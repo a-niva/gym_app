@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 import json
 import os
 
-from database import engine, get_db, SessionLocal
+from backend.database import engine, get_db, SessionLocal
 from models import Base, User, Exercise, Workout, Set
 
 # Create tables
