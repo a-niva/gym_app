@@ -13,7 +13,9 @@ class User(Base):
     experience_level = Column(String)
     goals = Column(JSON)
     available_equipment = Column(JSON)
-    dumbbell_weights = Column(JSON)
+    dumbbell_weights = Column(JSON)  # Liste des poids d'haltères disponibles
+    barbell_weights = Column(JSON)   # {"standard_bar": 20, "ez_bar": 10, "plates": [2.5, 5, 10, 20]}
+    resistance_bands = Column(JSON)  # [{"color": "rouge", "resistance": 15}, ...]
     created_at = Column(DateTime, default=datetime.utcnow)
     
     workouts = relationship("Workout", back_populates="user")

@@ -598,36 +598,194 @@
             </div>
 
             <!-- Étape 3: Équipement -->
-            <div class="onboarding-step" id="step3">
-                <h2>Votre équipement 🏋️</h2>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Quel matériel avez-vous à disposition ?</p>
-                
-                <div class="form-group">
-                    <label class="form-label">Équipement disponible</label>
-                    <div class="chip-group">
-                        <div class="chip" data-equipment="dumbbells">Haltères</div>
-                        <div class="chip" data-equipment="barbell">Barre</div>
-                        <div class="chip" data-equipment="pullup_bar">Barre de traction</div>
-                        <div class="chip" data-equipment="bench">Banc</div>
-                        <div class="chip" data-equipment="cables">Câbles</div>
-                        <div class="chip" data-equipment="machines">Machines</div>
-                        <div class="chip" data-equipment="kettlebell">Kettlebell</div>
-                        <div class="chip" data-equipment="resistance_bands">Élastiques</div>
-                    </div>
-                </div>
-                
-                <div class="form-group" id="dumbbellWeights" style="display: none;">
-                    <label class="form-label">Poids des haltères (kg)</label>
-                    <input type="text" class="form-input" id="dumbbellWeightsList" 
-                           placeholder="Ex: 2, 4, 6, 8, 10, 12">
-                    <small style="color: var(--gray);">Séparez les poids par des virgules</small>
-                </div>
-                
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button class="btn btn-secondary" onclick="previousStep()">Retour</button>
-                    <button class="btn" onclick="nextStep()">Continuer</button>
-                </div>
+<div class="onboarding-step" id="step3">
+    <h2>Votre équipement 🏋️</h2>
+    <p style="color: var(--gray); margin-bottom: 2rem;">Configurez précisément votre matériel</p>
+    
+    <!-- Types d'équipement -->
+    <div class="form-group">
+        <label class="form-label">Types d'équipement disponibles</label>
+        <div class="chip-group">
+            <div class="chip" data-equipment="dumbbells">Haltères</div>
+            <div class="chip" data-equipment="barbell">Barre + Disques</div>
+            <div class="chip" data-equipment="pull-up bar">Barre de traction</div>
+            <div class="chip" data-equipment="bench">Banc</div>
+            <div class="chip" data-equipment="cable machine">Câbles</div>
+            <div class="chip" data-equipment="resistance_bands">Élastiques</div>
+            <div class="chip" data-equipment="kettlebell">Kettlebell</div>
+        </div>
+    </div>
+    
+    <!-- Configuration Haltères -->
+    <div class="equipment-config" id="dumbbellsConfig" style="display: none;">
+        <h3 style="margin: 1.5rem 0 1rem;">Configuration des haltères</h3>
+        <div class="selected-weights">
+            <label class="form-label">Poids sélectionnés (kg)</label>
+            <div id="selectedDumbbells" class="chip-group" style="min-height: 40px; border: 1px dashed rgba(255,255,255,0.2); padding: 0.5rem; border-radius: var(--radius);">
+                <span style="color: var(--gray); font-size: 0.875rem;">Aucun poids sélectionné</span>
             </div>
+        </div>
+        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="showDumbbellSelector()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Ajouter des haltères
+        </button>
+    </div>
+    
+    <!-- Configuration Barbell -->
+    <div class="equipment-config" id="barbellConfig" style="display: none;">
+        <h3 style="margin: 1.5rem 0 1rem;">Configuration de la barre</h3>
+        <div class="form-group">
+            <label class="form-label">Poids de la barre standard (kg)</label>
+            <input type="text" class="form-input" id="standardBarWeight" placeholder="20" value="20">
+            <small style="color: var(--gray);">Utilisez le point (.) pour les décimales</small>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Poids de la barre EZ (kg)</label>
+            <input type="text" class="form-input" id="ezBarWeight" placeholder="10" value="10">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Disques disponibles (kg)</label>
+            <div class="chip-group">
+                <div class="chip plate-chip" data-plate="1.25">1.25</div>
+                <div class="chip plate-chip" data-plate="2.5">2.5</div>
+                <div class="chip plate-chip" data-plate="5">5</div>
+                <div class="chip plate-chip" data-plate="10">10</div>
+                <div class="chip plate-chip" data-plate="15">15</div>
+                <div class="chip plate-chip" data-plate="20">20</div>
+                <div class="chip plate-chip" data-plate="25">25</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Configuration Élastiques -->
+    <div class="equipment-config" id="resistanceBandsConfig" style="display: none;">
+        <h3 style="margin: 1.5rem 0 1rem;">Configuration des élastiques</h3>
+        <div id="bandsList"></div>
+        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="addResistanceBand()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Ajouter un élastique
+        </button>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button class="btn btn-secondary" onclick="previousStep()">Retour</button>
+        <button class="btn" onclick="nextStep()">Continuer</button>
+    </div>
+</div>
+
+<!-- Modal pour sélection des haltères -->
+<div id="dumbbellModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Sélectionner les poids d'haltères</h3>
+        <p style="color: var(--gray); margin-bottom: 1rem;">Cochez tous les poids que vous possédez (par haltère)</p>
+        <div class="dumbbell-grid">
+            <label class="weight-option"><input type="checkbox" value="1.25"> 1.25 kg</label>
+            <label class="weight-option"><input type="checkbox" value="2"> 2 kg</label>
+            <label class="weight-option"><input type="checkbox" value="2.5"> 2.5 kg</label>
+            <label class="weight-option"><input type="checkbox" value="4"> 4 kg</label>
+            <label class="weight-option"><input type="checkbox" value="5"> 5 kg</label>
+            <label class="weight-option"><input type="checkbox" value="7.5"> 7.5 kg</label>
+            <label class="weight-option"><input type="checkbox" value="10"> 10 kg</label>
+            <label class="weight-option"><input type="checkbox" value="12.5"> 12.5 kg</label>
+            <label class="weight-option"><input type="checkbox" value="15"> 15 kg</label>
+            <label class="weight-option"><input type="checkbox" value="17.5"> 17.5 kg</label>
+            <label class="weight-option"><input type="checkbox" value="20"> 20 kg</label>
+            <label class="weight-option"><input type="checkbox" value="22.5"> 22.5 kg</label>
+            <label class="weight-option"><input type="checkbox" value="25"> 25 kg</label>
+            <label class="weight-option"><input type="checkbox" value="30"> 30 kg</label>
+            <label class="weight-option"><input type="checkbox" value="40"> 40 kg</label>
+            <label class="weight-option"><input type="checkbox" value="50"> 50 kg</label>
+        </div>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button class="btn btn-secondary" onclick="closeDumbbellModal()">Annuler</button>
+            <button class="btn" onclick="confirmDumbbellSelection()">Confirmer</button>
+        </div>
+    </div>
+</div>
+<style>
+.equipment-config {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+}
+
+.modal-content {
+    background: var(--dark);
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dumbbell-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.weight-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.weight-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.weight-option input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.band-input {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.band-input input {
+    flex: 1;
+}
+
+.band-input button {
+    padding: 0.5rem;
+    background: var(--danger);
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    cursor: pointer;
+}
+</style>
 
             <!-- Étape 4: Confirmation -->
             <div class="onboarding-step" id="step4">
@@ -765,6 +923,10 @@
         let currentStep = 1;
         let selectedGoals = [];
         let selectedEquipment = [];
+        let selectedDumbbells = [];
+        let selectedPlates = [];
+        let resistanceBands = [];
+
         let workoutMode = null;
         let currentWorkout = null;
         let timerInterval = null;
@@ -782,37 +944,138 @@
             }
 
             // Event listeners pour les chips
-            document.querySelectorAll('.chip').forEach(chip => {
-                chip.addEventListener('click', () => {
-                    chip.classList.toggle('selected');
-                    
-                    // Mise à jour des arrays
-                    const goal = chip.dataset.goal;
-                    const equipment = chip.dataset.equipment;
-                    
-                    if (goal) {
-                        if (chip.classList.contains('selected')) {
-                            selectedGoals.push(goal);
-                        } else {
-                            selectedGoals = selectedGoals.filter(g => g !== goal);
-                        }
-                    }
-                    
-                    if (equipment) {
-                        if (chip.classList.contains('selected')) {
-                            selectedEquipment.push(equipment);
-                            if (equipment === 'dumbbells') {
-                                document.getElementById('dumbbellWeights').style.display = 'block';
-                            }
-                        } else {
-                            selectedEquipment = selectedEquipment.filter(e => e !== equipment);
-                            if (equipment === 'dumbbells') {
-                                document.getElementById('dumbbellWeights').style.display = 'none';
-                            }
-                        }
-                    }
-                });
-            });
+document.querySelectorAll('.chip[data-equipment]').forEach(chip => {
+    chip.addEventListener('click', () => {
+        chip.classList.toggle('selected');
+        const equipment = chip.dataset.equipment;
+        
+        if (chip.classList.contains('selected')) {
+            selectedEquipment.push(equipment);
+            // Afficher la configuration correspondante
+            switch(equipment) {
+                case 'dumbbells':
+                    document.getElementById('dumbbellsConfig').style.display = 'block';
+                    break;
+                case 'barbell':
+                    document.getElementById('barbellConfig').style.display = 'block';
+                    break;
+                case 'resistance_bands':
+                    document.getElementById('resistanceBandsConfig').style.display = 'block';
+                    break;
+            }
+        } else {
+            selectedEquipment = selectedEquipment.filter(e => e !== equipment);
+            // Masquer la configuration
+            switch(equipment) {
+                case 'dumbbells':
+                    document.getElementById('dumbbellsConfig').style.display = 'none';
+                    selectedDumbbells = [];
+                    updateDumbbellDisplay();
+                    break;
+                case 'barbell':
+                    document.getElementById('barbellConfig').style.display = 'none';
+                    selectedPlates = [];
+                    document.querySelectorAll('.plate-chip').forEach(c => c.classList.remove('selected'));
+                    break;
+                case 'resistance_bands':
+                    document.getElementById('resistanceBandsConfig').style.display = 'none';
+                    resistanceBands = [];
+                    updateBandsDisplay();
+                    break;
+            }
+        }
+    });
+});
+
+
+// Gestion des disques de barre
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.plate-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            chip.classList.toggle('selected');
+            const weight = parseFloat(chip.dataset.plate);
+            
+            if (chip.classList.contains('selected')) {
+                selectedPlates.push(weight);
+            } else {
+                selectedPlates = selectedPlates.filter(w => w !== weight);
+            }
+        });
+    });
+});
+
+// Fonctions pour les haltères
+function showDumbbellSelector() {
+    document.getElementById('dumbbellModal').style.display = 'flex';
+    // Cocher les poids déjà sélectionnés
+    selectedDumbbells.forEach(weight => {
+        const checkbox = document.querySelector(`#dumbbellModal input[value="${weight}"]`);
+        if (checkbox) checkbox.checked = true;
+    });
+}
+
+function closeDumbbellModal() {
+    document.getElementById('dumbbellModal').style.display = 'none';
+}
+
+function confirmDumbbellSelection() {
+    selectedDumbbells = [];
+    document.querySelectorAll('#dumbbellModal input:checked').forEach(checkbox => {
+        selectedDumbbells.push(parseFloat(checkbox.value));
+    });
+    selectedDumbbells.sort((a, b) => a - b);
+    updateDumbbellDisplay();
+    closeDumbbellModal();
+}
+
+function updateDumbbellDisplay() {
+    const container = document.getElementById('selectedDumbbells');
+    if (selectedDumbbells.length === 0) {
+        container.innerHTML = '<span style="color: var(--gray); font-size: 0.875rem;">Aucun poids sélectionné</span>';
+    } else {
+        container.innerHTML = selectedDumbbells
+            .map(w => `<div class="chip selected">${w} kg</div>`)
+            .join('');
+    }
+}
+
+// Fonctions pour les élastiques
+function addResistanceBand() {
+    const bandId = Date.now();
+    const bandHtml = `
+        <div class="band-input" data-band-id="${bandId}">
+            <input type="text" class="form-input" placeholder="Couleur" id="bandColor${bandId}">
+            <input type="text" class="form-input" placeholder="Résistance (kg)" id="bandResistance${bandId}" style="width: 150px;">
+            <button onclick="removeBand(${bandId})">×</button>
+        </div>
+    `;
+    document.getElementById('bandsList').insertAdjacentHTML('beforeend', bandHtml);
+}
+
+function removeBand(bandId) {
+    document.querySelector(`[data-band-id="${bandId}"]`).remove();
+}
+
+function collectBandsData() {
+    resistanceBands = [];
+    document.querySelectorAll('.band-input').forEach(bandDiv => {
+        const bandId = bandDiv.dataset.bandId;
+        const color = document.getElementById(`bandColor${bandId}`).value;
+        const resistance = parseCommaNumber(document.getElementById(`bandResistance${bandId}`).value);
+        
+        if (color && !isNaN(resistance)) {
+            resistanceBands.push({ color, resistance });
+        }
+    });
+}
+
+// Fonction pour parser les nombres avec virgules
+function parseCommaNumber(str) {
+    if (!str) return NaN;
+    // Remplacer les virgules par des points
+    return parseFloat(str.replace(',', '.'));
+}
+
         });
 
         // Navigation entre vues
@@ -921,64 +1184,85 @@
             }
         }
 
-        function showProfileSummary() {
-            const name = document.getElementById('userName').value;
-            const age = document.getElementById('userAge').value;
-            const experience = document.getElementById('experienceLevel').value;
-            const dumbbellWeights = document.getElementById('dumbbellWeightsList').value;
-            
-            const summary = `
-                <strong>Nom:</strong> ${name}<br>
-                <strong>Âge:</strong> ${age} ans<br>
-                <strong>Expérience:</strong> ${experience}<br>
-                <strong>Objectifs:</strong> ${selectedGoals.join(', ')}<br>
-                <strong>Équipement:</strong> ${selectedEquipment.join(', ')}<br>
-                ${dumbbellWeights ? `<strong>Poids haltères:</strong> ${dumbbellWeights} kg` : ''}
-            `;
-            
-            document.getElementById('profileSummary').innerHTML = summary;
+function showProfileSummary() {
+    const name = document.getElementById('userName').value;
+    const age = document.getElementById('userAge').value;
+    const experience = document.getElementById('experienceLevel').value;
+    
+    let equipmentDetails = '';
+    if (selectedDumbbells.length > 0) {
+        equipmentDetails += `<br><strong>Haltères:</strong> ${selectedDumbbells.join(', ')} kg`;
+    }
+    if (selectedEquipment.includes('barbell')) {
+        const standardBar = parseCommaNumber(document.getElementById('standardBarWeight').value) || 20;
+        equipmentDetails += `<br><strong>Barre standard:</strong> ${standardBar} kg`;
+        if (selectedPlates.length > 0) {
+            equipmentDetails += `<br><strong>Disques:</strong> ${selectedPlates.join(', ')} kg`;
         }
+    }
+    if (resistanceBands.length > 0) {
+        collectBandsData();
+        equipmentDetails += `<br><strong>Élastiques:</strong> ${resistanceBands.map(b => `${b.color} (${b.resistance}kg)`).join(', ')}`;
+    }
+    
+    const summary = `
+        <strong>Nom:</strong> ${name}<br>
+        <strong>Âge:</strong> ${age} ans<br>
+        <strong>Expérience:</strong> ${experience}<br>
+        <strong>Objectifs:</strong> ${selectedGoals.join(', ')}<br>
+        <strong>Équipement:</strong> ${selectedEquipment.join(', ')}
+        ${equipmentDetails}
+    `;
+    
+    document.getElementById('profileSummary').innerHTML = summary;
+}
 
-        async function completeOnboarding() {
-            const userData = {
-                name: document.getElementById('userName').value,
-                age: parseInt(document.getElementById('userAge').value),
-                experience_level: document.getElementById('experienceLevel').value,
-                goals: selectedGoals,
-                available_equipment: selectedEquipment,
-                dumbbell_weights: document.getElementById('dumbbellWeightsList').value
-                    .split(',')
-                    .map(w => parseFloat(w.trim()))
-                    .filter(w => !isNaN(w))
-            };
+async function completeOnboarding() {
+    // Collecter les données des élastiques
+    collectBandsData();
+    
+    const userData = {
+        name: document.getElementById('userName').value,
+        age: parseInt(document.getElementById('userAge').value),
+        experience_level: document.getElementById('experienceLevel').value,
+        goals: selectedGoals,
+        available_equipment: selectedEquipment,
+        dumbbell_weights: selectedDumbbells,
+        barbell_weights: selectedEquipment.includes('barbell') ? {
+            standard_bar: parseCommaNumber(document.getElementById('standardBarWeight').value) || 20,
+            ez_bar: parseCommaNumber(document.getElementById('ezBarWeight').value) || 10,
+            plates: selectedPlates
+        } : null,
+        resistance_bands: resistanceBands
+    };
 
-            try {
-                const response = await fetch(`${API_URL}/api/users`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(userData)
-                });
+    try {
+        const response = await fetch(`${API_URL}/api/users`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
 
-                if (response.ok) {
-                    const user = await response.json();
-                    currentUser = user;
-                    localStorage.setItem('userId', user.id);
-                    
-                    // Mettre à jour l'avatar
-                    document.getElementById('userInitial').textContent = user.name[0].toUpperCase();
-                    
-                    showToast('Profil créé avec succès !', 'success');
-                    showView('dashboard');
-                } else {
-                    showToast('Erreur lors de la création du profil', 'error');
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                showToast('Erreur de connexion', 'error');
-            }
+        if (response.ok) {
+            const user = await response.json();
+            currentUser = user;
+            localStorage.setItem('userId', user.id);
+            
+            document.getElementById('userInitial').textContent = user.name[0].toUpperCase();
+            
+            showToast('Profil créé avec succès !', 'success');
+            showView('dashboard');
+        } else {
+            const error = await response.json();
+            showToast(error.detail || 'Erreur lors de la création du profil', 'error');
         }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur de connexion', 'error');
+    }
+}
 
         async function loadUser(userId) {
             try {

@@ -63,7 +63,9 @@ class UserCreate(BaseModel):
     experience_level: str
     goals: List[str]
     available_equipment: List[str]
-    dumbbell_weights: List[int]
+    dumbbell_weights: List[float]
+    barbell_weights: Optional[Dict[str, Any]] = None
+    resistance_bands: Optional[List[Dict[str, Any]]] = []
 
 class UserResponse(BaseModel):
     id: int
@@ -108,7 +110,14 @@ class ExerciseResponse(BaseModel):
 # User endpoints
 @app.post("/api/users/", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = User(**user.dict())
+    user_data = user.dict()
+    
+    # Assurer que les listes sont bien des listes
+    if not isinstance(user_data.get('dumbbell_weights'), list):
+        user_data['dumbbell_weights'] = []
+    
+    # Créer l'utilisateur
+    db_user = User(**user_data)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
