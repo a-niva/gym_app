@@ -1,5 +1,4 @@
 # ===== backend/ml_engine.py =====
-import numpy as np
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
@@ -41,6 +40,28 @@ class FitnessMLEngine:
             "endurance": {"sets": 1.2, "reps": 1.3, "weight": 0.8},
             "weight_loss": {"sets": 1.1, "reps": 1.2, "weight": 0.85}
         }
+
+    def _mean(self, values):
+        """Calcule la moyenne d'une liste de valeurs"""
+        return sum(values) / len(values) if values else 0
+
+    def _linear_regression_slope(self, x_values, y_values):
+        """Calcule la pente d'une régression linéaire simple"""
+        if len(x_values) != len(y_values) or len(x_values) < 2:
+            return 0
+        
+        n = len(x_values)
+        sum_x = sum(x_values)
+        sum_y = sum(y_values)
+        sum_xy = sum(x * y for x, y in zip(x_values, y_values))
+        sum_x2 = sum(x * x for x in x_values)
+        
+        # Formule: slope = (n*sum_xy - sum_x*sum_y) / (n*sum_x2 - sum_x^2)
+        denominator = n * sum_x2 - sum_x * sum_x
+        if denominator == 0:
+            return 0
+        
+        return (n * sum_xy - sum_x * sum_y) / denominator
     
     def calculate_starting_weight(self, user: User, exercise: Exercise) -> float:
         """
@@ -66,10 +87,10 @@ class FitnessMLEngine:
                 weight_factor = 1.0 - (i * 0.05)
                 weights.append(set_record.weight * weight_factor)
             
-            base_weight = np.mean(weights)
+            base_weight = self._mean(weights)
             
             # Ajuster selon la fatigue moyenne récente
-            avg_fatigue = np.mean([s.fatigue_level for s in history[:3]])
+            avg_fatigue = self._mean([s.fatigue_level for s in history[:3]])
             fatigue_adjustment = self.FATIGUE_WEIGHTS.get(int(avg_fatigue), 0.9)
             
             return round(base_weight * fatigue_adjustment, 2.5)
@@ -186,15 +207,15 @@ class FitnessMLEngine:
         
         # Calcul de la tendance (régression linéaire simple)
         if len(weights) >= 3:
-            x = np.arange(len(weights))
-            weight_trend = np.polyfit(x, weights, 1)[0]
-            reps_trend = np.polyfit(x, reps, 1)[0]
+            x_values = list(range(len(weights)))
+            weight_trend = self._linear_regression_slope(x_values, weights)
+            reps_trend = self._linear_regression_slope(x_values, reps)
             
             # Prédiction
             next_weight = weights[0] + weight_trend
             
             # Ajustement selon la fatigue moyenne récente
-            recent_fatigue = np.mean(fatigue_levels[:5])
+            recent_fatigue = self._mean(fatigue_levels[:5])
             fatigue_factor = self.FATIGUE_WEIGHTS.get(int(recent_fatigue), 0.9)
             
             # Ajustement selon la réussite des dernières séances
@@ -499,7 +520,7 @@ class FitnessMLEngine:
             all_sets.extend(workout.sets)
         
         if all_sets:
-            avg_fatigue = np.mean([s.fatigue_level for s in all_sets if s.fatigue_level])
+            avg_fatigue = self._mean([s.fatigue_level for s in all_sets if s.fatigue_level])
             if avg_fatigue > 3.5:
                 risk_factors.append("Niveau de fatigue chronique élevé")
                 risk_level = "high" if risk_level == "medium" else "medium"
