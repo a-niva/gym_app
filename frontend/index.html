@@ -2,123 +2,100 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1e40af">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fitness Coach</title>
     <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
     <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light: #cbd5e1;
+            --white: #ffffff;
+            --radius: 0.5rem;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        :root {
-            --primary: #3b82f6;
-            --primary-dark: #1e40af;
-            --secondary: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --dark: #111827;
-            --gray: #6b7280;
-            --light: #f3f4f6;
-            --white: #ffffff;
-            --radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --safe-area-top: env(safe-area-inset-top);
-            --safe-area-bottom: env(safe-area-inset-bottom);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--dark);
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%);
             color: var(--white);
             min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            padding-top: var(--safe-area-top);
-            padding-bottom: var(--safe-area-bottom);
         }
 
-        /* Header Mobile */
+        /* Header */
         .header {
             position: fixed;
-            top: var(--safe-area-top);
+            top: 0;
             left: 0;
             right: 0;
-            background: rgba(17, 24, 39, 0.95);
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
-            z-index: 1000;
             padding: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            z-index: 1000;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .plate-config-item {
-            display: grid;
-            grid-template-columns: 100px 1fr auto;
-            gap: 0.75rem;
+        .header-content {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 0.5rem;
+            max-width: 480px;
+            margin: 0 auto;
         }
 
-        .plate-config-item .weight {
-            font-weight: 600;
-            color: var(--accent);
+        .logo {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
         }
 
-        .plate-config-item input[type="number"] {
-            width: 80px;
-        }
-
-        .plate-config-item button {
-            padding: 0.4rem;
-            background: var(--danger);
-            border: none;
-            border-radius: 0.4rem;
-            color: white;
-            cursor: pointer;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-        }
-
-        .plate-config-item button:hover {
-            opacity: 1;
-        }
-
-        .btn-danger {
-            background: var(--danger) !important;
-            color: white !important;
-        }
         .user-avatar {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
             background: var(--primary);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
+            color: white;
         }
 
-        .user-avatar:active {
-            transform: scale(0.95);
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 73px;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem;
+            z-index: 999;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+            width: 25%;
         }
 
         /* Navigation Bottom */
@@ -127,18 +104,16 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(17, 24, 39, 0.95);
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem;
             display: flex;
             justify-content: space-around;
-            padding: 0.5rem 0;
-            padding-bottom: calc(0.5rem + var(--safe-area-bottom));
             z-index: 1000;
         }
 
         .nav-item {
-            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -146,7 +121,8 @@
             padding: 0.5rem;
             color: var(--gray);
             text-decoration: none;
-            transition: color 0.2s;
+            border-radius: var(--radius);
+            transition: all 0.2s;
             cursor: pointer;
         }
 
@@ -233,76 +209,207 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
-            margin-top: 0.5rem;
         }
 
         .chip {
             padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 999px;
-            font-size: 0.875rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
             cursor: pointer;
             transition: all 0.2s;
+            user-select: none;
+        }
+
+        .chip:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .chip.selected {
             background: var(--primary);
             border-color: var(--primary);
+            color: white;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .equipment-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .equipment-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .equipment-card.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .equipment-card svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 0.5rem;
         }
 
         .btn {
-            width: 100%;
-            padding: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
             background: var(--primary);
+            color: white;
             border: none;
             border-radius: var(--radius);
-            color: var(--white);
             font-size: 1rem;
-            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
+            text-decoration: none;
             justify-content: center;
-            gap: 0.5rem;
         }
 
-        .btn:active {
-            transform: translateY(1px);
+        .btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--secondary);
         }
 
-        .progress-bar {
+        .btn-secondary:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Equipment Config */
+        .equipment-config {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .equipment-config h4 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--dark);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin: 0;
+        }
+
+        /* Band Input */
+        .band-input {
             display: flex;
             gap: 0.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 0.75rem;
+            align-items: center;
         }
 
-        .progress-step {
-            flex: 1;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            transition: background 0.3s;
+        .band-input .form-input {
+            margin-bottom: 0;
         }
 
-        .progress-step.completed {
-            background: var(--primary);
+        /* Plate Configuration */
+        .plate-config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
         }
 
-        /* Vue Dashboard */
+        .plate-config-item .weight {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Dashboard */
         .dashboard {
             display: none;
         }
 
         .dashboard.active {
             display: block;
-            animation: fadeIn 0.3s ease-out;
         }
 
         .stats-grid {
@@ -318,24 +425,13 @@
             border-radius: var(--radius);
             padding: 1.5rem;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
         }
 
         .stat-value {
             font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
         }
 
         .stat-label {
@@ -343,175 +439,32 @@
             font-size: 0.875rem;
         }
 
-        .quick-start {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: var(--radius);
-            padding: 2rem;
-            text-align: center;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow);
-        }
-
-        .quick-start h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .workout-modes {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        .mode-card {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid transparent;
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .mode-card:active {
-            transform: scale(0.98);
-        }
-
-        .mode-card.selected {
-            border-color: var(--white);
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .mode-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        /* Vue Workout */
+        /* Workout */
         .workout-view {
             display: none;
         }
 
         .workout-view.active {
             display: block;
-            animation: slideIn 0.3s ease-out;
         }
 
-        .exercise-card {
+        .mode-card {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: var(--radius);
             padding: 1.5rem;
             margin-bottom: 1rem;
-        }
-
-        .exercise-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .exercise-name {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .exercise-info {
-            display: flex;
-            gap: 1rem;
-            color: var(--gray);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        .set-tracker {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: var(--radius);
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .set-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .set-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .input-group label {
-            font-size: 0.75rem;
-            color: var(--gray);
-        }
-
-        .input-group input {
-            padding: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            color: var(--white);
-            font-size: 1rem;
-            text-align: center;
-        }
-
-        .timer {
-            background: var(--dark);
-            border-radius: var(--radius);
-            padding: 2rem;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        .timer-display {
-            font-size: 3rem;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            margin-bottom: 1rem;
-        }
-
-        .timer-controls {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
-
-        .timer-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .timer-btn.play {
-            background: var(--secondary);
-            color: var(--white);
+        .mode-card:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .timer-btn.pause {
-            background: var(--warning);
-            color: var(--white);
-        }
-
-        .timer-btn.stop {
-            background: var(--danger);
-            color: var(--white);
+        .mode-card.selected {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
         }
 
         /* Animations */
@@ -526,35 +479,36 @@
             }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Media Queries */
-        @media (min-width: 768px) {
-            .main-content {
-                max-width: 600px;
-                margin: 0 auto;
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
             }
         }
 
-        /* Mode sombre/clair (si nécessaire) */
-        @media (prefers-color-scheme: light) {
-            :root {
-                --dark: #ffffff;
-                --white: #111827;
-                --light: #374151;
-                --gray: #9ca3af;
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .checkbox-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
             
-            body {
-                background: #f3f4f6;
-            }
-            
-            .header, .bottom-nav {
-                background: rgba(255, 255, 255, 0.95);
-                border-color: rgba(0, 0, 0, 0.1);
+            .equipment-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -562,23 +516,23 @@
 <body>
     <!-- Header -->
     <header class="header">
-        <h1>Fitness Coach</h1>
-        <div class="user-avatar" id="userAvatar">
-            <span id="userInitial">?</span>
+        <div class="header-content">
+            <div class="logo">💪 Fitness Coach</div>
+            <div class="user-avatar" id="userInitial" style="display: none;">A</div>
         </div>
     </header>
 
-    <!-- Contenu Principal -->
+    <!-- Progress Bar (visible pendant onboarding) -->
+    <div class="progress-container" id="progressContainer" style="display: none;">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
     <main class="main-content">
         <!-- Vue Onboarding -->
-        <div class="onboarding" id="onboardingView">
-            <div class="progress-bar">
-                <div class="progress-step completed"></div>
-                <div class="progress-step"></div>
-                <div class="progress-step"></div>
-                <div class="progress-step"></div>
-            </div>
-
+        <div class="onboarding active" id="onboardingView">
             <!-- Étape 1: Informations de base -->
             <div class="onboarding-step active" id="step1">
                 <h2>Bienvenue ! 👋</h2>
@@ -622,281 +576,149 @@
                     <label class="form-label">Sélectionnez vos objectifs</label>
                     <div class="chip-group">
                         <div class="chip" data-goal="strength">💪 Force</div>
-                        <div class="chip" data-goal="hypertrophy">📏 Hypertrophie</div>
+                        <div class="chip" data-goal="hypertrophy">🏋️ Masse musculaire</div>
                         <div class="chip" data-goal="endurance">🏃 Endurance</div>
                         <div class="chip" data-goal="weight_loss">⚖️ Perte de poids</div>
-                        <div class="chip" data-goal="flexibility">🧘 Flexibilité</div>
+                        <div class="chip" data-goal="flexibility">🤸 Flexibilité</div>
                         <div class="chip" data-goal="cardio">❤️ Cardio</div>
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button class="btn btn-secondary" onclick="previousStep()">Retour</button>
-                    <button class="btn" onclick="nextStep()">Continuer</button>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-secondary" onclick="prevStep()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Retour
+                    </button>
+                    <button class="btn" onclick="nextStep()">
+                        Continuer
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
 
             <!-- Étape 3: Équipement -->
-<div class="onboarding-step" id="step3">
-    <h2>Votre équipement 🏋️</h2>
-    <p style="color: var(--gray); margin-bottom: 2rem;">Configurez précisément votre matériel</p>
-    
-    <!-- Types d'équipement -->
-    <div class="form-group">
-        <label class="form-label">Types d'équipement disponibles</label>
-        <div class="chip-group">
-            <div class="chip" data-equipment="dumbbells">Haltères</div>
-            <div class="chip" data-equipment="barbell">Barre + Disques</div>
-            <div class="chip" data-equipment="pull-up bar">Barre de traction</div>
-            <div class="chip" data-equipment="bench">Banc</div>
-            <div class="chip" data-equipment="cable machine">Câbles</div>
-            <div class="chip" data-equipment="resistance_bands">Élastiques</div>
-            <div class="chip" data-equipment="kettlebell">Kettlebell</div>
-        </div>
-    </div>
-    
-    <!-- Configuration Haltères -->
-    <div class="equipment-config" id="dumbbellsConfig" style="display: none;">
-        <h3 style="margin: 1.5rem 0 1rem;">Configuration des haltères</h3>
-        <div class="selected-weights">
-            <label class="form-label">Poids sélectionnés (kg)</label>
-            <div id="selectedDumbbells" class="chip-group" style="min-height: 40px; border: 1px dashed rgba(255,255,255,0.2); padding: 0.5rem; border-radius: var(--radius);">
-                <span style="color: var(--gray); font-size: 0.875rem;">Aucun poids sélectionné</span>
-            </div>
-        </div>
-        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="showDumbbellSelector()">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Ajouter des haltères
-        </button>
-    </div>
-    
-    <!-- Configuration Barbell -->
-<div class="equipment-config" id="barbellConfig" style="display: none;">
-    <h3 style="margin: 1.5rem 0 1rem;">Configuration de la barre</h3>
-    
-    <!-- Poids des barres -->
-    <div class="form-group">
-        <label class="form-label">Poids de la barre olympique standard (kg)</label>
-        <input type="text" class="form-input" id="standardBarWeight" placeholder="20" value="20">
-        <small style="color: var(--gray);">Une barre olympique standard pèse généralement 20kg</small>
-    </div>
-    
-    <div class="form-group">
-        <label class="form-label">Poids de la barre EZ (kg)</label>
-        <input type="text" class="form-input" id="ezBarWeight" placeholder="7 à 10" value="10">
-        <small style="color: var(--gray);">Les barres EZ pèsent entre 7 et 12kg selon le modèle</small>
-    </div>
-    
-    <!-- Configuration des disques -->
-    <div class="form-group">
-        <label class="form-label">Disques disponibles</label>
-        <small style="color: var(--gray); display: block; margin-bottom: 1rem;">
-            Indiquez le nombre de disques que vous possédez pour chaque poids
-        </small>
-        
-        <div id="platesConfiguration" style="display: grid; gap: 0.75rem;">
-            <!-- Les disques seront ajoutés dynamiquement ici -->
-        </div>
-        
-        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="showPlateSelector()">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Ajouter un type de disque
-        </button>
-    </div>
-</div>
-
-<!-- Modal pour ajouter des disques -->
-<div id="plateModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 400px;">
-        <h3>Ajouter des disques</h3>
-        <div class="form-group">
-            <label class="form-label">Poids du disque (kg)</label>
-            <select id="plateWeight" class="form-input">
-                <option value="">Sélectionner...</option>
-                <option value="0.5">0.5 kg</option>
-                <option value="1">1 kg</option>
-                <option value="1.25">1.25 kg</option>
-                <option value="2">2 kg</option>
-                <option value="2.5">2.5 kg</option>
-                <option value="5">5 kg</option>
-                <option value="10">10 kg</option>
-                <option value="15">15 kg</option>
-                <option value="20">20 kg</option>
-                <option value="25">25 kg</option>
-                <option value="custom">Autre...</option>
-            </select>
-            <input type="text" id="customPlateWeight" class="form-input" placeholder="Poids personnalisé (kg)" style="display: none; margin-top: 0.5rem;">
-        </div>
-        
-        <div class="form-group">
-            <label class="form-label">Nombre de disques</label>
-            <input type="number" id="plateCount" class="form-input" min="1" max="20" value="2" placeholder="2">
-            <small style="color: var(--gray);">Nombre total de disques de ce poids</small>
-        </div>
-        
-        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-            <button class="btn btn-secondary" onclick="closePlateModal()">Annuler</button>
-            <button class="btn" onclick="confirmPlateAddition()">Ajouter</button>
-        </div>
-    </div>
-</div>
-
-
-    <!-- Configuration Élastiques -->
-    <div class="equipment-config" id="resistanceBandsConfig" style="display: none;">
-        <h3 style="margin: 1.5rem 0 1rem;">Configuration des élastiques</h3>
-        <div id="bandsList"></div>
-        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="addResistanceBand()">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Ajouter un élastique
-        </button>
-    </div>
-    
-    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-        <button class="btn btn-secondary" onclick="previousStep()">Retour</button>
-        <button class="btn" onclick="nextStep()">Continuer</button>
-    </div>
-</div>
-
-<!-- Modal pour sélection des haltères -->
-<div id="dumbbellModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <h3>Sélectionner les poids d'haltères</h3>
-        <p style="color: var(--gray); margin-bottom: 1rem;">Cochez tous les poids que vous possédez (par haltère)</p>
-        <div class="dumbbell-grid">
-            <label class="weight-option"><input type="checkbox" value="1.25"> 1.25 kg</label>
-            <label class="weight-option"><input type="checkbox" value="2"> 2 kg</label>
-            <label class="weight-option"><input type="checkbox" value="2.5"> 2.5 kg</label>
-            <label class="weight-option"><input type="checkbox" value="4"> 4 kg</label>
-            <label class="weight-option"><input type="checkbox" value="5"> 5 kg</label>
-            <label class="weight-option"><input type="checkbox" value="7.5"> 7.5 kg</label>
-            <label class="weight-option"><input type="checkbox" value="10"> 10 kg</label>
-            <label class="weight-option"><input type="checkbox" value="12.5"> 12.5 kg</label>
-            <label class="weight-option"><input type="checkbox" value="15"> 15 kg</label>
-            <label class="weight-option"><input type="checkbox" value="17.5"> 17.5 kg</label>
-            <label class="weight-option"><input type="checkbox" value="20"> 20 kg</label>
-            <label class="weight-option"><input type="checkbox" value="22.5"> 22.5 kg</label>
-            <label class="weight-option"><input type="checkbox" value="25"> 25 kg</label>
-            <label class="weight-option"><input type="checkbox" value="30"> 30 kg</label>
-            <label class="weight-option"><input type="checkbox" value="40"> 40 kg</label>
-            <label class="weight-option"><input type="checkbox" value="50"> 50 kg</label>
-        </div>
-        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-            <button class="btn btn-secondary" onclick="closeDumbbellModal()">Annuler</button>
-            <button class="btn" onclick="confirmDumbbellSelection()">Confirmer</button>
-        </div>
-    </div>
-</div>
-<style>
-.equipment-config {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: var(--radius);
-    padding: 1rem;
-    margin-top: 1rem;
-}
-
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 1rem;
-}
-
-.modal-content {
-    background: var(--dark);
-    border-radius: var(--radius);
-    padding: 2rem;
-    max-width: 500px;
-    width: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dumbbell-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 0.75rem;
-    margin-top: 1rem;
-}
-
-.weight-option {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.weight-option:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.weight-option input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-.band-input {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.band-input input {
-    flex: 1;
-}
-
-.band-input button {
-    padding: 0.5rem;
-    background: var(--danger);
-    border: none;
-    border-radius: 0.5rem;
-    color: white;
-    cursor: pointer;
-}
-</style>
-
-            <!-- Étape 4: Confirmation -->
-            <div class="onboarding-step" id="step4">
-                <h2>Parfait ! ✨</h2>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Votre profil est prêt. Commençons l'entraînement !</p>
+            <div class="onboarding-step" id="step3">
+                <h2>Votre équipement 🏋️‍♀️</h2>
+                <p style="color: var(--gray); margin-bottom: 2rem;">Quel équipement avez-vous à disposition ?</p>
                 
-                <div class="exercise-card" style="background: rgba(59, 130, 246, 0.1); border-color: var(--primary);">
-                    <h3>Récapitulatif</h3>
-                    <div id="profileSummary" style="margin-top: 1rem; line-height: 1.8;">
-                        <!-- Rempli dynamiquement -->
+                <div class="equipment-grid">
+                    <div class="equipment-card" data-equipment="dumbbells">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                        </svg>
+                        <div>Haltères</div>
+                    </div>
+                    <div class="equipment-card" data-equipment="barbell">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8m-4-8v16"/>
+                        </svg>
+                        <div>Barre</div>
+                    </div>
+                    <div class="equipment-card" data-equipment="resistance_bands">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <div>Élastiques</div>
+                    </div>
+                    <div class="equipment-card" data-equipment="bodyweight">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <div>Poids du corps</div>
                     </div>
                 </div>
+
+                <!-- Configuration des haltères -->
+                <div class="equipment-config" id="dumbbellConfig" style="display: none;">
+                    <h4>Configuration des haltères</h4>
+                    <button class="btn btn-secondary" onclick="showDumbbellSelector()">
+                        Ajouter des haltères
+                    </button>
+                    <div id="selectedDumbbells" style="margin-top: 1rem;">
+                        <span style="color: var(--gray); font-size: 0.875rem;">Aucun poids sélectionné</span>
+                    </div>
+                </div>
+
+                <!-- Configuration des barres -->
+                <div class="equipment-config" id="barbellConfig" style="display: none;">
+                    <h4>Configuration des barres</h4>
+                    <div class="form-group">
+                        <label class="form-label">Poids barre standard (kg)</label>
+                        <input type="text" class="form-input" id="standardBarWeight" placeholder="20" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Poids barre EZ (kg)</label>
+                        <input type="text" class="form-input" id="ezBarWeight" placeholder="10" value="10">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <button class="btn btn-secondary" onclick="showPlateSelector()">
+                            Ajouter des disques
+                        </button>
+                    </div>
+                    <div id="platesConfiguration">
+                        <div style="color: var(--gray); text-align: center; padding: 1rem;">Aucun disque configuré</div>
+                    </div>
+                </div>
+
+                <!-- Configuration des élastiques -->
+                <div class="equipment-config" id="bandsConfig" style="display: none;">
+                    <h4>Configuration des élastiques</h4>
+                    <button class="btn btn-secondary" onclick="addResistanceBand()">
+                        Ajouter un élastique
+                    </button>
+                    <div id="bandsList" style="margin-top: 1rem;"></div>
+                </div>
                 
-                <button class="btn" onclick="completeOnboarding()">
-                    Commencer l'entraînement
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                    </svg>
-                </button>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button class="btn btn-secondary" onclick="prevStep()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Retour
+                    </button>
+                    <button class="btn" onclick="nextStep()">
+                        Continuer
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Étape 4: Récapitulatif -->
+            <div class="onboarding-step" id="step4">
+                <h2>Récapitulatif 📋</h2>
+                <p style="color: var(--gray); margin-bottom: 2rem;">Vérifiez vos informations avant de créer votre profil.</p>
+                
+                <div style="background: rgba(255, 255, 255, 0.05); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 2rem;">
+                    <div id="profileSummary"></div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-secondary" onclick="prevStep()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Retour
+                    </button>
+                    <button class="btn" onclick="completeOnboarding()">
+                        Créer mon profil
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Vue Dashboard -->
         <div class="dashboard" id="dashboardView">
+            <h1>Tableau de bord</h1>
+            
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="totalWorkouts">0</div>
@@ -908,57 +730,34 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="totalVolume">0</div>
-                    <div class="stat-label">Volume (kg)</div>
+                    <div class="stat-label">Volume total (kg)</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="currentStreak">0</div>
-                    <div class="stat-label">Série en cours</div>
+                    <div class="stat-label">Série actuelle</div>
                 </div>
             </div>
 
-            <div class="quick-start">
-                <h2>Démarrer une séance</h2>
-                <div class="workout-modes">
-                    <div class="mode-card" onclick="selectMode('free_time')">
-                        <div class="mode-icon">🎯</div>
-                        <h3>Temps libre</h3>
-                        <p style="font-size: 0.875rem; color: rgba(255,255,255,0.8);">Entraînement flexible</p>
-                    </div>
-                    <div class="mode-card" onclick="selectMode('program')">
-                        <div class="mode-icon">📋</div>
-                        <h3>Programme</h3>
-                        <p style="font-size: 0.875rem; color: rgba(255,255,255,0.8);">Suivre mon plan</p>
-                    </div>
+            <div style="display: grid; gap: 1rem;">
+                <div class="mode-card" onclick="selectMode('free_time')">
+                    <h3>⏱️ Temps libre</h3>
+                    <p style="color: var(--gray); margin-top: 0.5rem;">Entraînement libre avec les exercices de votre choix</p>
                 </div>
-                <button class="btn" style="margin-top: 1rem;" onclick="startWorkout()">
-                    Commencer
-                </button>
+                <div class="mode-card" onclick="selectMode('program')">
+                    <h3>📋 Programme</h3>
+                    <p style="color: var(--gray); margin-top: 0.5rem;">Suivre un programme d'entraînement structuré</p>
+                </div>
             </div>
 
-            <div class="recent-workouts">
-                <h3 style="margin-bottom: 1rem;">Séances récentes</h3>
-                <div id="recentWorkoutsList">
-                    <!-- Rempli dynamiquement -->
-                </div>
-            </div>
+            <button class="btn" onclick="startWorkout()" style="width: 100%; margin-top: 2rem;">
+                Commencer l'entraînement
+            </button>
         </div>
 
         <!-- Vue Workout -->
         <div class="workout-view" id="workoutView">
-            <div class="timer">
-                <div class="timer-display" id="timerDisplay">00:00</div>
-                <div class="timer-controls">
-                    <button class="timer-btn play" onclick="toggleTimer()">
-                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z"/>
-                        </svg>
-                    </button>
-                    <button class="timer-btn stop" onclick="finishSet()">
-                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M6 6h12v12H6z"/>
-                        </svg>
-                    </button>
-                </div>
+            <div id="exerciseSelector">
+                <!-- Sélecteur d'exercice affiché ici -->
             </div>
 
             <div id="currentExercise">
@@ -999,192 +798,444 @@
         </a>
     </nav>
 
+    <!-- Modal pour haltères -->
+    <div class="modal" id="dumbbellModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Sélectionner les haltères</h3>
+                <button class="modal-close" onclick="closeDumbbellModal()">×</button>
+            </div>
+            <div class="checkbox-grid">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_1" value="1">
+                    <label for="dumbbell_1">1 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_2" value="2">
+                    <label for="dumbbell_2">2 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_3" value="3">
+                    <label for="dumbbell_3">3 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_4" value="4">
+                    <label for="dumbbell_4">4 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_5" value="5">
+                    <label for="dumbbell_5">5 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_6" value="6">
+                    <label for="dumbbell_6">6 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_7" value="7">
+                    <label for="dumbbell_7">7 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_8" value="8">
+                    <label for="dumbbell_8">8 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_9" value="9">
+                    <label for="dumbbell_9">9 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_10" value="10">
+                    <label for="dumbbell_10">10 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_12_5" value="12.5">
+                    <label for="dumbbell_12_5">12.5 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_15" value="15">
+                    <label for="dumbbell_15">15 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_17_5" value="17.5">
+                    <label for="dumbbell_17_5">17.5 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_20" value="20">
+                    <label for="dumbbell_20">20 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_22_5" value="22.5">
+                    <label for="dumbbell_22_5">22.5 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_25" value="25">
+                    <label for="dumbbell_25">25 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_30" value="30">
+                    <label for="dumbbell_30">30 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_35" value="35">
+                    <label for="dumbbell_35">35 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_40" value="40">
+                    <label for="dumbbell_40">40 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_45" value="45">
+                    <label for="dumbbell_45">45 kg</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dumbbell_50" value="50">
+                    <label for="dumbbell_50">50 kg</label>
+                </div>
+            </div>
+            <button class="btn" onclick="confirmDumbbellSelection()">Confirmer</button>
+        </div>
+    </div>
+
+    <!-- Modal pour disques -->
+    <div class="modal" id="plateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ajouter des disques</h3>
+                <button class="modal-close" onclick="closePlateModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Poids du disque</label>
+                <select class="form-input form-select" id="plateWeight">
+                    <option value="">Sélectionnez...</option>
+                    <option value="0.5">0.5 kg</option>
+                    <option value="1.25">1.25 kg</option>
+                    <option value="2.5">2.5 kg</option>
+                    <option value="5">5 kg</option>
+                    <option value="10">10 kg</option>
+                    <option value="15">15 kg</option>
+                    <option value="20">20 kg</option>
+                    <option value="25">25 kg</option>
+                    <option value="custom">Autre poids...</option>
+                </select>
+                <input type="text" class="form-input" id="customPlateWeight" placeholder="Poids en kg" style="display: none; margin-top: 0.5rem;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nombre de disques</label>
+                <input type="number" class="form-input" id="plateCount" value="2" min="1" max="20">
+            </div>
+            <button class="btn" onclick="confirmPlateAddition()">Ajouter</button>
+        </div>
+    </div>
+
     <script>
         // Configuration API
         const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:8000' 
-            : '';
+            ? 'http://localhost:8000/api' 
+            : '/api';
 
-        // État de l'application
+        // Variables globales
         let currentUser = null;
         let currentStep = 1;
         let selectedGoals = [];
         let selectedEquipment = [];
-        let selectedDumbbells = [];
+        window.selectedDumbbells = [];
         let selectedPlates = [];
         let resistanceBands = [];
-
+        let plateConfiguration = {};
+        let bandCounter = 0;
         let workoutMode = null;
         let currentWorkout = null;
         let timerInterval = null;
-        let timerSeconds = 0;
+
+        // Fonctions globales pour les onclick
+        function showDumbbellSelector() {
+            const modal = document.getElementById('dumbbellModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.querySelectorAll('#dumbbellModal input[type="checkbox"]').forEach(cb => {
+                    cb.checked = false;
+                });
+                if (window.selectedDumbbells) {
+                    window.selectedDumbbells.forEach(weight => {
+                        const checkbox = document.querySelector(`#dumbbellModal input[value="${weight}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
+            }
+        }
+
+        function closeDumbbellModal() {
+            const modal = document.getElementById('dumbbellModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function confirmDumbbellSelection() {
+            window.selectedDumbbells = [];
+            document.querySelectorAll('#dumbbellModal input:checked').forEach(checkbox => {
+                window.selectedDumbbells.push(parseFloat(checkbox.value));
+            });
+            window.selectedDumbbells.sort((a, b) => a - b);
+            
+            const container = document.getElementById('selectedDumbbells');
+            if (container) {
+                if (window.selectedDumbbells.length === 0) {
+                    container.innerHTML = '<span style="color: var(--gray); font-size: 0.875rem;">Aucun poids sélectionné</span>';
+                } else {
+                    container.innerHTML = window.selectedDumbbells
+                        .map(w => `<div class="chip selected">${w} kg</div>`)
+                        .join('');
+                }
+            }
+            closeDumbbellModal();
+        }
+
+        function addResistanceBand() {
+            bandCounter++;
+            const bandsList = document.getElementById('bandsList');
+            if (!bandsList) return;
+            
+            const bandHtml = `
+                <div class="band-input" data-band-id="${bandCounter}">
+                    <input type="text" class="form-input" placeholder="Couleur" id="bandColor${bandCounter}">
+                    <input type="text" class="form-input" placeholder="Résistance (kg)" id="bandResistance${bandCounter}" style="width: 150px;">
+                    <button class="btn btn-danger" onclick="removeBand(${bandCounter})" style="padding: 0.5rem;">×</button>
+                </div>
+            `;
+            bandsList.insertAdjacentHTML('beforeend', bandHtml);
+        }
+
+        function removeBand(bandId) {
+            const band = document.querySelector(`[data-band-id="${bandId}"]`);
+            if (band) band.remove();
+        }
+
+        function showPlateSelector() {
+            document.getElementById('plateModal').style.display = 'flex';
+            document.getElementById('plateWeight').value = '';
+            document.getElementById('customPlateWeight').style.display = 'none';
+            document.getElementById('plateCount').value = '2';
+        }
+
+        function closePlateModal() {
+            document.getElementById('plateModal').style.display = 'none';
+        }
+
+        function confirmPlateAddition() {
+            const weightSelect = document.getElementById('plateWeight');
+            const customWeight = document.getElementById('customPlateWeight');
+            const count = parseInt(document.getElementById('plateCount').value);
+            
+            let weight;
+            if (weightSelect.value === 'custom') {
+                weight = parseCommaNumber(customWeight.value);
+                if (isNaN(weight) || weight <= 0) {
+                    showToast('Veuillez entrer un poids valide', 'error');
+                    return;
+                }
+            } else {
+                weight = parseFloat(weightSelect.value);
+                if (!weight) {
+                    showToast('Veuillez sélectionner un poids', 'error');
+                    return;
+                }
+            }
+            
+            if (!count || count < 1) {
+                showToast('Veuillez entrer un nombre valide', 'error');
+                return;
+            }
+            
+            plateConfiguration[weight] = count;
+            updatePlateDisplay();
+            closePlateModal();
+        }
+
+        function updatePlateDisplay() {
+            const container = document.getElementById('platesConfiguration');
+            if (!container) return;
+            
+            const weights = Object.keys(plateConfiguration).map(w => parseFloat(w)).sort((a, b) => a - b);
+            
+            if (weights.length === 0) {
+                container.innerHTML = '<div style="color: var(--gray); text-align: center; padding: 1rem;">Aucun disque configuré</div>';
+                return;
+            }
+            
+            container.innerHTML = weights.map(weight => `
+                <div class="plate-config-item">
+                    <div class="weight">${weight} kg</div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button onclick="decreasePlateCount(${weight})" style="width: 30px; height: 30px; padding: 0;" class="btn btn-secondary">−</button>
+                        <input type="number" id="plateCount_${weight}" value="${plateConfiguration[weight]}" 
+                               min="0" max="20" onchange="updatePlateCount(${weight}, this.value)"
+                               style="text-align: center; width: 60px;" class="form-input">
+                        <button onclick="increasePlateCount(${weight})" style="width: 30px; height: 30px; padding: 0;" class="btn btn-secondary">+</button>
+                    </div>
+                    <button onclick="removePlateType(${weight})" title="Supprimer" class="btn btn-danger" style="padding: 0.5rem;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updatePlateCount(weight, newCount) {
+            const count = parseInt(newCount);
+            if (count > 0) {
+                plateConfiguration[weight] = count;
+            } else {
+                delete plateConfiguration[weight];
+                updatePlateDisplay();
+            }
+        }
+
+        function increasePlateCount(weight) {
+            const current = plateConfiguration[weight] || 0;
+            if (current < 20) {
+                plateConfiguration[weight] = current + 1;
+                document.getElementById(`plateCount_${weight}`).value = current + 1;
+            }
+        }
+
+        function decreasePlateCount(weight) {
+            const current = plateConfiguration[weight] || 0;
+            if (current > 1) {
+                plateConfiguration[weight] = current - 1;
+                document.getElementById(`plateCount_${weight}`).value = current - 1;
+            } else if (current === 1) {
+                removePlateType(weight);
+            }
+        }
+
+        function removePlateType(weight) {
+            delete plateConfiguration[weight];
+            updatePlateDisplay();
+        }
+
+        function parseCommaNumber(str) {
+            if (!str) return NaN;
+            return parseFloat(str.replace(',', '.').trim());
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
 
         // Initialisation
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Vérifier si l'utilisateur existe
-            const userId = localStorage.getItem('userId');
-            if (userId) {
-                await loadUser(userId);
-                showView('dashboard');
-            } else {
-                showView('onboarding');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Event listeners pour les équipements
+            document.querySelectorAll('.equipment-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const equipment = card.dataset.equipment;
+                    card.classList.toggle('selected');
+                    
+                    if (card.classList.contains('selected')) {
+                        selectedEquipment.push(equipment);
+                    } else {
+                        const index = selectedEquipment.indexOf(equipment);
+                        if (index > -1) selectedEquipment.splice(index, 1);
+                    }
+                    
+                    // Montrer/cacher la configuration
+                    document.getElementById('dumbbellConfig').style.display = 
+                        selectedEquipment.includes('dumbbells') ? 'block' : 'none';
+                    document.getElementById('barbellConfig').style.display = 
+                        selectedEquipment.includes('barbell') ? 'block' : 'none';
+                    document.getElementById('bandsConfig').style.display = 
+                        selectedEquipment.includes('resistance_bands') ? 'block' : 'none';
+                });
+            });
+
+            // Event listeners pour les objectifs
+            document.querySelectorAll('.chip[data-goal]').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const goal = chip.dataset.goal;
+                    chip.classList.toggle('selected');
+                    
+                    if (chip.classList.contains('selected')) {
+                        selectedGoals.push(goal);
+                    } else {
+                        const index = selectedGoals.indexOf(goal);
+                        if (index > -1) selectedGoals.splice(index, 1);
+                    }
+                });
+            });
+
+            // Event listener pour le poids personnalisé des disques
+            const plateWeightSelect = document.getElementById('plateWeight');
+            if (plateWeightSelect) {
+                plateWeightSelect.addEventListener('change', (e) => {
+                    const customInput = document.getElementById('customPlateWeight');
+                    if (e.target.value === 'custom') {
+                        customInput.style.display = 'block';
+                        customInput.focus();
+                    } else {
+                        customInput.style.display = 'none';
+                        customInput.value = '';
+                    }
+                });
             }
 
-
-
-function updateBandsDisplay() {
-    const container = document.getElementById('bandsList');
-    if (container) {
-        container.innerHTML = '';
-    }
-}
-
-// Fonctions pour les haltères
-function showDumbbellSelector() {
-    document.getElementById('dumbbellModal').style.display = 'flex';
-    // Cocher les poids déjà sélectionnés
-    selectedDumbbells.forEach(weight => {
-        const checkbox = document.querySelector(`#dumbbellModal input[value="${weight}"]`);
-        if (checkbox) checkbox.checked = true;
-    });
-}
-
-function closeDumbbellModal() {
-    document.getElementById('dumbbellModal').style.display = 'none';
-}
-
-function confirmDumbbellSelection() {
-    selectedDumbbells = [];
-    document.querySelectorAll('#dumbbellModal input:checked').forEach(checkbox => {
-        selectedDumbbells.push(parseFloat(checkbox.value));
-    });
-    selectedDumbbells.sort((a, b) => a - b);
-    updateDumbbellDisplay();
-    closeDumbbellModal();
-}
-
-function updateDumbbellDisplay() {
-    const container = document.getElementById('selectedDumbbells');
-    if (selectedDumbbells.length === 0) {
-        container.innerHTML = '<span style="color: var(--gray); font-size: 0.875rem;">Aucun poids sélectionné</span>';
-    } else {
-        container.innerHTML = selectedDumbbells
-            .map(w => `<div class="chip selected">${w} kg</div>`)
-            .join('');
-    }
-}
-
-// Fonctions pour les élastiques
-function addResistanceBand() {
-    const bandId = Date.now();
-    const bandHtml = `
-        <div class="band-input" data-band-id="${bandId}">
-            <input type="text" class="form-input" placeholder="Couleur" id="bandColor${bandId}">
-            <input type="text" class="form-input" placeholder="Résistance (kg)" id="bandResistance${bandId}" style="width: 150px;">
-            <button onclick="removeBand(${bandId})">×</button>
-        </div>
-    `;
-    document.getElementById('bandsList').insertAdjacentHTML('beforeend', bandHtml);
-}
-
-function removeBand(bandId) {
-    document.querySelector(`[data-band-id="${bandId}"]`).remove();
-}
-
-function collectBandsData() {
-    resistanceBands = [];
-    document.querySelectorAll('.band-input').forEach(bandDiv => {
-        const bandId = bandDiv.dataset.bandId;
-        const color = document.getElementById(`bandColor${bandId}`).value;
-        const resistance = parseCommaNumber(document.getElementById(`bandResistance${bandId}`).value);
-        
-        if (color && !isNaN(resistance)) {
-            resistanceBands.push({ color, resistance });
-        }
-    });
-}
-
-// Fonction pour parser les nombres avec virgules
-function parseCommaNumber(str) {
-    if (!str) return NaN;
-    // Remplacer les virgules par des points
-    return parseFloat(str.replace(',', '.'));
-}
-
+            // Charger l'utilisateur existant
+            const userId = localStorage.getItem('userId');
+            if (userId) {
+                loadUser(userId);
+            }
         });
 
-        // Navigation entre vues
+        // Fonctions de navigation
         function showView(viewName) {
-            // Masquer toutes les vues
             document.querySelectorAll('.onboarding, .dashboard, .workout-view').forEach(view => {
                 view.classList.remove('active');
             });
 
-            // Afficher la vue demandée
             const view = document.getElementById(viewName + 'View');
             if (view) {
                 view.classList.add('active');
             }
 
-            // Mettre à jour la navigation
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
             
-            // Activer l'élément de navigation correspondant
             const navItem = document.querySelector(`.nav-item[onclick*="${viewName}"]`);
             if (navItem) {
                 navItem.classList.add('active');
             }
 
-            // Charger les données si nécessaire
             if (viewName === 'dashboard' && currentUser) {
                 loadDashboard();
             }
         }
 
-        // Onboarding - Navigation
         function nextStep() {
-            // Validation
             if (!validateStep(currentStep)) {
                 return;
             }
 
-            // Masquer l'étape actuelle
             document.getElementById(`step${currentStep}`).classList.remove('active');
-            
-            // Passer à l'étape suivante
             currentStep++;
             
-            // Afficher la nouvelle étape
             setTimeout(() => {
                 document.getElementById(`step${currentStep}`).classList.add('active');
                 updateProgressBar();
                 
-                // Si dernière étape, afficher le récapitulatif
                 if (currentStep === 4) {
                     showProfileSummary();
                 }
             }, 300);
         }
 
-        function previousStep() {
+        function prevStep() {
             document.getElementById(`step${currentStep}`).classList.remove('active');
             currentStep--;
+            
             setTimeout(() => {
                 document.getElementById(`step${currentStep}`).classList.add('active');
                 updateProgressBar();
             }, 300);
-        }
-
-        function updateProgressBar() {
-            document.querySelectorAll('.progress-step').forEach((step, index) => {
-                if (index < currentStep) {
-                    step.classList.add('completed');
-                } else {
-                    step.classList.remove('completed');
-                }
-            });
         }
 
         function validateStep(step) {
@@ -1199,112 +1250,159 @@ function parseCommaNumber(str) {
                         return false;
                     }
                     return true;
-                
+                    
                 case 2:
                     if (selectedGoals.length === 0) {
                         showToast('Veuillez sélectionner au moins un objectif', 'error');
                         return false;
                     }
                     return true;
-                
+                    
                 case 3:
                     if (selectedEquipment.length === 0) {
-                        showToast('Veuillez sélectionner votre équipement', 'error');
+                        showToast('Veuillez sélectionner au moins un équipement', 'error');
                         return false;
                     }
                     return true;
-                
+                    
                 default:
                     return true;
             }
         }
 
-function showProfileSummary() {
-    const name = document.getElementById('userName').value;
-    const age = document.getElementById('userAge').value;
-    const experience = document.getElementById('experienceLevel').value;
-    
-    let equipmentDetails = '';
-    if (selectedDumbbells.length > 0) {
-        equipmentDetails += `<br><strong>Haltères:</strong> ${selectedDumbbells.join(', ')} kg`;
-    }
-    if (selectedEquipment.includes('barbell')) {
-        const standardBar = parseCommaNumber(document.getElementById('standardBarWeight').value) || 20;
-        equipmentDetails += `<br><strong>Barre standard:</strong> ${standardBar} kg`;
-        if (selectedPlates.length > 0) {
-            equipmentDetails += `<br><strong>Disques:</strong> ${selectedPlates.join(', ')} kg`;
+        function updateProgressBar() {
+            const progress = (currentStep / 4) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
         }
-    }
-    if (resistanceBands.length > 0) {
-        collectBandsData();
-        equipmentDetails += `<br><strong>Élastiques:</strong> ${resistanceBands.map(b => `${b.color} (${b.resistance}kg)`).join(', ')}`;
-    }
-    
-    const summary = `
-        <strong>Nom:</strong> ${name}<br>
-        <strong>Âge:</strong> ${age} ans<br>
-        <strong>Expérience:</strong> ${experience}<br>
-        <strong>Objectifs:</strong> ${selectedGoals.join(', ')}<br>
-        <strong>Équipement:</strong> ${selectedEquipment.join(', ')}
-        ${equipmentDetails}
-    `;
-    
-    document.getElementById('profileSummary').innerHTML = summary;
-}
 
-async function completeOnboarding() {
-    // Collecter les données des élastiques
-    collectBandsData();
-    
-    const userData = {
-        name: document.getElementById('userName').value,
-        age: parseInt(document.getElementById('userAge').value),
-        experience_level: document.getElementById('experienceLevel').value,
-        goals: selectedGoals,
-        available_equipment: selectedEquipment,
-        dumbbell_weights: selectedDumbbells,
-        barbell_weights: selectedEquipment.includes('barbell') ? {
-            standard_bar: parseCommaNumber(document.getElementById('standardBarWeight').value) || 20,
-            ez_bar: parseCommaNumber(document.getElementById('ezBarWeight').value) || 10,
-            plates: selectedPlates
-        } : null,
-        resistance_bands: resistanceBands
-    };
-
-    try {
-        const response = await fetch(`${API_URL}/api/users`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userData)
-        });
-
-        if (response.ok) {
-            const user = await response.json();
-            currentUser = user;
-            localStorage.setItem('userId', user.id);
+        function showProfileSummary() {
+            const name = document.getElementById('userName').value;
+            const age = document.getElementById('userAge').value;
+            const experience = document.getElementById('experienceLevel').value;
             
-            document.getElementById('userInitial').textContent = user.name[0].toUpperCase();
+            const bands = [];
+            document.querySelectorAll('.band-input').forEach(bandDiv => {
+                const bandId = bandDiv.dataset.bandId;
+                const color = document.getElementById(`bandColor${bandId}`)?.value;
+                const resistance = document.getElementById(`bandResistance${bandId}`)?.value;
+                if (color && resistance) {
+                    bands.push(`${color} (${resistance}kg)`);
+                }
+            });
             
-            showToast('Profil créé avec succès !', 'success');
-            showView('dashboard');
-        } else {
-            const error = await response.json();
-            showToast(error.detail || 'Erreur lors de la création du profil', 'error');
+            let equipmentDetails = '';
+            if (window.selectedDumbbells && window.selectedDumbbells.length > 0) {
+                equipmentDetails += `<br><strong>Haltères:</strong> ${window.selectedDumbbells.join(', ')} kg`;
+            }
+            if (selectedEquipment.includes('barbell')) {
+                const standardBar = document.getElementById('standardBarWeight')?.value || '20';
+                equipmentDetails += `<br><strong>Barre standard:</strong> ${standardBar} kg`;
+                const plateWeights = Object.keys(plateConfiguration).map(w => parseFloat(w)).sort((a, b) => a - b);
+                if (plateWeights.length > 0) {
+                    equipmentDetails += `<br><strong>Disques:</strong> ${plateWeights.join(', ')} kg`;
+                }
+            }
+            if (bands.length > 0) {
+                equipmentDetails += `<br><strong>Élastiques:</strong> ${bands.join(', ')}`;
+            }
+            
+            const summary = `
+                <strong>Nom:</strong> ${name}<br>
+                <strong>Âge:</strong> ${age} ans<br>
+                <strong>Expérience:</strong> ${experience}<br>
+                <strong>Objectifs:</strong> ${selectedGoals.join(', ')}<br>
+                <strong>Équipement:</strong> ${selectedEquipment.join(', ')}
+                ${equipmentDetails}
+            `;
+            
+            document.getElementById('profileSummary').innerHTML = summary;
         }
-    } catch (error) {
-        console.error('Erreur:', error);
-        showToast('Erreur de connexion', 'error');
-    }
-}
+
+        function collectBarbellData() {
+            if (!selectedEquipment.includes('barbell')) return null;
+            
+            const standardBar = parseCommaNumber(document.getElementById('standardBarWeight').value) || 20;
+            const ezBar = parseCommaNumber(document.getElementById('ezBarWeight').value) || 10;
+            
+            const plates = [];
+            for (const [weight, count] of Object.entries(plateConfiguration)) {
+                plates.push({
+                    weight: parseFloat(weight),
+                    count: count
+                });
+            }
+            
+            return {
+                standard_bar: standardBar,
+                ez_bar: ezBar,
+                plates: plates
+            };
+        }
+
+        async function completeOnboarding() {
+            const bands = [];
+            document.querySelectorAll('.band-input').forEach(bandDiv => {
+                const bandId = bandDiv.dataset.bandId;
+                const colorInput = document.getElementById(`bandColor${bandId}`);
+                const resistanceInput = document.getElementById(`bandResistance${bandId}`);
+                
+                if (colorInput && resistanceInput) {
+                    const color = colorInput.value;
+                    const resistance = parseFloat(resistanceInput.value.replace(',', '.'));
+                    
+                    if (color && !isNaN(resistance) && resistance > 0) {
+                        bands.push({ color, resistance });
+                    }
+                }
+            });
+            
+            const userData = {
+                name: document.getElementById('userName').value,
+                age: parseInt(document.getElementById('userAge').value),
+                experience_level: document.getElementById('experienceLevel').value,
+                goals: selectedGoals,
+                available_equipment: selectedEquipment,
+                dumbbell_weights: window.selectedDumbbells || [],
+                barbell_weights: collectBarbellData(),
+                resistance_bands: bands
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    currentUser = user;
+                    localStorage.setItem('userId', user.id);
+                    
+                    document.getElementById('userInitial').textContent = user.name[0].toUpperCase();
+                    
+                    showToast('Profil créé avec succès !', 'success');
+                    showView('dashboard');
+                } else {
+                    const error = await response.json();
+                    showToast(error.detail || 'Erreur lors de la création du profil', 'error');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showToast('Erreur de connexion', 'error');
+            }
+        }
 
         async function loadUser(userId) {
             try {
-                const response = await fetch(`${API_URL}/api/users/${userId}`);
+                const response = await fetch(`${API_URL}/users/${userId}`);
                 if (response.ok) {
                     currentUser = await response.json();
                     document.getElementById('userInitial').textContent = currentUser.name[0].toUpperCase();
+                    document.getElementById('userInitial').style.display = 'flex';
+                    showView('dashboard');
                 } else {
                     localStorage.removeItem('userId');
                     showView('onboarding');
@@ -1316,14 +1414,12 @@ async function completeOnboarding() {
 
         async function loadDashboard() {
             try {
-                const response = await fetch(`${API_URL}/api/users/${currentUser.id}/stats`);
+                const response = await fetch(`${API_URL}/stats/${currentUser.id}`);
                 if (response.ok) {
                     const stats = await response.json();
                     document.getElementById('totalWorkouts').textContent = stats.total_workouts;
                     document.getElementById('weekWorkouts').textContent = stats.week_workouts;
                     document.getElementById('totalVolume').textContent = Math.round(stats.total_volume).toLocaleString();
-                    
-                    // Calculer la série (à implémenter)
                     document.getElementById('currentStreak').textContent = '0';
                 }
             } catch (error) {
@@ -1331,7 +1427,6 @@ async function completeOnboarding() {
             }
         }
 
-        // Sélection du mode d'entraînement
         function selectMode(mode) {
             workoutMode = mode;
             document.querySelectorAll('.mode-card').forEach(card => {
@@ -1347,7 +1442,7 @@ async function completeOnboarding() {
             }
 
             try {
-                const response = await fetch(`${API_URL}/api/workouts`, {
+                const response = await fetch(`${API_URL}/workouts`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1374,184 +1469,25 @@ async function completeOnboarding() {
             }
         }
 
-        // Timer
-        function toggleTimer() {
-            if (timerInterval) {
-                pauseTimer();
-            } else {
-                startTimer();
-            }
+        function loadExerciseSelector() {
+            // À implémenter
         }
 
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                timerSeconds++;
-                updateTimerDisplay();
-            }, 1000);
-            
-            // Changer l'icône
-            const btn = document.querySelector('.timer-btn.play');
-            btn.classList.remove('play');
-            btn.classList.add('pause');
-            btn.innerHTML = `
-                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                </svg>
-            `;
+        function loadProgramWorkout() {
+            // À implémenter
         }
 
-        function pauseTimer() {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            
-            // Changer l'icône
-            const btn = document.querySelector('.timer-btn.pause');
-            btn.classList.remove('pause');
-            btn.classList.add('play');
-            btn.innerHTML = `
-                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                </svg>
-            `;
-        }
-
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timerSeconds / 60);
-            const seconds = timerSeconds % 60;
-            document.getElementById('timerDisplay').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        function finishSet() {
-            pauseTimer();
-            // Logique pour terminer la série
-            showToast('Série terminée !', 'success');
-            timerSeconds = 0;
-            updateTimerDisplay();
-        }
-
-
-
-
-
-
-
-// Initialisation des événements - UN SEUL BLOC
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Initialisation des événements...'); // Pour debug
-    
-    // Gestion des objectifs
-    const goalChips = document.querySelectorAll('.chip[data-goal]');
-    console.log('Objectifs trouvés:', goalChips.length); // Pour debug
-    
-    goalChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            console.log('Clic sur objectif:', chip.dataset.goal); // Pour debug
-            chip.classList.toggle('selected');
-            const goal = chip.dataset.goal;
-            
-            if (chip.classList.contains('selected')) {
-                selectedGoals.push(goal);
-            } else {
-                selectedGoals = selectedGoals.filter(g => g !== goal);
-            }
-            console.log('Objectifs sélectionnés:', selectedGoals); // Pour debug
-        });
-    });
-
-    // Gestion des équipements
-    const equipmentChips = document.querySelectorAll('.chip[data-equipment]');
-    equipmentChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            chip.classList.toggle('selected');
-            const equipment = chip.dataset.equipment;
-            
-            if (chip.classList.contains('selected')) {
-                selectedEquipment.push(equipment);
-                // Afficher la configuration correspondante
-                const configElement = document.getElementById(`${equipment.replace('_', '')}Config`);
-                if (configElement) configElement.style.display = 'block';
-            } else {
-                selectedEquipment = selectedEquipment.filter(e => e !== equipment);
-                // Masquer la configuration
-                const configElement = document.getElementById(`${equipment.replace('_', '')}Config`);
-                if (configElement) {
-                    configElement.style.display = 'none';
-                    // Réinitialiser les données
-                    if (equipment === 'dumbbells') {
-                        selectedDumbbells = [];
-                        updateDumbbellDisplay();
-                    } else if (equipment === 'barbell') {
-                        selectedPlates = [];
-                        document.querySelectorAll('.plate-chip').forEach(c => c.classList.remove('selected'));
-                    } else if (equipment === 'resistance_bands') {
-                        resistanceBands = [];
-                        const bandsList = document.getElementById('bandsList');
-                        if (bandsList) bandsList.innerHTML = '';
-                    }
-                }
-            }
-        });
-    });
-
-    // Gestion des disques de barre
-    const plateChips = document.querySelectorAll('.plate-chip');
-    plateChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            chip.classList.toggle('selected');
-            const weight = parseFloat(chip.dataset.plate);
-            
-            if (chip.classList.contains('selected')) {
-                selectedPlates.push(weight);
-            } else {
-                selectedPlates = selectedPlates.filter(w => w !== weight);
-            }
-        });
-    });
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // Notifications toast
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
+            toast.className = 'toast';
             toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                bottom: 100px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: ${type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--secondary)' : 'var(--primary)'};
-                color: white;
-                padding: 1rem 2rem;
-                border-radius: var(--radius);
-                box-shadow: var(--shadow);
-                z-index: 9999;
-                animation: slideIn 0.3s ease-out;
-            `;
+            toast.style.background = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--secondary)' : 'var(--primary)';
+            toast.style.color = 'white';
+            toast.style.padding = '1rem 2rem';
+            toast.style.borderRadius = 'var(--radius)';
+            toast.style.boxShadow = 'var(--shadow)';
+            toast.style.zIndex = '9999';
+            toast.style.animation = 'slideIn 0.3s ease-out';
             
             document.body.appendChild(toast);
             
@@ -1564,6 +1500,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Service Worker pour PWA
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(console.error);
+        }
+
+        // Initialiser l'affichage
+        if (!localStorage.getItem('userId')) {
+            document.getElementById('progressContainer').style.display = 'block';
+            updateProgressBar();
         }
     </script>
 </body>
