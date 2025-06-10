@@ -7,11 +7,13 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
+
 import json
 import os
 
 from backend.database import engine, get_db, SessionLocal
-from models import Base, User, Exercise, Workout, Set
+from backend.models import Base, User, Exercise, Workout, Set
+from backend.routes import router as ml_router
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -43,6 +45,7 @@ async def lifespan(app: FastAPI):
     # Shutdown (nothing to do)
 
 app = FastAPI(title="Fitness Coach API", lifespan=lifespan)
+app.include_router(ml_router)
 
 # CORS for local network access
 app.add_middleware(
