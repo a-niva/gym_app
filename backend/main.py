@@ -3,7 +3,8 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from sqlalchemy import create_engine, text
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
@@ -17,6 +18,15 @@ from backend.routes import router as ml_router
 
 # Create tables
 Base.metadata.create_all(bind=engine)
+
+# Migration temporaire - À RETIRER APRÈS EXÉCUTION
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS barbell_weights JSON"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resistance_bands JSON"))
+        conn.commit()
+except Exception as e:
+    print(f"Migration already applied or error: {e}")
 
 # Lifespan event handler
 @asynccontextmanager

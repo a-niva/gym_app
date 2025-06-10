@@ -254,29 +254,45 @@ createApp({
             }
         },
         
-        calculateAvailableWeights(exerciseType) {
-            const weights = [];
-            if (exerciseType.includes('barbell')) {
-                const barWeight = this.equipmentDetails.barbell_bar_weight;
-                weights.push(barWeight);
+        calculateAvailableWeights(exercise) {
+            const equipmentNeeded = exercise.equipment;
+            let weights = [];
+            
+            if (equipmentNeeded.includes('dumbbells') && currentUser.dumbbell_weights) {
+                weights = [...currentUser.dumbbell_weights];
+            } else if (equipmentNeeded.includes('barbell') && currentUser.barbell_weights) {
+                const barWeight = currentUser.barbell_weights.standard_bar || 20;
+                const plates = currentUser.barbell_weights.plates || [];
                 
-                // Calculer toutes les combinaisons possibles avec 2 côtés
-                const plates = this.equipmentDetails.available_plates;
+                // Calculer toutes les combinaisons possibles
+                weights = [barWeight]; // Barre seule
+                
+                // Générer toutes les combinaisons de poids possibles
                 for (let i = 0; i < plates.length; i++) {
-                    for (let j = i; j < plates.length; j++) {
-                        weights.push(barWeight + (plates[i] + plates[j]) * 2);
+                    const plateWeight = plates[i];
+                    // On peut mettre jusqu'à 6 disques de chaque poids (3 de chaque côté)
+                    for (let count = 1; count <= 6; count++) {
+                        weights.push(barWeight + (plateWeight * count));
                     }
                 }
-            } else if (exerciseType.includes('dumbbell')) {
-                const barWeight = this.equipmentDetails.dumbbell_bar_weight;
-                const multiplier = this.equipmentDetails.usePairsForDumbbells ? 2 : 1;
                 
-                this.equipmentDetails.available_plates.forEach(plate => {
-                    weights.push((barWeight + plate * 2) * multiplier);
-                });
+                // Combinaisons de différents disques
+                for (let i = 0; i < plates.length; i++) {
+                    for (let j = i + 1; j < plates.length; j++) {
+                        weights.push(barWeight + (plates[i] * 2) + (plates[j] * 2));
+                    }
+                }
+                
+                // Trier et éliminer les doublons
+                weights = [...new Set(weights)].sort((a, b) => a - b);
+            } else if (equipmentNeeded.includes('resistance_bands') && currentUser.resistance_bands) {
+                weights = currentUser.resistance_bands.map(band => band.resistance);
+            } else if (equipmentNeeded.includes('bodyweight')) {
+                weights = [0]; // Poids du corps
             }
-            return [...new Set(weights)].sort((a, b) => a - b);
-        },
+            
+            return weights;
+        }
         
         // Init
         async init() {

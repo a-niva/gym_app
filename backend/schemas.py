@@ -1,4 +1,4 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
@@ -21,7 +21,8 @@ class UserCreate(BaseModel):
     barbell_weights: Optional[EquipmentDetails] = None
     resistance_bands: Optional[List[ResistanceBand]] = []
     
-    @validator('dumbbell_weights', pre=True)
+    @field_validator('dumbbell_weights', mode='before')
+    @classmethod
     def validate_dumbbell_weights(cls, v):
         if isinstance(v, list):
             return [float(w) for w in v]
