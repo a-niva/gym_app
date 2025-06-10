@@ -274,6 +274,8 @@ createApp({
                     for (let count = 1; count <= 6; count++) {
                         weights.push(barWeight + (plateWeight * count));
                     }
+                    // Limiter à des poids réalistes (max 500kg)
+                    weights = weights.filter(w => w <= 500);
                 }
                 
                 // Combinaisons de différents disques

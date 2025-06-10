@@ -19,14 +19,7 @@ from backend.routes import router as ml_router
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-# Migration temporaire - À RETIRER APRÈS EXÉCUTION
-try:
-    with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS barbell_weights JSON"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resistance_bands JSON"))
-        conn.commit()
-except Exception as e:
-    print(f"Migration already applied or error: {e}")
+
 
 # Lifespan event handler
 @asynccontextmanager
