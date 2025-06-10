@@ -1,0 +1,60 @@
+# ===== frontend/style.css =====
+[v-cloak] { display: none; }
+
+.btn-primary {
+    @apply bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors;
+}
+
+.btn-secondary {
+    @apply bg-gray-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors;
+}
+
+.btn-danger {
+    @apply bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors;
+}
+
+.input-field {
+    @apply w-full p-3 bg-gray-800 rounded-lg text-white border border-gray-700;
+}
+
+.label {
+    @apply block text-sm font-medium mb-2 text-gray-300;
+}
+
+.stat-card {
+    @apply bg-gray-800 p-4 rounded-lg text-center;
+}
+
+.action-card {
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all text-center;
+}
+
+.exercise-card {
+    @apply w-full p-3 bg-gray-800 rounded-lg text-left hover:bg-gray-700 transition-colors;
+}
+
+.loading-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+}
+
+/* Animations */
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+    opacity: 0;
+}
+
+/* PWA iOS fixes */
+body {
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* Safe area for notched phones */
+@supports (padding-top: env(safe-area-inset-top)) {
+    header {
+        padding-top: env(safe-area-inset-top);
+    }
+}

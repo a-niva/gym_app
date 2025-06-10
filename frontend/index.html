@@ -1,0 +1,320 @@
+# ===== frontend/index.html =====
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fitness Coach</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body class="bg-gray-900 text-white">
+    <div id="app" v-cloak>
+        <!-- Header -->
+        <header class="fixed top-0 w-full bg-gray-800 border-b border-gray-700 z-50">
+            <div class="flex justify-between items-center p-4">
+                <h1 class="text-xl font-bold">Fitness Coach</h1>
+                <nav class="flex gap-4">
+                    <button @click="view = 'home'" :class="{'text-blue-400': view === 'home'}">
+                        <i class="fas fa-home text-xl"></i>
+                    </button>
+                    <button @click="view = 'workout'" :class="{'text-blue-400': view === 'workout'}">
+                        <i class="fas fa-dumbbell text-xl"></i>
+                    </button>
+                    <button @click="view = 'history'" :class="{'text-blue-400': view === 'history'}">
+                        <i class="fas fa-history text-xl"></i>
+                    </button>
+                    <button @click="view = 'profile'" :class="{'text-blue-400': view === 'profile'}">
+                        <i class="fas fa-user text-xl"></i>
+                    </button>
+                </nav>
+            </div>
+        </header>
+        
+        <!-- Main content -->
+        <main class="pt-20 pb-4 px-4 min-h-screen">
+            <!-- Home -->
+            <div v-if="view === 'home'" class="space-y-6">
+                <div v-if="!user" class="text-center py-20">
+                    <i class="fas fa-dumbbell text-6xl text-gray-600 mb-4"></i>
+                    <h2 class="text-2xl mb-4">Bienvenue !</h2>
+                    <button @click="view = 'profile'" class="btn-primary">
+                        Créer mon profil
+                    </button>
+                </div>
+                
+                <div v-else>
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="stat-card">
+                            <div class="text-2xl font-bold">{{ stats.total_workouts }}</div>
+                            <div class="text-sm text-gray-400">Séances</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="text-2xl font-bold">{{ Math.round(stats.total_volume/1000) }}k</div>
+                            <div class="text-sm text-gray-400">Volume (kg)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="text-2xl font-bold">{{ stats.week_workouts }}</div>
+                            <div class="text-sm text-gray-400">Cette semaine</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <button @click="startWorkout()" class="w-full action-card">
+                        <i class="fas fa-play-circle text-3xl mb-2"></i>
+                        <h3 class="text-xl font-bold">Commencer l'entraînement</h3>
+                        <p class="text-sm opacity-80">Mode libre</p>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Workout -->
+            <div v-if="view === 'workout'" class="space-y-4">
+                <div v-if="!activeWorkout">
+                    <button @click="startWorkout()" class="btn-primary w-full">
+                        Démarrer une séance
+                    </button>
+                </div>
+                
+                <div v-else>
+                    <!-- Exercise selection -->
+                    <div v-if="!currentExercise">
+                        <h2 class="text-xl font-bold mb-4">Choisir un exercice</h2>
+                        
+                        <input v-model="searchQuery" placeholder="Rechercher..." 
+                               class="input-field mb-4">
+                        
+                        <div class="flex gap-2 overflow-x-auto pb-2 mb-4">
+                            <button v-for="part in bodyParts" 
+                                    @click="filterBodyPart = filterBodyPart === part ? '' : part"
+                                    :class="{'bg-blue-600': filterBodyPart === part}"
+                                    class="px-3 py-1 bg-gray-800 rounded-full text-sm whitespace-nowrap">
+                                {{ part }}
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-2 max-h-96 overflow-y-auto">
+                            <button v-for="ex in filteredExercises" 
+                                    @click="selectExercise(ex)"
+                                    class="exercise-card">
+                                <div class="font-medium">{{ ex.name_fr }}</div>
+                                <div class="text-sm text-gray-400">
+                                    {{ ex.body_part }} • {{ ex.equipment.join(', ') }}
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <button @click="endWorkout()" class="btn-danger w-full mt-4">
+                            Terminer la séance
+                        </button>
+                    </div>
+                    
+                    <!-- Active exercise -->
+                    <div v-else>
+                        <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                            <h3 class="text-xl font-bold">{{ currentExercise.name_fr }}</h3>
+                            <p class="text-gray-400">{{ currentExercise.body_part }}</p>
+                        </div>
+                        
+                        <!-- Timer -->
+                        <div v-if="restTimer > 0" class="text-center py-8">
+                            <div class="text-6xl font-bold mb-4" 
+                                 :class="{'text-red-500': restTimer <= 10}">
+                                {{ restTimer }}
+                            </div>
+                            <p class="text-gray-400 mb-4">Temps de repos</p>
+                            <button @click="skipRest()" class="text-blue-400">
+                                Passer <i class="fas fa-forward"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Set form -->
+                        <div v-else class="space-y-4">
+                            <h4 class="font-medium">Série {{ currentSet.set_number }}</h4>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="label">Poids (kg)</label>
+                                    <select v-model.number="currentSet.weight" class="input-field">
+                                        <option v-for="w in calculateAvailableWeights(currentExercise.equipment)" 
+                                                :value="w">{{ w }} kg</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="label">Répétitions</label>
+                                    <input v-model.number="currentSet.actual_reps" 
+                                           type="number"
+                                           class="input-field">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="label">Fatigue ({{ currentSet.fatigue_level }}/10)</label>
+                                <input v-model.number="currentSet.fatigue_level" 
+                                       type="range" min="1" max="10"
+                                       class="w-full">
+                            </div>
+                            
+                            <div>
+                                <label class="label">Effort perçu ({{ currentSet.perceived_exertion }}/10)</label>
+                                <input v-model.number="currentSet.perceived_exertion" 
+                                       type="range" min="1" max="10"
+                                       class="w-full">
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <button @click="skipSet()" class="btn-secondary">
+                                    Passer
+                                </button>
+                                <button @click="completeSet()" class="btn-primary">
+                                    Valider
+                                </button>
+                            </div>
+                            
+                            <button @click="finishExercise()" class="btn-secondary w-full">
+                                Terminer l'exercice
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- History -->
+            <div v-if="view === 'history'" class="space-y-4">
+                <h2 class="text-2xl font-bold">Historique</h2>
+                
+                <div v-if="workoutHistory.length === 0" class="text-center py-20 text-gray-400">
+                    <i class="fas fa-history text-4xl mb-4"></i>
+                    <p>Aucune séance enregistrée</p>
+                </div>
+                
+                <div v-else class="space-y-3">
+                    <div v-for="workout in workoutHistory" 
+                         class="bg-gray-800 p-4 rounded-lg">
+                        <div class="flex justify-between mb-2">
+                            <div>
+                                <div class="font-medium">{{ formatDate(workout.date) }}</div>
+                                <div class="text-sm text-gray-400">{{ workout.exercises.join(', ') }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold">{{ Math.round(workout.total_volume) }} kg</div>
+                                <div class="text-sm text-gray-400">{{ workout.total_sets }} séries</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile -->
+            <div v-if="view === 'profile'" class="space-y-4">
+                <h2 class="text-2xl font-bold">{{ user ? 'Mon Profil' : 'Créer mon profil' }}</h2>
+                
+                <form @submit.prevent="saveProfile" class="space-y-4">
+                    <div>
+                        <label class="label">Nom</label>
+                        <input v-model="profile.name" required class="input-field">
+                    </div>
+                    
+                    <div>
+                        <label class="label">Âge</label>
+                        <input v-model.number="profile.age" type="number" required class="input-field">
+                    </div>
+                    
+                    <div>
+                        <label class="label">Niveau</label>
+                        <select v-model="profile.experience_level" required class="input-field">
+                            <option value="beginner">Débutant</option>
+                            <option value="intermediate">Intermédiaire</option>
+                            <option value="advanced">Avancé</option>
+                            <option value="elite">Elite</option>
+                            <option value="extreme">Extrême</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="label">Objectifs</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" value="strength" v-model="profile.goals" class="mr-2">
+                                Force
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="hypertrophy" v-model="profile.goals" class="mr-2">
+                                Hypertrophie
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="endurance" v-model="profile.goals" class="mr-2">
+                                Endurance
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="weight_loss" v-model="profile.goals" class="mr-2">
+                                Perte de poids
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="label">Équipement disponible</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" value="dumbbells" v-model="profile.available_equipment" class="mr-2">
+                                Haltères
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="barbell" v-model="profile.available_equipment" class="mr-2">
+                                Barre
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="bodyweight" v-model="profile.available_equipment" class="mr-2">
+                                Poids du corps
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="cable machine" v-model="profile.available_equipment" class="mr-2">
+                                Câbles
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div v-if="profile.available_equipment.includes('dumbbells')">
+                        <label class="label">Poids des haltères (kg)</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <label v-for="w in [2,4,6,8,10,12,14,16,18,20,25,30]" 
+                                   class="flex items-center justify-center p-2 bg-gray-800 rounded">
+                                <input type="checkbox" :value="w" v-model="profile.dumbbell_weights" class="mr-1">
+                                {{ w }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-full">
+                        {{ user ? 'Mettre à jour' : 'Créer mon profil' }}
+                    </button>
+                </form>
+            </div>
+        </main>
+        
+        <!-- Loading -->
+        <div v-if="loading" class="loading-overlay">
+            <i class="fas fa-spinner fa-spin text-4xl"></i>
+        </div>
+    </div>
+    
+    <script src="/app.js"></script>
+</body>
+</html>
