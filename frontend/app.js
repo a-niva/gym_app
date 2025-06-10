@@ -253,7 +253,9 @@ createApp({
                 });
             }
         },
-        
+
+
+                
         calculateAvailableWeights(exercise) {
             const equipmentNeeded = exercise.equipment;
             let weights = [];
@@ -294,7 +296,7 @@ createApp({
             }
             
             return weights;
-        }
+        },
         
         // Init
         async init() {

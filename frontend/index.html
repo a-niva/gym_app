@@ -65,7 +65,45 @@
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        
+        .plate-config-item {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
 
+        .plate-config-item .weight {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .plate-config-item input[type="number"] {
+            width: 80px;
+        }
+
+        .plate-config-item button {
+            padding: 0.4rem;
+            background: var(--danger);
+            border: none;
+            border-radius: 0.4rem;
+            color: white;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .plate-config-item button:hover {
+            opacity: 1;
+        }
+
+        .btn-danger {
+            background: var(--danger) !important;
+            color: white !important;
+        }
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -635,31 +673,79 @@
     </div>
     
     <!-- Configuration Barbell -->
-    <div class="equipment-config" id="barbellConfig" style="display: none;">
-        <h3 style="margin: 1.5rem 0 1rem;">Configuration de la barre</h3>
-        <div class="form-group">
-            <label class="form-label">Poids de la barre standard (kg)</label>
-            <input type="text" class="form-input" id="standardBarWeight" placeholder="20" value="20">
-            <small style="color: var(--gray);">Utilisez le point (.) pour les décimales</small>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Poids de la barre EZ (kg)</label>
-            <input type="text" class="form-input" id="ezBarWeight" placeholder="10" value="10">
-        </div>
-        <div class="form-group">
-            <label class="form-label">Disques disponibles (kg)</label>
-            <div class="chip-group">
-                <div class="chip plate-chip" data-plate="1.25">1.25</div>
-                <div class="chip plate-chip" data-plate="2.5">2.5</div>
-                <div class="chip plate-chip" data-plate="5">5</div>
-                <div class="chip plate-chip" data-plate="10">10</div>
-                <div class="chip plate-chip" data-plate="15">15</div>
-                <div class="chip plate-chip" data-plate="20">20</div>
-                <div class="chip plate-chip" data-plate="25">25</div>
-            </div>
-        </div>
+<div class="equipment-config" id="barbellConfig" style="display: none;">
+    <h3 style="margin: 1.5rem 0 1rem;">Configuration de la barre</h3>
+    
+    <!-- Poids des barres -->
+    <div class="form-group">
+        <label class="form-label">Poids de la barre olympique standard (kg)</label>
+        <input type="text" class="form-input" id="standardBarWeight" placeholder="20" value="20">
+        <small style="color: var(--gray);">Une barre olympique standard pèse généralement 20kg</small>
     </div>
     
+    <div class="form-group">
+        <label class="form-label">Poids de la barre EZ (kg)</label>
+        <input type="text" class="form-input" id="ezBarWeight" placeholder="7 à 10" value="10">
+        <small style="color: var(--gray);">Les barres EZ pèsent entre 7 et 12kg selon le modèle</small>
+    </div>
+    
+    <!-- Configuration des disques -->
+    <div class="form-group">
+        <label class="form-label">Disques disponibles</label>
+        <small style="color: var(--gray); display: block; margin-bottom: 1rem;">
+            Indiquez le nombre de disques que vous possédez pour chaque poids
+        </small>
+        
+        <div id="platesConfiguration" style="display: grid; gap: 0.75rem;">
+            <!-- Les disques seront ajoutés dynamiquement ici -->
+        </div>
+        
+        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="showPlateSelector()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Ajouter un type de disque
+        </button>
+    </div>
+</div>
+
+<!-- Modal pour ajouter des disques -->
+<div id="plateModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <h3>Ajouter des disques</h3>
+        <div class="form-group">
+            <label class="form-label">Poids du disque (kg)</label>
+            <select id="plateWeight" class="form-input">
+                <option value="">Sélectionner...</option>
+                <option value="0.5">0.5 kg</option>
+                <option value="1">1 kg</option>
+                <option value="1.25">1.25 kg</option>
+                <option value="2">2 kg</option>
+                <option value="2.5">2.5 kg</option>
+                <option value="5">5 kg</option>
+                <option value="10">10 kg</option>
+                <option value="15">15 kg</option>
+                <option value="20">20 kg</option>
+                <option value="25">25 kg</option>
+                <option value="custom">Autre...</option>
+            </select>
+            <input type="text" id="customPlateWeight" class="form-input" placeholder="Poids personnalisé (kg)" style="display: none; margin-top: 0.5rem;">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Nombre de disques</label>
+            <input type="number" id="plateCount" class="form-input" min="1" max="20" value="2" placeholder="2">
+            <small style="color: var(--gray);">Nombre total de disques de ce poids</small>
+        </div>
+        
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button class="btn btn-secondary" onclick="closePlateModal()">Annuler</button>
+            <button class="btn" onclick="confirmPlateAddition()">Ajouter</button>
+        </div>
+    </div>
+</div>
+
+
     <!-- Configuration Élastiques -->
     <div class="equipment-config" id="resistanceBandsConfig" style="display: none;">
         <h3 style="margin: 1.5rem 0 1rem;">Configuration des élastiques</h3>
