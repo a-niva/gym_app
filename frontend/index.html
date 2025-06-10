@@ -944,81 +944,6 @@
                 showView('onboarding');
             }
 
-            // Event listeners pour les chips
-// Un seul DOMContentLoaded pour tout gérer
-document.addEventListener('DOMContentLoaded', () => {
-    // Gestion des objectifs
-    document.querySelectorAll('.chip[data-goal]').forEach(chip => {
-        chip.addEventListener('click', () => {
-            chip.classList.toggle('selected');
-            const goal = chip.dataset.goal;
-            
-            if (chip.classList.contains('selected')) {
-                selectedGoals.push(goal);
-            } else {
-                selectedGoals = selectedGoals.filter(g => g !== goal);
-            }
-        });
-    });
-
-    // Gestion des équipements
-    document.querySelectorAll('.chip[data-equipment]').forEach(chip => {
-        chip.addEventListener('click', () => {
-            chip.classList.toggle('selected');
-            const equipment = chip.dataset.equipment;
-            
-            if (chip.classList.contains('selected')) {
-                selectedEquipment.push(equipment);
-                // Afficher la configuration correspondante
-                switch(equipment) {
-                    case 'dumbbells':
-                        document.getElementById('dumbbellsConfig').style.display = 'block';
-                        break;
-                    case 'barbell':
-                        document.getElementById('barbellConfig').style.display = 'block';
-                        break;
-                    case 'resistance_bands':
-                        document.getElementById('resistanceBandsConfig').style.display = 'block';
-                        break;
-                }
-            } else {
-                selectedEquipment = selectedEquipment.filter(e => e !== equipment);
-                // Masquer la configuration
-                switch(equipment) {
-                    case 'dumbbells':
-                        document.getElementById('dumbbellsConfig').style.display = 'none';
-                        selectedDumbbells = [];
-                        updateDumbbellDisplay();
-                        break;
-                    case 'barbell':
-                        document.getElementById('barbellConfig').style.display = 'none';
-                        selectedPlates = [];
-                        document.querySelectorAll('.plate-chip').forEach(c => c.classList.remove('selected'));
-                        break;
-                    case 'resistance_bands':
-                        document.getElementById('resistanceBandsConfig').style.display = 'none';
-                        resistanceBands = [];
-                        updateBandsDisplay();
-                        break;
-                }
-            }
-        });
-    });
-
-    // Gestion des disques de barre
-    document.querySelectorAll('.plate-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            chip.classList.toggle('selected');
-            const weight = parseFloat(chip.dataset.plate);
-            
-            if (chip.classList.contains('selected')) {
-                selectedPlates.push(weight);
-            } else {
-                selectedPlates = selectedPlates.filter(w => w !== weight);
-            }
-        });
-    });
-});
 
 
 function updateBandsDisplay() {
@@ -1418,6 +1343,110 @@ async function completeOnboarding() {
             timerSeconds = 0;
             updateTimerDisplay();
         }
+
+
+
+
+
+
+
+// Initialisation des événements - UN SEUL BLOC
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initialisation des événements...'); // Pour debug
+    
+    // Gestion des objectifs
+    const goalChips = document.querySelectorAll('.chip[data-goal]');
+    console.log('Objectifs trouvés:', goalChips.length); // Pour debug
+    
+    goalChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            console.log('Clic sur objectif:', chip.dataset.goal); // Pour debug
+            chip.classList.toggle('selected');
+            const goal = chip.dataset.goal;
+            
+            if (chip.classList.contains('selected')) {
+                selectedGoals.push(goal);
+            } else {
+                selectedGoals = selectedGoals.filter(g => g !== goal);
+            }
+            console.log('Objectifs sélectionnés:', selectedGoals); // Pour debug
+        });
+    });
+
+    // Gestion des équipements
+    const equipmentChips = document.querySelectorAll('.chip[data-equipment]');
+    equipmentChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chip.classList.toggle('selected');
+            const equipment = chip.dataset.equipment;
+            
+            if (chip.classList.contains('selected')) {
+                selectedEquipment.push(equipment);
+                // Afficher la configuration correspondante
+                const configElement = document.getElementById(`${equipment.replace('_', '')}Config`);
+                if (configElement) configElement.style.display = 'block';
+            } else {
+                selectedEquipment = selectedEquipment.filter(e => e !== equipment);
+                // Masquer la configuration
+                const configElement = document.getElementById(`${equipment.replace('_', '')}Config`);
+                if (configElement) {
+                    configElement.style.display = 'none';
+                    // Réinitialiser les données
+                    if (equipment === 'dumbbells') {
+                        selectedDumbbells = [];
+                        updateDumbbellDisplay();
+                    } else if (equipment === 'barbell') {
+                        selectedPlates = [];
+                        document.querySelectorAll('.plate-chip').forEach(c => c.classList.remove('selected'));
+                    } else if (equipment === 'resistance_bands') {
+                        resistanceBands = [];
+                        const bandsList = document.getElementById('bandsList');
+                        if (bandsList) bandsList.innerHTML = '';
+                    }
+                }
+            }
+        });
+    });
+
+    // Gestion des disques de barre
+    const plateChips = document.querySelectorAll('.plate-chip');
+    plateChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chip.classList.toggle('selected');
+            const weight = parseFloat(chip.dataset.plate);
+            
+            if (chip.classList.contains('selected')) {
+                selectedPlates.push(weight);
+            } else {
+                selectedPlates = selectedPlates.filter(w => w !== weight);
+            }
+        });
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // Notifications toast
         function showToast(message, type = 'info') {
