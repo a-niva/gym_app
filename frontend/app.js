@@ -133,242 +133,132 @@ function toggleEquipment(card) {
 
 function generateDetailedEquipmentConfig() {
     const container = document.getElementById('detailedEquipmentConfig');
-    let html = '';
     
-    // Barres
-    if (selectedEquipment.includes('barbell')) {
-        html += `
-            <div class="equipment-section">
-                <h3>🏋️ Configuration des barres et disques</h3>
-                
-                <!-- Barres -->
-                <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Types de barres</h4>
-                <div class="equipment-subsection">
-                    <div class="equipment-item-row">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="barbell_olympic" onchange="toggleBarType('olympique')">
-                            <span>Barre olympique (20kg)</span>
-                        </label>
-                        <input type="number" id="barbell_olympic_count" class="count-input" 
-                               min="0" max="10" value="0" placeholder="Nombre"
-                               onchange="updateBarCount('olympique', this.value)"
-                               style="display: none;">
+    // Structure HTML similaire à la démo mais adaptée à votre système
+    let html = `
+        <div class="equipment-categories">
+            ${selectedEquipment.map(eq => `
+                <div class="equipment-category selected" data-equipment="${eq}">
+                    <div class="equipment-icon">
+                        ${getEquipmentIcon(eq)}
                     </div>
-                    <div class="equipment-item-row">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="barbell_ez" onchange="toggleBarType('ez')">
-                            <span>Barre EZ/Curl (10kg)</span>
-                        </label>
-                        <input type="number" id="barbell_ez_count" class="count-input" 
-                               min="0" max="10" value="0" placeholder="Nombre"
-                               onchange="updateBarCount('ez', this.value)"
-                               style="display: none;">
-                    </div>
-                    <div class="equipment-item-row">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="barbell_short" onchange="toggleBarType('courte')">
-                            <span>Barres courtes (2.5kg chacune)</span>
-                        </label>
-                        <input type="number" id="barbell_short_count" class="count-input" 
-                               min="0" max="10" value="0" placeholder="Nombre"
-                               onchange="updateBarCount('courte', this.value)"
-                               style="display: none;">
-                    </div>
+                    <div class="equipment-name">${getEquipmentName(eq)}</div>
+                    <div class="equipment-status">À configurer</div>
                 </div>
-                
-                <!-- Disques -->
-                <h4 style="margin-top: 1.5rem; margin-bottom: 1rem;">Disques disponibles</h4>
-                <div class="equipment-subsection">
-                    <p style="color: var(--gray); margin-bottom: 1rem;">Pour chaque poids, indiquez combien vous avez de disques</p>
-                    <div class="disques-grid">
-                        ${[0.5, 1, 1.25, 2.5, 5, 10, 15, 20, 25].map(weight => `
-                            <div class="disque-item">
-                                <span class="disque-weight">${weight}kg</span>
-                                <input type="number" class="count-input-small" 
-                                       min="0" max="20" value="0" 
-                                       placeholder="0"
-                                       onchange="updateDisqueCount('${weight}', this.value)">
-                            </div>
-                        `).join('')}
-                        <div class="disque-item custom">
-                            <input type="number" class="custom-weight-input" 
-                                   min="0.1" max="50" step="0.1" 
-                                   placeholder="Autre kg" 
-                                   id="customDisqueWeight">
-                            <input type="number" class="count-input-small" 
-                                   min="0" max="20" value="0" 
-                                   placeholder="0"
-                                   onchange="addCustomDisque()">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Haltères
-    if (selectedEquipment.includes('dumbbells')) {
-        html += `
-            <div class="equipment-section">
-                <h3>🏋️‍♀️ Configuration des haltères</h3>
-                <div class="equipment-subsection">
-                    <p style="color: var(--gray); margin-bottom: 1rem;">Pour chaque poids, indiquez combien vous avez d'haltères</p>
-                    <div class="dumbbells-grid">
-                        ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30].map(weight => `
-                            <div class="dumbbell-item">
-                                <span class="dumbbell-weight">${weight}kg</span>
-                                <input type="number" class="count-input-small" 
-                                       min="0" max="10" value="0" 
-                                       placeholder="0"
-                                       onchange="updateDumbbellCount('${weight}', this.value)">
-                            </div>
-                        `).join('')}
-                        <div class="dumbbell-item custom">
-                            <input type="number" class="custom-weight-input" 
-                                   min="0.1" max="100" step="0.1" 
-                                   placeholder="Autre kg" 
-                                   id="customDumbbellWeight">
-                            <input type="number" class="count-input-small" 
-                                   min="0" max="10" value="0" 
-                                   placeholder="0"
-                                   onchange="addCustomDumbbell()">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Kettlebells
-    if (selectedEquipment.includes('kettlebell')) {
-        html += `
-            <div class="equipment-section">
-                <h3>🔔 Configuration des kettlebells</h3>
-                <div class="equipment-subsection">
-                    <p style="color: var(--gray); margin-bottom: 1rem;">Pour chaque poids, indiquez combien vous avez de kettlebells</p>
-                    <div class="kettlebell-grid">
-                        ${[4, 6, 8, 10, 12, 16, 20, 24, 28, 32].map(weight => `
-                            <div class="kettlebell-item">
-                                <span class="kettlebell-weight">${weight}kg</span>
-                                <input type="number" class="count-input-small" 
-                                       min="0" max="10" value="0" 
-                                       placeholder="0"
-                                       onchange="updateKettlebellCount('${weight}', this.value)">
-                            </div>
-                        `).join('')}
-                        <div class="kettlebell-item custom">
-                            <input type="number" class="custom-weight-input" 
-                                   min="0.1" max="100" step="0.1" 
-                                   placeholder="Autre kg" 
-                                   id="customKettlebellWeight">
-                            <input type="number" class="count-input-small" 
-                                   min="0" max="10" value="0" 
-                                   placeholder="0"
-                                   onchange="addCustomKettlebell()">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Élastiques
-    if (selectedEquipment.includes('resistance_bands')) {
-        html += `
-            <div class="equipment-section">
-                <h3>🟡 Configuration des élastiques</h3>
-                <div class="equipment-subsection">
-                    <p style="color: var(--gray); margin-bottom: 1rem;">Ajoutez vos élastiques avec leur résistance exacte</p>
-                    <div id="elastiquesList" class="elastiques-list"></div>
-                    <div class="elastique-add">
-                        <input type="text" id="elastiqueColor" placeholder="Couleur" class="form-input" style="width: 30%;">
-                        <input type="number" id="elastiqueResistance" placeholder="Résistance (kg)" 
-                               min="1" max="100" step="0.5" class="form-input" style="width: 40%;">
-                        <input type="number" id="elastiqueCount" placeholder="Nombre" 
-                               min="1" max="10" value="1" class="form-input" style="width: 20%;">
-                        <button onclick="addElastique()" class="btn-add">+</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Banc
-    if (selectedEquipment.includes('bench')) {
-        html += `
-            <div class="equipment-section">
-                <h3>🪑 Configuration du banc</h3>
-                <div class="equipment-subsection">
-                    <div class="equipment-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="bench_incline" 
-                                   onchange="equipmentConfig.banc.inclinable = this.checked">
-                            <span>Inclinable (positif)</span>
-                        </label>
-                    </div>
-                    <div class="equipment-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="bench_decline"
-                                   onchange="equipmentConfig.banc.declinable = this.checked">
-                            <span>Déclinable (négatif)</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Autres équipements
-    if (selectedEquipment.includes('pullup_bar') || selectedEquipment.includes('weighted_vest')) {
-        html += `
-            <div class="equipment-section">
-                <h3>🎯 Autres équipements</h3>
-                <div class="equipment-subsection">
-        `;
-        
-        if (selectedEquipment.includes('pullup_bar')) {
-            html += `
-                <div class="equipment-item">
-                    <label class="checkbox-label">
-                        <input type="checkbox" checked disabled>
-                        <span>✅ Barre de traction disponible</span>
-                    </label>
-                </div>
-            `;
-        }
-        
-        if (selectedEquipment.includes('weighted_vest')) {
-            html += `
-                <h4 style="margin-top: 1rem;">Lests disponibles</h4>
-                <div class="lest-section">
-                    <h5>Gilet lesté</h5>
-                    <div class="lest-inputs">
-                        <input type="number" placeholder="Poids (kg)" min="0.5" max="50" step="0.5"
-                               onchange="addLest('corps', this.value)" class="form-input">
-                    </div>
-                    
-                    <h5>Lests chevilles</h5>
-                    <div class="lest-inputs">
-                        <input type="number" placeholder="Poids (kg)" min="0.5" max="10" step="0.5"
-                               onchange="addLest('chevilles', this.value)" class="form-input">
-                    </div>
-                    
-                    <h5>Lests poignets</h5>
-                    <div class="lest-inputs">
-                        <input type="number" placeholder="Poids (kg)" min="0.5" max="5" step="0.5"
-                               onchange="addLest('poignets', this.value)" class="form-input">
-                    </div>
-                </div>
-            `;
-        }
-        
-        html += `
-                </div>
-            </div>
-        `;
-    }
+            `).join('')}
+        </div>
+        <div id="configPanels"></div>
+    `;
     
     container.innerHTML = html;
+    
+    // Auto-ouvrir les panels pour l'équipement sélectionné
+    selectedEquipment.forEach(eq => {
+        showConfigPanel(eq);
+    });
+}
+
+// Nouvelle fonction pour créer les panels dynamiquement
+function showConfigPanel(equipmentType) {
+    const panelsContainer = document.getElementById('configPanels');
+    const panel = document.createElement('div');
+    panel.className = 'config-panel';
+    panel.id = `panel-${equipmentType}`;
+    
+    switch(equipmentType) {
+        case 'barbell':
+            panel.innerHTML = createBarbellPanel();
+            break;
+        case 'dumbbells':
+            panel.innerHTML = createDumbbellsPanel();
+            break;
+        case 'resistance_bands':
+            panel.innerHTML = createBandsPanel();
+            break;
+        case 'bench':
+            panel.innerHTML = createBenchPanel();
+            break;
+        // Ajouter autres cas si nécessaire
+    }
+    
+    panelsContainer.appendChild(panel);
+}
+
+// Exemple de panel pour les haltères
+function createDumbbellsPanel() {
+    const commonWeights = [30, 25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2, 1];
+    
+    return `
+        <div class="config-header">
+            <div class="config-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                </svg>
+            </div>
+            <h3 class="config-title">Configuration des haltères</h3>
+        </div>
+        
+        <div class="weight-grid">
+            ${commonWeights.map(weight => `
+                <div class="weight-item">
+                    <div class="weight-value">${weight}kg</div>
+                    <input type="number" 
+                           class="weight-input" 
+                           placeholder="0" 
+                           min="0" 
+                           max="10"
+                           value="${equipmentConfig.dumbbells[weight] || 0}"
+                           onchange="updateDumbbellWeight(${weight}, this.value)">
+                </div>
+            `).join('')}
+            <div class="add-custom" onclick="addCustomDumbbell()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </div>
+        </div>
+    `;
+}
+
+
+// Fonction mise à jour pour les poids
+function updateDumbbellWeight(weight, count) {
+    const value = parseInt(count) || 0;
+    
+    if (value > 0) {
+        equipmentConfig.dumbbells[weight] = value;
+    } else {
+        delete equipmentConfig.dumbbells[weight];
+    }
+    
+    updateEquipmentStatus('dumbbells');
+}
+
+// Mise à jour du statut visuel
+function updateEquipmentStatus(type) {
+    const statusEl = document.querySelector(`[data-equipment="${type}"] .equipment-status`);
+    if (!statusEl) return;
+    
+    let isConfigured = false;
+    
+    switch(type) {
+        case 'dumbbells':
+            isConfigured = Object.keys(equipmentConfig.dumbbells).length > 0;
+            break;
+        case 'barbell':
+            isConfigured = Object.values(equipmentConfig.disques).some(v => v > 0);
+            break;
+        case 'resistance_bands':
+            isConfigured = equipmentConfig.elastiques.length > 0;
+            break;
+        case 'bench':
+            isConfigured = equipmentConfig.banc.inclinable || equipmentConfig.banc.declinable;
+            break;
+    }
+    
+    statusEl.textContent = isConfigured ? 'Configuré ✓' : 'À configurer';
+    statusEl.style.color = isConfigured ? '#10b981' : '#94a3b8';
 }
 
 // Fonctions de mise à jour de l'équipement
