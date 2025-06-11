@@ -634,12 +634,12 @@ select.form-input {
 .btn-add {
     width: 40px;
     height: 40px;
-    padding: 0;
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
     border: none;
-    border-radius: 50%;
-    font-size: 1.5rem;
+    border-radius: 8px;
+    font-size: 24px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -649,7 +649,7 @@ select.form-input {
 
 .btn-add:hover {
     transform: scale(1.1);
-    background: var(--primary-dark);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
 }
 
 .btn-remove {
@@ -1158,4 +1158,18 @@ select.form-input {
     font-size: 0.875rem;
     color: var(--gray-light);
     margin-bottom: 0.5rem;
+}
+
+/* Equipment Grid Square Layout */
+.equipment-grid-square {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .equipment-grid-square {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }

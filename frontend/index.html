@@ -91,91 +91,98 @@
                     </button>
                 </div>
             </div>
+<!-- Étape 3: Équipement de base -->
+<div class="onboarding-step" id="step3">
+    <h2>Votre équipement 🏋️</h2>
+    <p style="color: var(--gray); margin-bottom: 2rem;">Sélectionnez ce que vous avez à disposition</p>
+    
+    <div class="equipment-grid-square">
+        <div class="equipment-card" data-equipment="dumbbells" onclick="toggleEquipment(this)">
+            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+            </svg>
+            <div>Haltères</div>
+        </div>
+        
+        <div class="equipment-card" data-equipment="barbell" onclick="toggleEquipment(this)">
+            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18M8 6h8M7 18h10"/>
+            </svg>
+            <div>Barres & Disques</div>
+        </div>
+        
+        <div class="equipment-card" data-equipment="resistance_bands" onclick="toggleEquipment(this)">
+            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <div>Élastiques</div>
+        </div>
+        
+        <div class="equipment-card" data-equipment="bench" onclick="toggleEquipment(this)">
+            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v6H3zM3 12h18v9H3z"/>
+            </svg>
+            <div>Banc</div>
+        </div>
+        
+        <div class="equipment-card" data-equipment="pull_up_bar" onclick="toggleEquipment(this)">
+            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18M5 3v9m14-9v9"/>
+            </svg>
+            <div>Barre de traction</div>
+        </div>
+        
+        <div class="equipment-card" data-equipment="kettlebell" onclick="toggleEquipment(this)">
+            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="15" r="7" stroke-width="2"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8V4m-2 4h4"/>
+            </svg>
+            <div>Kettlebells</div>
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button class="btn btn-secondary" onclick="prevStep()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Retour
+        </button>
+        <button class="btn" onclick="nextStep()">
+            Continuer
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+    </div>
+</div>
 
-            <!-- Étape 3: Équipement de base -->
-            <div class="onboarding-step" id="step3">
-                <h2>Votre équipement 🏋️</h2>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Sélectionnez ce que vous avez à disposition</p>
-                
-                <div class="equipment-grid-square">
-                    <div class="equipment-card" data-equipment="dumbbells" onclick="toggleEquipment(this)">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
-                        </svg>
-                        <div>Haltères</div>
-                    </div>
-                    <div class="equipment-card" data-equipment="barbell" onclick="toggleEquipment(this)">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8m-4-8v16"/>
-                        </svg>
-                        <div>Barres</div>
-                    </div>
-                    <div class="equipment-card" data-equipment="resistance_bands" onclick="toggleEquipment(this)">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        <div>Élastiques</div>
-                    </div>
-                    <div class="equipment-card" data-equipment="bench" onclick="toggleEquipment(this)">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18m-9-9v18"/>
-                        </svg>
-                        <div>Banc</div>
-                    </div>
-                    <div class="equipment-card" data-equipment="pull_up_bar" onclick="toggleEquipment(this)">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14m-7 0v18"/>
-                        </svg>
-                        <div>Barre traction</div>
-                    </div>
-                    <div class="equipment-card" data-equipment="kettlebell" onclick="toggleEquipment(this)">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8a4 4 0 100 8 4 4 0 000-8z"/>
-                        </svg>
-                        <div>Kettlebells</div>
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button class="btn btn-secondary" onclick="prevStep()">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                        Retour
-                    </button>
-                    <button class="btn" onclick="nextStep()">
-                        Configurer en détail
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Étape 4: Configuration détaillée -->
-            <div class="onboarding-step" id="step4">
-                <h2>Configuration détaillée</h2>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Précisez votre équipement</p>
-                
-                <div id="detailedEquipmentConfig">
-                    <!-- Contenu généré dynamiquement -->
-                </div>
-                
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button class="btn btn-secondary" onclick="prevStep()">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                        Retour
-                    </button>
-                    <button class="btn" onclick="nextStep()">
-                        Valider
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+<!-- Étape 4: Configuration détaillée -->
+<div class="onboarding-step" id="step4">
+    <h2>Configuration détaillée 🔧</h2>
+    <p style="color: var(--gray); margin-bottom: 2rem;">Précisez votre équipement</p>
+    
+    <div id="detailedEquipmentConfig">
+        <!-- Contenu généré dynamiquement -->
+    </div>
+    
+    <div id="equipmentProgress" style="display: none;">0 / 0 configurés</div>
+    
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button class="btn btn-secondary" onclick="prevStep()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Retour
+        </button>
+        <button class="btn" onclick="nextStep()">
+            Valider
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+    </div>
+</div>
 
             <!-- Étape 5: Récapitulatif -->
             <div class="onboarding-step" id="step5">

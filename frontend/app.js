@@ -762,40 +762,65 @@ function addLest(type, weight) {
 }
 
 function validateDetailedConfig() {
-    // Valider barres et disques
+    let isValid = true;
+    let errors = [];
+    
+    // Valider selon l'équipement sélectionné
+    if (selectedEquipment.includes('dumbbells')) {
+        const dumbellCount = Object.keys(equipmentConfig.dumbbells).length;
+        if (dumbellCount === 0) {
+            errors.push('Veuillez ajouter au moins un poids d\'haltère');
+            isValid = false;
+        }
+    }
+    
     if (selectedEquipment.includes('barbell')) {
-        const hasBar = Object.values(equipmentConfig.barres).some(b => b.available && b.count > 0);
+        const hasBarbell = Object.values(equipmentConfig.barres).some(b => b.available && b.count > 0);
         const hasDisques = Object.keys(equipmentConfig.disques).length > 0;
         
-        if (!hasBar) {
-            showToast('Veuillez sélectionner au moins un type de barre', 'error');
-            return false;
+        if (!hasBarbell) {
+            errors.push('Veuillez sélectionner au moins un type de barre');
+            isValid = false;
         }
         if (!hasDisques) {
-            showToast('Veuillez ajouter au moins un poids de disque', 'error');
-            return false;
+            errors.push('Veuillez ajouter au moins un poids de disque');
+            isValid = false;
         }
     }
     
-    // Valider haltères
-    if (selectedEquipment.includes('dumbbells') && Object.keys(equipmentConfig.dumbbells).length === 0) {
-        showToast('Veuillez ajouter au moins un poids d\'haltère', 'error');
-        return false;
+    if (selectedEquipment.includes('resistance_bands')) {
+        if (equipmentConfig.elastiques.length === 0) {
+            errors.push('Veuillez ajouter au moins un élastique');
+            isValid = false;
+        }
     }
     
-    // Valider kettlebells
-    if (selectedEquipment.includes('kettlebell') && Object.keys(equipmentConfig.kettlebells).length === 0) {
-        showToast('Veuillez ajouter au moins un poids de kettlebell', 'error');
-        return false;
+    if (selectedEquipment.includes('kettlebell')) {
+        const kettlebellCount = Object.keys(equipmentConfig.kettlebells).length;
+        if (kettlebellCount === 0) {
+            errors.push('Veuillez ajouter au moins un poids de kettlebell');
+            isValid = false;
+        }
     }
     
-    // Valider élastiques
-    if (selectedEquipment.includes('resistance_bands') && equipmentConfig.elastiques.length === 0) {
-        showToast('Veuillez ajouter au moins un élastique', 'error');
-        return false;
+    if (selectedEquipment.includes('bench')) {
+        // Le banc est toujours valide si sélectionné
+        if (!equipmentConfig.banc.available) {
+            equipmentConfig.banc.available = true;
+        }
     }
     
-    return true;
+    if (selectedEquipment.includes('pull_up_bar')) {
+        // La barre de traction est toujours valide si sélectionnée
+        equipmentConfig.autres.barre_traction = true;
+    }
+    
+    // Afficher toutes les erreurs
+    if (!isValid && errors.length > 0) {
+        errors.forEach(error => showToast(error, 'error'));
+    }
+    
+    return isValid;
 }
 
 // ===== PROFIL & ONBOARDING =====
@@ -900,55 +925,64 @@ function updateProfileSummary() {
     document.getElementById('profileSummary').innerHTML = summary;
 }
 
-// ===== ENREGISTREMENT UTILISATEUR =====
 async function saveUser() {
-    const name = document.getElementById('userName').value;
-    const age = parseInt(document.getElementById('userAge').value);
-    const experience = document.getElementById('experienceLevel').value;
-    
-    // Préparer la configuration d'équipement pour le backend
-    const backendEquipmentConfig = {
-        barres: equipmentConfig.barres,
-        disques: {
-            available: Object.keys(equipmentConfig.disques).length > 0,
-            weights: equipmentConfig.disques
-        },
-        dumbbells: {
-            available: Object.keys(equipmentConfig.dumbbells).length > 0,
-            weights: Object.keys(equipmentConfig.dumbbells).map(w => parseFloat(w))
-        },
-        banc: {
-            available: selectedEquipment.includes('bench'),
-            inclinable_haut: equipmentConfig.banc.inclinable,
-            inclinable_bas: equipmentConfig.banc.declinable
-        },
-        elastiques: {
-            available: equipmentConfig.elastiques.length > 0,
-            bands: equipmentConfig.elastiques
-        },
-        autres: {
-            kettlebell: {
-                available: Object.keys(equipmentConfig.kettlebells).length > 0,
-                weights: Object.keys(equipmentConfig.kettlebells).map(w => parseFloat(w))
-            },
-            barre_traction: {
-                available: selectedEquipment.includes('pullup_bar')
-            },
-            lest_corps: {
-                available: equipmentConfig.autres.lest_corps.length > 0,
-                weights: equipmentConfig.autres.lest_corps
-            },
-            lest_chevilles: {
-                available: equipmentConfig.autres.lest_chevilles.length > 0,
-                weights: equipmentConfig.autres.lest_chevilles
-            },
-            lest_poignets: {
-                available: equipmentConfig.autres.lest_poignets.length > 0,
-                weights: equipmentConfig.autres.lest_poignets
-            }
+    // Préparer les données utilisateur avec la structure attendue par l'API
+    const userData = {
+        name: document.getElementById('userName').value.trim(),
+        age: parseInt(document.getElementById('userAge').value),
+        experience_level: document.getElementById('experienceLevel').value,
+        goals: selectedGoals,
+        equipment_config: {
+            barres: equipmentConfig.barres,
+            disques: equipmentConfig.disques,
+            dumbbells: equipmentConfig.dumbbells,
+            kettlebells: equipmentConfig.kettlebells,
+            elastiques: equipmentConfig.elastiques,
+            banc: equipmentConfig.banc,
+            autres: equipmentConfig.autres
         }
     };
     
+    // Validation finale
+    if (!userData.name || !userData.age || !userData.experience_level) {
+        showToast('Informations personnelles incomplètes', 'error');
+        return;
+    }
+    
+    if (userData.goals.length === 0) {
+        showToast('Aucun objectif sélectionné', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/users/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            currentUser = user;
+            localStorage.setItem('userId', user.id);
+            
+            // Réinitialiser l'interface
+            document.getElementById('progressContainer').style.display = 'none';
+            
+            showMainInterface();
+            showToast('Profil créé avec succès !', 'success');
+        } else {
+            const error = await response.json();
+            console.error('Erreur serveur:', error);
+            showToast(error.detail || 'Erreur lors de la création du profil', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur réseau:', error);
+        showToast('Erreur de connexion au serveur', 'error');
+    }
+}
+
+// ===== ENREGISTREMENT UTILISATEUR =====    
     const userData = {
         name: name,
         age: age,
@@ -1020,15 +1054,18 @@ let allExercises = [];
 
 async function loadExercises() {
     try {
-        const response = await fetch('/api/exercises');
+        const response = await fetch('/api/exercises/');
         if (response.ok) {
             allExercises = await response.json();
-            displayExercises();
+            console.log(`${allExercises.length} exercices chargés`);
+        } else {
+            console.error('Erreur chargement exercices:', response.status);
         }
     } catch (error) {
         console.error('Erreur chargement exercices:', error);
     }
 }
+
 
 function displayExercises(exercises = allExercises) {
     const container = document.getElementById('exercisesList');
@@ -1113,6 +1150,15 @@ async function startWorkout() {
         showToast('Erreur lors du démarrage de la séance', 'error');
     }
 }
+
+// Event listeners pour l'équipement
+setTimeout(() => {
+    document.querySelectorAll('.equipment-card').forEach(card => {
+        if (!card.onclick) {
+            card.addEventListener('click', () => toggleEquipment(card));
+        }
+    });
+}, 100);
 
 // ===== UTILITAIRES =====
 function showToast(message, type = 'info') {
@@ -1201,10 +1247,6 @@ function logout() {
 
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', async () => {
-    // Event listeners pour les objectifs
-    document.querySelectorAll('.chip[data-goal]').forEach(chip => {
-        chip.addEventListener('click', () => toggleGoal(chip));
-    });
     
     // Event listeners pour l'équipement
     document.querySelectorAll('.equipment-card').forEach(card => {
