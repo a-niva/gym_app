@@ -1167,7 +1167,53 @@ function updateProfileSummary() {
 }
 
 async function saveUser() {
-    // Préparer les données utilisateur avec la structure attendue par l'API
+    // Transformer la structure equipment_config au format attendu par l'API
+    const transformedEquipmentConfig = {
+        barres: equipmentConfig.barres, // OK tel quel
+        disques: {
+            available: Object.keys(equipmentConfig.disques).length > 0,
+            weights: equipmentConfig.disques
+        },
+        dumbbells: {
+            available: Object.keys(equipmentConfig.dumbbells).length > 0,
+            weights: Object.keys(equipmentConfig.dumbbells).map(w => parseFloat(w))
+        },
+        banc: {
+            available: equipmentConfig.banc.available,
+            inclinable_haut: equipmentConfig.banc.inclinable || false,
+            inclinable_bas: equipmentConfig.banc.declinable || false
+        },
+        elastiques: {
+            available: equipmentConfig.elastiques.length > 0,
+            bands: equipmentConfig.elastiques.map(e => ({
+                color: e.color,
+                resistance: e.resistance,
+                count: e.count
+            }))
+        },
+        autres: {
+            kettlebell: {
+                available: Object.keys(equipmentConfig.kettlebells || {}).length > 0,
+                weights: Object.keys(equipmentConfig.kettlebells || {}).map(w => parseFloat(w))
+            },
+            barre_traction: {
+                available: equipmentConfig.autres.barre_traction || false
+            },
+            lest_corps: {
+                available: (equipmentConfig.autres.lest_corps || []).length > 0,
+                weights: equipmentConfig.autres.lest_corps || []
+            },
+            lest_chevilles: {
+                available: (equipmentConfig.autres.lest_chevilles || []).length > 0,
+                weights: equipmentConfig.autres.lest_chevilles || []
+            },
+            lest_poignets: {
+                available: (equipmentConfig.autres.lest_poignets || []).length > 0,
+                weights: equipmentConfig.autres.lest_poignets || []
+            }
+        }
+    };
+    
     const userData = {
         name: document.getElementById('userName').value.trim(),
         age: parseInt(document.getElementById('userAge').value),
@@ -1175,15 +1221,7 @@ async function saveUser() {
         weight: parseFloat(document.getElementById('userWeight').value),
         experience_level: document.getElementById('experienceLevel').value,
         goals: selectedGoals,
-        equipment_config: {
-            barres: equipmentConfig.barres,
-            disques: equipmentConfig.disques,
-            dumbbells: equipmentConfig.dumbbells,
-            kettlebells: equipmentConfig.kettlebells,
-            elastiques: equipmentConfig.elastiques,
-            banc: equipmentConfig.banc,
-            autres: equipmentConfig.autres
-        }
+        equipment_config: transformedEquipmentConfig
     };
     
     // Validation finale
@@ -1217,7 +1255,20 @@ async function saveUser() {
         } else {
             const error = await response.json();
             console.error('Erreur serveur:', error);
-            showToast(error.detail || 'Erreur lors de la création du profil', 'error');
+
+            // Gérer les erreurs de validation (422)
+            if (Array.isArray(error.detail)) {
+                const errorMessages = error.detail.map(err => {
+                    // Format Pydantic: extraire le champ et le message
+                    const field = err.loc ? err.loc[err.loc.length - 1] : 'Champ';
+                    return `${field}: ${err.msg}`;
+                }).join('\n');
+                showToast(errorMessages || 'Erreur de validation', 'error');
+                console.error('Détails erreurs validation:', error.detail);
+            } else {
+                showToast(error.detail || 'Erreur lors de la sauvegarde', 'error');
+            }
+
         }
     } catch (error) {
         console.error('Erreur réseau:', error);
