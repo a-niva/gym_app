@@ -906,6 +906,7 @@ function cleanupWorkout() {
     }
 }
 
+
 function updateTrainingInterface() {
     const container = document.getElementById('workoutInterface');
     if (!container || !currentWorkout) return;
@@ -946,6 +947,257 @@ function updateTrainingInterface() {
             }
         </div>
     `;
+    
+    // Afficher le sélecteur d'exercices
+    showExerciseSelector();
+}
+
+function showExerciseSelector() {
+    const container = document.getElementById('workoutInterface');
+    
+    // Filtrer les exercices disponibles selon l'équipement de l'utilisateur
+    const availableExercises = allExercises.filter(exercise => {
+        // TODO: Implémenter le filtrage selon equipment_config
+        return true; // Pour l'instant, tous les exercices
+    });
+    
+    // Grouper par partie du corps
+    const grouped = {};
+    availableExercises.forEach(ex => {
+        if (!grouped[ex.body_part]) grouped[ex.body_part] = [];
+        grouped[ex.body_part].push(ex);
+    });
+    
+    container.innerHTML += `
+        <div class="exercise-selector">
+            <h3>Sélectionner un exercice</h3>
+            <input type="text" id="exerciseSearch" placeholder="Rechercher..." 
+                   onkeyup="filterExerciseList()" class="form-input">
+            
+            <div id="exerciseListSelector" class="exercise-list-selector">
+                ${Object.entries(grouped).map(([part, exercises]) => `
+                    <div class="exercise-group">
+                        <h4>${part}</h4>
+                        ${exercises.map(ex => `
+                            <div class="exercise-option" onclick="selectExercise(${ex.id})">
+                                <div class="exercise-name">${ex.name_fr}</div>
+                                <div class="exercise-equipment">${ex.equipment.join(', ')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function filterExerciseList() {
+    const searchTerm = document.getElementById('exerciseSearch').value.toLowerCase();
+    const groups = document.querySelectorAll('.exercise-group');
+    
+    groups.forEach(group => {
+        const exercises = group.querySelectorAll('.exercise-option');
+        let hasVisible = false;
+        
+        exercises.forEach(ex => {
+            const name = ex.querySelector('.exercise-name').textContent.toLowerCase();
+            if (name.includes(searchTerm)) {
+                ex.style.display = 'block';
+                hasVisible = true;
+            } else {
+                ex.style.display = 'none';
+            }
+        });
+        
+        group.style.display = hasVisible ? 'block' : 'none';
+    });
+}
+
+let currentExercise = null;
+let currentSetNumber = 1;
+
+function selectExercise(exerciseId) {
+    currentExercise = allExercises.find(ex => ex.id === exerciseId);
+    if (!currentExercise) return;
+    
+    currentSetNumber = 1;
+    showSetInput();
+}
+
+function showSetInput() {
+    const container = document.getElementById('workoutInterface');
+    
+    container.innerHTML = `
+        <div class="current-exercise">
+            <h2>${currentExercise.name_fr}</h2>
+            <p class="exercise-info">${currentExercise.body_part} • ${currentExercise.level}</p>
+        </div>
+        
+        <div class="set-tracker">
+            <h3>Série ${currentSetNumber}</h3>
+            
+            <div class="set-input-grid">
+                <div class="input-group">
+                    <label>Poids (kg)</label>
+                    <div class="weight-selector">
+                        <button onclick="adjustWeight(-2.5)" class="btn-adjust">-2.5</button>
+                        <input type="number" id="setWeight" value="20" step="2.5" class="weight-display">
+                        <button onclick="adjustWeight(2.5)" class="btn-adjust">+2.5</button>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Répétitions</label>
+                    <div class="reps-selector">
+                        <button onclick="adjustReps(-1)" class="btn-adjust">-</button>
+                        <input type="number" id="setReps" value="10" class="reps-display">
+                        <button onclick="adjustReps(1)" class="btn-adjust">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fatigue-input">
+                <label>Fatigue (1-10)</label>
+                <input type="range" id="fatigueLevel" min="1" max="10" value="5" 
+                       oninput="updateFatigueDisplay(this.value)">
+                <span id="fatigueDisplay" class="fatigue-display">5</span>
+            </div>
+            
+            <div class="exertion-input">
+                <label>Effort perçu (1-10)</label>
+                <input type="range" id="exertionLevel" min="1" max="10" value="5"
+                       oninput="updateExertionDisplay(this.value)">
+                <span id="exertionDisplay" class="exertion-display">5</span>
+            </div>
+            
+            <div class="set-actions">
+                <button class="btn btn-primary" onclick="completeSet()">
+                    ✓ Valider la série
+                </button>
+                <button class="btn btn-secondary" onclick="skipSet()">
+                    ⏭️ Passer
+                </button>
+            </div>
+        </div>
+        
+        <div id="previousSets" class="previous-sets"></div>
+        
+        <button class="btn btn-secondary" onclick="finishExercise()">
+            Terminer cet exercice
+        </button>
+    `;
+    
+    // Charger l'historique de cet exercice
+    loadExerciseHistory();
+}
+
+function adjustWeight(delta) {
+    const input = document.getElementById('setWeight');
+    const newValue = parseFloat(input.value) + delta;
+    if (newValue >= 0) input.value = newValue;
+}
+
+function adjustReps(delta) {
+    const input = document.getElementById('setReps');
+    const newValue = parseInt(input.value) + delta;
+    if (newValue > 0) input.value = newValue;
+}
+
+function updateFatigueDisplay(value) {
+    document.getElementById('fatigueDisplay').textContent = value;
+}
+
+function updateExertionDisplay(value) {
+    document.getElementById('exertionDisplay').textContent = value;
+}
+
+async function completeSet() {
+    const setData = {
+        workout_id: currentWorkout.id,
+        exercise_id: currentExercise.id,
+        set_number: currentSetNumber,
+        target_reps: 10, // TODO: Obtenir depuis le programme ou l'historique
+        actual_reps: parseInt(document.getElementById('setReps').value),
+        weight: parseFloat(document.getElementById('setWeight').value),
+        rest_time: 90, // TODO: Calculer dynamiquement
+        fatigue_level: parseInt(document.getElementById('fatigueLevel').value),
+        perceived_exertion: parseInt(document.getElementById('exertionLevel').value),
+        skipped: false
+    };
+    
+    try {
+        const response = await fetch('/api/sets/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(setData)
+        });
+        
+        if (response.ok) {
+            showToast(`Série ${currentSetNumber} enregistrée !`, 'success');
+            
+            // Ajouter à l'historique local
+            addSetToHistory(setData);
+            
+            // Préparer la série suivante
+            currentSetNumber++;
+            
+            // Démarrer le timer de repos
+            startRestTimer(setData.rest_time);
+            
+            // Mettre à jour l'affichage
+            document.querySelector('.set-tracker h3').textContent = `Série ${currentSetNumber}`;
+            
+            // Suggestion intelligente pour la prochaine série
+            suggestNextSet(setData);
+        } else {
+            showToast('Erreur lors de l\'enregistrement', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        // Sauvegarder localement pour sync ultérieure
+        saveSetOffline(setData);
+        showToast('Série sauvegardée localement', 'warning');
+    }
+}
+
+function addSetToHistory(setData) {
+    const container = document.getElementById('previousSets');
+    const setElement = document.createElement('div');
+    setElement.className = 'set-history-item';
+    setElement.innerHTML = `
+        <div class="set-number">Série ${setData.set_number}</div>
+        <div class="set-details">
+            ${setData.weight}kg × ${setData.actual_reps} reps
+            <span class="fatigue-badge fatigue-${setData.fatigue_level}">
+                Fatigue: ${setData.fatigue_level}/10
+            </span>
+        </div>
+    `;
+    container.insertBefore(setElement, container.firstChild);
+}
+
+function suggestNextSet(lastSet) {
+    // Logique simple pour suggérer la prochaine série
+    if (lastSet.fatigue_level >= 8) {
+        // Très fatigué : réduire le poids
+        document.getElementById('setWeight').value = lastSet.weight * 0.9;
+        showToast('Fatigue élevée détectée : poids réduit', 'info');
+    } else if (lastSet.actual_reps > lastSet.target_reps + 2) {
+        // Trop facile : augmenter le poids
+        document.getElementById('setWeight').value = lastSet.weight + 2.5;
+        showToast('Performance excellente : poids augmenté', 'success');
+    }
+}
+
+function startRestTimer(seconds) {
+    // TODO: Implémenter le timer dans la phase 1.3
+    console.log(`Timer de repos: ${seconds}s`);
+}
+
+function finishExercise() {
+    currentExercise = null;
+    currentSetNumber = 1;
+    showExerciseSelector();
 }
 
 function addElastique() {
@@ -1387,32 +1639,6 @@ function showExerciseDetail(exerciseId) {
     // TODO: Implémenter la modal
 }
 
-// ===== SÉANCE D'ENTRAÎNEMENT =====
-async function startWorkout() {
-    if (!currentUser) return;
-    
-    try {
-        const response = await fetch('/api/workouts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: currentUser.id,
-                type: 'free_time'
-            })
-        });
-        
-        if (response.ok) {
-            const workout = await response.json();
-            currentWorkout = workout;
-            showView('workout-view');
-            showToast('Séance démarrée !', 'success');
-        }
-    } catch (error) {
-        console.error('Erreur démarrage séance:', error);
-        showToast('Erreur lors du démarrage de la séance', 'error');
-    }
-}
-
 // ===== UTILITAIRES =====
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
@@ -1559,6 +1785,18 @@ window.updateElastiquesList = updateElastiquesList;
 window.getColorHex = getColorHex;
 window.addLest = addLest;
 window.showConfigPanel = showConfigPanel;
+
+// Fonctions pour le tracking des sets
+window.showExerciseSelector = showExerciseSelector;
+window.selectExercise = selectExercise;
+window.filterExerciseList = filterExerciseList;
+window.adjustWeight = adjustWeight;
+window.adjustReps = adjustReps;
+window.updateFatigueDisplay = updateFatigueDisplay;
+window.updateExertionDisplay = updateExertionDisplay;
+window.completeSet = completeSet;
+window.skipSet = skipSet;
+window.finishExercise = finishExercise;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
