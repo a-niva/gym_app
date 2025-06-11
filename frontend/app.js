@@ -134,16 +134,16 @@ function toggleEquipment(card) {
 function generateDetailedEquipmentConfig() {
     const container = document.getElementById('detailedEquipmentConfig');
     
-    // Structure HTML similaire à la démo mais adaptée à votre système
+    // Structure en grille carrée pour les équipements sélectionnés
     let html = `
-        <div class="equipment-categories">
+        <div class="equipment-categories-grid">
             ${selectedEquipment.map(eq => `
                 <div class="equipment-category selected" data-equipment="${eq}">
                     <div class="equipment-icon">
                         ${getEquipmentIcon(eq)}
                     </div>
                     <div class="equipment-name">${getEquipmentName(eq)}</div>
-                    <div class="equipment-status">À configurer</div>
+                    <div class="equipment-status" id="status-${eq}">À configurer</div>
                 </div>
             `).join('')}
         </div>
@@ -156,6 +156,62 @@ function generateDetailedEquipmentConfig() {
     selectedEquipment.forEach(eq => {
         showConfigPanel(eq);
     });
+}
+
+function getEquipmentIcon(type) {
+    const icons = {
+        'dumbbells': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/></svg>',
+        'barbell': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8m-4-8v16"/></svg>',
+        'resistance_bands': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+        'bench': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18m-9-9v18"/></svg>',
+        'pull_up_bar': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14m-7 0v18"/></svg>',
+        'kettlebell': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>'
+    };
+    return icons[type] || '';
+}
+
+function getEquipmentName(type) {
+    const names = {
+        'dumbbells': 'Haltères',
+        'barbell': 'Barres & Disques',
+        'resistance_bands': 'Élastiques',
+        'bench': 'Banc',
+        'pull_up_bar': 'Barre de traction',
+        'kettlebell': 'Kettlebells'
+    };
+    return names[type] || type;
+}
+
+function showConfigPanel(equipmentType) {
+    const panelsContainer = document.getElementById('configPanels');
+    let panel = document.getElementById(`panel-${equipmentType}`);
+    
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.className = 'config-panel';
+        panel.id = `panel-${equipmentType}`;
+        panel.innerHTML = createPanelContent(equipmentType);
+        panelsContainer.appendChild(panel);
+    }
+}
+
+function createPanelContent(type) {
+    switch(type) {
+        case 'barbell':
+            return createBarbellPanel();
+        case 'dumbbells':
+            return createDumbbellsPanel();
+        case 'resistance_bands':
+            return createBandsPanel();
+        case 'bench':
+            return createBenchPanel();
+        case 'pull_up_bar':
+            return createPullUpPanel();
+        case 'kettlebell':
+            return createKettlebellPanel();
+        default:
+            return '';
+    }
 }
 
 // Nouvelle fonction pour créer les panels dynamiquement
@@ -182,6 +238,69 @@ function showConfigPanel(equipmentType) {
     }
     
     panelsContainer.appendChild(panel);
+}
+
+function createBandsPanel() {
+    return `
+        <div class="config-header">
+            <div class="config-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <h3 class="config-title">Configuration des élastiques</h3>
+        </div>
+        
+        <div id="bandsList"></div>
+        
+        <div class="band-input-group">
+            <input type="color" id="bandColor" value="#ff6b6b" class="band-color-input">
+            <input type="number" id="bandResistance" placeholder="Résistance (kg)" class="band-resistance-input">
+            <input type="number" id="bandCount" placeholder="Nombre" value="1" min="1" class="band-count-input">
+            <button onclick="addBand()" class="btn-add">+</button>
+        </div>
+    `;
+}
+
+function createBarbellPanel() {
+    return `
+        <div class="config-header">
+            <div class="config-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8m-4-8v16"/>
+                </svg>
+            </div>
+            <h3 class="config-title">Barres et disques</h3>
+        </div>
+        
+        <h4 style="margin-bottom: 16px; color: var(--gray-light);">Types de barres disponibles</h4>
+        <div class="barbell-types">
+            <label class="checkbox-label">
+                <input type="checkbox" onchange="updateBarbell('olympique', this.checked)">
+                <span>Barre olympique (20kg)</span>
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" onchange="updateBarbell('ez', this.checked)">
+                <span>Barre EZ/Curl (10kg)</span>
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" onchange="updateBarbell('courte', this.checked)">
+                <span>Barre courte (2.5kg)</span>
+            </label>
+        </div>
+        
+        <h4 style="margin-top: 24px; margin-bottom: 16px; color: var(--gray-light);">Poids des disques disponibles</h4>
+        <div class="weight-grid">
+            ${[20, 15, 10, 5, 2.5, 1.25, 0.5].map(weight => `
+                <div class="weight-item">
+                    <div class="weight-value">${weight}kg</div>
+                    <input type="number" class="weight-input" placeholder="0" min="0" max="10" 
+                           value="${equipmentConfig.disques[weight] || 0}"
+                           onchange="updateDisqueWeight(${weight}, this.value)">
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
 // Exemple de panel pour les haltères
@@ -237,7 +356,7 @@ function updateDumbbellWeight(weight, count) {
 
 // Mise à jour du statut visuel
 function updateEquipmentStatus(type) {
-    const statusEl = document.querySelector(`[data-equipment="${type}"] .equipment-status`);
+    const statusEl = document.getElementById(`status-${type}`);
     if (!statusEl) return;
     
     let isConfigured = false;
@@ -247,18 +366,48 @@ function updateEquipmentStatus(type) {
             isConfigured = Object.keys(equipmentConfig.dumbbells).length > 0;
             break;
         case 'barbell':
-            isConfigured = Object.values(equipmentConfig.disques).some(v => v > 0);
+            const hasBarbell = Object.values(equipmentConfig.barres).some(b => b.available);
+            const hasDisques = Object.keys(equipmentConfig.disques).length > 0;
+            isConfigured = hasBarbell && hasDisques;
             break;
         case 'resistance_bands':
             isConfigured = equipmentConfig.elastiques.length > 0;
             break;
         case 'bench':
-            isConfigured = equipmentConfig.banc.inclinable || equipmentConfig.banc.declinable;
+            isConfigured = true; // Toujours configuré si sélectionné
+            equipmentConfig.banc.available = true;
+            break;
+        case 'pull_up_bar':
+            isConfigured = true;
+            equipmentConfig.autres.barre_traction = true;
+            break;
+        case 'kettlebell':
+            isConfigured = Object.keys(equipmentConfig.kettlebells).length > 0;
             break;
     }
     
     statusEl.textContent = isConfigured ? 'Configuré ✓' : 'À configurer';
     statusEl.style.color = isConfigured ? '#10b981' : '#94a3b8';
+    
+    updateProgressIndicator();
+}
+
+function updateProgressIndicator() {
+    const total = selectedEquipment.length;
+    let configured = 0;
+    
+    selectedEquipment.forEach(eq => {
+        const status = document.getElementById(`status-${eq}`);
+        if (status && status.textContent.includes('✓')) {
+            configured++;
+        }
+    });
+    
+    // Mettre à jour un indicateur visuel si présent
+    const indicator = document.getElementById('equipmentProgress');
+    if (indicator) {
+        indicator.textContent = `${configured} / ${total} configurés`;
+    }
 }
 
 // Fonctions de mise à jour de l'équipement
@@ -336,6 +485,55 @@ function updateKettlebellCount(weight, count) {
     } else {
         delete equipmentConfig.kettlebells[weight];
     }
+}
+
+function createPullUpPanel() {
+    updateEquipmentStatus('pull_up_bar'); // Auto-marquer comme configuré
+    return `
+        <div class="config-header">
+            <div class="config-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14m-7 0v18"/>
+                </svg>
+            </div>
+            <h3 class="config-title">Barre de traction</h3>
+        </div>
+        <p style="color: var(--gray-light);">✓ Équipement configuré automatiquement</p>
+    `;
+}
+
+function createKettlebellPanel() {
+    return `
+        <div class="config-header">
+            <div class="config-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+                </svg>
+            </div>
+            <h3 class="config-title">Kettlebells</h3>
+        </div>
+        
+        <div class="weight-grid">
+            ${[32, 28, 24, 20, 16, 12, 8, 4].map(weight => `
+                <div class="weight-item">
+                    <div class="weight-value">${weight}kg</div>
+                    <input type="number" class="weight-input" placeholder="0" min="0" max="10" 
+                           value="${equipmentConfig.kettlebells[weight] || 0}"
+                           onchange="updateKettlebellWeight(${weight}, this.value)">
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function updateKettlebellWeight(weight, count) {
+    const value = parseInt(count) || 0;
+    if (value > 0) {
+        equipmentConfig.kettlebells[weight] = value;
+    } else {
+        delete equipmentConfig.kettlebells[weight];
+    }
+    updateEquipmentStatus('kettlebell');
 }
 
 function addCustomKettlebell() {
