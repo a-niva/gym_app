@@ -1276,7 +1276,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Application initialisée');
 });
 
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Boutons de navigation
+    const nextButtons = document.querySelectorAll('[data-action="next"]');
+    const prevButtons = document.querySelectorAll('[data-action="prev"]');
+    
+    nextButtons.forEach(btn => btn.addEventListener('click', nextStep));
+    prevButtons.forEach(btn => btn.addEventListener('click', prevStep));
+    
+    // Autres boutons
+    document.querySelectorAll('.chip[data-goal]').forEach(chip => {
+        chip.addEventListener('click', () => toggleGoal(chip));
+    });
+});
+
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
 }
+
