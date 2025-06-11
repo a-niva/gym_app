@@ -286,7 +286,7 @@ function createBarbellPanel() {
         
         <h4 style="margin-top: 24px; margin-bottom: 16px; color: var(--gray-light);">Poids des disques disponibles</h4>
         <div class="weight-grid">
-            ${[20, 15, 10, 5, 2.5, 1.25, 0.5].map(weight => `
+            ${[40, 25, 15, 10, 5, 2.5, 2, 1.25, 1].map(weight => `
                 <div class="weight-item">
                     <div class="weight-value">${weight}kg</div>
                     <input type="number" class="weight-input" placeholder="0" min="0" max="10" 
@@ -300,7 +300,7 @@ function createBarbellPanel() {
 
 // Exemple de panel pour les haltères
 function createDumbbellsPanel() {
-    const commonWeights = [30, 25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2, 1];
+    const commonWeights = [22.5, 20, 15, 12.5, 10, 8, 6, 5, 4, 2];
     
     return `
         <div class="config-header">
