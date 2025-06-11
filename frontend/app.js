@@ -29,27 +29,109 @@ let currentSet = {
 };
 let restTimer = 0;
 let restInterval = null;
+// ===== NOUVEAU CODE JAVASCRIPT POUR L'ÉQUIPEMENT =====
+// À ajouter/remplacer dans app.js
 
-// Gestion des disques avancée
-function showPlateSelector() {
-    document.getElementById('plateModal').style.display = 'flex';
-    document.getElementById('plateWeight').value = '';
-    document.getElementById('customPlateWeight').style.display = 'none';
-    document.getElementById('plateCount').value = '2';
+// Variables globales pour la nouvelle configuration équipement
+let equipmentConfig = {
+    barres: {
+        barbell_standard: {available: false, weight: 20.0, count: 1},
+        barbell_ez: {available: false, weight: 10.0, count: 1},
+        barbell_courte: {available: false, weight: 2.5, count: 2}
+    },
+    disques: {available: false, weights: {}},
+    dumbbells: {available: false, weights: []},
+    banc: {available: false, inclinable_haut: true, inclinable_bas: false},
+    elastiques: {available: false, bands: []},
+    autres: {
+        kettlebell: {available: false, weights: []},
+        barre_traction: {available: false},
+        lest_corps: {available: false, weights: []},
+        lest_chevilles: {available: false, weights: []},
+        lest_poignets: {available: false, weights: []}
+    }
+};
+
+let elastiqueCounter = 0;
+
+// ===== FONCTIONS POUR LES BARRES =====
+function toggleBarreConfig(type) {
+    const checkbox = document.getElementById(`barbell_${type}`);
+    const config = document.getElementById(`${type}_config`);
+    
+    if (checkbox.checked) {
+        config.style.display = 'block';
+        equipmentConfig.barres[`barbell_${type}`].available = true;
+        
+        // Mettre à jour les valeurs depuis les inputs
+        const weightInput = document.getElementById(`${type}_weight`);
+        const countInput = document.getElementById(`${type}_count`);
+        
+        if (weightInput) {
+            equipmentConfig.barres[`barbell_${type}`].weight = parseFloat(weightInput.value) || 20;
+        }
+        if (countInput) {
+            equipmentConfig.barres[`barbell_${type}`].count = parseInt(countInput.value) || 1;
+        }
+        
+        // Ajouter event listeners pour les changements
+        if (weightInput) {
+            weightInput.addEventListener('change', () => {
+                equipmentConfig.barres[`barbell_${type}`].weight = parseFloat(weightInput.value) || 20;
+            });
+        }
+        if (countInput) {
+            countInput.addEventListener('change', () => {
+                equipmentConfig.barres[`barbell_${type}`].count = parseInt(countInput.value) || 1;
+            });
+        }
+    } else {
+        config.style.display = 'none';
+        equipmentConfig.barres[`barbell_${type}`].available = false;
+    }
 }
 
-function closePlateModal() {
-    document.getElementById('plateModal').style.display = 'none';
+// ===== FONCTIONS POUR LES DISQUES =====
+function toggleDisquesConfig() {
+    const checkbox = document.getElementById('disques_available');
+    const config = document.getElementById('disques_config');
+    
+    equipmentConfig.disques.available = checkbox.checked;
+    config.style.display = checkbox.checked ? 'block' : 'none';
 }
 
-function confirmPlateAddition() {
-    const weightSelect = document.getElementById('plateWeight');
-    const customWeight = document.getElementById('customPlateWeight');
-    const count = parseInt(document.getElementById('plateCount').value);
+function showDisqueModal() {
+    document.getElementById('disqueModal').style.display = 'flex';
+    document.getElementById('disque_weight').value = '';
+    document.getElementById('disque_custom_weight').style.display = 'none';
+    document.getElementById('disque_count').value = '2';
+}
+
+function closeDisqueModal() {
+    document.getElementById('disqueModal').style.display = 'none';
+}
+
+function handleDisqueWeightChange() {
+    const weightSelect = document.getElementById('disque_weight');
+    const customInput = document.getElementById('disque_custom_weight');
+    
+    if (weightSelect.value === 'custom') {
+        customInput.style.display = 'block';
+        customInput.focus();
+    } else {
+        customInput.style.display = 'none';
+        customInput.value = '';
+    }
+}
+
+function confirmDisqueAddition() {
+    const weightSelect = document.getElementById('disque_weight');
+    const customWeight = document.getElementById('disque_custom_weight');
+    const count = parseInt(document.getElementById('disque_count').value);
     
     let weight;
     if (weightSelect.value === 'custom') {
-        weight = parseCommaNumber(customWeight.value);
+        weight = parseFloat(customWeight.value);
         if (isNaN(weight) || weight <= 0) {
             showToast('Veuillez entrer un poids valide', 'error');
             return;
@@ -67,257 +149,376 @@ function confirmPlateAddition() {
         return;
     }
     
-    plateConfiguration[weight] = count;
-    updatePlateDisplay();
-    closePlateModal();
+    equipmentConfig.disques.weights[weight.toString()] = count;
+    updateDisquesList();
+    closeDisqueModal();
+    showToast(`${count} disques de ${weight}kg ajoutés`, 'success');
 }
 
-function updatePlateDisplay() {
-    const container = document.getElementById('platesConfiguration');
-    if (!container) return;
-    
-    const weights = Object.keys(plateConfiguration).map(w => parseFloat(w)).sort((a, b) => a - b);
+function updateDisquesList() {
+    const container = document.getElementById('disques_list');
+    const weights = Object.entries(equipmentConfig.disques.weights);
     
     if (weights.length === 0) {
-        container.innerHTML = '<div style="color: var(--gray); text-align: center; padding: 1rem;">Aucun disque configuré</div>';
+        container.innerHTML = '<p style="color: var(--gray); font-size: 0.875rem;">Aucun disque configuré</p>';
         return;
     }
     
-    container.innerHTML = weights.map(weight => `
-        <div class="plate-config-item">
-            <div class="weight">${weight} kg</div>
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <button onclick="decreasePlateCount(${weight})" style="width: 30px; height: 30px; padding: 0;" class="btn btn-secondary">−</button>
-                <input type="number" id="plateCount_${weight}" value="${plateConfiguration[weight]}" 
-                       min="0" max="20" onchange="updatePlateCount(${weight}, this.value)"
-                       style="text-align: center; width: 60px;" class="form-input">
-                <button onclick="increasePlateCount(${weight})" style="width: 30px; height: 30px; padding: 0;" class="btn btn-secondary">+</button>
-            </div>
-            <button onclick="removePlateType(${weight})" title="Supprimer" class="btn btn-danger" style="padding: 0.5rem;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-    `).join('');
+    // Trier par poids
+    weights.sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]));
+    
+    container.innerHTML = weights.map(([weight, count]) => 
+        `<div class="disque-item">
+            <span><strong>${weight} kg</strong> × ${count} disques</span>
+            <button onclick="removeDisque('${weight}')" 
+                    style="background: var(--danger); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">×</button>
+        </div>`
+    ).join('');
 }
 
-function updatePlateCount(weight, newCount) {
-    const count = parseInt(newCount);
-    if (count > 0) {
-        plateConfiguration[weight] = count;
-    } else {
-        delete plateConfiguration[weight];
-        updatePlateDisplay();
-    }
+function removeDisque(weight) {
+    delete equipmentConfig.disques.weights[weight];
+    updateDisquesList();
+    showToast(`Disques de ${weight}kg supprimés`, 'info');
 }
 
-function increasePlateCount(weight) {
-    const current = plateConfiguration[weight] || 0;
-    if (current < 20) {
-        plateConfiguration[weight] = current + 1;
-        document.getElementById(`plateCount_${weight}`).value = current + 1;
-    }
+// ===== FONCTIONS POUR LES HALTÈRES =====
+function toggleDumbbellsConfig() {
+    const checkbox = document.getElementById('dumbbells_available');
+    const config = document.getElementById('dumbbells_config');
+    
+    equipmentConfig.dumbbells.available = checkbox.checked;
+    config.style.display = checkbox.checked ? 'block' : 'none';
 }
 
-function decreasePlateCount(weight) {
-    const current = plateConfiguration[weight] || 0;
-    if (current > 1) {
-        plateConfiguration[weight] = current - 1;
-        document.getElementById(`plateCount_${weight}`).value = current - 1;
-    } else if (current === 1) {
-        removePlateType(weight);
-    }
-}
-
-function removePlateType(weight) {
-    delete plateConfiguration[weight];
-    updatePlateDisplay();
-}
-
-// Fonction pour calculer toutes les combinaisons possibles avec les disques disponibles
-function calculatePossibleBarbellWeights(barWeight, availablePlates) {
-    const weights = new Set([barWeight]); // Commencer avec la barre seule
-    
-    // Fonction récursive pour générer les combinaisons
-    function generateCombinations(plates, maxPerSide) {
-        const combinations = [[]];
-        
-        for (const [weight, count] of Object.entries(plates)) {
-            const newCombinations = [];
-            const maxUse = Math.min(Math.floor(count / 2), maxPerSide); // Max par côté
-            
-            for (const combo of combinations) {
-                for (let i = 0; i <= maxUse; i++) {
-                    const newCombo = [...combo];
-                    if (i > 0) {
-                        for (let j = 0; j < i; j++) {
-                            newCombo.push(parseFloat(weight));
-                        }
-                    }
-                    newCombinations.push(newCombo);
-                }
-            }
-            combinations.push(...newCombinations.slice(1)); // Éviter les doublons
-        }
-        
-        return combinations;
-    }
-    
-    // Générer les combinaisons (max 4 disques par côté pour être réaliste)
-    const combinations = generateCombinations(availablePlates, 4);
-    
-    // Calculer le poids total pour chaque combinaison
-    combinations.forEach(combo => {
-        const plateWeight = combo.reduce((sum, w) => sum + w, 0) * 2; // x2 car des deux côtés
-        weights.add(barWeight + plateWeight);
-    });
-    
-    // Convertir en array, trier et limiter
-    return Array.from(weights)
-        .filter(w => w <= 500) // Max 500kg pour être réaliste
-        .sort((a, b) => a - b);
-}
-
-// Améliorer calculateAvailableWeights pour tenir compte du nombre de disques
-function calculateAvailableWeights(exercise) {
-    const equipmentNeeded = exercise.equipment;
-    let weights = [];
-    
-    if (equipmentNeeded.includes('dumbbells') && currentUser.dumbbell_weights) {
-        weights = [...currentUser.dumbbell_weights];
-    } else if (equipmentNeeded.includes('barbell') && currentUser.barbell_weights) {
-        const barWeight = currentUser.barbell_weights.standard_bar || 20;
-        const platesData = currentUser.barbell_weights.plates || [];
-        
-        // Convertir le format plates si nécessaire
-        let availablePlates = {};
-        if (Array.isArray(platesData)) {
-            if (platesData.length > 0 && typeof platesData[0] === 'object') {
-                // Nouveau format avec count
-                platesData.forEach(p => {
-                    availablePlates[p.weight] = p.count;
-                });
-            } else {
-                // Ancien format - assumer 2 disques de chaque
-                platesData.forEach(w => {
-                    availablePlates[w] = 2;
-                });
-            }
-        }
-        
-        // Calculer toutes les combinaisons possibles
-        weights = calculatePossibleBarbellWeights(barWeight, availablePlates);
-    } else if (equipmentNeeded.includes('resistance_bands') && currentUser.resistance_bands) {
-        weights = currentUser.resistance_bands.map(band => band.resistance);
-    } else if (equipmentNeeded.includes('bodyweight')) {
-        weights = [0]; // Poids du corps
-    }
-    
-    return weights;
-}
-
-function collectBarbellData() {
-    if (!selectedEquipment.includes('barbell')) return null;
-    
-    const standardBar = parseCommaNumber(document.getElementById('standardBarWeight').value) || 20;
-    const ezBar = parseCommaNumber(document.getElementById('ezBarWeight').value) || 10;
-    
-    const plates = [];
-    for (const [weight, count] of Object.entries(plateConfiguration)) {
-        plates.push({
-            weight: parseFloat(weight),
-            count: count
-        });
-    }
-    
-    return {
-        standard_bar: standardBar,
-        ez_bar: ezBar,
-        plates: plates
-    };
-}
-
-// Gestion des élastiques
-function addResistanceBand() {
-    bandCounter++;
-    const bandsList = document.getElementById('bandsList');
-    if (!bandsList) return;
-    
-    const bandHtml = `
-        <div class="band-input" data-band-id="${bandCounter}">
-            <input type="text" class="form-input" placeholder="Couleur" id="bandColor${bandCounter}">
-            <input type="text" class="form-input" placeholder="Résistance (kg)" id="bandResistance${bandCounter}" style="width: 150px;">
-            <button class="btn btn-danger" onclick="removeBand(${bandCounter})" style="padding: 0.5rem;">×</button>
-        </div>
-    `;
-    bandsList.insertAdjacentHTML('beforeend', bandHtml);
-}
-
-function removeBand(bandId) {
-    const band = document.querySelector(`[data-band-id="${bandId}"]`);
-    if (band) band.remove();
-}
-
-function collectBandsData() {
-    resistanceBands = [];
-    document.querySelectorAll('.band-input').forEach(bandDiv => {
-        const bandId = bandDiv.dataset.bandId;
-        const colorInput = document.getElementById(`bandColor${bandId}`);
-        const resistanceInput = document.getElementById(`bandResistance${bandId}`);
-        
-        if (colorInput && resistanceInput) {
-            const color = colorInput.value;
-            const resistance = parseCommaNumber(resistanceInput.value);
-            
-            if (color && !isNaN(resistance) && resistance > 0) {
-                resistanceBands.push({ color, resistance });
-            }
-        }
+function showDumbbellModal() {
+    document.getElementById('dumbbellModal').style.display = 'flex';
+    // Pré-cocher les poids déjà sélectionnés
+    document.querySelectorAll('#dumbbellModal input[type="checkbox"]').forEach(cb => {
+        cb.checked = equipmentConfig.dumbbells.weights.includes(parseFloat(cb.value));
     });
 }
 
-// Gestion des haltères
-function showDumbbellSelector() {
-    const modal = document.getElementById('dumbbellModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        document.querySelectorAll('#dumbbellModal input[type="checkbox"]').forEach(cb => {
-            cb.checked = false;
-        });
-        if (window.selectedDumbbells) {
-            window.selectedDumbbells.forEach(weight => {
-                const checkbox = document.querySelector(`#dumbbellModal input[value="${weight}"]`);
-                if (checkbox) checkbox.checked = true;
+function closeDumbbellModal() {
+    document.getElementById('dumbbellModal').style.display = 'none';
+}
+
+function confirmDumbbellSelection() {
+    equipmentConfig.dumbbells.weights = [];
+    document.querySelectorAll('#dumbbellModal input:checked').forEach(checkbox => {
+        equipmentConfig.dumbbells.weights.push(parseFloat(checkbox.value));
+    });
+    equipmentConfig.dumbbells.weights.sort((a, b) => a - b);
+    
+    updateDumbbellsList();
+    closeDumbbellModal();
+    showToast(`${equipmentConfig.dumbbells.weights.length} poids d'haltères sélectionnés`, 'success');
+}
+
+function updateDumbbellsList() {
+    const container = document.getElementById('dumbbells_list');
+    
+    if (equipmentConfig.dumbbells.weights.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray); font-size: 0.875rem;">Aucun haltère sélectionné</p>';
+        return;
+    }
+    
+    container.innerHTML = `<p><strong>Haltères disponibles :</strong><br>${equipmentConfig.dumbbells.weights.join(' kg, ')} kg (paires)</p>`;
+}
+
+// ===== FONCTIONS POUR LE BANC =====
+function toggleBancConfig() {
+    const checkbox = document.getElementById('banc_available');
+    const config = document.getElementById('banc_config');
+    
+    equipmentConfig.banc.available = checkbox.checked;
+    config.style.display = checkbox.checked ? 'block' : 'none';
+    
+    if (checkbox.checked) {
+        // Ajouter event listeners pour les options du banc
+        const inclineHaut = document.getElementById('banc_incline_haut');
+        const inclineBas = document.getElementById('banc_incline_bas');
+        
+        if (inclineHaut) {
+            inclineHaut.addEventListener('change', () => {
+                equipmentConfig.banc.inclinable_haut = inclineHaut.checked;
+            });
+        }
+        if (inclineBas) {
+            inclineBas.addEventListener('change', () => {
+                equipmentConfig.banc.inclinable_bas = inclineBas.checked;
             });
         }
     }
 }
 
-function closeDumbbellModal() {
-    const modal = document.getElementById('dumbbellModal');
-    if (modal) modal.style.display = 'none';
+// ===== FONCTIONS POUR LES ÉLASTIQUES =====
+function toggleElastiquesConfig() {
+    const checkbox = document.getElementById('elastiques_available');
+    const config = document.getElementById('elastiques_config');
+    
+    equipmentConfig.elastiques.available = checkbox.checked;
+    config.style.display = checkbox.checked ? 'block' : 'none';
 }
 
-function confirmDumbbellSelection() {
-    window.selectedDumbbells = [];
-    document.querySelectorAll('#dumbbellModal input:checked').forEach(checkbox => {
-        window.selectedDumbbells.push(parseFloat(checkbox.value));
-    });
-    window.selectedDumbbells.sort((a, b) => a - b);
+function addElastique() {
+    elastiqueCounter++;
+    const container = document.getElementById('elastiques_list');
     
-    const container = document.getElementById('selectedDumbbells');
-    if (container) {
-        if (window.selectedDumbbells.length === 0) {
-            container.innerHTML = '<span style="color: var(--gray); font-size: 0.875rem;">Aucun poids sélectionné</span>';
+    const elastiqueHtml = `
+        <div class="elastique-input" data-elastique-id="${elastiqueCounter}">
+            <input type="text" class="form-input" placeholder="Couleur" id="elastique_color_${elastiqueCounter}" style="flex: 1;">
+            <input type="number" class="form-input" placeholder="Résistance (kg)" id="elastique_resistance_${elastiqueCounter}" 
+                   step="0.5" min="1" max="100" style="flex: 1;">
+            <input type="number" class="form-input" placeholder="Nombre" id="elastique_count_${elastiqueCounter}" 
+                   value="1" min="1" max="10" style="width: 80px;">
+            <button onclick="removeElastique(${elastiqueCounter})" 
+                    style="background: var(--danger); color: white; border: none; border-radius: var(--radius); padding: 0.5rem; cursor: pointer;">×</button>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', elastiqueHtml);
+}
+
+function removeElastique(id) {
+    const element = document.querySelector(`[data-elastique-id="${id}"]`);
+    if (element) {
+        element.remove();
+        updateElastiquesConfig();
+    }
+}
+
+function updateElastiquesConfig() {
+    equipmentConfig.elastiques.bands = [];
+    
+    document.querySelectorAll('.elastique-input').forEach(elastiqueDiv => {
+        const id = elastiqueDiv.dataset.elastiqueId;
+        const colorInput = document.getElementById(`elastique_color_${id}`);
+        const resistanceInput = document.getElementById(`elastique_resistance_${id}`);
+        const countInput = document.getElementById(`elastique_count_${id}`);
+        
+        if (colorInput && resistanceInput && countInput) {
+            const color = colorInput.value.trim();
+            const resistance = parseFloat(resistanceInput.value);
+            const count = parseInt(countInput.value);
+            
+            if (color && !isNaN(resistance) && !isNaN(count) && resistance > 0 && count > 0) {
+                equipmentConfig.elastiques.bands.push({
+                    color: color,
+                    resistance: resistance,
+                    count: count
+                });
+            }
+        }
+    });
+}
+
+// ===== FONCTIONS POUR LES AUTRES ÉQUIPEMENTS =====
+function toggleKettlebellConfig() {
+    const checkbox = document.getElementById('kettlebell_available');
+    const config = document.getElementById('kettlebell_config');
+    
+    equipmentConfig.autres.kettlebell.available = checkbox.checked;
+    config.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+function toggleLestConfig(type) {
+    const checkbox = document.getElementById(`lest_${type}_available`);
+    const config = document.getElementById(`lest_${type}_config`);
+    
+    equipmentConfig.autres[`lest_${type}`].available = checkbox.checked;
+    config.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+function showKettlebellModal() {
+    // TODO: Implémenter modal pour kettlebells
+    showToast('Configuration kettlebells à venir', 'info');
+}
+
+function showLestModal(type) {
+    // TODO: Implémenter modal pour lests
+    showToast(`Configuration lests ${type} à venir`, 'info');
+}
+
+// ===== FONCTION POUR COLLECTER TOUTE LA CONFIGURATION =====
+function collectEquipmentConfig() {
+    // Mettre à jour les élastiques
+    updateElastiquesConfig();
+    
+    // Mettre à jour les options du banc si activé
+    if (equipmentConfig.banc.available) {
+        const inclineHaut = document.getElementById('banc_incline_haut');
+        const inclineBas = document.getElementById('banc_incline_bas');
+        
+        if (inclineHaut) equipmentConfig.banc.inclinable_haut = inclineHaut.checked;
+        if (inclineBas) equipmentConfig.banc.inclinable_bas = inclineBas.checked;
+    }
+    
+    // Mettre à jour la barre de traction
+    const barreTraction = document.getElementById('barre_traction_available');
+    if (barreTraction) {
+        equipmentConfig.autres.barre_traction.available = barreTraction.checked;
+    }
+    
+    return equipmentConfig;
+}
+
+// ===== FONCTION DE COMPLETION ONBOARDING MISE À JOUR =====
+async function completeOnboarding() {
+    // Collecter toute la configuration
+    const finalConfig = collectEquipmentConfig();
+    
+    const userData = {
+        name: document.getElementById('userName').value,
+        age: parseInt(document.getElementById('userAge').value),
+        experience_level: document.getElementById('experienceLevel').value,
+        goals: selectedGoals,
+        equipment_config: finalConfig
+    };
+    
+    // Validation basique
+    if (!userData.name || !userData.age || !userData.experience_level || selectedGoals.length === 0) {
+        showToast('Veuillez remplir tous les champs obligatoires', 'error');
+        return;
+    }
+    
+    try {
+        console.log('Envoi des données utilisateur:', userData);
+        
+        const response = await fetch(`${API_URL}/users/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (response.ok) {
+            const user = await response.json();
+            currentUser = user;
+            localStorage.setItem('userId', user.id);
+            
+            // Mettre à jour l'interface
+            document.getElementById('userInitial').textContent = user.name[0].toUpperCase();
+            document.getElementById('userInitial').style.display = 'flex';
+            
+            showToast('Profil créé avec succès ! 🎉', 'success');
+            
+            // Passer au dashboard
+            setTimeout(() => {
+                showView('dashboard');
+                document.getElementById('progressContainer').style.display = 'none';
+            }, 1500);
+            
         } else {
-            container.innerHTML = window.selectedDumbbells
-                .map(w => `<div class="chip selected">${w} kg</div>`)
-                .join('');
+            const errorData = await response.json();
+            console.error('Erreur serveur:', errorData);
+            showToast('Erreur lors de la création du profil', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur de connexion au serveur', 'error');
+    }
+}
+
+// ===== FONCTION POUR CALCULER LES POIDS DISPONIBLES (mise à jour) =====
+function calculateAvailableWeights(exercise) {
+    if (!currentUser || !currentUser.equipment_config) {
+        return [];
+    }
+    
+    const equipmentNeeded = exercise.equipment || [];
+    const config = currentUser.equipment_config;
+    let weights = [];
+    
+    // Haltères
+    if (equipmentNeeded.includes('dumbbells') && config.dumbbells?.available) {
+        weights = [...config.dumbbells.weights];
+    }
+    
+    // Barres + disques
+    else if (equipmentNeeded.some(eq => eq.startsWith('barbell_')) && config.disques?.available) {
+        // Déterminer le type de barre
+        let barWeight = 20; // Défaut
+        
+        if (equipmentNeeded.includes('barbell_standard') && config.barres?.barbell_standard?.available) {
+            barWeight = config.barres.barbell_standard.weight;
+        } else if (equipmentNeeded.includes('barbell_ez') && config.barres?.barbell_ez?.available) {
+            barWeight = config.barres.barbell_ez.weight;
+        } else if (equipmentNeeded.includes('barbell_courte') && config.barres?.barbell_courte?.available) {
+            barWeight = config.barres.barbell_courte.weight;
+        }
+        
+        // Calculer toutes les combinaisons possibles avec les disques
+        weights = calculateBarbellWeightCombinations(barWeight, config.disques.weights);
+    }
+    
+    // Élastiques
+    else if (equipmentNeeded.includes('elastiques') && config.elastiques?.available) {
+        weights = config.elastiques.bands.map(band => band.resistance);
+    }
+    
+    // Kettlebells
+    else if (equipmentNeeded.includes('kettlebell') && config.autres?.kettlebell?.available) {
+        weights = config.autres.kettlebell.weights;
+    }
+    
+    // Poids du corps
+    else if (equipmentNeeded.includes('bodyweight')) {
+        weights = [0]; // Poids du corps
+    }
+    
+    return weights.sort((a, b) => a - b);
+}
+
+function calculateBarbellWeightCombinations(barWeight, availablePlates) {
+    const weights = new Set([barWeight]); // Commencer avec la barre seule
+    
+    // Convertir les disques en format numérique
+    const plates = {};
+    for (const [weightStr, count] of Object.entries(availablePlates)) {
+        plates[parseFloat(weightStr)] = count;
+    }
+    
+    // Générer toutes les combinaisons possibles (max 6 disques par côté pour être réaliste)
+    function generateCombinations(currentWeight, remainingPlates, depth = 0) {
+        if (depth > 6) return; // Max 6 disques par côté
+        
+        weights.add(currentWeight);
+        
+        for (const [plateWeight, count] of Object.entries(remainingPlates)) {
+            if (count >= 2) { // Il faut 2 disques (un de chaque côté)
+                const newWeight = currentWeight + (plateWeight * 2);
+                const newRemaining = {...remainingPlates};
+                newRemaining[plateWeight] = count - 2;
+                
+                if (newRemaining[plateWeight] === 0) {
+                    delete newRemaining[plateWeight];
+                }
+                
+                generateCombinations(newWeight, newRemaining, depth + 1);
+            }
         }
     }
-    closeDumbbellModal();
+    
+    generateCombinations(barWeight, plates);
+    
+    // Convertir en array, trier et limiter à des poids réalistes
+    return Array.from(weights)
+        .filter(w => w <= 300) // Max 300kg pour être réaliste
+        .sort((a, b) => a - b);
 }
+
+// ===== INITIALISATION =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listener pour les changements de poids de disques personnalisés
+    const disqueWeightSelect = document.getElementById('disque_weight');
+    if (disqueWeightSelect) {
+        disqueWeightSelect.addEventListener('change', handleDisqueWeightChange);
+    }
+    
+    console.log('Interface équipement initialisée');
+});
 
 // Utilitaires
 function parseCommaNumber(str) {

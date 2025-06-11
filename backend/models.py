@@ -12,10 +12,16 @@ class User(Base):
     age = Column(Integer)
     experience_level = Column(String)
     goals = Column(JSON)
-    available_equipment = Column(JSON)
-    dumbbell_weights = Column(JSON)  # Liste des poids d'haltères disponibles
-    barbell_weights = Column(JSON)   # {"standard_bar": 20, "ez_bar": 10, "plates": [2.5, 5, 10, 20]}
-    resistance_bands = Column(JSON)  # [{"color": "rouge", "resistance": 15}, ...]
+    
+    # NOUVELLE STRUCTURE ÉQUIPEMENT (prioritaire)
+    equipment_config = Column(JSON)  # Structure complète nouvelle
+    
+    # ANCIENNES COLONNES (gardées pour compatibilité pendant migration)
+    available_equipment = Column(JSON)  # DEPRECATED mais gardé temporairement
+    dumbbell_weights = Column(JSON)     # DEPRECATED mais gardé temporairement
+    barbell_weights = Column(JSON)      # DEPRECATED mais gardé temporairement
+    resistance_bands = Column(JSON)     # DEPRECATED mais gardé temporairement
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     
     workouts = relationship("Workout", back_populates="user")
@@ -26,10 +32,13 @@ class Exercise(Base):
     id = Column(Integer, primary_key=True, index=True)
     name_fr = Column(String, nullable=False)
     name_eng = Column(String, nullable=False)
-    equipment = Column(JSON)
+    equipment = Column(JSON)  # Nouveau format: ["barbell_standard", "dumbbells"]
     level = Column(String)
     body_part = Column(String)
     sets_reps = Column(JSON)
+    
+    # NOUVEAU: Spécifications détaillées
+    equipment_specs = Column(JSON)  # {"barbell_count": 1, "dumbbell_count": 2}
 
 class Workout(Base):
     __tablename__ = "workouts"

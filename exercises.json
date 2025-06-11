@@ -3,7 +3,7 @@
     "name_fr": "Développé assis à la machine convergente",
     "name_eng": "Convergent Machine Seated Press",
     "equipment": [
-      "convergent_machine"
+      "machine_convergente"
     ],
     "level": "basic",
     "body_part": "Pectoraux",
@@ -43,14 +43,15 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Développé couché avec haltères",
     "name_eng": "Dumbbell Bench Press",
     "equipment": [
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "basic",
     "body_part": "Pectoraux",
@@ -90,14 +91,17 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Développé couché à la barre",
     "name_eng": "Barbell Bench Press",
     "equipment": [
-      "barbell",
-      "bench"
+      "barbell_standard",
+      "bench_plat"
     ],
     "level": "basic",
     "body_part": "Pectoraux",
@@ -137,13 +141,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Développé couché à la machine convergente",
     "name_eng": "Convergent Machine Bench Press",
     "equipment": [
-      "convergent_machine"
+      "machine_convergente"
     ],
     "level": "basic",
     "body_part": "Pectoraux",
@@ -183,7 +190,8 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Développé décliné avec haltères",
@@ -230,13 +238,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Développé décliné à la barre",
     "name_eng": "Decline Barbell Press",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "decline_bench"
     ],
     "level": "basic",
@@ -277,7 +288,10 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Développé incliné avec haltères",
@@ -324,13 +338,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Développé incliné à la barre",
     "name_eng": "Incline Barbell Press",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "incline_bench"
     ],
     "level": "basic",
@@ -371,13 +388,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Développé incliné à la machine convergente",
     "name_eng": "Convergent Machine Incline Press",
     "equipment": [
-      "convergent_machine"
+      "machine_convergente"
     ],
     "level": "basic",
     "body_part": "Pectoraux",
@@ -417,7 +437,8 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Dips prise large buste penché",
@@ -469,9 +490,9 @@
     "name_fr": "Pull over avec barre ou haltère",
     "name_eng": "Barbell or Dumbbell Pullover",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "basic",
     "body_part": "Pectoraux",
@@ -511,15 +532,19 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1,
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Pull over en travers d’un banc avec barre ou haltère",
     "name_eng": "Cross-Bench Barbell or Dumbbell Pullover",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "basic",
     "body_part": "Pectoraux",
@@ -559,14 +584,18 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1,
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Écarté couché avec haltères",
     "name_eng": "Dumbbell Fly",
     "equipment": [
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Pectoraux",
@@ -606,7 +635,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Écarté décliné avec haltères",
@@ -653,7 +685,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Écarté incliné avec haltères",
@@ -700,7 +735,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Écarté pectoraux à la machine",
@@ -792,13 +830,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Pull over à la poulie basse",
     "name_eng": "Low Cable Pullover",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Pectoraux",
@@ -838,13 +877,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Écarté à la poulie vis à vis basse",
     "name_eng": "Low Cable Crossover",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "finition",
     "body_part": "Pectoraux",
@@ -884,13 +924,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Écarté à la poulie vis à vis haute",
     "name_eng": "High Cable Crossover",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "finition",
     "body_part": "Pectoraux",
@@ -930,7 +971,8 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Développé couché à la machine",
@@ -1028,7 +1070,7 @@
     "name_fr": "Crunch à la poulie haute",
     "name_eng": "Cable Crunch",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "basic",
     "body_part": "Abdominaux",
@@ -1068,7 +1110,8 @@
         "reps": 35,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Enroulement de bassin au sol avec l’Abmat",
@@ -1252,7 +1295,8 @@
         "reps": 35,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Crunch abdominaux à la machine",
@@ -1390,7 +1434,8 @@
         "reps": 35,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Enroulement de bassin au sol",
@@ -1436,7 +1481,8 @@
         "reps": 35,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Obliques avec l’Abmat",
@@ -1666,7 +1712,8 @@
         "reps": 30,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Crunch abdominaux avec rotation au sol",
@@ -1712,13 +1759,14 @@
         "reps": 35,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Drapeau du dragon",
     "name_eng": "Dragon Flag",
     "equipment": [
-      "bench"
+      "bench_plat"
     ],
     "level": "finition",
     "body_part": "Abdominaux",
@@ -1758,7 +1806,8 @@
         "reps": 20,
         "reps_tolerance": 3
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Flexion latérale avec haltère",
@@ -1850,7 +1899,8 @@
         "reps": 90,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Gainage abdominal oblique",
@@ -1896,7 +1946,8 @@
         "reps": 90,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Rotation debout avec balais",
@@ -1994,7 +2045,7 @@
     "name_fr": "Presse à cuisses allongé",
     "name_eng": "Lying Leg Press",
     "equipment": [
-      "leg_press_machine"
+      "machine_jambes"
     ],
     "level": "basic",
     "body_part": "Quadriceps",
@@ -2034,13 +2085,14 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Presse à cuisses assis",
     "name_eng": "Seated Leg Press",
     "equipment": [
-      "leg_press_machine"
+      "machine_jambes"
     ],
     "level": "basic",
     "body_part": "Quadriceps",
@@ -2080,13 +2132,14 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Presse à cuisses incliné",
     "name_eng": "Incline Leg Press",
     "equipment": [
-      "leg_press_machine"
+      "machine_jambes"
     ],
     "level": "basic",
     "body_part": "Quadriceps",
@@ -2126,13 +2179,14 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Squat avant avec barre",
     "name_eng": "Front Squat",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "squat_rack"
     ],
     "level": "basic",
@@ -2173,13 +2227,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Squat avec barre derrière la nuque",
     "name_eng": "Back Squat",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "squat_rack"
     ],
     "level": "basic",
@@ -2220,13 +2277,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Squat sumo avec barre",
     "name_eng": "Sumo Squat",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "squat_rack"
     ],
     "level": "basic",
@@ -2267,13 +2327,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Fente latérale avec barre",
     "name_eng": "Barbell Lateral Lunge",
     "equipment": [
-      "barbell"
+      "barbell_standard"
     ],
     "level": "advanced",
     "body_part": "Quadriceps",
@@ -2313,7 +2376,10 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Gobelet Squat avec haltère",
@@ -2365,7 +2431,7 @@
     "name_fr": "Hack squat avec une barre",
     "name_eng": "Barbell Hack Squat",
     "equipment": [
-      "barbell"
+      "barbell_standard"
     ],
     "level": "advanced",
     "body_part": "Quadriceps",
@@ -2405,15 +2471,18 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Montée sur banc avec barre ou haltères",
     "name_eng": "Barbell or Dumbbell Step-Up",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Quadriceps",
@@ -2453,7 +2522,11 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1,
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Squat avec ceinture de lest",
@@ -2552,7 +2625,7 @@
     "name_eng": "Bulgarian Split Squat",
     "equipment": [
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Quadriceps",
@@ -2592,13 +2665,16 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Fente avant avec barre ou haltères",
     "name_eng": "Barbell or Dumbbell Lunge",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "dumbbells"
     ],
     "level": "finition",
@@ -2639,13 +2715,17 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1,
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Fente arrière avec barre ou haltères",
     "name_eng": "Reverse Barbell or Dumbbell Lunge",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "dumbbells"
     ],
     "level": "finition",
@@ -2686,7 +2766,11 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1,
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Squat sauté",
@@ -2732,13 +2816,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Développé militaire avec barre",
     "name_eng": "Barbell Military Press",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "squat_rack"
     ],
     "level": "basic",
@@ -2779,7 +2864,10 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Développé militaire avec haltères",
@@ -2825,13 +2913,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Développé militaire à la machine",
     "name_eng": "Machine Military Press",
     "equipment": [
-      "shoulder_press_machine"
+      "machine_epaules"
     ],
     "level": "basic",
     "body_part": "Deltoïdes",
@@ -2871,14 +2962,15 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Développé militaire assis avec barre",
     "name_eng": "Seated Barbell Military Press",
     "equipment": [
-      "barbell",
-      "bench"
+      "barbell_standard",
+      "bench_plat"
     ],
     "level": "basic",
     "body_part": "Deltoïdes",
@@ -2918,14 +3010,17 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Développé militaire assis avec haltères",
     "name_eng": "Seated Dumbbell Military Press",
     "equipment": [
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "basic",
     "body_part": "Deltoïdes",
@@ -2965,7 +3060,10 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Développé Arnold avec haltères",
@@ -3011,13 +3109,16 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Élévation frontale à la barre",
     "name_eng": "Barbell Front Raise",
     "equipment": [
-      "barbell"
+      "barbell_standard"
     ],
     "level": "advanced",
     "body_part": "Deltoïdes",
@@ -3057,7 +3158,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Élévation frontale avec haltères",
@@ -3103,7 +3207,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Élévation latérale avec haltères",
@@ -3149,13 +3256,16 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Élévation latérale à la poulie basse",
     "name_eng": "Low Cable Lateral Raise",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Deltoïdes",
@@ -3195,14 +3305,15 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Oiseau avec haltères",
     "name_eng": "Dumbbell Rear Delt Fly",
     "equipment": [
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Deltoïdes",
@@ -3242,13 +3353,16 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Oiseau à la poulie basse",
     "name_eng": "Low Cable Rear Delt Fly",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Deltoïdes",
@@ -3288,13 +3402,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Élévation frontale à la poulie basse",
     "name_eng": "Low Cable Front Raise",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "finition",
     "body_part": "Deltoïdes",
@@ -3334,7 +3449,8 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Oiseau à la machine",
@@ -3386,7 +3502,7 @@
     "name_fr": "Curl avec barre droite",
     "name_eng": "Barbell Curl",
     "equipment": [
-      "barbell"
+      "barbell_standard"
     ],
     "level": "basic",
     "body_part": "Biceps",
@@ -3426,13 +3542,16 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Curl avec barre EZ",
     "name_eng": "EZ Bar Curl",
     "equipment": [
-      "ez_bar"
+      "barbell_ez"
     ],
     "level": "basic",
     "body_part": "Biceps",
@@ -3472,7 +3591,8 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Curl avec haltères",
@@ -3518,7 +3638,10 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Curl incliné avec haltères",
@@ -3565,7 +3688,10 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Curl marteau avec haltères",
@@ -3611,13 +3737,16 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Curl à la poulie basse",
     "name_eng": "Low Cable Curl",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Biceps",
@@ -3657,13 +3786,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Curl à la poulie haute",
     "name_eng": "High Cable Curl",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Biceps",
@@ -3703,14 +3833,15 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Curl concentré avec haltère",
     "name_eng": "Concentration Curl",
     "equipment": [
       "dumbbell",
-      "bench"
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Biceps",
@@ -3750,13 +3881,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Curl prêcheur avec barre droite",
     "name_eng": "Barbell Preacher Curl",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "preacher_bench"
     ],
     "level": "advanced",
@@ -3797,13 +3929,16 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Curl prêcheur avec barre EZ",
     "name_eng": "EZ Bar Preacher Curl",
     "equipment": [
-      "ez_bar",
+      "barbell_ez",
       "preacher_bench"
     ],
     "level": "advanced",
@@ -3844,7 +3979,8 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Curl prêcheur avec haltères",
@@ -3891,7 +4027,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Curl à la machine",
@@ -3943,7 +4082,7 @@
     "name_fr": "Curl inversé avec barre",
     "name_eng": "Reverse Barbell Curl",
     "equipment": [
-      "barbell"
+      "barbell_standard"
     ],
     "level": "advanced",
     "body_part": "Avants-Bras",
@@ -3983,7 +4122,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Curl inversé avec haltères",
@@ -4029,14 +4171,17 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Curl poignet avec barre",
     "name_eng": "Barbell Wrist Curl",
     "equipment": [
-      "barbell",
-      "bench"
+      "barbell_standard",
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Avants-Bras",
@@ -4076,14 +4221,17 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Curl poignet avec haltères",
     "name_eng": "Dumbbell Wrist Curl",
     "equipment": [
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Avants-Bras",
@@ -4123,13 +4271,16 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Curl inversé à la poulie basse",
     "name_eng": "Low Cable Reverse Curl",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "finition",
     "body_part": "Avants-Bras",
@@ -4169,7 +4320,8 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Curl poignet à la machine",
@@ -4222,7 +4374,7 @@
     "name_eng": "T-Bar Row",
     "equipment": [
       "t-bar_machine",
-      "barbell"
+      "barbell_standard"
     ],
     "level": "basic",
     "body_part": "Trapèzes",
@@ -4262,13 +4414,16 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Shrug avec barre",
     "name_eng": "Barbell Shrug",
     "equipment": [
-      "barbell"
+      "barbell_standard"
     ],
     "level": "basic",
     "body_part": "Trapèzes",
@@ -4308,7 +4463,10 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Shrug avec haltères",
@@ -4354,7 +4512,10 @@
         "reps": 5,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Shrug à la machine",
@@ -4406,7 +4567,7 @@
     "name_fr": "Face pull à la poulie",
     "name_eng": "Cable Face Pull",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Trapèzes",
@@ -4446,13 +4607,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Rowing vertical avec barre",
     "name_eng": "Barbell Upright Row",
     "equipment": [
-      "barbell"
+      "barbell_standard"
     ],
     "level": "advanced",
     "body_part": "Trapèzes",
@@ -4492,7 +4654,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Rowing vertical avec haltères",
@@ -4538,13 +4703,16 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Shrug à la poulie basse",
     "name_eng": "Low Cable Shrug",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "finition",
     "body_part": "Trapèzes",
@@ -4584,15 +4752,16 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Barre au front triceps avec barre ou haltères",
     "name_eng": "Skull Crusher",
     "equipment": [
-      "barbell",
+      "barbell_standard",
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "basic",
     "body_part": "Triceps",
@@ -4632,7 +4801,11 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1,
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Dips prise étroite",
@@ -4684,7 +4857,7 @@
     "name_fr": "Extension triceps à la poulie haute",
     "name_eng": "Cable Tricep Pushdown",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "basic",
     "body_part": "Triceps",
@@ -4724,14 +4897,15 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Développé couché prise serrée avec barre",
     "name_eng": "Close-Grip Barbell Bench Press",
     "equipment": [
-      "barbell",
-      "bench"
+      "barbell_standard",
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Triceps",
@@ -4771,7 +4945,10 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Extension triceps avec haltère au-dessus de la tête",
@@ -4823,8 +5000,8 @@
     "name_fr": "Extension triceps couché avec barre EZ",
     "name_eng": "EZ Bar Lying Tricep Extension",
     "equipment": [
-      "ez_bar",
-      "bench"
+      "barbell_ez",
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Triceps",
@@ -4864,7 +5041,8 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Extension triceps à la machine",
@@ -4917,7 +5095,7 @@
     "name_eng": "Dumbbell Kickback",
     "equipment": [
       "dumbbells",
-      "bench"
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Triceps",
@@ -4957,13 +5135,16 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Extension triceps à la poulie avec corde",
     "name_eng": "Cable Tricep Pushdown with Rope",
     "equipment": [
-      "cable_machine",
+      "cables",
       "rope_attachment"
     ],
     "level": "finition",
@@ -5004,13 +5185,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Extension triceps à la poulie inversée",
     "name_eng": "Reverse Cable Tricep Pushdown",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "finition",
     "body_part": "Triceps",
@@ -5050,7 +5232,8 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Crunch au sol",
@@ -5097,7 +5280,8 @@
         "reps": 10,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Crunch à la machine",
@@ -5195,7 +5379,7 @@
     "name_fr": "Relevé de jambes au banc",
     "name_eng": "Bench Leg Raise",
     "equipment": [
-      "bench"
+      "bench_plat"
     ],
     "level": "advanced",
     "body_part": "Abdominaux",
@@ -5235,13 +5419,14 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Obliques à la poulie",
     "name_eng": "Cable Oblique Twist",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Abdominaux",
@@ -5281,7 +5466,8 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Russian twist",
@@ -5329,7 +5515,8 @@
         "reps": 10,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Planche",
@@ -5376,7 +5563,8 @@
         "reps": 90,
         "reps_tolerance": 15
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Planche latérale",
@@ -5423,7 +5611,8 @@
         "reps": 75,
         "reps_tolerance": 10
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Abdominaux à la roue",
@@ -5516,7 +5705,8 @@
         "reps": 40,
         "reps_tolerance": 5
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Pont fessier",
@@ -5563,14 +5753,15 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Hip thrust avec barre",
     "name_eng": "Barbell Hip Thrust",
     "equipment": [
-      "barbell",
-      "bench"
+      "barbell_standard",
+      "bench_plat"
     ],
     "level": "basic",
     "body_part": "Fessiers",
@@ -5610,7 +5801,10 @@
         "reps": 6,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Fente arrière fessier avec haltères",
@@ -5656,7 +5850,10 @@
         "reps": 8,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Abduction fessier à la machine",
@@ -5754,7 +5951,7 @@
     "name_fr": "Kick back fessier à la poulie",
     "name_eng": "Cable Glute Kickback",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Fessiers",
@@ -5794,14 +5991,15 @@
         "reps": "8",
         "reps_tolerance": "2"
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Élévation latérale fessier au poids du corps",
     "name_eng": "Bodyweight Lateral Step-Up",
     "equipment": [
       "bodyweight",
-      "bench"
+      "bench_plat"
     ],
     "level": "finition",
     "body_part": "Fessiers",
@@ -5841,7 +6039,8 @@
         "reps": 10,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Mollets debout à la machine",
@@ -5939,7 +6138,7 @@
     "name_fr": "Mollets à la presse à cuisses",
     "name_eng": "Leg Press Calf Raise",
     "equipment": [
-      "leg_press_machine"
+      "machine_jambes"
     ],
     "level": "basic",
     "body_part": "Mollets",
@@ -5979,7 +6178,8 @@
         "reps": 10,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Mollets debout avec haltères",
@@ -6025,13 +6225,16 @@
         "reps": 10,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Mollets à la poulie",
     "name_eng": "Cable Calf Raise",
     "equipment": [
-      "cable_machine"
+      "cables"
     ],
     "level": "advanced",
     "body_part": "Mollets",
@@ -6071,7 +6274,8 @@
         "reps": 10,
         "reps_tolerance": 2
       }
-    ]
+    ],
+    "equipment_specs": {}
   },
   {
     "name_fr": "Saut à la corde",

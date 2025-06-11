@@ -5,7 +5,6 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, text
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 
@@ -15,11 +14,10 @@ import os
 from backend.database import engine, get_db, SessionLocal
 from backend.models import Base, User, Exercise, Workout, Set
 from backend.routes import router as ml_router
+from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse
 
 # Create tables
 Base.metadata.create_all(bind=engine)
-
-
 
 # Lifespan event handler
 @asynccontextmanager
@@ -47,7 +45,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown (nothing to do)
 
-app = FastAPI(title="Fitness Coach API", lifespan=lifespan)
+app = FastAPI(title="Gym Coach API", lifespan=lifespan)
 app.include_router(ml_router)
 
 # CORS for local network access
@@ -59,67 +57,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Pydantic schemas
-class UserCreate(BaseModel):
-    name: str
-    age: int
-    experience_level: str
-    goals: List[str]
-    available_equipment: List[str]
-    dumbbell_weights: List[float]
-    barbell_weights: Optional[Dict[str, Any]] = None
-    resistance_bands: Optional[List[Dict[str, Any]]] = []
-
-class UserResponse(BaseModel):
-    id: int
-    name: str
-    age: int
-    experience_level: str
-    goals: List[str]
-    available_equipment: List[str]
-    created_at: datetime
-    
-    class Config:
-        from_attributes = True
-
-class WorkoutCreate(BaseModel):
-    user_id: int
-    type: str = "free_time"
-
-class SetCreate(BaseModel):
-    workout_id: int
-    exercise_id: int
-    set_number: int
-    target_reps: int
-    actual_reps: int
-    weight: float
-    rest_time: int
-    fatigue_level: int
-    perceived_exertion: int
-    skipped: bool = False
-
-class ExerciseResponse(BaseModel):
-    id: int
-    name_fr: str
-    name_eng: str
-    equipment: List[str]
-    level: str
-    body_part: str
-    sets_reps: List[dict]
-    
-    class Config:
-        from_attributes = True
-
 # User endpoints
 @app.post("/api/users/", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     user_data = user.dict()
     
-    # Assurer que les listes sont bien des listes
-    if not isinstance(user_data.get('dumbbell_weights'), list):
-        user_data['dumbbell_weights'] = []
-    
-    # Créer l'utilisateur
+    # Créer l'utilisateur avec la nouvelle structure
     db_user = User(**user_data)
     db.add(db_user)
     db.commit()
@@ -157,6 +100,60 @@ def get_exercise(exercise_id: int, db: Session = Depends(get_db)):
     if not exercise:
         raise HTTPException(status_code=404, detail="Exercise not found")
     return exercise
+
+# Endpoint pour filtrer exercices selon équipement utilisateur
+@app.get("/api/users/{user_id}/available-exercises", response_model=List[ExerciseResponse])
+def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not user.equipment_config:
+        return []
+    
+    # Analyser l'équipement disponible
+    equipment_config = user.equipment_config
+    available_equipment = []
+    
+    # Barres
+    for barre_type, config in equipment_config.get("barres", {}).items():
+        if config.get("available", False):
+            available_equipment.append(barre_type)
+    
+    # Haltères
+    if equipment_config.get("dumbbells", {}).get("available", False):
+        available_equipment.append("dumbbells")
+    
+    # Banc
+    if equipment_config.get("banc", {}).get("available", False):
+        available_equipment.append("bench_plat")
+        if equipment_config["banc"].get("inclinable_haut", False):
+            available_equipment.append("bench_inclinable")
+    
+    # Élastiques
+    if equipment_config.get("elastiques", {}).get("available", False):
+        available_equipment.append("elastiques")
+    
+    # Autres
+    autres = equipment_config.get("autres", {})
+    for equip_type, config in autres.items():
+        if config.get("available", False):
+            available_equipment.append(equip_type)
+    
+    # Poids du corps toujours disponible
+    available_equipment.append("bodyweight")
+    
+    # Filtrer les exercices
+    all_exercises = db.query(Exercise).all()
+    compatible_exercises = []
+    
+    for exercise in all_exercises:
+        exercise_equipment = exercise.equipment or []
+        # Vérifier si tous les équipements requis sont disponibles
+        if all(eq in available_equipment for eq in exercise_equipment):
+            compatible_exercises.append(exercise)
+    
+    return compatible_exercises
 
 # Workout endpoints
 @app.post("/api/workouts/")
@@ -218,52 +215,10 @@ def create_set(set_data: SetCreate, db: Session = Depends(get_db)):
     db.refresh(db_set)
     return {"id": db_set.id, "created": True}
 
-@app.get("/api/sets/last-weight/{user_id}/{exercise_id}")
-def get_last_weight(user_id: int, exercise_id: int, db: Session = Depends(get_db)):
-    # Get last non-skipped set for this exercise
-    last_set = db.query(Set).join(Workout).filter(
-        Workout.user_id == user_id,
-        Set.exercise_id == exercise_id,
-        Set.skipped == False
-    ).order_by(Set.completed_at.desc()).first()
-    
-    if last_set:
-        return {"weight": last_set.weight, "reps": last_set.actual_reps}
-    return {"weight": None, "reps": None}
+@app.get("/api/sets/{workout_id}")
+def get_workout_sets(workout_id: int, db: Session = Depends(get_db)):
+    sets = db.query(Set).filter(Set.workout_id == workout_id).all()
+    return sets
 
-# Stats endpoint
-@app.get("/api/stats/{user_id}")
-def get_user_stats(user_id: int, db: Session = Depends(get_db)):
-    total_workouts = db.query(Workout).filter(Workout.user_id == user_id).count()
-    
-    # Total volume
-    sets = db.query(Set).join(Workout).filter(
-        Workout.user_id == user_id,
-        Set.skipped == False
-    ).all()
-    total_volume = sum(s.weight * s.actual_reps for s in sets)
-    
-    # This week
-    week_start = datetime.utcnow() - timedelta(days=7)
-    week_workouts = db.query(Workout).filter(
-        Workout.user_id == user_id,
-        Workout.created_at >= week_start
-    ).count()
-    
-    return {
-        "total_workouts": total_workouts,
-        "total_volume": total_volume,
-        "week_workouts": week_workouts
-    }
-
-# Serve frontend
-frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
-if os.path.exists(frontend_path):
-    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
-else:
-    print(f"Warning: frontend folder not found at {frontend_path}")
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+# Static files
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

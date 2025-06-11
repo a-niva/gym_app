@@ -6,512 +6,499 @@
     <title>Fitness Coach</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2563eb">
-    <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --dark: #0f172a;
-            --gray: #64748b;
-            --light: #cbd5e1;
-            --white: #ffffff;
-            --radius: 0.5rem;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%);
-            color: var(--white);
-            min-height: 100vh;
-        }
-
-        /* Header */
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1rem;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-        }
-
-        /* Progress Bar */
-        .progress-container {
-            position: fixed;
-            top: 73px;
-            left: 0;
-            right: 0;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 0.5rem 1rem;
-            z-index: 999;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--primary);
-            transition: width 0.3s ease;
-            width: 25%;
-        }
-
-        /* Navigation Bottom */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 0.5rem;
-            display: flex;
-            justify-content: space-around;
-            z-index: 1000;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.5rem;
-            color: var(--gray);
-            text-decoration: none;
-            border-radius: var(--radius);
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .nav-item.active {
-            color: var(--primary);
-        }
-
-        .nav-item svg {
-            width: 24px;
-            height: 24px;
-        }
-
-        .nav-item span {
-            font-size: 0.75rem;
-        }
-
-        /* Contenu principal */
-        .main-content {
-            padding: 5rem 1rem 5rem;
-            min-height: 100vh;
-        }
-
-        /* Vue Onboarding */
-        .onboarding {
-            display: none;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .onboarding.active {
-            display: block;
-        }
-
-        .onboarding-step {
-            display: none;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease-out;
-        }
-
-        .onboarding-step.active {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--light);
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-            color: var(--white);
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .form-select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1.5rem;
-            padding-right: 3rem;
-        }
-
-        .chip-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .chip {
-            padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 2rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-
-        .chip:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .chip.selected {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-
-        .equipment-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-
-        .equipment-card {
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .equipment-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .equipment-card.selected {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .equipment-card svg {
-            width: 40px;
-            height: 40px;
-            margin-bottom: 0.5rem;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 1rem 2rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius);
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            justify-content: center;
-        }
-
-        .btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: var(--secondary);
-        }
-
-        .btn-secondary:hover {
-            background: #059669;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-            border: none;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
-        /* Equipment Config */
-        .equipment-config {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-
-        .equipment-config h4 {
-            margin-bottom: 1rem;
-            color: var(--primary);
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-        }
-
-        .modal-content {
-            background: var(--dark);
-            border-radius: var(--radius);
-            padding: 2rem;
-            max-width: 400px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--gray);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            margin: 0;
-        }
-
-        /* Band Input */
-        .band-input {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-            align-items: center;
-        }
-
-        .band-input .form-input {
-            margin-bottom: 0;
-        }
-
-        /* Plate Configuration */
-        .plate-config-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius);
-            margin-bottom: 0.5rem;
-        }
-
-        .plate-config-item .weight {
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        /* Dashboard */
-        .dashboard {
-            display: none;
-        }
-
-        .dashboard.active {
-            display: block;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: var(--gray);
-            font-size: 0.875rem;
-        }
-
-        /* Workout */
-        .workout-view {
-            display: none;
-        }
-
-        .workout-view.active {
-            display: block;
-        }
-
-        .mode-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .mode-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .mode-card.selected {
-            border-color: var(--primary);
-            background: rgba(37, 99, 235, 0.1);
-        }
-
-        /* Animations */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 1rem 2rem;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            z-index: 9999;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .checkbox-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .equipment-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
+    
+<!-- Corrections CSS pour améliorer le design -->
+<style>
+:root {
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --secondary: #10b981;
+    --secondary-dark: #059669;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --dark: #0f172a;
+    --dark-lighter: #1e293b;
+    --gray: #64748b;
+    --gray-light: #94a3b8;
+    --light: #cbd5e1;
+    --white: #ffffff;
+    --radius: 0.75rem;
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Reset et base améliorés */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+    background: linear-gradient(135deg, var(--dark) 0%, var(--dark-lighter) 50%, #334155 100%);
+    color: var(--white);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Header amélioré */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 1rem;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.user-avatar {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    box-shadow: var(--shadow);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Progress Bar améliorée */
+.progress-container {
+    position: fixed;
+    top: 73px;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 0.75rem 1rem;
+    z-index: 999;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Navigation Bottom améliorée */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    display: flex;
+    justify-content: space-around;
+    z-index: 1000;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    color: var(--gray);
+    text-decoration: none;
+    border-radius: var(--radius);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+}
+
+.nav-item:hover {
+    color: var(--primary);
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-item.active {
+    color: var(--primary);
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: -0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--primary);
+}
+
+.nav-item svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+}
+
+.nav-item:hover svg {
+    transform: scale(1.1);
+}
+
+.nav-item span {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Contenu principal amélioré */
+.main-content {
+    padding: 6rem 1rem 6rem;
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* Boutons améliorés */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover {
+    background: linear-gradient(135deg, var(--primary-dark), #1d4ed8);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, var(--secondary-dark), #047857);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #dc2626);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+/* Formulaires améliorés */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--light);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    color: var(--white);
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+.form-input::placeholder {
+    color: var(--gray);
+}
+
+/* Cards améliorées */
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--gray-light);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Equipment Cards */
+.equipment-card {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.equipment-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.equipment-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.equipment-card:hover::before {
+    opacity: 0.1;
+}
+
+.equipment-card.selected {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.equipment-card.selected::before {
+    opacity: 0.2;
+}
+
+.equipment-card svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.equipment-card:hover svg {
+    transform: scale(1.1);
+}
+
+/* Animations améliorées */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.onboarding-step {
+    animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Toast amélioré */
+.toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 1rem 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toast.success {
+    background: rgba(16, 185, 129, 0.9);
+    color: white;
+}
+
+.toast.error {
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+}
+
+/* Responsive amélioré */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 5.5rem 0.75rem 5.5rem;
+    }
+    
+    .header-content {
+        padding: 0 0.5rem;
+    }
+    
+    .btn {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-input {
+        padding: 0.875rem 1rem;
+    }
+    
+    .equipment-card {
+        padding: 1rem;
+    }
+    
+    .equipment-card svg {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Mode sombre optimisé */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #000000 0%, var(--dark) 50%, var(--dark-lighter) 100%);
+    }
+}
+
+/* Performance optimizations */
+* {
+    will-change: auto;
+}
+
+.btn, .nav-item, .equipment-card, .stat-card {
+    will-change: transform;
+}
+</style>
 </head>
 <body>
     <!-- Header -->
@@ -690,29 +677,442 @@
             </div>
 
             <!-- Étape 4: Récapitulatif -->
-            <div class="onboarding-step" id="step4">
-                <h2>Récapitulatif 📋</h2>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Vérifiez vos informations avant de créer votre profil.</p>
-                
-                <div style="background: rgba(255, 255, 255, 0.05); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 2rem;">
-                    <div id="profileSummary"></div>
-                </div>
-                
-                <div style="display: flex; gap: 1rem;">
-                    <button class="btn btn-secondary" onclick="prevStep()">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                        Retour
-                    </button>
-                    <button class="btn" onclick="completeOnboarding()">
-                        Créer mon profil
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </button>
+
+<div class="onboarding-step" id="step4">
+    <h2>Votre équipement</h2>
+    <p style="color: var(--gray); margin-bottom: 2rem;">Configurez précisément votre équipement disponible :</p>
+    
+    <!-- BARRES -->
+    <div class="equipment-section">
+        <h3>🏋️ Barres</h3>
+        <div class="equipment-subsection">
+            <div class="equipment-item">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="barbell_standard" onchange="toggleBarreConfig('standard')">
+                    <span>Barre standard (olympique)</span>
+                </label>
+                <div class="equipment-details" id="standard_config" style="display: none;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <label style="min-width: 80px;">Poids (kg):</label>
+                        <input type="number" step="0.5" value="20" id="standard_weight" style="width: 80px;">
+                        <label style="min-width: 60px;">Nombre:</label>
+                        <input type="number" min="1" max="5" value="1" id="standard_count" style="width: 60px;">
+                    </div>
                 </div>
             </div>
+            
+            <div class="equipment-item">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="barbell_ez" onchange="toggleBarreConfig('ez')">
+                    <span>Barre EZ/curl</span>
+                </label>
+                <div class="equipment-details" id="ez_config" style="display: none;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <label style="min-width: 80px;">Poids (kg):</label>
+                        <input type="number" step="0.5" value="10" id="ez_weight" style="width: 80px;">
+                        <label style="min-width: 60px;">Nombre:</label>
+                        <input type="number" min="1" max="5" value="1" id="ez_count" style="width: 60px;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="equipment-item">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="barbell_courte" onchange="toggleBarreConfig('courte')">
+                    <span>Barres courtes (haltères réglables)</span>
+                </label>
+                <div class="equipment-details" id="courte_config" style="display: none;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <label style="min-width: 80px;">Poids (kg):</label>
+                        <input type="number" step="0.5" value="2.5" id="courte_weight" style="width: 80px;">
+                        <label style="min-width: 60px;">Nombre:</label>
+                        <input type="number" min="1" max="10" value="2" id="courte_count" style="width: 60px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- DISQUES -->
+    <div class="equipment-section">
+        <h3>⚪ Disques</h3>
+        <div class="equipment-subsection">
+            <label class="checkbox-label">
+                <input type="checkbox" id="disques_available" onchange="toggleDisquesConfig()">
+                <span>J'ai des disques à ajouter sur les barres</span>
+            </label>
+            <div class="equipment-details" id="disques_config" style="display: none;">
+                <button class="btn btn-secondary" onclick="showDisqueModal()" style="margin-bottom: 1rem;">
+                    ➕ Ajouter des disques
+                </button>
+                <div id="disques_list" class="disques-list">
+                    <p style="color: var(--gray); font-size: 0.875rem;">Aucun disque configuré</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- HALTÈRES (DUMBELLS) -->
+    <div class="equipment-section">
+        <h3>🏋️‍♀️ Haltères (dumbells)</h3>
+        <div class="equipment-subsection">
+            <label class="checkbox-label">
+                <input type="checkbox" id="dumbbells_available" onchange="toggleDumbbellsConfig()">
+                <span>J'ai des haltères fixes (paires)</span>
+            </label>
+            <div class="equipment-details" id="dumbbells_config" style="display: none;">
+                <button class="btn btn-secondary" onclick="showDumbbellModal()" style="margin-bottom: 1rem;">
+                    ➕ Sélectionner mes haltères
+                </button>
+                <div id="dumbbells_list" class="dumbbells-list">
+                    <p style="color: var(--gray); font-size: 0.875rem;">Aucun haltère sélectionné</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BANC -->
+    <div class="equipment-section">
+        <h3>🪑 Banc</h3>
+        <div class="equipment-subsection">
+            <label class="checkbox-label">
+                <input type="checkbox" id="banc_available" onchange="toggleBancConfig()">
+                <span>J'ai un banc de musculation</span>
+            </label>
+            <div class="equipment-details" id="banc_config" style="display: none;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="banc_incline_haut" checked>
+                    <span>Inclinable vers le haut</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="banc_incline_bas">
+                    <span>Inclinable vers le bas (décliné)</span>
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ÉLASTIQUES -->
+    <div class="equipment-section">
+        <h3>🔗 Élastiques / Câbles</h3>
+        <div class="equipment-subsection">
+            <label class="checkbox-label">
+                <input type="checkbox" id="elastiques_available" onchange="toggleElastiquesConfig()">
+                <span>J'ai des élastiques de résistance</span>
+            </label>
+            <div class="equipment-details" id="elastiques_config" style="display: none;">
+                <button class="btn btn-secondary" onclick="addElastique()" style="margin-bottom: 1rem;">
+                    ➕ Ajouter un élastique
+                </button>
+                <div id="elastiques_list" class="elastiques-list">
+                    <!-- Les élastiques seront ajoutés ici dynamiquement -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AUTRES ÉQUIPEMENTS -->
+    <div class="equipment-section">
+        <h3>🏃‍♂️ Autres équipements</h3>
+        <div class="equipment-subsection">
+            <div class="equipment-item">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="kettlebell_available" onchange="toggleKettlebellConfig()">
+                    <span>Kettlebells</span>
+                </label>
+                <div class="equipment-details" id="kettlebell_config" style="display: none;">
+                    <button class="btn btn-secondary" onclick="showKettlebellModal()">
+                        ⚙️ Configurer les poids
+                    </button>
+                    <div id="kettlebell_list"></div>
+                </div>
+            </div>
+            
+            <div class="equipment-item">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="barre_traction_available">
+                    <span>Barre de traction</span>
+                </label>
+            </div>
+            
+            <div class="equipment-item">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="lest_corps_available" onchange="toggleLestConfig('corps')">
+                    <span>Lest pour le corps (gilet lesté)</span>
+                </label>
+                <div class="equipment-details" id="lest_corps_config" style="display: none;">
+                    <button class="btn btn-secondary" onclick="showLestModal('corps')">
+                        ⚙️ Configurer les poids
+                    </button>
+                    <div id="lest_corps_list"></div>
+                </div>
+            </div>
+            
+            <div class="equipment-item">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="lest_chevilles_available" onchange="toggleLestConfig('chevilles')">
+                    <span>Lests aux chevilles</span>
+                </label>
+                <div class="equipment-details" id="lest_chevilles_config" style="display: none;">
+                    <button class="btn btn-secondary" onclick="showLestModal('chevilles')">
+                        ⚙️ Configurer les poids
+                    </button>
+                    <div id="lest_chevilles_list"></div>
+                </div>
+            </div>
+            
+            <div class="equipment-item">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="lest_poignets_available" onchange="toggleLestConfig('poignets')">
+                    <span>Lests aux poignets</span>
+                </label>
+                <div class="equipment-details" id="lest_poignets_config" style="display: none;">
+                    <button class="btn btn-secondary" onclick="showLestModal('poignets')">
+                        ⚙️ Configurer les poids
+                    </button>
+                    <div id="lest_poignets_list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Poids du corps toujours disponible -->
+    <div class="equipment-section">
+        <h3>💪 Poids du corps</h3>
+        <p style="color: var(--secondary); font-size: 0.875rem;">✅ Toujours disponible - aucune configuration nécessaire</p>
+    </div>
+    
+    <div class="form-actions">
+        <button class="btn btn-secondary" onclick="previousStep()">Précédent</button>
+        <button class="btn" onclick="nextStep()">Suivant</button>
+    </div>
+</div>
+
+<!-- MODALS POUR LA CONFIGURATION -->
+
+<!-- Modal disques (amélioré avec 2kg) -->
+<div class="modal" id="disqueModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Ajouter des disques</h3>
+            <button class="modal-close" onclick="closeDisqueModal()">×</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Poids du disque</label>
+            <select class="form-input" id="disque_weight" onchange="handleDisqueWeightChange()">
+                <option value="">Sélectionnez...</option>
+                <option value="0.5">0.5 kg</option>
+                <option value="1.25">1.25 kg</option>
+                <option value="2.0">2.0 kg</option>
+                <option value="2.5">2.5 kg</option>
+                <option value="5.0">5.0 kg</option>
+                <option value="10.0">10.0 kg</option>
+                <option value="15.0">15.0 kg</option>
+                <option value="20.0">20.0 kg</option>
+                <option value="25.0">25.0 kg</option>
+                <option value="custom">Autre poids...</option>
+            </select>
+            <input type="number" class="form-input" id="disque_custom_weight" 
+                   placeholder="Poids personnalisé (kg)" style="display: none; margin-top: 0.5rem;" 
+                   step="0.5" min="0.5" max="50">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Nombre de disques</label>
+            <input type="number" class="form-input" id="disque_count" value="2" min="1" max="20">
+            <small style="color: var(--gray); font-size: 0.75rem;">Exemple: 2 disques de 10kg = 20kg au total sur la barre</small>
+        </div>
+        <button class="btn" onclick="confirmDisqueAddition()">Ajouter</button>
+    </div>
+</div>
+
+<!-- Modal haltères (étendu) -->
+<div class="modal" id="dumbbellModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Sélectionner vos haltères</h3>
+            <button class="modal-close" onclick="closeDumbbellModal()">×</button>
+        </div>
+        <p style="color: var(--gray); font-size: 0.875rem; margin-bottom: 1rem;">
+            Cochez les poids d'haltères que vous possédez (par paire)
+        </p>
+        <div class="checkbox-grid">
+            <label><input type="checkbox" value="1"> 1 kg</label>
+            <label><input type="checkbox" value="1.5"> 1.5 kg</label>
+            <label><input type="checkbox" value="2"> 2 kg</label>
+            <label><input type="checkbox" value="2.5"> 2.5 kg</label>
+            <label><input type="checkbox" value="3"> 3 kg</label>
+            <label><input type="checkbox" value="4"> 4 kg</label>
+            <label><input type="checkbox" value="5"> 5 kg</label>
+            <label><input type="checkbox" value="6"> 6 kg</label>
+            <label><input type="checkbox" value="7"> 7 kg</label>
+            <label><input type="checkbox" value="8"> 8 kg</label>
+            <label><input type="checkbox" value="9"> 9 kg</label>
+            <label><input type="checkbox" value="10"> 10 kg</label>
+            <label><input type="checkbox" value="12"> 12 kg</label>
+            <label><input type="checkbox" value="14"> 14 kg</label>
+            <label><input type="checkbox" value="15"> 15 kg</label>
+            <label><input type="checkbox" value="16"> 16 kg</label>
+            <label><input type="checkbox" value="18"> 18 kg</label>
+            <label><input type="checkbox" value="20"> 20 kg</label>
+            <label><input type="checkbox" value="22.5"> 22.5 kg</label>
+            <label><input type="checkbox" value="25"> 25 kg</label>
+            <label><input type="checkbox" value="27.5"> 27.5 kg</label>
+            <label><input type="checkbox" value="30"> 30 kg</label>
+            <label><input type="checkbox" value="35"> 35 kg</label>
+            <label><input type="checkbox" value="40"> 40 kg</label>
+            <label><input type="checkbox" value="45"> 45 kg</label>
+            <label><input type="checkbox" value="50"> 50 kg</label>
+        </div>
+        <button class="btn" onclick="confirmDumbbellSelection()">Confirmer la sélection</button>
+    </div>
+</div>
+
+<!-- CSS pour la nouvelle interface -->
+<style>
+.equipment-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.equipment-section h3 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+    font-size: 1.125rem;
+}
+
+.equipment-subsection {
+    padding-left: 1rem;
+}
+
+.equipment-item {
+    margin-bottom: 1rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+
+.equipment-details {
+    margin-left: 2rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 0.5rem;
+}
+
+.equipment-details input {
+    display: inline-block;
+    width: auto;
+    min-width: 60px;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.disques-list, .dumbbells-list, .elastiques-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.disque-item, .elastique-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.elastique-input {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.elastique-input input {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.checkbox-grid label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+}
+
+.checkbox-grid label:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--primary);
+}
+
+.checkbox-grid label input {
+    margin: 0;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 480px) {
+    .equipment-details {
+        margin-left: 1rem;
+        padding: 0.75rem;
+    }
+    
+    .checkbox-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .equipment-section {
+        padding: 1rem;
+    }
+}
+</style>
         </div>
 
         <!-- Vue Dashboard -->
