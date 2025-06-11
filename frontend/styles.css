@@ -1324,23 +1324,89 @@ select.form-input {
     padding: 0.5rem;
 }
 
-.fatigue-input,
-.exertion-input {
+/* Effort Selectors */
+.effort-selectors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.selector-group label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--light);
+    font-weight: 500;
+}
+
+.emoji-selector {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.emoji-option {
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+    opacity: 0.5;
+}
+
+.emoji-option:hover {
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+.emoji-option.selected {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.15);
+}
+
+/* Fatigue colors */
+#fatigueSelector .emoji-option[data-value="1"] { filter: hue-rotate(120deg); } /* Vert forêt */
+#fatigueSelector .emoji-option[data-value="2"] { filter: hue-rotate(90deg); }  /* Vert clair */
+#fatigueSelector .emoji-option[data-value="3"] { filter: hue-rotate(200deg); } /* Bleu */
+#fatigueSelector .emoji-option[data-value="4"] { filter: hue-rotate(30deg); }  /* Orange */
+#fatigueSelector .emoji-option[data-value="5"] { filter: hue-rotate(0deg); }   /* Rouge */
+
+/* Timers */
+.set-timer, .rest-timer {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: var(--primary);
+}
+
+.rest-timer {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: var(--radius);
     margin-bottom: 1.5rem;
 }
 
-.fatigue-input input[type="range"],
-.exertion-input input[type="range"] {
-    width: 100%;
-    margin-top: 0.5rem;
+.rest-info {
+    font-weight: 600;
 }
 
-.fatigue-display,
-.exertion-display {
-    display: inline-block;
-    margin-left: 1rem;
-    font-weight: 700;
-    color: var(--primary);
+#setTimer, #restTime {
+    font-family: monospace;
+    font-size: 1.25rem;
+    color: var(--secondary);
+}
+
+.weight-info {
+    font-size: 0.875rem;
+    color: var(--gray-light);
+    text-align: center;
+    margin-top: 0.25rem;
+}
+
+/* Fix exercise area */
+#exerciseArea {
+    margin-top: 2rem;
 }
 
 .set-actions {
@@ -1407,3 +1473,4 @@ select.form-input {
     background: rgba(220, 38, 38, 0.3);
     color: #dc2626;
 }
+

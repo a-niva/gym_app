@@ -946,14 +946,17 @@ function updateTrainingInterface() {
                 'En attente de synchronisation...'
             }
         </div>
+        
+        <div id="exerciseArea"></div>
     `;
     
-    // Afficher le sélecteur d'exercices
+    // Afficher le sélecteur d'exercices dans la div dédiée
     showExerciseSelector();
 }
 
 function showExerciseSelector() {
-    const container = document.getElementById('workoutInterface');
+    const container = document.getElementById('exerciseArea');
+    if (!container) return;
     
     // Filtrer les exercices disponibles selon l'équipement de l'utilisateur
     const availableExercises = allExercises.filter(exercise => {
@@ -968,7 +971,7 @@ function showExerciseSelector() {
         grouped[ex.body_part].push(ex);
     });
     
-    container.innerHTML += `
+    container.innerHTML = `
         <div class="exercise-selector">
             <h3>Sélectionner un exercice</h3>
             <input type="text" id="exerciseSearch" placeholder="Rechercher..." 
@@ -1015,6 +1018,8 @@ function filterExerciseList() {
 
 let currentExercise = null;
 let currentSetNumber = 1;
+let setStartTime = null;
+let lastSetEndTime = null;
 
 function selectExercise(exerciseId) {
     currentExercise = allExercises.find(ex => ex.id === exerciseId);
@@ -1025,7 +1030,10 @@ function selectExercise(exerciseId) {
 }
 
 function showSetInput() {
-    const container = document.getElementById('workoutInterface');
+    const container = document.getElementById('exerciseArea');
+    if (!container) return;
+    
+    setStartTime = new Date();
     
     container.innerHTML = `
         <div class="current-exercise">
@@ -1033,17 +1041,25 @@ function showSetInput() {
             <p class="exercise-info">${currentExercise.body_part} • ${currentExercise.level}</p>
         </div>
         
+        ${lastSetEndTime ? `
+            <div class="rest-timer">
+                <div class="rest-info">Repos: <span id="restTime">0:00</span></div>
+            </div>
+        ` : ''}
+        
         <div class="set-tracker">
             <h3>Série ${currentSetNumber}</h3>
+            <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
             
             <div class="set-input-grid">
                 <div class="input-group">
-                    <label>Poids (kg)</label>
+                    <label>Poids total (kg)</label>
                     <div class="weight-selector">
                         <button onclick="adjustWeight(-2.5)" class="btn-adjust">-2.5</button>
                         <input type="number" id="setWeight" value="20" step="2.5" class="weight-display">
                         <button onclick="adjustWeight(2.5)" class="btn-adjust">+2.5</button>
                     </div>
+                    <div class="weight-info">Barre + disques inclus</div>
                 </div>
                 
                 <div class="input-group">
@@ -1056,18 +1072,28 @@ function showSetInput() {
                 </div>
             </div>
             
-            <div class="fatigue-input">
-                <label>Fatigue (1-10)</label>
-                <input type="range" id="fatigueLevel" min="1" max="10" value="5" 
-                       oninput="updateFatigueDisplay(this.value)">
-                <span id="fatigueDisplay" class="fatigue-display">5</span>
-            </div>
-            
-            <div class="exertion-input">
-                <label>Effort perçu (1-10)</label>
-                <input type="range" id="exertionLevel" min="1" max="10" value="5"
-                       oninput="updateExertionDisplay(this.value)">
-                <span id="exertionDisplay" class="exertion-display">5</span>
+            <div class="effort-selectors">
+                <div class="selector-group">
+                    <label>Fatigue</label>
+                    <div class="emoji-selector" id="fatigueSelector">
+                        <span class="emoji-option" data-value="1" onclick="selectFatigue(1)">😄</span>
+                        <span class="emoji-option" data-value="2" onclick="selectFatigue(2)">🙂</span>
+                        <span class="emoji-option selected" data-value="3" onclick="selectFatigue(3)">😐</span>
+                        <span class="emoji-option" data-value="4" onclick="selectFatigue(4)">😓</span>
+                        <span class="emoji-option" data-value="5" onclick="selectFatigue(5)">😵</span>
+                    </div>
+                </div>
+                
+                <div class="selector-group">
+                    <label>Effort perçu</label>
+                    <div class="emoji-selector" id="effortSelector">
+                        <span class="emoji-option" data-value="5" onclick="selectEffort(5)">💪</span>
+                        <span class="emoji-option" data-value="4" onclick="selectEffort(4)">💪💪</span>
+                        <span class="emoji-option selected" data-value="3" onclick="selectEffort(3)">💪💪💪</span>
+                        <span class="emoji-option" data-value="2" onclick="selectEffort(2)">💪💪💪💪</span>
+                        <span class="emoji-option" data-value="1" onclick="selectEffort(1)">💪💪💪💪💪</span>
+                    </div>
+                </div>
             </div>
             
             <div class="set-actions">
@@ -1087,9 +1113,94 @@ function showSetInput() {
         </button>
     `;
     
+    // Démarrer les timers
+    startTimers();
+    
     // Charger l'historique de cet exercice
     loadExerciseHistory();
 }
+
+let selectedFatigue = 3;
+let selectedEffort = 3;
+let timerInterval = null;
+
+function selectFatigue(value) {
+    selectedFatigue = value;
+    document.querySelectorAll('#fatigueSelector .emoji-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    document.querySelector(`#fatigueSelector .emoji-option[data-value="${value}"]`).classList.add('selected');
+}
+
+function selectEffort(value) {
+    selectedEffort = value;
+    document.querySelectorAll('#effortSelector .emoji-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    document.querySelector(`#effortSelector .emoji-option[data-value="${value}"]`).classList.add('selected');
+}
+
+function startTimers() {
+    if (timerInterval) clearInterval(timerInterval);
+    
+    timerInterval = setInterval(() => {
+        // Timer de série
+        if (setStartTime) {
+            const elapsed = Math.floor((new Date() - setStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const setTimer = document.getElementById('setTimer');
+            if (setTimer) {
+                setTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        // Timer de repos
+        if (lastSetEndTime) {
+            const restElapsed = Math.floor((new Date() - lastSetEndTime) / 1000);
+            const minutes = Math.floor(restElapsed / 60);
+            const seconds = restElapsed % 60;
+            const restTimer = document.getElementById('restTime');
+            if (restTimer) {
+                restTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+    }, 1000);
+}
+
+function loadExerciseHistory() {
+    // TODO: Charger l'historique depuis l'API
+}
+
+async function skipSet() {
+    const setData = {
+        workout_id: currentWorkout.id,
+        exercise_id: currentExercise.id,
+        set_number: currentSetNumber,
+        target_reps: 0,
+        actual_reps: 0,
+        weight: 0,
+        rest_time: 0,
+        fatigue_level: 0,
+        perceived_exertion: 0,
+        skipped: true
+    };
+    
+    try {
+        await fetch('/api/sets/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(setData)
+        });
+        
+        showToast('Série passée', 'info');
+        currentSetNumber++;
+        showSetInput();
+    } catch (error) {
+        console.error('Erreur:', error);
+    }
+}
+
 
 function adjustWeight(delta) {
     const input = document.getElementById('setWeight');
@@ -1119,9 +1230,9 @@ async function completeSet() {
         target_reps: 10, // TODO: Obtenir depuis le programme ou l'historique
         actual_reps: parseInt(document.getElementById('setReps').value),
         weight: parseFloat(document.getElementById('setWeight').value),
-        rest_time: 90, // TODO: Calculer dynamiquement
-        fatigue_level: parseInt(document.getElementById('fatigueLevel').value),
-        perceived_exertion: parseInt(document.getElementById('exertionLevel').value),
+        rest_time: lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0,
+        fatigue_level: selectedFatigue * 2, // Convertir 1-5 en 2-10
+        perceived_exertion: (6 - selectedEffort) * 2, // Convertir 5-1 en 2-10
         skipped: false
     };
     
@@ -1138,24 +1249,19 @@ async function completeSet() {
             // Ajouter à l'historique local
             addSetToHistory(setData);
             
+            // Mettre à jour les timings
+            lastSetEndTime = new Date();
+            
             // Préparer la série suivante
             currentSetNumber++;
             
-            // Démarrer le timer de repos
-            startRestTimer(setData.rest_time);
-            
-            // Mettre à jour l'affichage
-            document.querySelector('.set-tracker h3').textContent = `Série ${currentSetNumber}`;
-            
-            // Suggestion intelligente pour la prochaine série
-            suggestNextSet(setData);
+            // Continuer avec la série suivante
+            showSetInput();
         } else {
             showToast('Erreur lors de l\'enregistrement', 'error');
         }
     } catch (error) {
         console.error('Erreur:', error);
-        // Sauvegarder localement pour sync ultérieure
-        saveSetOffline(setData);
         showToast('Série sauvegardée localement', 'warning');
     }
 }
@@ -1195,8 +1301,21 @@ function startRestTimer(seconds) {
 }
 
 function finishExercise() {
+    // Arrêter les timers
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    
+    // Réinitialiser
     currentExercise = null;
     currentSetNumber = 1;
+    setStartTime = null;
+    lastSetEndTime = null;
+    selectedFatigue = 3;
+    selectedEffort = 3;
+    
+    // Retourner au sélecteur d'exercices
     showExerciseSelector();
 }
 
@@ -1797,6 +1916,11 @@ window.updateExertionDisplay = updateExertionDisplay;
 window.completeSet = completeSet;
 window.skipSet = skipSet;
 window.finishExercise = finishExercise;
+
+// Fonctions pour les emojis et timers
+window.selectFatigue = selectFatigue;
+window.selectEffort = selectEffort;
+window.skipSet = skipSet;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
