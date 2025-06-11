@@ -987,40 +987,6 @@ async function saveUser() {
     }
 }
 
-// ===== ENREGISTREMENT UTILISATEUR =====    
-    const userData = {
-        name: name,
-        age: age,
-        height: height,
-        weight: weight,
-        experience_level: experience,
-        goals: selectedGoals,
-        equipment_config: backendEquipmentConfig
-    };
-    
-    try {
-        const response = await fetch('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
-        });
-        
-        if (response.ok) {
-            const user = await response.json();
-            localStorage.setItem('userId', user.id);
-            currentUser = user;
-            showMainInterface();
-            showToast('Profil créé avec succès !', 'success');
-        } else {
-            const error = await response.json();
-            showToast(error.detail || 'Erreur lors de la création du profil', 'error');
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-        showToast('Erreur de connexion au serveur', 'error');
-    }
-}
-
 // ===== INTERFACE PRINCIPALE =====
 function showMainInterface() {
     document.getElementById('onboarding').classList.remove('active');
