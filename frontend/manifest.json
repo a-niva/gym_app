@@ -1,19 +1,62 @@
-
-# ===== frontend/manifest.json =====
 {
-    "name": "Fitness Coach",
-    "short_name": "Fitness",
-    "description": "Application de coaching fitness personnelle",
+    "name": "Fitness Coach - Personal Trainer",
+    "short_name": "Fitness Coach",
+    "description": "Application de coaching fitness personnalisée avec suivi de performance et IA",
     "start_url": "/",
     "display": "standalone",
-    "theme_color": "#1e40af",
-    "background_color": "#111827",
+    "theme_color": "#3b82f6",
+    "background_color": "#0f172a",
     "orientation": "portrait",
+    "scope": "/",
+    "lang": "fr",
+    "categories": ["fitness", "health", "sports"],
     "icons": [
         {
-            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%231e40af'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='white' font-size='256'%3E💪%3C/text%3E%3C/svg%3E",
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%233b82f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='white' font-size='96' font-weight='bold'%3E💪%3C/text%3E%3C/svg%3E",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='64' fill='%233b82f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='white' font-size='256' font-weight='bold'%3E💪%3C/text%3E%3C/svg%3E",
             "sizes": "512x512",
-            "type": "image/svg+xml"
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
         }
-    ]
+    ],
+    "screenshots": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'%3E%3Crect width='540' height='720' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%233b82f6' font-size='32' font-weight='bold'%3EFitness Coach%3C/text%3E%3C/svg%3E",
+            "sizes": "540x720",
+            "type": "image/svg+xml",
+            "label": "Page d'accueil"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Nouvelle séance",
+            "short_name": "Séance",
+            "description": "Démarrer une nouvelle séance d'entraînement",
+            "url": "/?action=new-workout",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='64'%3E🏃%3C/text%3E%3C/svg%3E",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Programme",
+            "short_name": "Programme",
+            "description": "Voir mon programme d'entraînement",
+            "url": "/?action=program",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='64'%3E📋%3C/text%3E%3C/svg%3E",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "prefer_related_applications": false
 }

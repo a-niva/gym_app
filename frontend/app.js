@@ -1,361 +1,428 @@
-// ===== frontend/app.js - VERSION COMPLÈTE CORRIGÉE =====
-
 // Configuration API
-const API_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000/api' 
-    : '/api';
+const API_URL = 'http://localhost:8000';
 
-// ===== VARIABLES GLOBALES NETTOYÉES =====
+// Variables globales
 let currentUser = null;
 let currentStep = 1;
 let selectedGoals = [];
-let workoutMode = null;
-let currentWorkout = null;
-let timerInterval = null;
+let selectedEquipment = [];
 let exercises = [];
-let bodyParts = [];
-let searchQuery = '';
-let filterBodyPart = '';
-let currentExercise = null;
-let currentSet = {
-    set_number: 1,
-    weight: 0,
-    target_reps: 10,
-    actual_reps: 10
-};
-let restTimer = 0;
+let currentWorkout = null;
+let currentExerciseIndex = 0;
+let currentSetIndex = 0;
+let restTimer = null;
 let restInterval = null;
 
-// ===== NOUVELLE CONFIGURATION ÉQUIPEMENT (PROPRE) =====
-let equipmentConfig = {
-    barres: {
-        barbell_standard: {available: false, weight: 20.0, count: 1},
-        barbell_ez: {available: false, weight: 10.0, count: 1},
-        barbell_courte: {available: false, weight: 2.5, count: 2}
+// Configuration équipement détaillée
+const equipmentConfig = {
+    dumbbells: [],
+    barbell: {
+        types: [],
+        plates: []
     },
-    disques: {available: false, weights: {}},
-    dumbbells: {available: false, weights: []},
-    banc: {available: false, inclinable_haut: true, inclinable_bas: false},
-    elastiques: {available: false, bands: []},
-    autres: {
-        kettlebell: {available: false, weights: []},
-        barre_traction: {available: false},
-        lest_corps: {available: false, weights: []},
-        lest_chevilles: {available: false, weights: []},
-        lest_poignets: {available: false, weights: []}
-    }
+    resistance_bands: [],
+    bench: {
+        available: false,
+        incline: false,
+        decline: false
+    },
+    pull_up_bar: false,
+    kettlebell: []
 };
 
-let elastiqueCounter = 0;
-
-// ===== FONCTIONS POUR LES BARRES =====
-function toggleBarreConfig(type) {
-    const checkbox = document.getElementById(`barbell_${type}`);
-    const config = document.getElementById(`${type}_config`);
-    
-    if (checkbox.checked) {
-        config.style.display = 'block';
-        equipmentConfig.barres[`barbell_${type}`].available = true;
-        
-        // Mettre à jour les valeurs depuis les inputs
-        const weightInput = document.getElementById(`${type}_weight`);
-        const countInput = document.getElementById(`${type}_count`);
-        
-        if (weightInput) {
-            equipmentConfig.barres[`barbell_${type}`].weight = parseFloat(weightInput.value) || 20;
-        }
-        if (countInput) {
-            equipmentConfig.barres[`barbell_${type}`].count = parseInt(countInput.value) || 1;
-        }
-        
-        // Ajouter event listeners pour les changements
-        if (weightInput) {
-            weightInput.addEventListener('change', () => {
-                equipmentConfig.barres[`barbell_${type}`].weight = parseFloat(weightInput.value) || 20;
-            });
-        }
-        if (countInput) {
-            countInput.addEventListener('change', () => {
-                equipmentConfig.barres[`barbell_${type}`].count = parseInt(countInput.value) || 1;
-            });
-        }
-    } else {
-        config.style.display = 'none';
-        equipmentConfig.barres[`barbell_${type}`].available = false;
-    }
-}
-
-// ===== FONCTIONS POUR LES DISQUES =====
-function toggleDisquesConfig() {
-    const checkbox = document.getElementById('disques_available');
-    const config = document.getElementById('disques_config');
-    
-    equipmentConfig.disques.available = checkbox.checked;
-    config.style.display = checkbox.checked ? 'block' : 'none';
-}
-
-function showDisqueModal() {
-    document.getElementById('disqueModal').style.display = 'flex';
-    document.getElementById('disque_weight').value = '';
-    document.getElementById('disque_custom_weight').style.display = 'none';
-    document.getElementById('disque_count').value = '2';
-}
-
-function closeDisqueModal() {
-    document.getElementById('disqueModal').style.display = 'none';
-}
-
-function handleDisqueWeightChange() {
-    const weightSelect = document.getElementById('disque_weight');
-    const customInput = document.getElementById('disque_custom_weight');
-    
-    if (weightSelect.value === 'custom') {
-        customInput.style.display = 'block';
-        customInput.focus();
-    } else {
-        customInput.style.display = 'none';
-        customInput.value = '';
-    }
-}
-
-function confirmDisqueAddition() {
-    const weightSelect = document.getElementById('disque_weight');
-    const customWeight = document.getElementById('disque_custom_weight');
-    const count = parseInt(document.getElementById('disque_count').value);
-    
-    let weight;
-    if (weightSelect.value === 'custom') {
-        weight = parseFloat(customWeight.value);
-        if (isNaN(weight) || weight <= 0) {
-            showToast('Veuillez entrer un poids valide', 'error');
-            return;
-        }
-    } else {
-        weight = parseFloat(weightSelect.value);
-        if (!weight) {
-            showToast('Veuillez sélectionner un poids', 'error');
-            return;
-        }
-    }
-    
-    if (!count || count < 1) {
-        showToast('Veuillez entrer un nombre valide', 'error');
-        return;
-    }
-    
-    equipmentConfig.disques.weights[weight.toString()] = count;
-    updateDisquesList();
-    closeDisqueModal();
-    showToast(`${count} disques de ${weight}kg ajoutés`, 'success');
-}
-
-function updateDisquesList() {
-    const container = document.getElementById('disques_list');
-    const weights = Object.entries(equipmentConfig.disques.weights);
-    
-    if (weights.length === 0) {
-        container.innerHTML = '<p style="color: var(--gray); font-size: 0.875rem;">Aucun disque configuré</p>';
-        return;
-    }
-    
-    // Trier par poids
-    weights.sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]));
-    
-    container.innerHTML = weights.map(([weight, count]) => 
-        `<div class="disque-item">
-            <span><strong>${weight} kg</strong> × ${count} disques</span>
-            <button onclick="removeDisque('${weight}')" 
-                    style="background: var(--danger); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">×</button>
-        </div>`
-    ).join('');
-}
-
-function removeDisque(weight) {
-    delete equipmentConfig.disques.weights[weight];
-    updateDisquesList();
-    showToast(`Disques de ${weight}kg supprimés`, 'info');
-}
-
-// ===== FONCTIONS POUR LES HALTÈRES =====
-function toggleDumbbellsConfig() {
-    const checkbox = document.getElementById('dumbbells_available');
-    const config = document.getElementById('dumbbells_config');
-    
-    equipmentConfig.dumbbells.available = checkbox.checked;
-    config.style.display = checkbox.checked ? 'block' : 'none';
-}
-
-function showDumbbellModal() {
-    document.getElementById('dumbbellModal').style.display = 'flex';
-    // Pré-cocher les poids déjà sélectionnés
-    document.querySelectorAll('#dumbbellModal input[type="checkbox"]').forEach(cb => {
-        cb.checked = equipmentConfig.dumbbells.weights.includes(parseFloat(cb.value));
+// ===== NAVIGATION & VUES =====
+function showView(viewName) {
+    // Cacher toutes les vues
+    document.querySelectorAll('.onboarding, .dashboard, .workout-view, .exercises-view, .profile-view').forEach(view => {
+        view.classList.remove('active');
     });
-}
-
-function closeDumbbellModal() {
-    document.getElementById('dumbbellModal').style.display = 'none';
-}
-
-function confirmDumbbellSelection() {
-    equipmentConfig.dumbbells.weights = [];
-    document.querySelectorAll('#dumbbellModal input:checked').forEach(checkbox => {
-        equipmentConfig.dumbbells.weights.push(parseFloat(checkbox.value));
-    });
-    equipmentConfig.dumbbells.weights.sort((a, b) => a - b);
     
-    updateDumbbellsList();
-    closeDumbbellModal();
-    showToast(`${equipmentConfig.dumbbells.weights.length} poids d'haltères sélectionnés`, 'success');
-}
-
-function updateDumbbellsList() {
-    const container = document.getElementById('dumbbells_list');
-    
-    if (equipmentConfig.dumbbells.weights.length === 0) {
-        container.innerHTML = '<p style="color: var(--gray); font-size: 0.875rem;">Aucun haltère sélectionné</p>';
-        return;
+    // Afficher la vue demandée
+    const targetView = document.getElementById(`${viewName}View`);
+    if (targetView) {
+        targetView.classList.add('active');
     }
     
-    container.innerHTML = `<p><strong>Haltères disponibles :</strong><br>${equipmentConfig.dumbbells.weights.join(' kg, ')} kg (paires)</p>`;
+    // Mettre à jour la navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    const activeNavItem = document.querySelector(`[data-view="${viewName}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
+    
+    // Charger les données si nécessaire
+    if (viewName === 'dashboard' && currentUser) {
+        loadDashboard();
+    } else if (viewName === 'exercises' && currentUser) {
+        loadAvailableExercises();
+    } else if (viewName === 'profile' && currentUser) {
+        loadProfile();
+    }
 }
 
-// ===== FONCTIONS POUR LE BANC =====
-function toggleBancConfig() {
-    const checkbox = document.getElementById('banc_available');
-    const config = document.getElementById('banc_config');
+// ===== ONBOARDING =====
+function nextStep() {
+    if (!validateStep(currentStep)) return;
     
-    equipmentConfig.banc.available = checkbox.checked;
-    config.style.display = checkbox.checked ? 'block' : 'none';
+    document.getElementById(`step${currentStep}`).classList.remove('active');
+    currentStep++;
+    
+    // Préparer l'étape 4 si nécessaire
+    if (currentStep === 4) {
+        generateDetailedEquipmentConfig();
+    }
+    
+    setTimeout(() => {
+        document.getElementById(`step${currentStep}`).classList.add('active');
+        updateProgressBar();
+        
+        if (currentStep === 5) {
+            updateProfileSummary();
+        }
+    }, 300);
 }
 
-// ===== FONCTIONS POUR LES ÉLASTIQUES =====
-function toggleElastiquesConfig() {
-    const checkbox = document.getElementById('elastiques_available');
-    const config = document.getElementById('elastiques_config');
-    
-    equipmentConfig.elastiques.available = checkbox.checked;
-    config.style.display = checkbox.checked ? 'block' : 'none';
+function prevStep() {
+    if (currentStep > 1) {
+        document.getElementById(`step${currentStep}`).classList.remove('active');
+        currentStep--;
+        
+        setTimeout(() => {
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            updateProgressBar();
+        }, 300);
+    }
 }
 
-function addElastique() {
-    elastiqueCounter++;
-    const container = document.getElementById('elastiques_list');
+function updateProgressBar() {
+    const progress = (currentStep / 5) * 100;
+    document.getElementById('progressFill').style.width = `${progress}%`;
+}
+
+function validateStep(step) {
+    switch(step) {
+        case 1:
+            const name = document.getElementById('userName').value.trim();
+            const age = document.getElementById('userAge').value;
+            const experience = document.getElementById('experienceLevel').value;
+            
+            if (!name || !age || !experience) {
+                showToast('Veuillez remplir tous les champs', 'error');
+                return false;
+            }
+            if (age < 14 || age > 100) {
+                showToast('Veuillez entrer un âge valide', 'error');
+                return false;
+            }
+            return true;
+            
+        case 2:
+            if (selectedGoals.length === 0) {
+                showToast('Veuillez sélectionner au moins un objectif', 'error');
+                return false;
+            }
+            return true;
+            
+        case 3:
+            if (selectedEquipment.length === 0) {
+                showToast('Veuillez sélectionner au moins un équipement', 'error');
+                return false;
+            }
+            return true;
+            
+        case 4:
+            // Validation de la configuration détaillée
+            return validateDetailedConfig();
+            
+        default:
+            return true;
+    }
+}
+
+// ===== GESTION DES OBJECTIFS =====
+function toggleGoal(goalElement) {
+    const goal = goalElement.dataset.goal;
+    goalElement.classList.toggle('selected');
     
-    const elastiqueHtml = `
-        <div class="elastique-input" data-elastique-id="${elastiqueCounter}">
-            <input type="text" class="form-input" placeholder="Couleur" id="elastique_color_${elastiqueCounter}" style="flex: 1;">
-            <input type="number" class="form-input" placeholder="Résistance (kg)" id="elastique_resistance_${elastiqueCounter}" 
-                   step="0.5" min="1" max="100" style="flex: 1;">
-            <input type="number" class="form-input" placeholder="Nombre" id="elastique_count_${elastiqueCounter}" 
-                   value="1" min="1" max="10" style="width: 80px;">
-            <button onclick="removeElastique(${elastiqueCounter})" 
-                    style="background: var(--danger); color: white; border: none; border-radius: var(--radius); padding: 0.5rem; cursor: pointer;">×</button>
-        </div>
+    if (goalElement.classList.contains('selected')) {
+        if (!selectedGoals.includes(goal)) {
+            selectedGoals.push(goal);
+        }
+    } else {
+        const index = selectedGoals.indexOf(goal);
+        if (index > -1) selectedGoals.splice(index, 1);
+    }
+}
+
+// ===== GESTION DE L'ÉQUIPEMENT =====
+function toggleEquipment(card) {
+    const equipment = card.dataset.equipment;
+    card.classList.toggle('selected');
+    
+    if (card.classList.contains('selected')) {
+        if (!selectedEquipment.includes(equipment)) {
+            selectedEquipment.push(equipment);
+        }
+    } else {
+        const index = selectedEquipment.indexOf(equipment);
+        if (index > -1) selectedEquipment.splice(index, 1);
+    }
+}
+
+function generateDetailedEquipmentConfig() {
+    const container = document.getElementById('detailedEquipmentConfig');
+    let html = '';
+    
+    // Haltères
+    if (selectedEquipment.includes('dumbbells')) {
+        html += `
+            <div class="equipment-section">
+                <h3>🏋️‍♀️ Configuration des haltères</h3>
+                <div class="equipment-subsection">
+                    <p style="color: var(--gray); margin-bottom: 1rem;">Sélectionnez les poids disponibles (en kg)</p>
+                    <div class="chip-group" id="dumbbellWeights">
+                        ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30].map(weight => 
+                            `<div class="chip" data-weight="${weight}" onclick="toggleWeight(this, 'dumbbells')">${weight}kg</div>`
+                        ).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Barres
+    if (selectedEquipment.includes('barbell')) {
+        html += `
+            <div class="equipment-section">
+                <h3>🏋️ Configuration des barres</h3>
+                <div class="equipment-subsection">
+                    <div class="equipment-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="barbell_olympic" value="olympic">
+                            <span>Barre olympique (20kg)</span>
+                        </label>
+                    </div>
+                    <div class="equipment-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="barbell_ez" value="ez">
+                            <span>Barre EZ (10kg)</span>
+                        </label>
+                    </div>
+                    <div class="equipment-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="barbell_short" value="short">
+                            <span>Barres courtes (2.5kg)</span>
+                        </label>
+                    </div>
+                    
+                    <h4 style="margin-top: 1.5rem; margin-bottom: 1rem;">Disques disponibles</h4>
+                    <div class="chip-group" id="plateWeights">
+                        ${[0.5, 1, 1.25, 2.5, 5, 10, 15, 20, 25].map(weight => 
+                            `<div class="chip" data-weight="${weight}" onclick="toggleWeight(this, 'plates')">${weight}kg</div>`
+                        ).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Élastiques
+    if (selectedEquipment.includes('resistance_bands')) {
+        html += `
+            <div class="equipment-section">
+                <h3>🟡 Configuration des élastiques</h3>
+                <div class="equipment-subsection">
+                    <p style="color: var(--gray); margin-bottom: 1rem;">Sélectionnez les résistances disponibles</p>
+                    <div class="chip-group" id="bandResistances">
+                        <div class="chip" data-resistance="light" onclick="toggleBand(this)">🟢 Léger (5-15kg)</div>
+                        <div class="chip" data-resistance="medium" onclick="toggleBand(this)">🟡 Moyen (15-25kg)</div>
+                        <div class="chip" data-resistance="heavy" onclick="toggleBand(this)">🔴 Lourd (25-35kg)</div>
+                        <div class="chip" data-resistance="x-heavy" onclick="toggleBand(this)">⚫ Très lourd (35-45kg)</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Banc
+    if (selectedEquipment.includes('bench')) {
+        html += `
+            <div class="equipment-section">
+                <h3>🪑 Configuration du banc</h3>
+                <div class="equipment-subsection">
+                    <div class="equipment-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="bench_incline">
+                            <span>Inclinable (positif)</span>
+                        </label>
+                    </div>
+                    <div class="equipment-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="bench_decline">
+                            <span>Déclinable (négatif)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function toggleWeight(element, type) {
+    element.classList.toggle('selected');
+    const weight = parseFloat(element.dataset.weight);
+    
+    if (type === 'dumbbells') {
+        if (element.classList.contains('selected')) {
+            if (!equipmentConfig.dumbbells.includes(weight)) {
+                equipmentConfig.dumbbells.push(weight);
+            }
+        } else {
+            const index = equipmentConfig.dumbbells.indexOf(weight);
+            if (index > -1) equipmentConfig.dumbbells.splice(index, 1);
+        }
+    } else if (type === 'plates') {
+        if (element.classList.contains('selected')) {
+            if (!equipmentConfig.barbell.plates.includes(weight)) {
+                equipmentConfig.barbell.plates.push(weight);
+            }
+        } else {
+            const index = equipmentConfig.barbell.plates.indexOf(weight);
+            if (index > -1) equipmentConfig.barbell.plates.splice(index, 1);
+        }
+    }
+}
+
+function toggleBand(element) {
+    element.classList.toggle('selected');
+    const resistance = element.dataset.resistance;
+    
+    if (element.classList.contains('selected')) {
+        if (!equipmentConfig.resistance_bands.includes(resistance)) {
+            equipmentConfig.resistance_bands.push(resistance);
+        }
+    } else {
+        const index = equipmentConfig.resistance_bands.indexOf(resistance);
+        if (index > -1) equipmentConfig.resistance_bands.splice(index, 1);
+    }
+}
+
+function validateDetailedConfig() {
+    let hasValidConfig = false;
+    
+    if (selectedEquipment.includes('dumbbells') && equipmentConfig.dumbbells.length === 0) {
+        showToast('Veuillez sélectionner au moins un poids d\'haltère', 'error');
+        return false;
+    }
+    
+    if (selectedEquipment.includes('barbell')) {
+        const hasBarType = document.querySelector('#barbell_olympic:checked') || 
+                          document.querySelector('#barbell_ez:checked') || 
+                          document.querySelector('#barbell_short:checked');
+        if (!hasBarType) {
+            showToast('Veuillez sélectionner au moins un type de barre', 'error');
+            return false;
+        }
+        if (equipmentConfig.barbell.plates.length === 0) {
+            showToast('Veuillez sélectionner au moins un poids de disque', 'error');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// ===== PROFIL & ONBOARDING =====
+function updateProfileSummary() {
+    const name = document.getElementById('userName').value;
+    const age = document.getElementById('userAge').value;
+    const experience = document.getElementById('experienceLevel').value;
+    const experienceText = document.querySelector(`#experienceLevel option[value="${experience}"]`).textContent;
+    
+    let summary = `
+        <p><strong>Nom:</strong> ${name}</p>
+        <p><strong>Âge:</strong> ${age} ans</p>
+        <p><strong>Niveau:</strong> ${experienceText}</p>
+        <p><strong>Objectifs:</strong> ${selectedGoals.map(g => {
+            const chip = document.querySelector(`[data-goal="${g}"]`);
+            return chip ? chip.textContent : g;
+        }).join(', ')}</p>
     `;
     
-    container.insertAdjacentHTML('beforeend', elastiqueHtml);
-}
-
-function removeElastique(id) {
-    const element = document.querySelector(`[data-elastique-id="${id}"]`);
-    if (element) {
-        element.remove();
-        updateElastiquesConfig();
-    }
-}
-
-function updateElastiquesConfig() {
-    equipmentConfig.elastiques.bands = [];
-    
-    document.querySelectorAll('.elastique-input').forEach(elastiqueDiv => {
-        const id = elastiqueDiv.dataset.elastiqueId;
-        const colorInput = document.getElementById(`elastique_color_${id}`);
-        const resistanceInput = document.getElementById(`elastique_resistance_${id}`);
-        const countInput = document.getElementById(`elastique_count_${id}`);
+    // Résumé de l'équipement
+    if (selectedEquipment.length > 0) {
+        summary += '<p><strong>Équipement:</strong></p><ul style="margin-left: 1rem;">';
         
-        if (colorInput && resistanceInput && countInput) {
-            const color = colorInput.value.trim();
-            const resistance = parseFloat(resistanceInput.value);
-            const count = parseInt(countInput.value);
+        if (selectedEquipment.includes('dumbbells') && equipmentConfig.dumbbells.length > 0) {
+            summary += `<li>Haltères: ${equipmentConfig.dumbbells.sort((a,b) => a-b).join(', ')} kg</li>`;
+        }
+        
+        if (selectedEquipment.includes('barbell')) {
+            const barTypes = [];
+            if (document.querySelector('#barbell_olympic:checked')) barTypes.push('Olympique');
+            if (document.querySelector('#barbell_ez:checked')) barTypes.push('EZ');
+            if (document.querySelector('#barbell_short:checked')) barTypes.push('Courtes');
             
-            if (color && !isNaN(resistance) && !isNaN(count) && resistance > 0 && count > 0) {
-                equipmentConfig.elastiques.bands.push({
-                    color: color,
-                    resistance: resistance,
-                    count: count
-                });
+            summary += `<li>Barres: ${barTypes.join(', ')}</li>`;
+            if (equipmentConfig.barbell.plates.length > 0) {
+                summary += `<li>Disques: ${equipmentConfig.barbell.plates.sort((a,b) => a-b).join(', ')} kg</li>`;
             }
         }
-    });
-}
-
-// ===== FONCTIONS POUR LES AUTRES ÉQUIPEMENTS =====
-function toggleKettlebellConfig() {
-    const checkbox = document.getElementById('kettlebell_available');
-    const config = document.getElementById('kettlebell_config');
-    
-    equipmentConfig.autres.kettlebell.available = checkbox.checked;
-    config.style.display = checkbox.checked ? 'block' : 'none';
-}
-
-function toggleLestConfig(type) {
-    const checkbox = document.getElementById(`lest_${type}_available`);
-    const config = document.getElementById(`lest_${type}_config`);
-    
-    equipmentConfig.autres[`lest_${type}`].available = checkbox.checked;
-    config.style.display = checkbox.checked ? 'block' : 'none';
-}
-
-function showKettlebellModal() {
-    showToast('Configuration kettlebells à venir', 'info');
-}
-
-function showLestModal(type) {
-    showToast(`Configuration lests ${type} à venir`, 'info');
-}
-
-// ===== FONCTION POUR COLLECTER TOUTE LA CONFIGURATION =====
-function collectEquipmentConfig() {
-    // Mettre à jour les élastiques
-    updateElastiquesConfig();
-    
-    // Mettre à jour les options du banc si activé
-    if (equipmentConfig.banc.available) {
-        const inclineHaut = document.getElementById('banc_incline_haut');
-        const inclineBas = document.getElementById('banc_incline_bas');
         
-        if (inclineHaut) equipmentConfig.banc.inclinable_haut = inclineHaut.checked;
-        if (inclineBas) equipmentConfig.banc.inclinable_bas = inclineBas.checked;
+        if (selectedEquipment.includes('resistance_bands') && equipmentConfig.resistance_bands.length > 0) {
+            summary += `<li>Élastiques: ${equipmentConfig.resistance_bands.length} résistance(s)</li>`;
+        }
+        
+        if (selectedEquipment.includes('bench')) {
+            const benchFeatures = [];
+            if (document.querySelector('#bench_incline:checked')) benchFeatures.push('inclinable');
+            if (document.querySelector('#bench_decline:checked')) benchFeatures.push('déclinable');
+            summary += `<li>Banc${benchFeatures.length > 0 ? ' (' + benchFeatures.join(', ') + ')' : ''}</li>`;
+        }
+        
+        if (selectedEquipment.includes('pull_up_bar')) {
+            summary += '<li>Barre de traction</li>';
+        }
+        
+        if (selectedEquipment.includes('kettlebell')) {
+            summary += '<li>Kettlebells</li>';
+        }
+        
+        summary += '</ul>';
     }
     
-    // Mettre à jour la barre de traction
-    const barreTraction = document.getElementById('barre_traction_available');
-    if (barreTraction) {
-        equipmentConfig.autres.barre_traction.available = barreTraction.checked;
-    }
-    
-    return equipmentConfig;
+    document.getElementById('profileSummary').innerHTML = summary;
 }
 
-// ===== FONCTION DE COMPLETION ONBOARDING =====
 async function completeOnboarding() {
-    // Collecter toute la configuration
-    const finalConfig = collectEquipmentConfig();
+    // Collecter la configuration finale
+    if (selectedEquipment.includes('barbell')) {
+        equipmentConfig.barbell.types = [];
+        if (document.querySelector('#barbell_olympic:checked')) equipmentConfig.barbell.types.push('olympic');
+        if (document.querySelector('#barbell_ez:checked')) equipmentConfig.barbell.types.push('ez');
+        if (document.querySelector('#barbell_short:checked')) equipmentConfig.barbell.types.push('short');
+    }
+    
+    if (selectedEquipment.includes('bench')) {
+        equipmentConfig.bench.available = true;
+        equipmentConfig.bench.incline = document.querySelector('#bench_incline:checked') || false;
+        equipmentConfig.bench.decline = document.querySelector('#bench_decline:checked') || false;
+    }
+    
+    equipmentConfig.pull_up_bar = selectedEquipment.includes('pull_up_bar');
     
     const userData = {
         name: document.getElementById('userName').value,
         age: parseInt(document.getElementById('userAge').value),
         experience_level: document.getElementById('experienceLevel').value,
         goals: selectedGoals,
-        equipment_config: finalConfig
+        equipment_config: equipmentConfig
     };
-    
-    // Validation basique
-    if (!userData.name || !userData.age || !userData.experience_level || selectedGoals.length === 0) {
-        showToast('Veuillez remplir tous les champs obligatoires', 'error');
-        return;
-    }
     
     try {
         console.log('Envoi des données utilisateur:', userData);
@@ -376,19 +443,17 @@ async function completeOnboarding() {
             // Mettre à jour l'interface
             document.getElementById('userInitial').textContent = user.name[0].toUpperCase();
             document.getElementById('userInitial').style.display = 'flex';
+            document.getElementById('userNameDisplay').textContent = user.name;
             
-            showToast('Profil créé avec succès ! 🎉', 'success');
+            // Masquer onboarding et afficher navigation
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('bottomNav').style.display = 'flex';
             
-            // Passer au dashboard
-            setTimeout(() => {
-                showView('dashboard');
-                document.getElementById('progressContainer').style.display = 'none';
-            }, 1500);
-            
+            showToast('Profil créé avec succès !', 'success');
+            showView('dashboard');
         } else {
-            const errorData = await response.json();
-            console.error('Erreur serveur:', errorData);
-            showToast('Erreur lors de la création du profil', 'error');
+            const error = await response.json();
+            showToast(error.detail || 'Erreur lors de la création du profil', 'error');
         }
     } catch (error) {
         console.error('Erreur:', error);
@@ -396,176 +461,7 @@ async function completeOnboarding() {
     }
 }
 
-// ===== FONCTIONS UTILITAIRES =====
-function parseCommaNumber(str) {
-    if (!str) return NaN;
-    return parseFloat(str.replace(',', '.'));
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    toast.style.background = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--secondary)' : 'var(--primary)';
-    toast.style.color = 'white';
-    toast.style.padding = '1rem 2rem';
-    toast.style.borderRadius = 'var(--radius)';
-    toast.style.boxShadow = 'var(--shadow)';
-    toast.style.zIndex = '9999';
-    toast.style.animation = 'slideIn 0.3s ease-out';
-    toast.style.position = 'fixed';
-    toast.style.top = '50%';
-    toast.style.left = '50%';
-    toast.style.transform = 'translate(-50%, -50%)';
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// ===== FONCTIONS DE NAVIGATION =====
-function nextStep() {
-    if (currentStep < 5) {
-        document.getElementById(`step${currentStep}`).classList.remove('active');
-        currentStep++;
-        document.getElementById(`step${currentStep}`).classList.add('active');
-        updateProgressBar();
-        
-        if (currentStep === 5) {
-            updateProfileSummary();
-        }
-    }
-}
-
-function previousStep() {
-    if (currentStep > 1) {
-        document.getElementById(`step${currentStep}`).classList.remove('active');
-        currentStep--;
-        document.getElementById(`step${currentStep}`).classList.add('active');
-        updateProgressBar();
-    }
-}
-
-function updateProgressBar() {
-    const progress = (currentStep / 5) * 100;
-    document.getElementById('progressFill').style.width = `${progress}%`;
-}
-
-function updateProfileSummary() {
-    const name = document.getElementById('userName').value;
-    const age = document.getElementById('userAge').value;
-    const experience = document.getElementById('experienceLevel').value;
-    
-    let equipmentSummary = '';
-    const config = equipmentConfig;
-    
-    // Résumer l'équipement configuré
-    const activeEquipment = [];
-    
-    // Barres
-    Object.entries(config.barres).forEach(([type, conf]) => {
-        if (conf.available) {
-            const name = type === 'barbell_standard' ? 'Barre standard' : 
-                         type === 'barbell_ez' ? 'Barre EZ' : 'Barres courtes';
-            activeEquipment.push(`${name} (${conf.weight}kg × ${conf.count})`);
-        }
-    });
-    
-    // Disques
-    if (config.disques.available) {
-        const weights = Object.keys(config.disques.weights);
-        if (weights.length > 0) {
-            activeEquipment.push(`Disques: ${weights.join(', ')} kg`);
-        }
-    }
-    
-    // Haltères
-    if (config.dumbbells.available && config.dumbbells.weights.length > 0) {
-        activeEquipment.push(`Haltères: ${config.dumbbells.weights.join(', ')} kg`);
-    }
-    
-    // Banc
-    if (config.banc.available) {
-        let bancInfo = 'Banc';
-        if (config.banc.inclinable_haut) bancInfo += ' (inclinable)';
-        activeEquipment.push(bancInfo);
-    }
-    
-    // Élastiques
-    if (config.elastiques.available && config.elastiques.bands.length > 0) {
-        activeEquipment.push(`Élastiques: ${config.elastiques.bands.length} bands`);
-    }
-    
-    // Autres
-    Object.entries(config.autres).forEach(([type, conf]) => {
-        if (conf.available) {
-            const name = type === 'barre_traction' ? 'Barre de traction' : 
-                         type === 'kettlebell' ? 'Kettlebells' :
-                         type.replace('lest_', 'Lests ');
-            activeEquipment.push(name);
-        }
-    });
-    
-    equipmentSummary = activeEquipment.length > 0 ? 
-        `<br><strong>Équipement:</strong> ${activeEquipment.join(', ')}` : 
-        '<br><strong>Équipement:</strong> Poids du corps uniquement';
-    
-    const summary = `
-        <strong>Nom:</strong> ${name}<br>
-        <strong>Âge:</strong> ${age} ans<br>
-        <strong>Expérience:</strong> ${experience}<br>
-        <strong>Objectifs:</strong> ${selectedGoals.join(', ')}${equipmentSummary}
-    `;
-    
-    document.getElementById('profileSummary').innerHTML = summary;
-}
-
-function showView(viewName) {
-    // Cacher toutes les vues
-    document.querySelectorAll('.onboarding, .dashboard, .workout-view, .exercises-view, .profile-view').forEach(view => {
-        view.classList.remove('active');
-    });
-    
-    // Afficher la vue demandée
-    const targetView = document.getElementById(`${viewName}View`) || document.querySelector(`.${viewName}`);
-    if (targetView) {
-        targetView.classList.add('active');
-    }
-    
-    // Mettre à jour la navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    const activeNavItem = document.querySelector(`[data-view="${viewName}"]`);
-    if (activeNavItem) {
-        activeNavItem.classList.add('active');
-    }
-}
-
-// ===== FONCTIONS POUR LES EXERCICES =====
-async function loadExercises() {
-    try {
-        const response = await fetch(`${API_URL}/exercises/`);
-        if (response.ok) {
-            exercises = await response.json();
-            bodyParts = [...new Set(exercises.map(ex => ex.body_part))];
-            console.log(`Loaded ${exercises.length} exercises`);
-        }
-    } catch (error) {
-        console.error('Error loading exercises:', error);
-    }
-}
-
+// ===== CHARGEMENT DES DONNÉES =====
 async function loadUser(userId) {
     try {
         const response = await fetch(`${API_URL}/users/${userId}`);
@@ -573,16 +469,37 @@ async function loadUser(userId) {
             currentUser = await response.json();
             document.getElementById('userInitial').textContent = currentUser.name[0].toUpperCase();
             document.getElementById('userInitial').style.display = 'flex';
+            document.getElementById('userNameDisplay').textContent = currentUser.name;
+            document.getElementById('bottomNav').style.display = 'flex';
             showView('dashboard');
         } else {
             localStorage.removeItem('userId');
-            showView('onboarding');
+            document.getElementById('progressContainer').style.display = 'block';
+            updateProgressBar();
         }
     } catch (error) {
-        console.error('Error loading user:', error);
+        console.error('Erreur:', error);
         localStorage.removeItem('userId');
-        showView('onboarding');
+        document.getElementById('progressContainer').style.display = 'block';
+        updateProgressBar();
     }
+}
+
+async function loadExercises() {
+    try {
+        const response = await fetch(`${API_URL}/exercises/`);
+        if (response.ok) {
+            exercises = await response.json();
+            console.log(`${exercises.length} exercices chargés`);
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des exercices:', error);
+    }
+}
+
+async function loadDashboard() {
+    // TODO: Charger les statistiques réelles
+    console.log('Chargement du dashboard pour', currentUser.name);
 }
 
 async function loadAvailableExercises() {
@@ -595,7 +512,8 @@ async function loadAvailableExercises() {
             displayExercises(availableExercises);
         }
     } catch (error) {
-        console.error('Error loading available exercises:', error);
+        console.error('Erreur lors du chargement des exercices:', error);
+        showToast('Erreur lors du chargement des exercices', 'error');
     }
 }
 
@@ -609,237 +527,94 @@ function displayExercises(exercisesList) {
     }
     
     container.innerHTML = exercisesList.map(exercise => `
-        <div class="exercise-card" onclick="selectExercise(${exercise.id})">
-            <div class="exercise-header">
-                <h3>${exercise.name_fr}</h3>
-                <span class="exercise-level">${exercise.level}</span>
+        <div class="exercise-card" onclick="selectExercise(${exercise.id})" style="margin-bottom: 1rem; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <h3 style="font-size: 1.125rem; margin-bottom: 0.5rem;">${exercise.name_fr}</h3>
+                <span style="font-size: 0.875rem; color: var(--primary); background: rgba(59, 130, 246, 0.1); padding: 0.25rem 0.75rem; border-radius: 9999px;">${exercise.level}</span>
             </div>
-            <p class="exercise-body-part">${exercise.body_part}</p>
-            <p class="exercise-equipment">${exercise.equipment.join(', ')}</p>
+            <p style="color: var(--gray-light); font-size: 0.875rem; margin-bottom: 0.25rem;">${exercise.body_part}</p>
+            <p style="color: var(--gray); font-size: 0.75rem;">${exercise.equipment.join(', ')}</p>
         </div>
     `).join('');
 }
 
-function selectExercise(exerciseId) {
-    const exercise = exercises.find(ex => ex.id === exerciseId);
-    if (exercise) {
-        currentExercise = exercise;
-        startWorkout();
-    }
-}
-
-function filterExercises() {
-    const searchTerm = document.getElementById('searchExercises').value.toLowerCase();
-    const bodyPartFilter = document.getElementById('bodyPartFilter').value;
+function loadProfile() {
+    if (!currentUser) return;
     
-    let filteredExercises = exercises;
-    
-    if (searchTerm) {
-        filteredExercises = filteredExercises.filter(ex => 
-            ex.name_fr.toLowerCase().includes(searchTerm) ||
-            ex.name_eng.toLowerCase().includes(searchTerm)
-        );
-    }
-    
-    if (bodyPartFilter) {
-        filteredExercises = filteredExercises.filter(ex => ex.body_part === bodyPartFilter);
-    }
-    
-    displayExercises(filteredExercises);
-}
-
-// ===== FONCTIONS WORKOUT =====
-function startFreeTimeWorkout() {
-    workoutMode = 'free_time';
-    showView('exercises');
-    loadAvailableExercises();
-}
-
-function startProgramWorkout() {
-    workoutMode = 'program';
-    showToast('Programmes d\'entraînement à venir', 'info');
-}
-
-async function startWorkout() {
-    if (!currentExercise || !currentUser) return;
-    
-    try {
-        // Créer une nouvelle séance
-        const workoutResponse = await fetch(`${API_URL}/workouts/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                user_id: currentUser.id,
-                type: workoutMode
-            })
-        });
-        
-        if (workoutResponse.ok) {
-            currentWorkout = await workoutResponse.json();
-            showView('workout');
-            initializeWorkoutInterface();
-        }
-    } catch (error) {
-        console.error('Error starting workout:', error);
-        showToast('Erreur lors du démarrage de l\'entraînement', 'error');
-    }
-}
-
-function initializeWorkoutInterface() {
-    const container = document.getElementById('currentExercise');
-    if (!container || !currentExercise) return;
-    
-    // Déterminer les paramètres selon le niveau de l'utilisateur
-    const userLevel = currentUser.experience_level;
-    const exerciseParams = currentExercise.sets_reps.find(sr => sr.level === userLevel) || 
-                          currentExercise.sets_reps[0];
-    
-    currentSet = {
-        set_number: 1,
-        weight: 0,
-        target_reps: exerciseParams.reps,
-        actual_reps: exerciseParams.reps
-    };
-    
+    const container = document.getElementById('profileContent');
     container.innerHTML = `
-        <div class="workout-header">
-            <h2>${currentExercise.name_fr}</h2>
-            <p>${currentExercise.body_part} • ${currentExercise.level}</p>
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 1rem;">
+            <p><strong>Nom:</strong> ${currentUser.name}</p>
+            <p><strong>Âge:</strong> ${currentUser.age} ans</p>
+            <p><strong>Niveau:</strong> ${currentUser.experience_level}</p>
+            <p><strong>Objectifs:</strong> ${currentUser.goals.join(', ')}</p>
         </div>
-        
-        <div class="workout-progress">
-            <span>Série ${currentSet.set_number} / ${exerciseParams.sets}</span>
-        </div>
-        
-        <div class="workout-controls">
-            <div class="weight-control">
-                <label>Poids (kg)</label>
-                <input type="number" id="currentWeight" value="${currentSet.weight}" step="0.5" min="0">
-            </div>
-            
-            <div class="reps-control">
-                <label>Répétitions</label>
-                <input type="number" id="currentReps" value="${currentSet.target_reps}" min="1">
-            </div>
-        </div>
-        
-        <div class="workout-actions">
-            <button class="btn btn-secondary" onclick="skipSet()">Passer</button>
-            <button class="btn" onclick="completeSet()">Série terminée</button>
-        </div>
-        
-        <div id="restTimer" style="display: none;">
-            <h3>Repos</h3>
-            <div id="timerDisplay">2:00</div>
-            <button class="btn btn-secondary" onclick="stopRestTimer()">Arrêter</button>
-        </div>
+        <button class="btn btn-secondary" onclick="logout()">
+            Déconnexion
+        </button>
     `;
 }
 
-function completeSet() {
-    const weight = parseFloat(document.getElementById('currentWeight').value) || 0;
-    const reps = parseInt(document.getElementById('currentReps').value) || 0;
-    
-    currentSet.weight = weight;
-    currentSet.actual_reps = reps;
-    
-    // Sauvegarder la série
-    saveSet();
-    
-    // Commencer le repos
-    startRestTimer();
+// ===== SÉANCES =====
+function startFreeWorkout() {
+    showView('exercises');
+    showToast('Sélectionnez un exercice pour commencer', 'info');
 }
 
-async function saveSet() {
-    if (!currentWorkout || !currentExercise) return;
+function startProgram() {
+    showToast('Programmes personnalisés bientôt disponibles !', 'info');
+}
+
+function selectExercise(exerciseId) {
+    const exercise = exercises.find(e => e.id === exerciseId);
+    if (!exercise) return;
     
-    try {
-        const setData = {
-            workout_id: currentWorkout.id,
-            exercise_id: currentExercise.id,
-            set_number: currentSet.set_number,
-            target_reps: currentSet.target_reps,
-            actual_reps: currentSet.actual_reps,
-            weight: currentSet.weight,
-            rest_time: 120, // 2 minutes par défaut
-            fatigue_level: 3, // À améliorer avec interface
-            perceived_exertion: 7 // À améliorer avec interface
-        };
+    // TODO: Implémenter la logique de séance
+    showToast(`Exercice sélectionné: ${exercise.name_fr}`, 'success');
+}
+
+// ===== UTILITAIRES =====
+function showToast(message, type = 'info') {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function logout() {
+    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('userId');
+        currentUser = null;
+        currentStep = 1;
+        selectedGoals = [];
+        selectedEquipment = [];
         
-        await fetch(`${API_URL}/sets/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(setData)
+        // Réinitialiser l'interface
+        document.getElementById('bottomNav').style.display = 'none';
+        document.getElementById('progressContainer').style.display = 'block';
+        document.getElementById('userInitial').style.display = 'none';
+        
+        // Réinitialiser les formulaires
+        document.getElementById('userName').value = '';
+        document.getElementById('userAge').value = '';
+        document.getElementById('experienceLevel').value = '';
+        
+        document.querySelectorAll('.chip.selected, .equipment-card.selected').forEach(el => {
+            el.classList.remove('selected');
         });
         
-        showToast(`Série ${currentSet.set_number} enregistrée`, 'success');
-        
-    } catch (error) {
-        console.error('Error saving set:', error);
-    }
-}
-
-function skipSet() {
-    currentSet.actual_reps = 0;
-    saveSet();
-    nextSet();
-}
-
-function nextSet() {
-    const userLevel = currentUser.experience_level;
-    const exerciseParams = currentExercise.sets_reps.find(sr => sr.level === userLevel) || 
-                          currentExercise.sets_reps[0];
-    
-    if (currentSet.set_number >= exerciseParams.sets) {
-        // Exercice terminé
-        showToast('Exercice terminé ! 🎉', 'success');
-        showView('dashboard');
-    } else {
-        // Série suivante
-        currentSet.set_number++;
-        currentSet.actual_reps = currentSet.target_reps;
-        initializeWorkoutInterface();
-    }
-}
-
-function startRestTimer(duration = 120) {
-    restTimer = duration;
-    document.getElementById('restTimer').style.display = 'block';
-    
-    restInterval = setInterval(() => {
-        restTimer--;
-        document.getElementById('timerDisplay').textContent = formatTime(restTimer);
-        
-        if (restTimer <= 0) {
-            stopRestTimer();
-            showToast('Repos terminé !', 'info');
-            nextSet();
-        }
-    }, 1000);
-}
-
-function stopRestTimer() {
-    if (restInterval) {
-        clearInterval(restInterval);
-        restInterval = null;
-    }
-    document.getElementById('restTimer').style.display = 'none';
-}
-
-// ===== GESTION DES OBJECTIFS =====
-function toggleGoal(goalElement) {
-    const goal = goalElement.dataset.goal;
-    goalElement.classList.toggle('selected');
-    
-    if (goalElement.classList.contains('selected')) {
-        selectedGoals.push(goal);
-    } else {
-        const index = selectedGoals.indexOf(goal);
-        if (index > -1) selectedGoals.splice(index, 1);
+        updateProgressBar();
+        showView('onboarding');
+        showToast('Déconnexion réussie', 'success');
     }
 }
 
@@ -849,17 +624,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.chip[data-goal]').forEach(chip => {
         chip.addEventListener('click', () => toggleGoal(chip));
     });
-
-    // Event listener pour les changements de poids de disques personnalisés
-    const disqueWeightSelect = document.getElementById('disque_weight');
-    if (disqueWeightSelect) {
-        disqueWeightSelect.addEventListener('change', handleDisqueWeightChange);
-    }
-
+    
+    // Event listeners pour l'équipement
+    document.querySelectorAll('.equipment-card').forEach(card => {
+        card.addEventListener('click', () => toggleEquipment(card));
+    });
+    
     // Charger les exercices
     await loadExercises();
-
-    // Charger l'utilisateur existant
+    
+    // Vérifier si un utilisateur existe
     const userId = localStorage.getItem('userId');
     if (userId) {
         await loadUser(userId);
