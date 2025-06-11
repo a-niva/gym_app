@@ -182,19 +182,6 @@ function getEquipmentName(type) {
     return names[type] || type;
 }
 
-function showConfigPanel(equipmentType) {
-    const panelsContainer = document.getElementById('configPanels');
-    let panel = document.getElementById(`panel-${equipmentType}`);
-    
-    if (!panel) {
-        panel = document.createElement('div');
-        panel.className = 'config-panel';
-        panel.id = `panel-${equipmentType}`;
-        panel.innerHTML = createPanelContent(equipmentType);
-        panelsContainer.appendChild(panel);
-    }
-}
-
 function createPanelContent(type) {
     switch(type) {
         case 'barbell':
@@ -526,6 +513,148 @@ function createKettlebellPanel() {
     `;
 }
 
+// Fonction pour créer le panel du banc
+function createBenchPanel() {
+    return `
+        <div class="config-header">
+            <div class="config-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18m-9-9v18"/>
+                </svg>
+            </div>
+            <h3 class="config-title">Configuration du banc</h3>
+        </div>
+        
+        <div class="bench-options">
+            <div class="bench-option ${equipmentConfig.banc.available ? 'active' : ''}" onclick="toggleBenchFeature(this, 'flat')">
+                <h4>Banc plat</h4>
+                <p style="color: #64748b; font-size: 14px;">Position horizontale standard</p>
+            </div>
+            <div class="bench-option ${equipmentConfig.banc.inclinable ? 'active' : ''}" onclick="toggleBenchFeature(this, 'incline')">
+                <h4>Inclinable</h4>
+                <p style="color: #64748b; font-size: 14px;">Angles positifs (15°, 30°, 45°...)</p>
+            </div>
+            <div class="bench-option ${equipmentConfig.banc.declinable ? 'active' : ''}" onclick="toggleBenchFeature(this, 'decline')">
+                <h4>Déclinable</h4>
+                <p style="color: #64748b; font-size: 14px;">Angles négatifs (-15°, -30°...)</p>
+            </div>
+        </div>
+    `;
+}
+
+function toggleBenchFeature(element, feature) {
+    element.classList.toggle('active');
+    
+    switch(feature) {
+        case 'flat':
+            equipmentConfig.banc.available = element.classList.contains('active');
+            break;
+        case 'incline':
+            equipmentConfig.banc.inclinable = element.classList.contains('active');
+            break;
+        case 'decline':
+            equipmentConfig.banc.declinable = element.classList.contains('active');
+            break;
+    }
+    
+    updateEquipmentStatus('bench');
+}
+
+// Fonctions pour mettre à jour les poids
+function updateBarbell(type, checked) {
+    equipmentConfig.barres[type].available = checked;
+    if (checked) {
+        equipmentConfig.barres[type].count = 1;
+    } else {
+        equipmentConfig.barres[type].count = 0;
+    }
+    updateEquipmentStatus('barbell');
+}
+
+function updateDisqueWeight(weight, count) {
+    const value = parseInt(count) || 0;
+    if (value > 0) {
+        equipmentConfig.disques[weight] = value;
+    } else {
+        delete equipmentConfig.disques[weight];
+    }
+    updateEquipmentStatus('barbell');
+}
+
+function updateDumbbellWeight(weight, count) {
+    const value = parseInt(count) || 0;
+    if (value > 0) {
+        equipmentConfig.dumbbells[weight] = value;
+    } else {
+        delete equipmentConfig.dumbbells[weight];
+    }
+    updateEquipmentStatus('dumbbells');
+}
+
+// Fonction pour ajouter une bande élastique
+function addBand() {
+    const color = document.getElementById('bandColor').value;
+    const resistance = document.getElementById('bandResistance').value;
+    const count = document.getElementById('bandCount').value;
+    
+    if (resistance && count) {
+        equipmentConfig.elastiques.push({
+            color: getColorName(color),
+            resistance: parseFloat(resistance),
+            count: parseInt(count)
+        });
+        
+        updateBandsList();
+        updateEquipmentStatus('resistance_bands');
+        
+        // Reset inputs
+        document.getElementById('bandResistance').value = '';
+        document.getElementById('bandCount').value = '1';
+    }
+}
+
+function updateBandsList() {
+    const container = document.getElementById('bandsList');
+    if (!container) return;
+    
+    container.innerHTML = equipmentConfig.elastiques.map((band, index) => `
+        <div class="band-item">
+            <div class="band-color" style="background-color: ${band.color}"></div>
+            <div class="band-info">
+                <div class="band-resistance">${band.resistance}kg</div>
+                <div class="band-count">${band.count} élastique${band.count > 1 ? 's' : ''}</div>
+            </div>
+            <div class="band-remove" onclick="removeBand(${index})">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </div>
+        </div>
+    `).join('');
+}
+
+function removeBand(index) {
+    equipmentConfig.elastiques.splice(index, 1);
+    updateBandsList();
+    updateEquipmentStatus('resistance_bands');
+}
+
+function getColorName(hexColor) {
+    // Convertir le code hex en nom de couleur approximatif
+    const colors = {
+        '#ff6b6b': 'Rouge',
+        '#4ecdc4': 'Turquoise',
+        '#45b7d1': 'Bleu',
+        '#f7dc6f': 'Jaune',
+        '#52c41a': 'Vert',
+        '#722ed1': 'Violet',
+        '#fa8c16': 'Orange',
+        '#000000': 'Noir'
+    };
+    
+    return colors[hexColor] || hexColor;
+}
+
 function updateKettlebellWeight(weight, count) {
     const value = parseInt(count) || 0;
     if (value > 0) {
@@ -547,6 +676,34 @@ function addCustomKettlebell() {
         showToast(`Ajouté: ${count} kettlebell(s) de ${weight}kg`, 'success');
         weightInput.value = '';
         countInput.value = 0;
+    }
+}
+
+async function startWorkout(type) {
+    if (!currentUser) {
+        showToast('Veuillez vous connecter', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/workouts/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                type: type
+            })
+        });
+        
+        if (response.ok) {
+            const workout = await response.json();
+            localStorage.setItem('currentWorkout', workout.id);
+            showView('training');
+            showToast('Séance démarrée !', 'success');
+        }
+    } catch (error) {
+        console.error('Erreur démarrage séance:', error);
+        showToast('Erreur lors du démarrage de la séance', 'error');
     }
 }
 
