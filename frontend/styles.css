@@ -1173,3 +1173,47 @@ select.form-input {
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+/* Workout Status */
+.workout-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.status-started {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.status-paused {
+    background: rgba(251, 146, 60, 0.2);
+    color: #fb923c;
+}
+
+.workout-controls {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.sync-status {
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.875rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius);
+}

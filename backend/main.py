@@ -158,12 +158,40 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
 
 # Workout endpoints
 @app.post("/api/workouts/")
-def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
-    db_workout = Workout(**workout.dict())
+async def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
+    # Vérifier que l'utilisateur existe
+    user = db.query(User).filter(User.id == workout.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Vérifier qu'il n'y a pas déjà une session active
+    active_workout = db.query(Workout).filter(
+        Workout.user_id == workout.user_id,
+        Workout.status.in_(["started", "paused"])
+    ).first()
+    
+    if active_workout:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Session active existante (ID: {active_workout.id}). Terminez-la d'abord."
+        )
+    
+    # Créer le workout
+    db_workout = Workout(
+        user_id=workout.user_id,
+        type=workout.type,
+        status="started"
+    )
     db.add(db_workout)
     db.commit()
     db.refresh(db_workout)
-    return {"id": db_workout.id, "created_at": db_workout.created_at}
+    
+    return {
+        "id": db_workout.id,
+        "status": db_workout.status,
+        "created_at": db_workout.created_at,
+        "type": db_workout.type
+    }
 
 @app.get("/api/workouts/{user_id}/history")
 def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get_db)):
@@ -203,9 +231,113 @@ def complete_workout(workout_id: int, db: Session = Depends(get_db)):
     if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
     
+    if workout.status == "completed":
+        raise HTTPException(status_code=400, detail="Workout already completed")
+    
+    # Si en pause, calculer la durée de pause finale
+    if workout.status == "paused" and workout.paused_at:
+        pause_duration = (datetime.utcnow() - workout.paused_at).total_seconds()
+        workout.total_pause_duration += int(pause_duration)
+    
+    workout.completed_at = datetime.utcnow()
+    workout.status = "completed"
+    db.commit()
+    
+    return {"status": "completed", "completed_at": workout.completed_at}
+
+@app.put("/api/workouts/{workout_id}/pause")
+def pause_workout(workout_id: int, db: Session = Depends(get_db)):
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    
+    if workout.status != "started":
+        raise HTTPException(status_code=400, detail=f"Cannot pause workout in status: {workout.status}")
+    
+    workout.status = "paused"
+    workout.paused_at = datetime.utcnow()
+    db.commit()
+    
+    return {"status": "paused", "paused_at": workout.paused_at}
+
+@app.put("/api/workouts/{workout_id}/resume")
+def resume_workout(workout_id: int, db: Session = Depends(get_db)):
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    
+    if workout.status != "paused":
+        raise HTTPException(status_code=400, detail=f"Cannot resume workout in status: {workout.status}")
+    
+    if workout.paused_at:
+        pause_duration = (datetime.utcnow() - workout.paused_at).total_seconds()
+        workout.total_pause_duration += int(pause_duration)
+    
+    workout.status = "started"
+    workout.paused_at = None
+    db.commit()
+    
+    return {"status": "resumed", "total_pause_duration": workout.total_pause_duration}
+
+@app.put("/api/workouts/{workout_id}/abandon")
+def abandon_workout(workout_id: int, db: Session = Depends(get_db)):
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    
+    if workout.status == "completed":
+        raise HTTPException(status_code=400, detail="Workout already completed")
+    
+    workout.status = "abandoned"
     workout.completed_at = datetime.utcnow()
     db.commit()
-    return {"status": "completed"}
+    
+    return {"status": "abandoned"}
+
+@app.get("/api/workouts/{workout_id}/status")
+def get_workout_status(workout_id: int, db: Session = Depends(get_db)):
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    
+    # Calculer la durée totale
+    if workout.completed_at:
+        total_duration = (workout.completed_at - workout.created_at).total_seconds()
+    else:
+        total_duration = (datetime.utcnow() - workout.created_at).total_seconds()
+    
+    active_duration = total_duration - workout.total_pause_duration
+    
+    return {
+        "id": workout.id,
+        "status": workout.status,
+        "created_at": workout.created_at,
+        "completed_at": workout.completed_at,
+        "total_duration": int(total_duration),
+        "active_duration": int(active_duration),
+        "pause_duration": workout.total_pause_duration,
+        "type": workout.type
+    }
+
+@app.get("/api/users/{user_id}/active-workout")
+def get_active_workout(user_id: int, db: Session = Depends(get_db)):
+    """Récupère la session active d'un utilisateur s'il y en a une"""
+    workout = db.query(Workout).filter(
+        Workout.user_id == user_id,
+        Workout.status.in_(["started", "paused"])
+    ).first()
+    
+    if not workout:
+        return {"active_workout": None}
+    
+    return {
+        "active_workout": {
+            "id": workout.id,
+            "status": workout.status,
+            "type": workout.type,
+            "created_at": workout.created_at
+        }
+    }
 
 # Set endpoints
 @app.post("/api/sets/")

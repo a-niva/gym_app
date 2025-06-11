@@ -110,6 +110,7 @@ class ExerciseResponse(BaseModel):
 class WorkoutCreate(BaseModel):
     user_id: int
     type: str = "free_time"
+    initial_exercise_id: Optional[int] = None  # Premier exercice prévu
 
 class SetCreate(BaseModel):
     workout_id: int
@@ -144,6 +145,9 @@ class WorkoutResponse(BaseModel):
     id: int
     user_id: int
     type: str
+    status: str
+    paused_at: Optional[datetime]
+    total_pause_duration: int
     created_at: datetime
     completed_at: Optional[datetime]
     sets: List[SetResponse] = []

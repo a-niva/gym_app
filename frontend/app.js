@@ -26,6 +26,9 @@ let equipmentConfig = {
         lest_poignets: []
     }
 };
+let currentWorkout = null;
+let workoutCheckInterval = null;
+let lastSyncTime = null;
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
@@ -693,6 +696,14 @@ async function startWorkout(type) {
         return;
     }
     
+    // Vérifier s'il y a déjà une session active
+    const activeCheck = await checkActiveWorkout();
+    if (activeCheck) {
+        showToast('Une session est déjà active', 'warning');
+        showView('training');
+        return;
+    }
+    
     try {
         const response = await fetch('/api/workouts/', {
             method: 'POST',
@@ -705,14 +716,236 @@ async function startWorkout(type) {
         
         if (response.ok) {
             const workout = await response.json();
-            localStorage.setItem('currentWorkout', workout.id);
+            currentWorkout = workout;
+            
+            // Sauvegarder en localStorage pour récupération
+            localStorage.setItem('currentWorkout', JSON.stringify({
+                id: workout.id,
+                status: workout.status,
+                created_at: workout.created_at,
+                type: workout.type,
+                user_id: currentUser.id
+            }));
+            
+            // Démarrer le monitoring
+            startWorkoutMonitoring();
+            
             showView('training');
             showToast('Séance démarrée !', 'success');
+            updateTrainingInterface();
+        } else {
+            const error = await response.json();
+            showToast(error.detail || 'Erreur lors du démarrage', 'error');
         }
     } catch (error) {
         console.error('Erreur démarrage séance:', error);
-        showToast('Erreur lors du démarrage de la séance', 'error');
+        showToast('Erreur de connexion au serveur', 'error');
     }
+}
+
+async function checkActiveWorkout() {
+    if (!currentUser) return null;
+    
+    try {
+        // D'abord vérifier localStorage
+        const savedWorkout = localStorage.getItem('currentWorkout');
+        if (savedWorkout) {
+            const workout = JSON.parse(savedWorkout);
+            
+            // Vérifier que c'est bien pour cet utilisateur
+            if (workout.user_id === currentUser.id && workout.status !== 'completed') {
+                // Vérifier avec le serveur que la session existe toujours
+                const response = await fetch(`/api/workouts/${workout.id}/status`);
+                if (response.ok) {
+                    const serverWorkout = await response.json();
+                    if (serverWorkout.status === 'started' || serverWorkout.status === 'paused') {
+                        currentWorkout = serverWorkout;
+                        startWorkoutMonitoring();
+                        return serverWorkout;
+                    }
+                }
+            }
+            
+            // Si pas valide, nettoyer
+            localStorage.removeItem('currentWorkout');
+        }
+        
+        // Vérifier côté serveur
+        const response = await fetch(`/api/users/${currentUser.id}/active-workout`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.active_workout) {
+                currentWorkout = data.active_workout;
+                localStorage.setItem('currentWorkout', JSON.stringify(data.active_workout));
+                startWorkoutMonitoring();
+                return data.active_workout;
+            }
+        }
+    } catch (error) {
+        console.error('Erreur vérification workout actif:', error);
+    }
+    
+    return null;
+}
+
+function startWorkoutMonitoring() {
+    // Sync toutes les 30 secondes pour gérer Render qui s'endort
+    if (workoutCheckInterval) clearInterval(workoutCheckInterval);
+    
+    workoutCheckInterval = setInterval(async () => {
+        if (currentWorkout && currentWorkout.status === 'started') {
+            try {
+                // Ping pour garder le serveur éveillé sur Render
+                await fetch(`/api/workouts/${currentWorkout.id}/status`);
+                lastSyncTime = new Date();
+            } catch (error) {
+                console.error('Erreur sync workout:', error);
+                showToast('Connexion perdue, données en local', 'warning');
+            }
+        }
+    }, 30000); // 30 secondes
+}
+
+async function pauseWorkout() {
+    if (!currentWorkout) return;
+    
+    try {
+        const response = await fetch(`/api/workouts/${currentWorkout.id}/pause`, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            currentWorkout.status = 'paused';
+            currentWorkout.paused_at = result.paused_at;
+            
+            localStorage.setItem('currentWorkout', JSON.stringify(currentWorkout));
+            showToast('Séance mise en pause', 'info');
+            updateTrainingInterface();
+        }
+    } catch (error) {
+        console.error('Erreur pause workout:', error);
+        // Sauvegarder l'état localement même si le serveur ne répond pas
+        currentWorkout.status = 'paused';
+        currentWorkout.paused_at = new Date().toISOString();
+        localStorage.setItem('currentWorkout', JSON.stringify(currentWorkout));
+        showToast('Pause sauvegardée localement', 'warning');
+    }
+}
+
+async function resumeWorkout() {
+    if (!currentWorkout) return;
+    
+    try {
+        const response = await fetch(`/api/workouts/${currentWorkout.id}/resume`, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            currentWorkout.status = 'started';
+            currentWorkout.paused_at = null;
+            
+            localStorage.setItem('currentWorkout', JSON.stringify(currentWorkout));
+            showToast('Séance reprise', 'success');
+            updateTrainingInterface();
+        }
+    } catch (error) {
+        console.error('Erreur reprise workout:', error);
+        showToast('Erreur de connexion', 'error');
+    }
+}
+
+async function completeWorkout() {
+    if (!currentWorkout) return;
+    
+    if (!confirm('Terminer la séance ?')) return;
+    
+    try {
+        const response = await fetch(`/api/workouts/${currentWorkout.id}/complete`, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            showToast('Séance terminée !', 'success');
+            cleanupWorkout();
+            showView('dashboard');
+            loadDashboard(); // Rafraîchir les stats
+        }
+    } catch (error) {
+        console.error('Erreur fin workout:', error);
+        showToast('Erreur, données sauvegardées localement', 'error');
+        // TODO: implémenter une queue de sync pour plus tard
+    }
+}
+
+async function abandonWorkout() {
+    if (!currentWorkout) return;
+    
+    if (!confirm('Abandonner la séance ? Les données seront perdues.')) return;
+    
+    try {
+        await fetch(`/api/workouts/${currentWorkout.id}/abandon`, {
+            method: 'PUT'
+        });
+        
+        showToast('Séance abandonnée', 'info');
+    } catch (error) {
+        console.error('Erreur abandon workout:', error);
+    }
+    
+    cleanupWorkout();
+    showView('dashboard');
+}
+
+function cleanupWorkout() {
+    currentWorkout = null;
+    localStorage.removeItem('currentWorkout');
+    if (workoutCheckInterval) {
+        clearInterval(workoutCheckInterval);
+        workoutCheckInterval = null;
+    }
+}
+
+function updateTrainingInterface() {
+    const container = document.getElementById('workoutInterface');
+    if (!container || !currentWorkout) return;
+    
+    const isPaused = currentWorkout.status === 'paused';
+    
+    container.innerHTML = `
+        <div class="workout-status">
+            <h2>Séance ${currentWorkout.type === 'program' ? 'Programme' : 'Libre'}</h2>
+            <div class="status-badge status-${currentWorkout.status}">
+                ${currentWorkout.status === 'started' ? '🟢 En cours' : '⏸️ En pause'}
+            </div>
+        </div>
+        
+        <div class="workout-controls">
+            ${isPaused ? 
+                `<button class="btn btn-primary" onclick="resumeWorkout()">
+                    ▶️ Reprendre
+                </button>` :
+                `<button class="btn btn-secondary" onclick="pauseWorkout()">
+                    ⏸️ Pause
+                </button>`
+            }
+            
+            <button class="btn btn-primary" onclick="completeWorkout()">
+                ✅ Terminer
+            </button>
+            
+            <button class="btn btn-secondary" onclick="abandonWorkout()">
+                ❌ Abandonner
+            </button>
+        </div>
+        
+        <div class="sync-status">
+            ${lastSyncTime ? 
+                `Dernière sync: ${new Date(lastSyncTime).toLocaleTimeString()}` : 
+                'En attente de synchronisation...'
+            }
+        </div>
+    `;
 }
 
 function addElastique() {
@@ -1152,7 +1385,16 @@ async function loadUser(userId) {
         const response = await fetch(`/api/users/${userId}`);
         if (response.ok) {
             currentUser = await response.json();
-            showMainInterface();
+            
+            // Vérifier s'il y a une session active
+            const activeWorkout = await checkActiveWorkout();
+            if (activeWorkout) {
+                showToast('Session en cours récupérée', 'info');
+                showView('training');
+                updateTrainingInterface();
+            } else {
+                showMainInterface();
+            }
         } else {
             localStorage.removeItem('userId');
             showView('onboarding');
@@ -1232,6 +1474,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     console.log('Application initialisée');
 });
+
+// Export des fonctions pour les rendre accessibles depuis le HTML
+window.pauseWorkout = pauseWorkout;
+window.resumeWorkout = resumeWorkout;
+window.completeWorkout = completeWorkout;
+window.abandonWorkout = abandonWorkout;
 
 // Exposer les fonctions globalement pour les onclick HTML
 window.nextStep = nextStep;

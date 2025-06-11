@@ -43,6 +43,9 @@ class Workout(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     type = Column(String, default="free_time")
+    status = Column(String, default="started")  # started, paused, completed, abandoned
+    paused_at = Column(DateTime, nullable=True)
+    total_pause_duration = Column(Integer, default=0)  # en secondes
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
     notes = Column(Text, nullable=True)
