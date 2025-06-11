@@ -3,28 +3,28 @@ from pydantic import BaseModel, field_validator
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
-# STRUCTURES ÉQUIPEMENT
+# STRUCTURES ÉQUIPEMENT REFONDUES
 class BarreConfig(BaseModel):
     available: bool = False
-    weight: float = 20.0
-    count: int = 1
+    count: int = 0
+    weight: float = 20.0  # Poids par défaut en kg
 
 class DisquesConfig(BaseModel):
     available: bool = False
-    weights: Dict[str, int] = {}  # {"5.0": 4, "10.0": 2} - poids -> nombre
+    weights: Dict[str, int] = {}  # {"5.0": 4, "10.0": 2} - poids en kg -> nombre
 
 class DumbbellsConfig(BaseModel):
     available: bool = False
-    weights: List[float] = []  # [5.0, 10.0, 15.0, 20.0]
+    weights: List[float] = []  # Liste des poids disponibles
 
 class BancConfig(BaseModel):
     available: bool = False
-    inclinable_haut: bool = True
+    inclinable_haut: bool = False
     inclinable_bas: bool = False
 
 class ElastiquesBand(BaseModel):
     color: str
-    resistance: float  # en kg
+    resistance: float  # Résistance exacte en kg
     count: int = 1
 
 class ElastiquesConfig(BaseModel):
@@ -33,14 +33,14 @@ class ElastiquesConfig(BaseModel):
 
 class KettlebellConfig(BaseModel):
     available: bool = False
-    weights: List[float] = []
+    weights: List[float] = []  # Liste des poids de kettlebells
 
 class BarreTractionConfig(BaseModel):
     available: bool = False
 
 class LestConfig(BaseModel):
     available: bool = False
-    weights: List[float] = []
+    weights: List[float] = []  # Liste des poids disponibles
 
 class AutresEquipmentConfig(BaseModel):
     kettlebell: KettlebellConfig = KettlebellConfig()
@@ -51,9 +51,9 @@ class AutresEquipmentConfig(BaseModel):
 
 class EquipmentConfig(BaseModel):
     barres: Dict[str, BarreConfig] = {
-        "barbell_standard": BarreConfig(),
-        "barbell_ez": BarreConfig(weight=10.0),
-        "barbell_courte": BarreConfig(weight=2.5, count=2)
+        "olympique": BarreConfig(weight=20.0),
+        "ez": BarreConfig(weight=10.0),
+        "courte": BarreConfig(weight=2.5)
     }
     disques: DisquesConfig = DisquesConfig()
     dumbbells: DumbbellsConfig = DumbbellsConfig()
@@ -75,7 +75,7 @@ class UserResponse(BaseModel):
     age: int
     experience_level: str
     goals: List[str]
-    equipment_config: Optional[Dict[str, Any]] = None 
+    equipment_config: EquipmentConfig
     created_at: datetime
     
     class Config:
@@ -83,19 +83,20 @@ class UserResponse(BaseModel):
 
 # SCHEMAS EXERCICES
 class ExerciseSpecs(BaseModel):
-    barbell_count: Optional[int] = 1
-    dumbbell_count: Optional[int] = 2
-    min_weight: Optional[float] = None
-    max_weight: Optional[float] = None
+    barbell_count: Optional[int] = None  # Nombre de barres nécessaires
+    dumbbell_count: Optional[int] = None  # Nombre d'haltères nécessaires
     requires_rack: Optional[bool] = False
     requires_incline: Optional[bool] = False
+    requires_decline: Optional[bool] = False
+    min_weight: Optional[float] = None
+    max_weight: Optional[float] = None
 
 class ExerciseResponse(BaseModel):
     id: int
     name_fr: str
     name_eng: str
-    equipment: List[str]  # ["barbell_standard", "dumbbells", "bench_inclinable"]
-    equipment_config: Optional[Dict[str, Any]] = None
+    equipment: List[str]
+    equipment_specs: Optional[ExerciseSpecs] = None
     level: str
     body_part: str
     sets_reps: List[dict]
@@ -119,3 +120,40 @@ class SetCreate(BaseModel):
     fatigue_level: int
     perceived_exertion: int
     skipped: bool = False
+
+class SetResponse(BaseModel):
+    id: int
+    workout_id: int
+    exercise_id: int
+    set_number: int
+    target_reps: int
+    actual_reps: int
+    weight: float
+    rest_time: int
+    fatigue_level: int
+    perceived_exertion: int
+    completed_at: datetime
+    skipped: bool
+    
+    class Config:
+        from_attributes = True
+
+class WorkoutResponse(BaseModel):
+    id: int
+    user_id: int
+    type: str
+    created_at: datetime
+    completed_at: Optional[datetime]
+    sets: List[SetResponse] = []
+    
+    class Config:
+        from_attributes = True
+
+# SCHEMAS STATS
+class UserStats(BaseModel):
+    total_workouts: int
+    week_streak: int
+    last_workout: Optional[str]
+    total_weight_lifted: float
+    favorite_exercises: List[Dict[str, Any]]
+    progress_data: Dict[str, List[Dict[str, Any]]]

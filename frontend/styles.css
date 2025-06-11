@@ -1,60 +1,253 @@
-# ===== frontend/style.css =====
-[v-cloak] { display: none; }
+/* ===== AJOUTS CSS POUR LA REFONTE ÉQUIPEMENT ===== */
 
-.btn-primary {
-    @apply bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors;
+/* Configuration équipement */
+.equipment-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: var(--radius);
+    transition: background 0.2s;
 }
 
-.btn-secondary {
-    @apply bg-gray-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors;
+.equipment-item-row:hover {
+    background: rgba(255, 255, 255, 0.03);
 }
 
-.btn-danger {
-    @apply bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors;
+.count-input {
+    width: 80px;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: white;
+    text-align: center;
+    transition: all 0.3s ease;
 }
 
-.input-field {
-    @apply w-full p-3 bg-gray-800 rounded-lg text-white border border-gray-700;
+.count-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.08);
 }
 
-.label {
-    @apply block text-sm font-medium mb-2 text-gray-300;
+/* Grilles pour disques, haltères, kettlebells */
+.disques-grid,
+.dumbbells-grid,
+.kettlebell-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
-.stat-card {
-    @apply bg-gray-800 p-4 rounded-lg text-center;
+.disque-item,
+.dumbbell-item,
+.kettlebell-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
 }
 
-.action-card {
-    @apply bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all text-center;
+.disque-item:hover,
+.dumbbell-item:hover,
+.kettlebell-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-.exercise-card {
-    @apply w-full p-3 bg-gray-800 rounded-lg text-left hover:bg-gray-700 transition-colors;
+.disque-weight,
+.dumbbell-weight,
+.kettlebell-weight {
+    font-weight: 600;
+    color: var(--light);
+    font-size: 0.875rem;
 }
 
-.loading-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+.count-input-small {
+    width: 60px;
+    padding: 0.375rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: white;
+    text-align: center;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
 }
 
-/* Animations */
-.fade-enter-active, .fade-leave-active {
-    transition: opacity 0.3s;
-}
-.fade-enter-from, .fade-leave-to {
-    opacity: 0;
+.count-input-small:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.08);
 }
 
-/* PWA iOS fixes */
-body {
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
+/* Items personnalisés */
+.disque-item.custom,
+.dumbbell-item.custom,
+.kettlebell-item.custom {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
-/* Safe area for notched phones */
-@supports (padding-top: env(safe-area-inset-top)) {
-    header {
-        padding-top: env(safe-area-inset-top);
+.custom-weight-input {
+    width: 80px;
+    padding: 0.375rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: white;
+    text-align: center;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.custom-weight-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+}
+
+/* Élastiques */
+.elastiques-list {
+    margin-bottom: 1rem;
+}
+
+.elastique-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+}
+
+.elastique-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.elastique-add {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-add {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-add:hover {
+    transform: scale(1.1);
+    background: var(--primary-dark);
+}
+
+.btn-remove {
+    margin-left: auto;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remove:hover {
+    background: rgba(239, 68, 68, 0.3);
+    transform: scale(1.1);
+}
+
+/* Lests */
+.lest-section h5 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--light);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.lest-inputs {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Tags exercices */
+.exercise-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tag {
+    padding: 0.25rem 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tag-basic {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.tag-advanced {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+}
+
+.tag-finition {
+    background: rgba(251, 146, 60, 0.2);
+    color: #fdba74;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .disques-grid,
+    .dumbbells-grid,
+    .kettlebell-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .elastique-add {
+        flex-wrap: wrap;
+    }
+    
+    .elastique-add input {
+        flex: 1;
+        min-width: 100px;
     }
 }

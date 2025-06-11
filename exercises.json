@@ -44,7 +44,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Développé couché avec haltères",
@@ -191,7 +193,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Développé décliné avec haltères",
@@ -442,7 +446,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Dips prise large buste penché",
@@ -792,7 +798,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Pompes prise large au sol",
@@ -1027,7 +1035,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Crunch abdominaux avec l’Abmat",
@@ -1215,7 +1225,9 @@
         "reps_tolerance": 5
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "pullup_bar_required": true
+    }
   },
   {
     "name_fr": "Obliques sur banc à lombaires",
@@ -1356,7 +1368,9 @@
         "reps_tolerance": 5
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Crunch abdominaux sur la Swiss Ball",
@@ -1638,7 +1652,9 @@
         "reps_tolerance": 5
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "pullup_bar_required": true
+    }
   },
   {
     "name_fr": "Rotation à la machine",
@@ -1685,7 +1701,9 @@
         "reps_tolerance": 5
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Vacuum",
@@ -2063,7 +2081,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Presse à cuisses allongé",
@@ -2110,7 +2130,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Presse à cuisses assis",
@@ -2157,7 +2179,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Presse à cuisses incliné",
@@ -2204,7 +2228,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Squat avant avec barre",
@@ -2647,7 +2673,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Squat bulgare avec haltères",
@@ -2992,7 +3020,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Développé militaire assis avec barre",
@@ -3189,7 +3219,8 @@
       }
     ],
     "equipment_specs": {
-      "barbell_count": 1
+      "barbell_count": 1,
+      "dumbbell_count": 2
     }
   },
   {
@@ -3335,7 +3366,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Oiseau avec haltères",
@@ -3479,7 +3512,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Oiseau à la machine",
@@ -3526,7 +3561,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Curl avec barre droite",
@@ -3622,7 +3659,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Curl avec haltères",
@@ -4013,7 +4052,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Curl prêcheur avec haltères",
@@ -4062,7 +4103,7 @@
       }
     ],
     "equipment_specs": {
-      "dumbbell_count": 2
+      "dumbbell_count": 1
     }
   },
   {
@@ -4110,7 +4151,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Curl inversé avec barre",
@@ -4402,7 +4445,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Rowing à la T-bar",
@@ -4451,7 +4496,8 @@
       }
     ],
     "equipment_specs": {
-      "barbell_count": 1
+      "barbell_count": 1,
+      "machine_required": true
     }
   },
   {
@@ -4597,7 +4643,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Face pull à la poulie",
@@ -5033,7 +5081,7 @@
       }
     ],
     "equipment_specs": {
-      "dumbbell_count": 2
+      "dumbbell_count": 1
     }
   },
   {
@@ -5082,7 +5130,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "barbell_count": 1
+    }
   },
   {
     "name_fr": "Extension triceps à la machine",
@@ -5129,7 +5179,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Kick back avec haltères",
@@ -5369,7 +5421,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Relevé de jambes suspendu",
@@ -5416,7 +5470,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "pullup_bar_required": true
+    }
   },
   {
     "name_fr": "Relevé de jambes au banc",
@@ -5944,7 +6000,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Adduction fessier à la machine",
@@ -5991,7 +6049,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Kick back fessier à la poulie",
@@ -6086,7 +6146,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "dumbbell_count": 2
+    }
   },
   {
     "name_fr": "Mollets debout à la machine",
@@ -6133,7 +6195,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Mollets assis à la machine",
@@ -6180,7 +6244,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Mollets à la presse à cuisses",
@@ -6227,7 +6293,9 @@
         "reps_tolerance": 2
       }
     ],
-    "equipment_specs": {}
+    "equipment_specs": {
+      "machine_required": true
+    }
   },
   {
     "name_fr": "Mollets debout avec haltères",
