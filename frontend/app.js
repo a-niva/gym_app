@@ -1254,7 +1254,6 @@ function logout() {
 
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', async () => {
-    
     // Event listeners pour l'équipement
     document.querySelectorAll('.equipment-card').forEach(card => {
         card.addEventListener('click', () => toggleEquipment(card));
@@ -1276,23 +1275,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Application initialisée');
 });
 
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Boutons de navigation
-    const nextButtons = document.querySelectorAll('[data-action="next"]');
-    const prevButtons = document.querySelectorAll('[data-action="prev"]');
-    
-    nextButtons.forEach(btn => btn.addEventListener('click', nextStep));
-    prevButtons.forEach(btn => btn.addEventListener('click', prevStep));
-    
-    // Autres boutons
-    document.querySelectorAll('.chip[data-goal]').forEach(chip => {
-        chip.addEventListener('click', () => toggleGoal(chip));
-    });
-});
+// Exposer les fonctions globalement pour les onclick HTML
+window.nextStep = nextStep;
+window.prevStep = prevStep;
+window.toggleGoal = toggleGoal;
+window.toggleEquipment = toggleEquipment;
+window.showView = showView;
+window.saveUser = saveUser;
+window.addWeight = addWeight;
+window.removeWeight = removeWeight;
+window.addElastique = addElastique;
+window.removeElastique = removeElastique;
+window.updateDumbbellWeight = updateDumbbellWeight;
+window.updatePlateWeight = updatePlateWeight;
+window.toggleBarbellType = toggleBarbellType;
+window.updateBarbellCount = updateBarbellCount;
+window.updateBenchOption = updateBenchOption;
+window.updateKettlebellWeight = updateKettlebellWeight;
+window.addBand = addBand;
+window.removeBand = removeBand;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
 }
-
