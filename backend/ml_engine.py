@@ -104,7 +104,7 @@ class FitnessMLEngine:
         Estime le poids initial pour un nouvel exercice
         """
         # Poids de base selon le type d'exercice et le poids corporel
-        body_weight = self._estimate_body_weight(user)
+        body_weight = self._get_user_weight(user)
         
         # Mapping approximatif exercice -> pourcentage du poids corporel
         exercise_ratios = {
@@ -140,9 +140,9 @@ class FitnessMLEngine:
             goal_mult = goal_mult ** (1/len(user.goals))  # Moyenne géométrique
         
         # Si haltères, ajuster au poids disponible le plus proche
-        if "dumbbells" in exercise.equipment and user.dumbbell_weights:
+        if "dumbbells" in exercise.equipment and user.equipment_config and user.equipment_config.get("dumbbells"):
             target_weight = base_weight * experience_mult * goal_mult / 2  # Divisé par 2 pour un haltère
-            available_weights = sorted(user.dumbbell_weights)
+            available_weights = sorted([float(w) for w in user.equipment_config.get("dumbbells", {}).keys()])
             
             # Trouver le poids le plus proche
             closest_weight = min(available_weights, key=lambda x: abs(x - target_weight))

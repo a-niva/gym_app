@@ -121,6 +121,11 @@ function toggleGoal(goalElement) {
 
 // ===== GESTION DE L'ÉQUIPEMENT =====
 function toggleEquipment(card) {
+    console.log('Toggle equipment:', {
+        equipment: card.dataset.equipment,
+        hasOnclick: !!card.onclick,
+        classList: card.classList.toString()
+    });
     const equipment = card.dataset.equipment;
     card.classList.toggle('selected');
     
@@ -1124,15 +1129,6 @@ async function startWorkout() {
     }
 }
 
-// Event listeners pour l'équipement
-setTimeout(() => {
-    document.querySelectorAll('.equipment-card').forEach(card => {
-        if (!card.onclick) {
-            card.addEventListener('click', () => toggleEquipment(card));
-        }
-    });
-}, 100);
-
 // ===== UTILITAIRES =====
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
@@ -1220,10 +1216,6 @@ function logout() {
 
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', async () => {
-    // Event listeners pour l'équipement
-    document.querySelectorAll('.equipment-card').forEach(card => {
-        card.addEventListener('click', () => toggleEquipment(card));
-    });
     
     // Charger les exercices
     await loadExercises();
@@ -1248,18 +1240,26 @@ window.toggleGoal = toggleGoal;
 window.toggleEquipment = toggleEquipment;
 window.showView = showView;
 window.saveUser = saveUser;
-window.addWeight = addWeight;
-window.removeWeight = removeWeight;
-window.addElastique = addElastique;
-window.removeElastique = removeElastique;
+window.startWorkout = startWorkout;
+window.logout = logout;
+
+// Fonctions pour la configuration détaillée
+window.updateBarbell = updateBarbell;
+window.updateDisqueWeight = updateDisqueWeight;
 window.updateDumbbellWeight = updateDumbbellWeight;
-window.updatePlateWeight = updatePlateWeight;
-window.toggleBarbellType = toggleBarbellType;
-window.updateBarbellCount = updateBarbellCount;
-window.updateBenchOption = updateBenchOption;
 window.updateKettlebellWeight = updateKettlebellWeight;
+window.toggleBenchFeature = toggleBenchFeature;
 window.addBand = addBand;
 window.removeBand = removeBand;
+window.addElastique = addElastique;
+window.removeElastique = removeElastique;
+window.addCustomDumbbell = addCustomDumbbell;
+window.addCustomDisque = addCustomDisque;
+window.addCustomKettlebell = addCustomKettlebell;
+window.updateElastiquesList = updateElastiquesList;
+window.getColorHex = getColorHex;
+window.addLest = addLest;
+window.showConfigPanel = showConfigPanel;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
