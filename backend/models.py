@@ -10,6 +10,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     age = Column(Integer)
+    height = Column(Float)  # en cm
+    eight = Column(Float)  # en kg
     experience_level = Column(String)
     goals = Column(JSON)
     

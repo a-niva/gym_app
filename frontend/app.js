@@ -54,10 +54,13 @@ function nextStep() {
     if (currentStep === 1) {
         const name = document.getElementById('userName').value.trim();
         const age = document.getElementById('userAge').value;
+        const height = document.getElementById('userHeight').value;
+        const weight = document.getElementById('userWeight').value;
         const experience = document.getElementById('experienceLevel').value;
         
-        if (!name || !age || !experience) {
+        if (!name || !age || !height || !weight || !experience) {
             showToast('Veuillez remplir tous les champs', 'error');
+            console.error('Validation échouée:', {name, age, height, weight, experience});
             return;
         }
     } else if (currentStep === 2) {
@@ -930,6 +933,8 @@ async function saveUser() {
     const userData = {
         name: document.getElementById('userName').value.trim(),
         age: parseInt(document.getElementById('userAge').value),
+        height: parseFloat(document.getElementById('userHeight').value),
+        weight: parseFloat(document.getElementById('userWeight').value),
         experience_level: document.getElementById('experienceLevel').value,
         goals: selectedGoals,
         equipment_config: {
@@ -986,6 +991,8 @@ async function saveUser() {
     const userData = {
         name: name,
         age: age,
+        height: height,
+        weight: weight,
         experience_level: experience,
         goals: selectedGoals,
         equipment_config: backendEquipmentConfig

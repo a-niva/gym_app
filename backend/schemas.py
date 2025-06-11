@@ -65,6 +65,8 @@ class EquipmentConfig(BaseModel):
 class UserCreate(BaseModel):
     name: str
     age: int
+    height: float
+    weight: float
     experience_level: str
     goals: List[str]
     equipment_config: EquipmentConfig

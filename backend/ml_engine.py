@@ -150,30 +150,10 @@ class FitnessMLEngine:
         
         return round(base_weight * experience_mult * goal_mult, 2.5)
     
-    def _estimate_body_weight(self, user: User) -> float:
-        """
-        Estime le poids corporel basé sur l'âge et le niveau
-        """
-        # Estimation très approximative
-        base_weight = 70  # kg
+    def _get_user_weight(self, user: User) -> float:
+        """Retourne le poids réel de l'utilisateur"""
+        return user.weight
         
-        # Ajustement selon l'âge
-        if user.age < 20:
-            base_weight *= 0.9
-        elif user.age > 40:
-            base_weight *= 0.95
-        
-        # Ajustement selon le niveau (les plus expérimentés sont souvent plus lourds)
-        experience_weights = {
-            "beginner": 0.95,
-            "intermediate": 1.0,
-            "advanced": 1.05,
-            "elite": 1.08,
-            "extreme": 1.1
-        }
-        
-        return base_weight * experience_weights.get(user.experience_level, 1.0)
-    
     def predict_next_session_performance(
         self, 
         user: User, 
