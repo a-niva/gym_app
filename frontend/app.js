@@ -1,18 +1,14 @@
+// ===== frontend/app.js - VERSION COMPLÈTE CORRIGÉE =====
+
 // Configuration API
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:8000/api' 
     : '/api';
 
-// Variables globales
+// ===== VARIABLES GLOBALES NETTOYÉES =====
 let currentUser = null;
 let currentStep = 1;
 let selectedGoals = [];
-let selectedEquipment = [];
-window.selectedDumbbells = [];
-let selectedPlates = [];
-let resistanceBands = [];
-let plateConfiguration = {}; // Format: { "5": 4, "10": 2, "20": 2 }
-let bandCounter = 0;
 let workoutMode = null;
 let currentWorkout = null;
 let timerInterval = null;
@@ -29,10 +25,8 @@ let currentSet = {
 };
 let restTimer = 0;
 let restInterval = null;
-// ===== NOUVEAU CODE JAVASCRIPT POUR L'ÉQUIPEMENT =====
-// À ajouter/remplacer dans app.js
 
-// Variables globales pour la nouvelle configuration équipement
+// ===== NOUVELLE CONFIGURATION ÉQUIPEMENT (PROPRE) =====
 let equipmentConfig = {
     barres: {
         barbell_standard: {available: false, weight: 20.0, count: 1},
@@ -233,23 +227,6 @@ function toggleBancConfig() {
     
     equipmentConfig.banc.available = checkbox.checked;
     config.style.display = checkbox.checked ? 'block' : 'none';
-    
-    if (checkbox.checked) {
-        // Ajouter event listeners pour les options du banc
-        const inclineHaut = document.getElementById('banc_incline_haut');
-        const inclineBas = document.getElementById('banc_incline_bas');
-        
-        if (inclineHaut) {
-            inclineHaut.addEventListener('change', () => {
-                equipmentConfig.banc.inclinable_haut = inclineHaut.checked;
-            });
-        }
-        if (inclineBas) {
-            inclineBas.addEventListener('change', () => {
-                equipmentConfig.banc.inclinable_bas = inclineBas.checked;
-            });
-        }
-    }
 }
 
 // ===== FONCTIONS POUR LES ÉLASTIQUES =====
@@ -331,12 +308,10 @@ function toggleLestConfig(type) {
 }
 
 function showKettlebellModal() {
-    // TODO: Implémenter modal pour kettlebells
     showToast('Configuration kettlebells à venir', 'info');
 }
 
 function showLestModal(type) {
-    // TODO: Implémenter modal pour lests
     showToast(`Configuration lests ${type} à venir`, 'info');
 }
 
@@ -363,7 +338,7 @@ function collectEquipmentConfig() {
     return equipmentConfig;
 }
 
-// ===== FONCTION DE COMPLETION ONBOARDING MISE À JOUR =====
+// ===== FONCTION DE COMPLETION ONBOARDING =====
 async function completeOnboarding() {
     // Collecter toute la configuration
     const finalConfig = collectEquipmentConfig();
@@ -421,109 +396,10 @@ async function completeOnboarding() {
     }
 }
 
-// ===== FONCTION POUR CALCULER LES POIDS DISPONIBLES (mise à jour) =====
-function calculateAvailableWeights(exercise) {
-    if (!currentUser || !currentUser.equipment_config) {
-        return [];
-    }
-    
-    const equipmentNeeded = exercise.equipment || [];
-    const config = currentUser.equipment_config;
-    let weights = [];
-    
-    // Haltères
-    if (equipmentNeeded.includes('dumbbells') && config.dumbbells?.available) {
-        weights = [...config.dumbbells.weights];
-    }
-    
-    // Barres + disques
-    else if (equipmentNeeded.some(eq => eq.startsWith('barbell_')) && config.disques?.available) {
-        // Déterminer le type de barre
-        let barWeight = 20; // Défaut
-        
-        if (equipmentNeeded.includes('barbell_standard') && config.barres?.barbell_standard?.available) {
-            barWeight = config.barres.barbell_standard.weight;
-        } else if (equipmentNeeded.includes('barbell_ez') && config.barres?.barbell_ez?.available) {
-            barWeight = config.barres.barbell_ez.weight;
-        } else if (equipmentNeeded.includes('barbell_courte') && config.barres?.barbell_courte?.available) {
-            barWeight = config.barres.barbell_courte.weight;
-        }
-        
-        // Calculer toutes les combinaisons possibles avec les disques
-        weights = calculateBarbellWeightCombinations(barWeight, config.disques.weights);
-    }
-    
-    // Élastiques
-    else if (equipmentNeeded.includes('elastiques') && config.elastiques?.available) {
-        weights = config.elastiques.bands.map(band => band.resistance);
-    }
-    
-    // Kettlebells
-    else if (equipmentNeeded.includes('kettlebell') && config.autres?.kettlebell?.available) {
-        weights = config.autres.kettlebell.weights;
-    }
-    
-    // Poids du corps
-    else if (equipmentNeeded.includes('bodyweight')) {
-        weights = [0]; // Poids du corps
-    }
-    
-    return weights.sort((a, b) => a - b);
-}
-
-function calculateBarbellWeightCombinations(barWeight, availablePlates) {
-    const weights = new Set([barWeight]); // Commencer avec la barre seule
-    
-    // Convertir les disques en format numérique
-    const plates = {};
-    for (const [weightStr, count] of Object.entries(availablePlates)) {
-        plates[parseFloat(weightStr)] = count;
-    }
-    
-    // Générer toutes les combinaisons possibles (max 6 disques par côté pour être réaliste)
-    function generateCombinations(currentWeight, remainingPlates, depth = 0) {
-        if (depth > 6) return; // Max 6 disques par côté
-        
-        weights.add(currentWeight);
-        
-        for (const [plateWeight, count] of Object.entries(remainingPlates)) {
-            if (count >= 2) { // Il faut 2 disques (un de chaque côté)
-                const newWeight = currentWeight + (plateWeight * 2);
-                const newRemaining = {...remainingPlates};
-                newRemaining[plateWeight] = count - 2;
-                
-                if (newRemaining[plateWeight] === 0) {
-                    delete newRemaining[plateWeight];
-                }
-                
-                generateCombinations(newWeight, newRemaining, depth + 1);
-            }
-        }
-    }
-    
-    generateCombinations(barWeight, plates);
-    
-    // Convertir en array, trier et limiter à des poids réalistes
-    return Array.from(weights)
-        .filter(w => w <= 300) // Max 300kg pour être réaliste
-        .sort((a, b) => a - b);
-}
-
-// ===== INITIALISATION =====
-document.addEventListener('DOMContentLoaded', function() {
-    // Event listener pour les changements de poids de disques personnalisés
-    const disqueWeightSelect = document.getElementById('disque_weight');
-    if (disqueWeightSelect) {
-        disqueWeightSelect.addEventListener('change', handleDisqueWeightChange);
-    }
-    
-    console.log('Interface équipement initialisée');
-});
-
-// Utilitaires
+// ===== FONCTIONS UTILITAIRES =====
 function parseCommaNumber(str) {
     if (!str) return NaN;
-    return parseFloat(str.replace(',', '.').trim());
+    return parseFloat(str.replace(',', '.'));
 }
 
 function formatTime(seconds) {
@@ -532,530 +408,6 @@ function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Son du timer compatible iOS
-function playTimerSound() {
-    try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = 800; // Fréquence en Hz
-        gainNode.gain.value = 0.3; // Volume
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.2); // Durée 200ms
-    } catch (error) {
-        console.log('Audio non supporté:', error);
-    }
-}
-
-// Navigation
-function showView(viewName) {
-    document.querySelectorAll('.onboarding, .dashboard, .workout-view').forEach(view => {
-        view.classList.remove('active');
-    });
-
-    const view = document.getElementById(viewName + 'View');
-    if (view) {
-        view.classList.add('active');
-    }
-
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    const navItem = document.querySelector(`.nav-item[onclick*="${viewName}"]`);
-    if (navItem) {
-        navItem.classList.add('active');
-    }
-
-    if (viewName === 'dashboard' && currentUser) {
-        loadDashboard();
-    }
-
-    // Gérer l'affichage de la barre de progression
-    const progressContainer = document.getElementById('progressContainer');
-    if (viewName === 'onboarding') {
-        progressContainer.style.display = 'block';
-    } else {
-        progressContainer.style.display = 'none';
-    }
-}
-
-function nextStep() {
-    if (!validateStep(currentStep)) {
-        return;
-    }
-
-    document.getElementById(`step${currentStep}`).classList.remove('active');
-    currentStep++;
-    
-    setTimeout(() => {
-        document.getElementById(`step${currentStep}`).classList.add('active');
-        updateProgressBar();
-        
-        if (currentStep === 4) {
-            showProfileSummary();
-        }
-    }, 300);
-}
-
-function prevStep() {
-    document.getElementById(`step${currentStep}`).classList.remove('active');
-    currentStep--;
-    
-    setTimeout(() => {
-        document.getElementById(`step${currentStep}`).classList.add('active');
-        updateProgressBar();
-    }, 300);
-}
-
-function validateStep(step) {
-    switch(step) {
-        case 1:
-            const name = document.getElementById('userName').value;
-            const age = document.getElementById('userAge').value;
-            const experience = document.getElementById('experienceLevel').value;
-            
-            if (!name || !age || !experience) {
-                showToast('Veuillez remplir tous les champs', 'error');
-                return false;
-            }
-            
-            if (parseInt(age) < 13 || parseInt(age) > 120) {
-                showToast('L\'âge doit être entre 13 et 120 ans', 'error');
-                return false;
-            }
-            
-            if (name.length < 2) {
-                showToast('Le nom doit contenir au moins 2 caractères', 'error');
-                return false;
-            }
-            
-            return true;
-            
-        case 2:
-            if (selectedGoals.length === 0) {
-                showToast('Veuillez sélectionner au moins un objectif', 'error');
-                return false;
-            }
-            return true;
-            
-        case 3:
-            if (selectedEquipment.length === 0) {
-                showToast('Veuillez sélectionner au moins un équipement', 'error');
-                return false;
-            }
-            return true;
-            
-        default:
-            return true;
-    }
-}
-
-function updateProgressBar() {
-    const progress = (currentStep / 4) * 100;
-    document.getElementById('progressFill').style.width = progress + '%';
-}
-
-function showProfileSummary() {
-    const name = document.getElementById('userName').value;
-    const age = document.getElementById('userAge').value;
-    const experience = document.getElementById('experienceLevel').value;
-    
-    collectBandsData();
-    
-    let equipmentDetails = '';
-    if (window.selectedDumbbells && window.selectedDumbbells.length > 0) {
-        equipmentDetails += `<br><strong>Haltères:</strong> ${window.selectedDumbbells.join(', ')} kg`;
-    }
-    if (selectedEquipment.includes('barbell')) {
-        const standardBar = document.getElementById('standardBarWeight')?.value || '20';
-        equipmentDetails += `<br><strong>Barre standard:</strong> ${standardBar} kg`;
-        const plateWeights = Object.keys(plateConfiguration).map(w => parseFloat(w)).sort((a, b) => a - b);
-        if (plateWeights.length > 0) {
-            equipmentDetails += `<br><strong>Disques:</strong> ${plateWeights.join(', ')} kg`;
-        }
-    }
-    if (resistanceBands.length > 0) {
-        equipmentDetails += `<br><strong>Élastiques:</strong> ${resistanceBands.map(b => `${b.color} (${b.resistance}kg)`).join(', ')}`;
-    }
-    
-    const summary = `
-        <strong>Nom:</strong> ${name}<br>
-        <strong>Âge:</strong> ${age} ans<br>
-        <strong>Expérience:</strong> ${experience}<br>
-        <strong>Objectifs:</strong> ${selectedGoals.join(', ')}<br>
-        <strong>Équipement:</strong> ${selectedEquipment.join(', ')}
-        ${equipmentDetails}
-    `;
-    
-    document.getElementById('profileSummary').innerHTML = summary;
-}
-
-// API et données
-async function completeOnboarding() {
-    collectBandsData();
-    
-    const userData = {
-        name: document.getElementById('userName').value,
-        age: parseInt(document.getElementById('userAge').value),
-        experience_level: document.getElementById('experienceLevel').value,
-        goals: selectedGoals,
-        available_equipment: selectedEquipment,
-        dumbbell_weights: window.selectedDumbbells || [],
-        barbell_weights: collectBarbellData(),
-        resistance_bands: resistanceBands
-    };
-
-    try {
-        const response = await fetch(`${API_URL}/users`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userData)
-        });
-
-        if (response.ok) {
-            const user = await response.json();
-            currentUser = user;
-            localStorage.setItem('userId', user.id);
-            
-            document.getElementById('userInitial').textContent = user.name[0].toUpperCase();
-            document.getElementById('userInitial').style.display = 'flex';
-            
-            showToast('Profil créé avec succès !', 'success');
-            showView('dashboard');
-        } else {
-            const error = await response.json();
-            showToast(error.detail || 'Erreur lors de la création du profil', 'error');
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-        showToast('Erreur de connexion', 'error');
-    }
-}
-
-async function loadUser(userId) {
-    try {
-        const response = await fetch(`${API_URL}/users/${userId}`);
-        if (response.ok) {
-            currentUser = await response.json();
-            document.getElementById('userInitial').textContent = currentUser.name[0].toUpperCase();
-            document.getElementById('userInitial').style.display = 'flex';
-            showView('dashboard');
-        } else {
-            localStorage.removeItem('userId');
-            showView('onboarding');
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-        showView('onboarding');
-    }
-}
-
-async function loadDashboard() {
-    if (!currentUser) return;
-    
-    try {
-        const response = await fetch(`${API_URL}/stats/${currentUser.id}`);
-        if (response.ok) {
-            const stats = await response.json();
-            document.getElementById('totalWorkouts').textContent = stats.total_workouts;
-            document.getElementById('weekWorkouts').textContent = stats.week_workouts;
-            document.getElementById('totalVolume').textContent = Math.round(stats.total_volume).toLocaleString();
-            document.getElementById('currentStreak').textContent = '0'; // TODO: calculer la série
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-    }
-}
-
-async function loadExercises() {
-    try {
-        const response = await fetch(`${API_URL}/exercises`);
-        if (response.ok) {
-            exercises = await response.json();
-            bodyParts = [...new Set(exercises.map(e => e.body_part))].sort();
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-    }
-}
-
-// Gestion des entraînements
-function selectMode(mode) {
-    workoutMode = mode;
-    document.querySelectorAll('.mode-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    event.currentTarget.classList.add('selected');
-}
-
-async function startWorkout() {
-    if (!workoutMode) {
-        showToast('Veuillez sélectionner un mode', 'error');
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/workouts`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                user_id: currentUser.id,
-                type: workoutMode
-            })
-        });
-
-        if (response.ok) {
-            currentWorkout = await response.json();
-            showView('workout');
-            
-            if (workoutMode === 'free_time') {
-                loadExerciseSelector();
-            } else {
-                loadProgramWorkout();
-            }
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-        showToast('Erreur lors du démarrage', 'error');
-    }
-}
-
-function loadExerciseSelector() {
-    const container = document.getElementById('exerciseSelector');
-    if (!container) return;
-    
-    const filteredExercises = exercises.filter(ex => {
-        const matchSearch = !searchQuery || 
-            ex.name_fr.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchBodyPart = !filterBodyPart || 
-            ex.body_part === filterBodyPart;
-        const hasEquipment = ex.equipment.some(eq => 
-            currentUser.available_equipment.includes(eq)
-        );
-        
-        return matchSearch && matchBodyPart && hasEquipment;
-    });
-    
-    container.innerHTML = `
-        <h2>Sélectionner un exercice</h2>
-        <div style="margin-bottom: 1rem;">
-            <input type="text" class="form-input" placeholder="Rechercher..." 
-                   oninput="updateSearchQuery(this.value)" style="margin-bottom: 0.5rem;">
-            <select class="form-input form-select" onchange="updateBodyPartFilter(this.value)">
-                <option value="">Toutes les parties du corps</option>
-                ${bodyParts.map(bp => `<option value="${bp}">${bp}</option>`).join('')}
-            </select>
-        </div>
-        <div style="display: grid; gap: 0.5rem;">
-            ${filteredExercises.map(ex => `
-                <div class="equipment-card" onclick="selectExercise(${JSON.stringify(ex).replace(/"/g, '&quot;')})">
-                    <h4>${ex.name_fr}</h4>
-                    <p style="color: var(--gray); font-size: 0.875rem;">${ex.body_part}</p>
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-function updateSearchQuery(value) {
-    searchQuery = value;
-    loadExerciseSelector();
-}
-
-function updateBodyPartFilter(value) {
-    filterBodyPart = value;
-    loadExerciseSelector();
-}
-
-async function selectExercise(exercise) {
-    currentExercise = exercise;
-    
-    // Récupérer le dernier poids utilisé
-    try {
-        const response = await fetch(`${API_URL}/sets/last-weight/${currentUser.id}/${exercise.id}`);
-        if (response.ok) {
-            const lastData = await response.json();
-            if (lastData.weight) {
-                currentSet.weight = lastData.weight;
-                currentSet.target_reps = lastData.reps;
-                currentSet.actual_reps = lastData.reps;
-            }
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-    }
-    
-    currentSet.set_number = 1;
-    displayCurrentExercise();
-}
-
-function displayCurrentExercise() {
-    const container = document.getElementById('currentExercise');
-    if (!container || !currentExercise) return;
-    
-    const availableWeights = calculateAvailableWeights(currentExercise);
-    
-    container.innerHTML = `
-        <h2>${currentExercise.name_fr}</h2>
-        <p style="color: var(--gray);">Série ${currentSet.set_number}</p>
-        
-        <div style="display: grid; gap: 1rem; margin: 2rem 0;">
-            <div class="form-group">
-                <label class="form-label">Poids (kg)</label>
-                <select class="form-input form-select" onchange="updateCurrentWeight(this.value)">
-                    ${availableWeights.map(w => 
-                        `<option value="${w}" ${w === currentSet.weight ? 'selected' : ''}>${w} kg</option>`
-                    ).join('')}
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Répétitions cibles</label>
-                <input type="number" class="form-input" value="${currentSet.target_reps}" 
-                       onchange="currentSet.target_reps = parseInt(this.value)">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Répétitions réalisées</label>
-                <input type="number" class="form-input" value="${currentSet.actual_reps}" 
-                       onchange="currentSet.actual_reps = parseInt(this.value)">
-            </div>
-        </div>
-        
-        <div style="display: flex; gap: 1rem;">
-            <button class="btn btn-secondary" onclick="skipSet()">Passer</button>
-            <button class="btn" onclick="completeSet()">Valider la série</button>
-        </div>
-        
-        <button class="btn btn-danger" onclick="finishExercise()" style="width: 100%; margin-top: 1rem;">
-            Terminer l'exercice
-        </button>
-        
-        <div id="restTimer" style="display: none; text-align: center; margin-top: 2rem;">
-            <h3>Repos</h3>
-            <div style="font-size: 2rem; font-weight: bold; color: var(--primary);" id="timerDisplay">0:00</div>
-            <button class="btn btn-secondary" onclick="stopRestTimer()">Arrêter</button>
-        </div>
-    `;
-}
-
-function updateCurrentWeight(weight) {
-    currentSet.weight = parseFloat(weight);
-}
-
-async function completeSet() {
-    try {
-        const response = await fetch(`${API_URL}/sets`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                workout_id: currentWorkout.id,
-                exercise_id: currentExercise.id,
-                ...currentSet,
-                skipped: false
-            })
-        });
-        
-        if (response.ok) {
-            startRestTimer();
-            currentSet.set_number++;
-            displayCurrentExercise();
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-        showToast('Erreur lors de l\'enregistrement', 'error');
-    }
-}
-
-async function skipSet() {
-    try {
-        await fetch(`${API_URL}/sets`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                workout_id: currentWorkout.id,
-                exercise_id: currentExercise.id,
-                ...currentSet,
-                skipped: true
-            })
-        });
-        
-        currentSet.set_number++;
-        displayCurrentExercise();
-    } catch (error) {
-        console.error('Erreur:', error);
-    }
-}
-
-function finishExercise() {
-    currentExercise = null;
-    currentSet.set_number = 1;
-    loadExerciseSelector();
-}
-
-async function endWorkout() {
-    if (confirm('Terminer la séance ?')) {
-        try {
-            await fetch(`${API_URL}/workouts/${currentWorkout.id}/complete`, {
-                method: 'PUT'
-            });
-            
-            showToast('Séance terminée !', 'success');
-            showView('dashboard');
-        } catch (error) {
-            console.error('Erreur:', error);
-        }
-    }
-}
-
-// Gestion du timer de repos
-function startRestTimer() {
-    restTimer = 120; // 2 minutes par défaut
-    document.getElementById('restTimer').style.display = 'block';
-    
-    restInterval = setInterval(() => {
-        restTimer--;
-        document.getElementById('timerDisplay').textContent = formatTime(restTimer);
-        
-        if (restTimer <= 0) {
-            stopRestTimer();
-            playTimerSound();
-            showToast('Temps de repos terminé !', 'info');
-        }
-    }, 1000);
-}
-
-function stopRestTimer() {
-    if (restInterval) {
-        clearInterval(restInterval);
-        restInterval = null;
-    }
-    document.getElementById('restTimer').style.display = 'none';
-}
-
-function loadProgramWorkout() {
-    // TODO: Implémenter les programmes d'entraînement
-    const container = document.getElementById('currentExercise');
-    if (container) {
-        container.innerHTML = '<h2>Programmes d\'entraînement</h2><p>Fonctionnalité à venir...</p>';
-    }
-}
-
-// Utilitaires d'affichage
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = 'toast';
@@ -1080,61 +432,428 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Initialisation
-document.addEventListener('DOMContentLoaded', async () => {
-    // Event listeners pour les équipements
-    document.querySelectorAll('.equipment-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const equipment = card.dataset.equipment;
-            if (!equipment) return;
-            
-            card.classList.toggle('selected');
-            
-            if (card.classList.contains('selected')) {
-                selectedEquipment.push(equipment);
-            } else {
-                const index = selectedEquipment.indexOf(equipment);
-                if (index > -1) selectedEquipment.splice(index, 1);
-            }
-            
-            // Montrer/cacher la configuration
-            document.getElementById('dumbbellConfig').style.display = 
-                selectedEquipment.includes('dumbbells') ? 'block' : 'none';
-            document.getElementById('barbellConfig').style.display = 
-                selectedEquipment.includes('barbell') ? 'block' : 'none';
-            document.getElementById('bandsConfig').style.display = 
-                selectedEquipment.includes('resistance_bands') ? 'block' : 'none';
-        });
-    });
+// ===== FONCTIONS DE NAVIGATION =====
+function nextStep() {
+    if (currentStep < 5) {
+        document.getElementById(`step${currentStep}`).classList.remove('active');
+        currentStep++;
+        document.getElementById(`step${currentStep}`).classList.add('active');
+        updateProgressBar();
+        
+        if (currentStep === 5) {
+            updateProfileSummary();
+        }
+    }
+}
 
+function previousStep() {
+    if (currentStep > 1) {
+        document.getElementById(`step${currentStep}`).classList.remove('active');
+        currentStep--;
+        document.getElementById(`step${currentStep}`).classList.add('active');
+        updateProgressBar();
+    }
+}
+
+function updateProgressBar() {
+    const progress = (currentStep / 5) * 100;
+    document.getElementById('progressFill').style.width = `${progress}%`;
+}
+
+function updateProfileSummary() {
+    const name = document.getElementById('userName').value;
+    const age = document.getElementById('userAge').value;
+    const experience = document.getElementById('experienceLevel').value;
+    
+    let equipmentSummary = '';
+    const config = equipmentConfig;
+    
+    // Résumer l'équipement configuré
+    const activeEquipment = [];
+    
+    // Barres
+    Object.entries(config.barres).forEach(([type, conf]) => {
+        if (conf.available) {
+            const name = type === 'barbell_standard' ? 'Barre standard' : 
+                         type === 'barbell_ez' ? 'Barre EZ' : 'Barres courtes';
+            activeEquipment.push(`${name} (${conf.weight}kg × ${conf.count})`);
+        }
+    });
+    
+    // Disques
+    if (config.disques.available) {
+        const weights = Object.keys(config.disques.weights);
+        if (weights.length > 0) {
+            activeEquipment.push(`Disques: ${weights.join(', ')} kg`);
+        }
+    }
+    
+    // Haltères
+    if (config.dumbbells.available && config.dumbbells.weights.length > 0) {
+        activeEquipment.push(`Haltères: ${config.dumbbells.weights.join(', ')} kg`);
+    }
+    
+    // Banc
+    if (config.banc.available) {
+        let bancInfo = 'Banc';
+        if (config.banc.inclinable_haut) bancInfo += ' (inclinable)';
+        activeEquipment.push(bancInfo);
+    }
+    
+    // Élastiques
+    if (config.elastiques.available && config.elastiques.bands.length > 0) {
+        activeEquipment.push(`Élastiques: ${config.elastiques.bands.length} bands`);
+    }
+    
+    // Autres
+    Object.entries(config.autres).forEach(([type, conf]) => {
+        if (conf.available) {
+            const name = type === 'barre_traction' ? 'Barre de traction' : 
+                         type === 'kettlebell' ? 'Kettlebells' :
+                         type.replace('lest_', 'Lests ');
+            activeEquipment.push(name);
+        }
+    });
+    
+    equipmentSummary = activeEquipment.length > 0 ? 
+        `<br><strong>Équipement:</strong> ${activeEquipment.join(', ')}` : 
+        '<br><strong>Équipement:</strong> Poids du corps uniquement';
+    
+    const summary = `
+        <strong>Nom:</strong> ${name}<br>
+        <strong>Âge:</strong> ${age} ans<br>
+        <strong>Expérience:</strong> ${experience}<br>
+        <strong>Objectifs:</strong> ${selectedGoals.join(', ')}${equipmentSummary}
+    `;
+    
+    document.getElementById('profileSummary').innerHTML = summary;
+}
+
+function showView(viewName) {
+    // Cacher toutes les vues
+    document.querySelectorAll('.onboarding, .dashboard, .workout-view, .exercises-view, .profile-view').forEach(view => {
+        view.classList.remove('active');
+    });
+    
+    // Afficher la vue demandée
+    const targetView = document.getElementById(`${viewName}View`) || document.querySelector(`.${viewName}`);
+    if (targetView) {
+        targetView.classList.add('active');
+    }
+    
+    // Mettre à jour la navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    const activeNavItem = document.querySelector(`[data-view="${viewName}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
+}
+
+// ===== FONCTIONS POUR LES EXERCICES =====
+async function loadExercises() {
+    try {
+        const response = await fetch(`${API_URL}/exercises/`);
+        if (response.ok) {
+            exercises = await response.json();
+            bodyParts = [...new Set(exercises.map(ex => ex.body_part))];
+            console.log(`Loaded ${exercises.length} exercises`);
+        }
+    } catch (error) {
+        console.error('Error loading exercises:', error);
+    }
+}
+
+async function loadUser(userId) {
+    try {
+        const response = await fetch(`${API_URL}/users/${userId}`);
+        if (response.ok) {
+            currentUser = await response.json();
+            document.getElementById('userInitial').textContent = currentUser.name[0].toUpperCase();
+            document.getElementById('userInitial').style.display = 'flex';
+            showView('dashboard');
+        } else {
+            localStorage.removeItem('userId');
+            showView('onboarding');
+        }
+    } catch (error) {
+        console.error('Error loading user:', error);
+        localStorage.removeItem('userId');
+        showView('onboarding');
+    }
+}
+
+async function loadAvailableExercises() {
+    if (!currentUser) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/users/${currentUser.id}/available-exercises`);
+        if (response.ok) {
+            const availableExercises = await response.json();
+            displayExercises(availableExercises);
+        }
+    } catch (error) {
+        console.error('Error loading available exercises:', error);
+    }
+}
+
+function displayExercises(exercisesList) {
+    const container = document.getElementById('exercisesList');
+    if (!container) return;
+    
+    if (exercisesList.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 2rem;">Aucun exercice disponible avec votre équipement</p>';
+        return;
+    }
+    
+    container.innerHTML = exercisesList.map(exercise => `
+        <div class="exercise-card" onclick="selectExercise(${exercise.id})">
+            <div class="exercise-header">
+                <h3>${exercise.name_fr}</h3>
+                <span class="exercise-level">${exercise.level}</span>
+            </div>
+            <p class="exercise-body-part">${exercise.body_part}</p>
+            <p class="exercise-equipment">${exercise.equipment.join(', ')}</p>
+        </div>
+    `).join('');
+}
+
+function selectExercise(exerciseId) {
+    const exercise = exercises.find(ex => ex.id === exerciseId);
+    if (exercise) {
+        currentExercise = exercise;
+        startWorkout();
+    }
+}
+
+function filterExercises() {
+    const searchTerm = document.getElementById('searchExercises').value.toLowerCase();
+    const bodyPartFilter = document.getElementById('bodyPartFilter').value;
+    
+    let filteredExercises = exercises;
+    
+    if (searchTerm) {
+        filteredExercises = filteredExercises.filter(ex => 
+            ex.name_fr.toLowerCase().includes(searchTerm) ||
+            ex.name_eng.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    if (bodyPartFilter) {
+        filteredExercises = filteredExercises.filter(ex => ex.body_part === bodyPartFilter);
+    }
+    
+    displayExercises(filteredExercises);
+}
+
+// ===== FONCTIONS WORKOUT =====
+function startFreeTimeWorkout() {
+    workoutMode = 'free_time';
+    showView('exercises');
+    loadAvailableExercises();
+}
+
+function startProgramWorkout() {
+    workoutMode = 'program';
+    showToast('Programmes d\'entraînement à venir', 'info');
+}
+
+async function startWorkout() {
+    if (!currentExercise || !currentUser) return;
+    
+    try {
+        // Créer une nouvelle séance
+        const workoutResponse = await fetch(`${API_URL}/workouts/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                type: workoutMode
+            })
+        });
+        
+        if (workoutResponse.ok) {
+            currentWorkout = await workoutResponse.json();
+            showView('workout');
+            initializeWorkoutInterface();
+        }
+    } catch (error) {
+        console.error('Error starting workout:', error);
+        showToast('Erreur lors du démarrage de l\'entraînement', 'error');
+    }
+}
+
+function initializeWorkoutInterface() {
+    const container = document.getElementById('currentExercise');
+    if (!container || !currentExercise) return;
+    
+    // Déterminer les paramètres selon le niveau de l'utilisateur
+    const userLevel = currentUser.experience_level;
+    const exerciseParams = currentExercise.sets_reps.find(sr => sr.level === userLevel) || 
+                          currentExercise.sets_reps[0];
+    
+    currentSet = {
+        set_number: 1,
+        weight: 0,
+        target_reps: exerciseParams.reps,
+        actual_reps: exerciseParams.reps
+    };
+    
+    container.innerHTML = `
+        <div class="workout-header">
+            <h2>${currentExercise.name_fr}</h2>
+            <p>${currentExercise.body_part} • ${currentExercise.level}</p>
+        </div>
+        
+        <div class="workout-progress">
+            <span>Série ${currentSet.set_number} / ${exerciseParams.sets}</span>
+        </div>
+        
+        <div class="workout-controls">
+            <div class="weight-control">
+                <label>Poids (kg)</label>
+                <input type="number" id="currentWeight" value="${currentSet.weight}" step="0.5" min="0">
+            </div>
+            
+            <div class="reps-control">
+                <label>Répétitions</label>
+                <input type="number" id="currentReps" value="${currentSet.target_reps}" min="1">
+            </div>
+        </div>
+        
+        <div class="workout-actions">
+            <button class="btn btn-secondary" onclick="skipSet()">Passer</button>
+            <button class="btn" onclick="completeSet()">Série terminée</button>
+        </div>
+        
+        <div id="restTimer" style="display: none;">
+            <h3>Repos</h3>
+            <div id="timerDisplay">2:00</div>
+            <button class="btn btn-secondary" onclick="stopRestTimer()">Arrêter</button>
+        </div>
+    `;
+}
+
+function completeSet() {
+    const weight = parseFloat(document.getElementById('currentWeight').value) || 0;
+    const reps = parseInt(document.getElementById('currentReps').value) || 0;
+    
+    currentSet.weight = weight;
+    currentSet.actual_reps = reps;
+    
+    // Sauvegarder la série
+    saveSet();
+    
+    // Commencer le repos
+    startRestTimer();
+}
+
+async function saveSet() {
+    if (!currentWorkout || !currentExercise) return;
+    
+    try {
+        const setData = {
+            workout_id: currentWorkout.id,
+            exercise_id: currentExercise.id,
+            set_number: currentSet.set_number,
+            target_reps: currentSet.target_reps,
+            actual_reps: currentSet.actual_reps,
+            weight: currentSet.weight,
+            rest_time: 120, // 2 minutes par défaut
+            fatigue_level: 3, // À améliorer avec interface
+            perceived_exertion: 7 // À améliorer avec interface
+        };
+        
+        await fetch(`${API_URL}/sets/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(setData)
+        });
+        
+        showToast(`Série ${currentSet.set_number} enregistrée`, 'success');
+        
+    } catch (error) {
+        console.error('Error saving set:', error);
+    }
+}
+
+function skipSet() {
+    currentSet.actual_reps = 0;
+    saveSet();
+    nextSet();
+}
+
+function nextSet() {
+    const userLevel = currentUser.experience_level;
+    const exerciseParams = currentExercise.sets_reps.find(sr => sr.level === userLevel) || 
+                          currentExercise.sets_reps[0];
+    
+    if (currentSet.set_number >= exerciseParams.sets) {
+        // Exercice terminé
+        showToast('Exercice terminé ! 🎉', 'success');
+        showView('dashboard');
+    } else {
+        // Série suivante
+        currentSet.set_number++;
+        currentSet.actual_reps = currentSet.target_reps;
+        initializeWorkoutInterface();
+    }
+}
+
+function startRestTimer(duration = 120) {
+    restTimer = duration;
+    document.getElementById('restTimer').style.display = 'block';
+    
+    restInterval = setInterval(() => {
+        restTimer--;
+        document.getElementById('timerDisplay').textContent = formatTime(restTimer);
+        
+        if (restTimer <= 0) {
+            stopRestTimer();
+            showToast('Repos terminé !', 'info');
+            nextSet();
+        }
+    }, 1000);
+}
+
+function stopRestTimer() {
+    if (restInterval) {
+        clearInterval(restInterval);
+        restInterval = null;
+    }
+    document.getElementById('restTimer').style.display = 'none';
+}
+
+// ===== GESTION DES OBJECTIFS =====
+function toggleGoal(goalElement) {
+    const goal = goalElement.dataset.goal;
+    goalElement.classList.toggle('selected');
+    
+    if (goalElement.classList.contains('selected')) {
+        selectedGoals.push(goal);
+    } else {
+        const index = selectedGoals.indexOf(goal);
+        if (index > -1) selectedGoals.splice(index, 1);
+    }
+}
+
+// ===== INITIALISATION =====
+document.addEventListener('DOMContentLoaded', async () => {
     // Event listeners pour les objectifs
     document.querySelectorAll('.chip[data-goal]').forEach(chip => {
-        chip.addEventListener('click', () => {
-            const goal = chip.dataset.goal;
-            chip.classList.toggle('selected');
-            
-            if (chip.classList.contains('selected')) {
-                selectedGoals.push(goal);
-            } else {
-                const index = selectedGoals.indexOf(goal);
-                if (index > -1) selectedGoals.splice(index, 1);
-            }
-        });
+        chip.addEventListener('click', () => toggleGoal(chip));
     });
 
-    // Event listener pour le poids personnalisé des disques
-    const plateWeightSelect = document.getElementById('plateWeight');
-    if (plateWeightSelect) {
-        plateWeightSelect.addEventListener('change', (e) => {
-            const customInput = document.getElementById('customPlateWeight');
-            if (e.target.value === 'custom') {
-                customInput.style.display = 'block';
-                customInput.focus();
-            } else {
-                customInput.style.display = 'none';
-                customInput.value = '';
-            }
-        });
+    // Event listener pour les changements de poids de disques personnalisés
+    const disqueWeightSelect = document.getElementById('disque_weight');
+    if (disqueWeightSelect) {
+        disqueWeightSelect.addEventListener('change', handleDisqueWeightChange);
     }
 
     // Charger les exercices
@@ -1149,6 +868,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('progressContainer').style.display = 'block';
         updateProgressBar();
     }
+    
+    console.log('Application initialisée');
 });
 
 // Service Worker pour PWA

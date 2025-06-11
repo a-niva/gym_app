@@ -75,7 +75,7 @@ class UserResponse(BaseModel):
     age: int
     experience_level: str
     goals: List[str]
-    equipment_config: Dict[str, Any]
+    equipment_config: Optional[Dict[str, Any]] = None 
     created_at: datetime
     
     class Config:
@@ -95,7 +95,7 @@ class ExerciseResponse(BaseModel):
     name_fr: str
     name_eng: str
     equipment: List[str]  # ["barbell_standard", "dumbbells", "bench_inclinable"]
-    equipment_specs: Optional[Dict[str, Any]] = None
+    equipment_config: Optional[Dict[str, Any]] = None
     level: str
     body_part: str
     sets_reps: List[dict]

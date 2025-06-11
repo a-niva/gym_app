@@ -16,12 +16,7 @@ class User(Base):
     # NOUVELLE STRUCTURE ÉQUIPEMENT (prioritaire)
     equipment_config = Column(JSON)  # Structure complète nouvelle
     
-    # ANCIENNES COLONNES (gardées pour compatibilité pendant migration)
-    available_equipment = Column(JSON)  # DEPRECATED mais gardé temporairement
-    dumbbell_weights = Column(JSON)     # DEPRECATED mais gardé temporairement
-    barbell_weights = Column(JSON)      # DEPRECATED mais gardé temporairement
-    resistance_bands = Column(JSON)     # DEPRECATED mais gardé temporairement
-    
+
     created_at = Column(DateTime, default=datetime.utcnow)
     
     workouts = relationship("Workout", back_populates="user")

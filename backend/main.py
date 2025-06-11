@@ -1,4 +1,4 @@
-# ===== backend/main.py =====
+# ===== backend/main.py - VERSION FINALE CORRIGÉE =====
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -90,7 +90,6 @@ def get_exercises(
     if body_part:
         query = query.filter(Exercise.body_part == body_part)
     
-    # Note: equipment filter would need JSON querying, simplified here
     exercises = query.offset(skip).limit(limit).all()
     return exercises
 
@@ -101,7 +100,7 @@ def get_exercise(exercise_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Exercise not found")
     return exercise
 
-# Endpoint pour filtrer exercices selon équipement utilisateur
+# NOUVEAU: Endpoint pour exercices disponibles selon équipement utilisateur
 @app.get("/api/users/{user_id}/available-exercises", response_model=List[ExerciseResponse])
 def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -112,32 +111,34 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
         return []
     
     # Analyser l'équipement disponible
-    equipment_config = user.equipment_config
+    config = user.equipment_config
     available_equipment = []
     
     # Barres
-    for barre_type, config in equipment_config.get("barres", {}).items():
-        if config.get("available", False):
+    for barre_type, barre_config in config.get("barres", {}).items():
+        if barre_config.get("available", False):
             available_equipment.append(barre_type)
     
     # Haltères
-    if equipment_config.get("dumbbells", {}).get("available", False):
+    if config.get("dumbbells", {}).get("available", False):
         available_equipment.append("dumbbells")
     
     # Banc
-    if equipment_config.get("banc", {}).get("available", False):
+    if config.get("banc", {}).get("available", False):
         available_equipment.append("bench_plat")
-        if equipment_config["banc"].get("inclinable_haut", False):
+        if config["banc"].get("inclinable_haut", False):
             available_equipment.append("bench_inclinable")
+        if config["banc"].get("inclinable_bas", False):
+            available_equipment.append("bench_declinable")
     
     # Élastiques
-    if equipment_config.get("elastiques", {}).get("available", False):
+    if config.get("elastiques", {}).get("available", False):
         available_equipment.append("elastiques")
     
-    # Autres
-    autres = equipment_config.get("autres", {})
-    for equip_type, config in autres.items():
-        if config.get("available", False):
+    # Autres équipements
+    autres = config.get("autres", {})
+    for equip_type, equip_config in autres.items():
+        if equip_config.get("available", False):
             available_equipment.append(equip_type)
     
     # Poids du corps toujours disponible
