@@ -338,20 +338,6 @@ function createDumbbellsPanel() {
     `;
 }
 
-
-// Fonction mise à jour pour les poids
-function updateDumbbellWeight(weight, count) {
-    const value = parseInt(count) || 0;
-    
-    if (value > 0) {
-        equipmentConfig.dumbbells[weight] = value;
-    } else {
-        delete equipmentConfig.dumbbells[weight];
-    }
-    
-    updateEquipmentStatus('dumbbells');
-}
-
 // Mise à jour du statut visuel
 function updateEquipmentStatus(type) {
     const statusEl = document.getElementById(`status-${type}`);
@@ -1417,7 +1403,7 @@ function startRestTimer(seconds) {
             restTimerInterval = null;
             vibrateDevice([500]); // Longer vibration in silent mode
         }
-    , 1000); // Check every second
+    }, 1000); // Check every second
 }
 
 function playBeep(frequency, duration) {
