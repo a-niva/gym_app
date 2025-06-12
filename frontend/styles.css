@@ -1538,6 +1538,44 @@ select.form-input {
     animation: pulse 1s infinite;
 }
 
+.btn-continue-rest {
+    margin-top: 1rem;
+    animation: pulse 2s infinite;
+}
+
+.set-actions {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.btn-secondary.btn-sm {
+    font-size: 0.875rem;
+    padding: 0.75rem 0.5rem;
+}
+
+/* Indicateur de repos inter-exercices */
+.inter-exercise-rest-indicator {
+    background: rgba(168, 85, 247, 0.1);
+    border: 2px solid rgba(168, 85, 247, 0.3);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.inter-exercise-rest-time {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #a855f7;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
 @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }

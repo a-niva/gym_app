@@ -34,6 +34,8 @@ let lastSyncTime = null;
 let restTimerInterval = null;
 let lastSetEndTime = null;
 let allExercises = [];
+let lastExerciseEndTime = null;
+let interExerciseRestTime = 0;
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
@@ -754,6 +756,7 @@ async function startWorkout(type) {
             // Démarrer le monitoring
             startWorkoutMonitoring();
             syncPendingSets();
+            syncInterExerciseRests();
             
             showView('training');
             showToast('Séance démarrée !', 'success');
@@ -787,6 +790,7 @@ async function checkActiveWorkout() {
                         currentWorkout = serverWorkout;
                         startWorkoutMonitoring();
                         syncPendingSets();
+                        syncInterExerciseRests();
                         return serverWorkout;
                     }
                 }
@@ -945,6 +949,9 @@ function cleanupWorkout() {
     }
     localStorage.removeItem('lastCompletedSetId');
     localStorage.removeItem('pendingSets');
+    localStorage.removeItem('interExerciseRests');
+    lastExerciseEndTime = null;
+    interExerciseRestTime = 0;
     if (audioContext) {
     audioContext.close();
     audioContext = null;
@@ -982,6 +989,33 @@ async function syncPendingSets() {
     if (successfullySynced.length > 0) {
         showToast(`${successfullySynced.length} série(s) synchronisée(s)`, 'success');
     }
+}
+
+async function syncInterExerciseRests() {
+    const interExerciseRests = JSON.parse(localStorage.getItem('interExerciseRests') || '[]');
+    if (interExerciseRests.length === 0) return;
+    
+    const successfullySynced = [];
+    
+    for (const rest of interExerciseRests) {
+        try {
+            const response = await fetch('/api/workouts/rest-periods/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rest)
+            });
+            
+            if (response.ok) {
+                successfullySynced.push(rest);
+            }
+        } catch (error) {
+            console.error('Erreur sync repos inter-exercices:', error);
+        }
+    }
+    
+    // Retirer les repos synchronisés
+    const remaining = interExerciseRests.filter(r => !successfullySynced.includes(r));
+    localStorage.setItem('interExerciseRests', JSON.stringify(remaining));
 }
 
 function updateTrainingInterface() {
@@ -1152,11 +1186,39 @@ let setStartTime = null;
 let currentRestTime = 0; // Temps de repos pour la série en cours
 
 function selectExercise(exerciseId) {
+    // Calculer le repos inter-exercices si applicable
+    if (lastExerciseEndTime) {
+        interExerciseRestTime = Math.floor((new Date() - lastExerciseEndTime) / 1000);
+        
+        // Sauvegarder ce temps de repos inter-exercices
+        if (interExerciseRestTime > 10) { // Ignorer si moins de 10 secondes
+            const restData = {
+                workout_id: currentWorkout.id,
+                rest_type: 'inter_exercise',
+                duration: interExerciseRestTime,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Stocker localement pour sync ultérieure
+            const interExerciseRests = JSON.parse(localStorage.getItem('interExerciseRests') || '[]');
+            interExerciseRests.push(restData);
+            localStorage.setItem('interExerciseRests', JSON.stringify(interExerciseRests));
+            
+            // Tenter de synchroniser
+            fetch('/api/workouts/rest-periods/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData)
+            }).catch(err => console.error('Erreur sync repos inter-exercices:', err));
+        }
+        
+        lastExerciseEndTime = null;
+    }
+    
     currentExercise = allExercises.find(ex => ex.id === exerciseId);
     if (!currentExercise) return;
     
     currentSetNumber = 1;
-    // Récupérer les répétitions recommandées pour le niveau de l'utilisateur
     if (currentUser && currentExercise.sets_reps) {
         const userLevel = currentUser.experience_level;
         const levelConfig = currentExercise.sets_reps.find(sr => sr.level === userLevel);
@@ -1186,17 +1248,22 @@ function showSetInput() {
     container.innerHTML = `
         <div class="current-exercise">
             <h2>${currentExercise.name_fr}</h2>
+            ${interExerciseRestTime > 10 ? `
+            <div class="inter-exercise-rest-indicator">
+                <div>Repos depuis le dernier exercice</div>
+                <div class="inter-exercise-rest-time">${Math.floor(interExerciseRestTime / 60)}:${(interExerciseRestTime % 60).toString().padStart(2, '0')}</div>
+            </div>
+            ` : ''}
             <p class="exercise-info">${currentExercise.body_part} • ${currentExercise.level}</p>
         </div>
         
         <div class="set-tracker">
             <h3>Série ${currentSetNumber}</h3>
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
-            ${currentSetNumber > 1 && lastSetEndTime ? `
+            ${currentSetNumber > 1 ? `
             <div class="rest-timer">
-                <div class="rest-timer-label">Temps de repos écoulé</div>
+                <div class="rest-timer-label">Temps de repos</div>
                 <div class="rest-timer-display" id="restTimer">0:00</div>
-                <button class="btn-secondary btn-sm" onclick="skipRestTimer()">Commencer maintenant</button>
             </div>
             ` : ''}
             
@@ -1247,7 +1314,10 @@ function showSetInput() {
                 <button class="btn btn-primary" onclick="completeSet()">
                     ✓ Valider la série
                 </button>
-                <button class="btn btn-secondary" onclick="skipSet()">
+                <button class="btn btn-secondary" onclick="completeSetAndFinish()">
+                    ✓ Dernière série
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="skipSet()">
                     ⏭️ Passer
                 </button>
             </div>
@@ -1317,14 +1387,6 @@ function startTimers() {
     }, 1000);
 }
 
-function skipRestTimer() {
-    if (restTimerInterval) {
-        clearInterval(restTimerInterval);
-        restTimerInterval = null;
-        showToast('Repos passé', 'info');
-        updateRestTimerDisplay(0);
-    }
-}
 
 function loadExerciseHistory() {
     // TODO: Charger l'historique depuis l'API
@@ -1380,7 +1442,7 @@ function updateExertionDisplay(value) {
     document.getElementById('exertionDisplay').textContent = value;
 }
 
-async function completeSet() {
+async function completeSet(isLastSet = false) {
     // Calculate set duration BEFORE updating lastSetEndTime
     const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
     
@@ -1428,6 +1490,14 @@ async function completeSet() {
             localStorage.setItem('lastCompletedSetId', savedSet.id);
             
             showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
+            // Si c'est la dernière série, terminer l'exercice automatiquement
+            if (isLastSet) {
+                setTimeout(() => {
+                    finishExercise();
+                    showToast('Exercice terminé', 'success');
+                }, 500);
+                return;
+            }
             
             // Add to history with duration
             addSetToHistory({...setData, duration: setDuration});
@@ -1458,8 +1528,8 @@ async function completeSet() {
             }
             
             // Start rest timer
-            const restDuration = selectedEffort >= 4 ? 120 : 90;
-            startRestTimer(restDuration);
+            // Toujours 60 secondes de repos
+            startRestTimer(60);
         } else {
             showToast('Erreur lors de l\'enregistrement', 'error');
         }
@@ -1476,6 +1546,14 @@ async function completeSet() {
         });
         localStorage.setItem('pendingSets', JSON.stringify(localSets));
     }
+}
+
+async function completeSetAndFinish() {
+    await completeSet();
+    setTimeout(() => {
+        finishExercise();
+        showToast('Exercice terminé', 'success');
+    }, 500);
 }
 
 function addSetToHistory(setData) {
@@ -1519,57 +1597,48 @@ let restEndTime = null;
 let audioContext = null;
 let isSilentMode = false;
 
-function startRestTimer(seconds) {
+function startRestTimer(seconds = 60) {
     // Clear any existing timer
     if (restTimerInterval) {
         clearInterval(restTimerInterval);
     }
     
-    restEndTime = new Date(Date.now() + seconds * 1000);
+    const restStartTime = new Date();
+    let targetReached = false;
 
-    if (!currentWorkout || currentWorkout.status !== 'started') {
-        clearInterval(restTimerInterval);
-        restTimerInterval = null;
-        return;
-    }
-
-    // Initialize audio context on first use
-    if (!audioContext && !isSilentMode) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    
-    // Start countdown
     restTimerInterval = setInterval(() => {
-        // Guard against timer running when not in training view
         if (!document.getElementById('restTimer')) {
             clearInterval(restTimerInterval);
             restTimerInterval = null;
             return;
         }
-        const remaining = Math.max(0, Math.floor((restEndTime - Date.now()) / 1000));
-        updateRestTimerDisplay(remaining);
+
+        const elapsed = Math.floor((new Date() - restStartTime) / 1000);
+        const remaining = Math.max(0, seconds - elapsed);
         
-        // Audio cues at specific intervals
-        if (!isSilentMode) {
+        updateRestTimerDisplay(elapsed);
+        
+        // Afficher le bouton Continuer après 60 secondes
+        if (elapsed >= seconds && !targetReached) {
+            targetReached = true;
+            showContinueButton();
+            
+            // Audio/vibration uniquement à 60 secondes
+            if (!isSilentMode) {
+                playBeep(1000, 300);
+            }
+            vibrateDevice([200, 100, 200]);
+        }
+        
+        // Audio cues avant 60 secondes
+        if (!targetReached && !isSilentMode) {
             if (remaining === 30 || remaining === 10) {
-                playBeep(800, 100); // Higher pitch for warnings
+                playBeep(800, 100);
             } else if (remaining === 3 || remaining === 2 || remaining === 1) {
-                playBeep(600, 150); // Countdown beeps
-            } else if (remaining === 0) {
-                playBeep(1000, 300); // End beep
-                vibrateDevice([200, 100, 200]); // Double vibration
-                clearInterval(restTimerInterval);
-                restTimerInterval = null;
-                showToast('Repos terminé ! Prochaine série', 'success');
+                playBeep(600, 150);
             }
         }
-        
-        if (remaining === 0 && isSilentMode) {
-            clearInterval(restTimerInterval);
-            restTimerInterval = null;
-            vibrateDevice([500]); // Longer vibration in silent mode
-        }
-    }, 1000); // Check every second
+    }, 1000);
 }
 
 function playBeep(frequency, duration) {
@@ -1608,20 +1677,42 @@ function updateRestTimerDisplay(seconds) {
     const secs = seconds % 60;
     const display = `${minutes}:${secs.toString().padStart(2, '0')}`;
     
-    // Update all rest timer displays
     const restTimerEl = document.getElementById('restTimer');
     if (restTimerEl) {
         restTimerEl.textContent = display;
         
-        // Visual warning at 10 seconds
-        if (seconds <= 10 && seconds > 0) {
-            restTimerEl.style.color = '#ef4444'; // Red
-            restTimerEl.style.fontSize = '1.5rem';
-        } else {
-            restTimerEl.style.color = '#10b981'; // Green
+        // Vert jusqu'à 60s, puis orange
+        if (seconds <= 60) {
+            restTimerEl.style.color = '#10b981';
             restTimerEl.style.fontSize = '1.25rem';
+        } else {
+            restTimerEl.style.color = '#fb923c'; // Orange après 60s
+            restTimerEl.style.fontSize = '1.5rem';
         }
     }
+}
+
+function showContinueButton() {
+    const restTimerContainer = document.querySelector('.rest-timer');
+    if (!restTimerContainer) return;
+    
+    const existingButton = restTimerContainer.querySelector('.btn-continue-rest');
+    if (existingButton) return; // Éviter les doublons
+    
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'btn btn-primary btn-continue-rest';
+    continueBtn.textContent = 'Continuer';
+    continueBtn.onclick = () => {
+        if (restTimerInterval) {
+            clearInterval(restTimerInterval);
+            restTimerInterval = null;
+        }
+        // Reset pour la prochaine série
+        lastSetEndTime = null;
+        showSetInput();
+    };
+    
+    restTimerContainer.appendChild(continueBtn);
 }
 
 function toggleSilentMode() {
@@ -1631,37 +1722,46 @@ function toggleSilentMode() {
 }
 
 function finishExercise() {
+    // Capturer le temps de fin de l'exercice
+    lastExerciseEndTime = new Date();
+    
     // Arrêter les timers
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
+    }
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+    }
+    
+    // Sauvegarder l'historique de l'exercice
+    if (currentExercise && currentSetNumber > 1) {
+        const exerciseHistory = {
+            exerciseId: currentExercise.id,
+            exerciseName: currentExercise.name_fr,
+            totalSets: currentSetNumber - 1,
+            timestamp: new Date().toISOString()
+        };
+        const workoutHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+        workoutHistory.push(exerciseHistory);
+        localStorage.setItem('currentWorkoutHistory', JSON.stringify(workoutHistory));
     }
     
     // Réinitialiser
     currentExercise = null;
     currentSetNumber = 1;
     setStartTime = null;
-    lastSetEndTime = null; // Arrêter le timer de repos
+    lastSetEndTime = null;
     selectedFatigue = 3;
     selectedEffort = 3;
     
-    // Retourner au sélecteur d'exercices
     if (currentWorkout && currentWorkout.status === 'started') {
-        // Sauvegarder l'historique de l'exercice en localStorage
-        if (currentExercise) {
-            const exerciseHistory = {
-                exerciseId: currentExercise.id,
-                exerciseName: currentExercise.name_fr,
-                totalSets: currentSetNumber - 1,
-                timestamp: new Date().toISOString()
-            };
-            const workoutHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
-            workoutHistory.push(exerciseHistory);
-            localStorage.setItem('currentWorkoutHistory', JSON.stringify(workoutHistory));
-        }
         showExerciseSelector();
     }
 }
+
+
 
 function addElastique() {
     const color = document.getElementById('elastiqueColor').value.trim();
@@ -2396,7 +2496,7 @@ window.selectEffort = selectEffort;
 window.skipSet = skipSet;
 
 window.toggleSilentMode = toggleSilentMode;
-window.skipRestTimer = skipRestTimer;
+window.completeSetAndFinish = completeSetAndFinish;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
