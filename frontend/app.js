@@ -38,6 +38,7 @@ let lastExerciseEndTime = null;
 let interExerciseRestTime = 0;
 let isInRestPeriod = false;
 let currentSetData = null; // Pour stocker temporairement les données de la série
+let sessionHistory = []; // Historique complet de la séance en cours
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
@@ -792,6 +793,11 @@ async function checkActiveWorkout() {
                         currentWorkout = serverWorkout;
                         startWorkoutMonitoring();
                         syncPendingSets();
+                        // Récupérer l'historique de session si disponible
+                        const savedHistory = localStorage.getItem('currentSessionHistory');
+                        if (savedHistory) {
+                            sessionHistory = JSON.parse(savedHistory);
+                        }
                         syncInterExerciseRests();
                         return serverWorkout;
                     }
@@ -811,6 +817,11 @@ async function checkActiveWorkout() {
                 localStorage.setItem('currentWorkout', JSON.stringify(data.active_workout));
                 startWorkoutMonitoring();
                 syncPendingSets();
+                // Récupérer l'historique de session si disponible
+                const savedHistory = localStorage.getItem('currentSessionHistory');
+                if (savedHistory) {
+                    sessionHistory = JSON.parse(savedHistory);
+                }
                 return data.active_workout;
             }
         }
@@ -821,19 +832,104 @@ async function checkActiveWorkout() {
     return null;
 }
 
-function addRestToHistory(duration) {
-    const container = document.getElementById('previousSets');
-    if (!container || duration < 5) return; // Ignorer les repos très courts
+function addToSessionHistory(type, data) {
+    const historyEntry = {
+        type: type, // 'set', 'rest', 'exercise_change'
+        timestamp: new Date(),
+        data: data
+    };
     
-    const restElement = document.createElement('div');
-    restElement.className = 'rest-history-item';
-    restElement.innerHTML = `
-        <div class="rest-indicator">
-            <span class="rest-icon">⏱️</span>
-            <span class="rest-duration">Repos: ${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}</span>
-        </div>
-    `;
-    container.insertBefore(restElement, container.firstChild);
+    sessionHistory.push(historyEntry);
+    
+    // Sauvegarder également en localStorage pour récupération en cas de crash
+    localStorage.setItem('currentSessionHistory', JSON.stringify(sessionHistory));
+    
+    // Reconstruire l'affichage complet
+    updateHistoryDisplay();
+}
+
+function updateHistoryDisplay() {
+    const container = document.getElementById('previousSets');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    let currentExercise = null;
+    
+    // Parcourir l'historique dans l'ordre chronologique inverse
+    for (let i = sessionHistory.length - 1; i >= 0; i--) {
+        const entry = sessionHistory[i];
+        
+        if (entry.type === 'exercise_change') {
+            // Afficher un séparateur d'exercice
+            const separator = document.createElement('div');
+            separator.className = 'exercise-separator';
+            separator.innerHTML = `
+                <div class="exercise-change-indicator">
+                    <span class="exercise-name">${entry.data.exerciseName}</span>
+                    <span class="body-part-badge" style="background-color: ${getBodyPartColor(entry.data.bodyPart)}">
+                        ${entry.data.bodyPart}
+                    </span>
+                </div>
+            `;
+            container.appendChild(separator);
+            currentExercise = entry.data;
+            
+        } else if (entry.type === 'set') {
+            const setElement = document.createElement('div');
+            setElement.className = 'set-history-item';
+            setElement.style.borderLeftColor = getBodyPartColor(entry.data.bodyPart);
+            setElement.innerHTML = `
+                <div class="set-number">Série ${entry.data.set_number}</div>
+                <div class="set-details">
+                    ${entry.data.weight}kg × ${entry.data.actual_reps} reps
+                    ${entry.data.duration ? `<span class="set-duration">${entry.data.duration}s</span>` : ''}
+                    <span class="fatigue-badge fatigue-${entry.data.fatigue_level}">
+                        Fatigue: ${entry.data.fatigue_level}/10
+                    </span>
+                </div>
+            `;
+            container.appendChild(setElement);
+            
+        } else if (entry.type === 'rest') {
+            const restElement = document.createElement('div');
+            restElement.className = 'rest-history-item';
+            restElement.innerHTML = `
+                <div class="rest-indicator">
+                    <span class="rest-icon">⏱️</span>
+                    <span class="rest-duration">Repos: ${Math.floor(entry.data.duration / 60)}:${(entry.data.duration % 60).toString().padStart(2, '0')}</span>
+                </div>
+            `;
+            container.appendChild(restElement);
+        }
+    }
+}
+
+function getBodyPartColor(bodyPart) {
+    const colorMap = {
+        'Pectoraux': '#3b82f6',      // Bleu
+        'Biceps': '#8b5cf6',         // Violet
+        'Triceps': '#a855f7',        // Mauve
+        'Deltoïdes': '#ec4899',      // Rose
+        'Dos': '#ef4444',            // Rouge
+        'Abdominaux': '#f97316',     // Orange
+        'Quadriceps': '#eab308',     // Jaune
+        'Ischio-jambiers': '#84cc16', // Vert clair
+        'Mollets': '#22c55e',        // Vert
+        'Fessiers': '#14b8a6',       // Turquoise
+        'Trapèzes': '#06b6d4',       // Cyan
+        'Avants-Bras': '#6366f1'     // Indigo
+    };
+    
+    return colorMap[bodyPart] || '#64748b'; // Gris par défaut
+}
+
+function addRestToHistory(duration) {
+    if (duration < 5) return; // Ignorer les repos très courts
+    
+    addToSessionHistory('rest', {
+        duration: duration,
+        type: 'between_sets'
+    });
 }
 
 function startWorkoutMonitoring() {
@@ -955,7 +1051,6 @@ function cleanupWorkout() {
         clearInterval(workoutCheckInterval);
         workoutCheckInterval = null;
     }
-    // ADD THESE LINES
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -970,11 +1065,13 @@ function cleanupWorkout() {
     lastExerciseEndTime = null;
     interExerciseRestTime = 0;
     if (audioContext) {
-    audioContext.close();
-    audioContext = null;
-    // Nettoyer l'historique de la session
-    localStorage.removeItem('currentWorkoutHistory');
+        audioContext.close();
+        audioContext = null;
     }
+    
+    // Nettoyer l'historique de session
+    sessionHistory = [];
+    localStorage.removeItem('currentSessionHistory');
 }
 
 async function syncPendingSets() {
@@ -1207,8 +1304,13 @@ function selectExercise(exerciseId) {
     if (lastExerciseEndTime) {
         interExerciseRestTime = Math.floor((new Date() - lastExerciseEndTime) / 1000);
         
-        // Sauvegarder ce temps de repos inter-exercices
-        if (interExerciseRestTime > 10) { // Ignorer si moins de 10 secondes
+        if (interExerciseRestTime > 10) {
+            // Ajouter le repos inter-exercices à l'historique
+            addToSessionHistory('rest', {
+                duration: interExerciseRestTime,
+                type: 'inter_exercise'
+            });
+            
             const restData = {
                 workout_id: currentWorkout.id,
                 rest_type: 'inter_exercise',
@@ -1216,12 +1318,10 @@ function selectExercise(exerciseId) {
                 timestamp: new Date().toISOString()
             };
             
-            // Stocker localement pour sync ultérieure
             const interExerciseRests = JSON.parse(localStorage.getItem('interExerciseRests') || '[]');
             interExerciseRests.push(restData);
             localStorage.setItem('interExerciseRests', JSON.stringify(interExerciseRests));
             
-            // Tenter de synchroniser
             fetch('/api/workouts/rest-periods/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1234,6 +1334,13 @@ function selectExercise(exerciseId) {
     
     currentExercise = allExercises.find(ex => ex.id === exerciseId);
     if (!currentExercise) return;
+    
+    // Ajouter le changement d'exercice à l'historique
+    addToSessionHistory('exercise_change', {
+        exerciseId: currentExercise.id,
+        exerciseName: currentExercise.name_fr,
+        bodyPart: currentExercise.body_part
+    });
     
     currentSetNumber = 1;
     if (currentUser && currentExercise.sets_reps) {
@@ -1672,26 +1779,14 @@ function updateSessionHistory(setData) {
 }
 
 function addSetToHistory(setData) {
-    const container = document.getElementById('previousSets');
-    if (!container) return;
+    // Enrichir les données avec les informations de l'exercice
+    const enrichedData = {
+        ...setData,
+        bodyPart: currentExercise.body_part,
+        exerciseName: currentExercise.name_fr
+    };
     
-    while (container.children.length >= 20) {
-        container.removeChild(container.lastChild);
-    }
-    
-    const setElement = document.createElement('div');
-    setElement.className = 'set-history-item';
-    setElement.innerHTML = `
-        <div class="set-number">Série ${setData.set_number}</div>
-        <div class="set-details">
-            ${setData.weight}kg × ${setData.actual_reps} reps
-            ${setData.duration ? `<span class="set-duration">${setData.duration}s</span>` : ''}
-            <span class="fatigue-badge fatigue-${setData.fatigue_level}">
-                Fatigue: ${setData.fatigue_level}/10
-            </span>
-        </div>
-    `;
-    container.insertBefore(setElement, container.firstChild);
+    addToSessionHistory('set', enrichedData);
 }
 
 function suggestNextSet(lastSet) {
