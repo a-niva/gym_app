@@ -320,6 +320,17 @@ def get_workout_status(workout_id: int, db: Session = Depends(get_db)):
         "type": workout.type
     }
 
+@app.patch("/api/sets/{set_id}/rest-time")
+def update_set_rest_time(set_id: int, rest_time: int, db: Session = Depends(get_db)):
+    """Update rest time for a completed set"""
+    set_obj = db.query(Set).filter(Set.id == set_id).first()
+    if not set_obj:
+        raise HTTPException(status_code=404, detail="Set not found")
+    
+    set_obj.rest_time = rest_time
+    db.commit()
+    return {"updated": True, "set_id": set_id, "rest_time": rest_time}
+
 @app.get("/api/users/{user_id}/active-workout")
 def get_active_workout(user_id: int, db: Session = Depends(get_db)):
     """Récupère la session active d'un utilisateur s'il y en a une"""

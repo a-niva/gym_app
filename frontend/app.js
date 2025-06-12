@@ -1038,7 +1038,10 @@ function showExerciseSelector() {
 }
 
 function filterExerciseList() {
-    const searchTerm = document.getElementById('exerciseSearch').value.toLowerCase();
+    const searchInput = document.getElementById('exerciseSearch');
+    if (!searchInput) return; // ADD THIS
+    
+    const searchTerm = searchInput.value.toLowerCase();
     const groups = document.querySelectorAll('.exercise-group');
     
     groups.forEach(group => {
@@ -1202,6 +1205,7 @@ function startTimers() {
     if (timerInterval) clearInterval(timerInterval);
     
     timerInterval = setInterval(() => {
+        if (document.hidden) return;
         // ADD guards
         if (!document.getElementById('setTimer')) {
             clearInterval(timerInterval);
@@ -1295,8 +1299,25 @@ function updateExertionDisplay(value) {
 }
 
 async function completeSet() {
-    // Calculer la durée de la série AVANT de mettre à jour lastSetEndTime
+    // Calculate set duration BEFORE updating lastSetEndTime
     const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
+    
+    // Calculate rest time from PREVIOUS set
+    let restTimeForPreviousSet = 0;
+    if (lastSetEndTime && currentSetNumber > 1) {
+        restTimeForPreviousSet = Math.floor((new Date() - lastSetEndTime) / 1000);
+        
+        // Update the PREVIOUS set's rest time if we stored its ID
+        const lastSetId = localStorage.getItem('lastCompletedSetId');
+        if (lastSetId && restTimeForPreviousSet > 0) {
+            // Fire and forget - don't await
+            fetch(`/api/sets/${lastSetId}/rest-time`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rest_time: restTimeForPreviousSet })
+            }).catch(err => console.error('Failed to update rest time:', err));
+        }
+    }
     
     const setData = {
         workout_id: currentWorkout.id,
@@ -1305,7 +1326,7 @@ async function completeSet() {
         target_reps: currentTargetReps,
         actual_reps: parseInt(document.getElementById('setReps').value),
         weight: parseFloat(document.getElementById('setWeight').value),
-        rest_time: 0, // We don't know rest time yet!
+        rest_time: 0, // This set's rest time is unknown until NEXT set
         fatigue_level: selectedFatigue * 2,
         perceived_exertion: selectedEffort * 2,
         skipped: false
@@ -1319,31 +1340,36 @@ async function completeSet() {
         });
         
         if (response.ok) {
+            const savedSet = await response.json();
+            
+            // Store this set's ID for updating its rest time later
+            localStorage.setItem('lastCompletedSetId', savedSet.id);
+            
             showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
             
-            // Ajouter à l'historique local avec la durée
+            // Add to history with duration
             addSetToHistory({...setData, duration: setDuration});
-            // Ne pas réinitialiser setStartTime ici, ce sera fait dans showSetInput()
             
-            // IMPORTANT : Mettre à jour lastSetEndTime APRÈS avoir calculé setDuration
+            // Update lastSetEndTime AFTER calculating duration
             lastSetEndTime = new Date();
-            setStartTime = null; // Réinitialiser pour la prochaine série
+            setStartTime = null;
             
-            // Préparer la série suivante
-            currentSetNumber++;
-            
-            // In completeSet(), before showSetInput():
+            // Save state before showSetInput resets everything
             const previousFatigue = selectedFatigue;
             const previousEffort = selectedEffort;
+            
+            // Prepare next set
+            currentSetNumber++;
             showSetInput();
-            // Restore state
-            selectedFatigue = Math.min(5, previousFatigue + 0.5); // Slight increase
+            
+            // Restore and slightly increase fatigue
+            selectedFatigue = Math.min(5, previousFatigue + 0.2);
             selectedEffort = previousEffort;
-            selectFatigue(selectedFatigue);
+            selectFatigue(Math.round(selectedFatigue));
             selectEffort(selectedEffort);
-
-            // Start rest timer with appropriate duration
-            const restDuration = selectedEffort >= 4 ? 120 : 90; // 2 min for high effort, 90s default
+            
+            // Start rest timer
+            const restDuration = selectedEffort >= 4 ? 120 : 90;
             startRestTimer(restDuration);
         } else {
             showToast('Erreur lors de l\'enregistrement', 'error');
@@ -1352,7 +1378,7 @@ async function completeSet() {
         console.error('Erreur:', error);
         showToast('Série sauvegardée localement', 'warning');
         
-        // Sauvegarder en local pour sync ultérieure
+        // Local save logic...
         const localSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
         localSets.push({
             ...setData,
@@ -1505,7 +1531,7 @@ function finishExercise() {
     currentExercise = null;
     currentSetNumber = 1;
     setStartTime = null;
-    lastSetEndTime = null;
+    lastSetEndTime = null; // Arrêter le timer de repos
     selectedFatigue = 3;
     selectedEffort = 3;
     
@@ -1878,19 +1904,6 @@ async function loadDashboard() {
             // Ajouter la section historique dans le HTML du dashboard
             const dashboardContainer = document.getElementById('dashboard');
             const historySection = dashboardContainer.querySelector('.history-section');
-            if (!historySection) {
-                const actionGrid = dashboardContainer.querySelector('.action-grid');
-                if (actionGrid) {
-                    actionGrid.insertAdjacentHTML('afterend', `
-                        <div class="history-section">
-                            <div class="section-title">Historique récent</div>
-                            <div id="workoutHistory" class="workout-history">
-                                <!-- Historique chargé ici -->
-                            </div>
-                        </div>
-                    `);
-                }
-            }
 
             // Charger l'historique
             loadWorkoutHistory();
