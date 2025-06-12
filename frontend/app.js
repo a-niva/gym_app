@@ -56,12 +56,12 @@ function showStep(step) {
 function nextStep() {
     if (currentStep === 1) {
         const name = document.getElementById('userName').value.trim();
-        const age = document.getElementById('userAge').value;
+        const birthDate = document.getElementById('userBirthDate').value;
         const height = document.getElementById('userHeight').value;
         const weight = document.getElementById('userWeight').value;
         const experience = document.getElementById('experienceLevel').value;
         
-        if (!name || !age || !height || !weight || !experience) {
+        if (!name || !birthDate || !height || !weight || !experience) {
             showToast('Veuillez remplir tous les champs', 'error');
             console.error('Validation échouée:', {name, age, height, weight, experience});
             return;
@@ -1033,6 +1033,7 @@ function showSetInput() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
     
+    // IMPORTANT : réinitialiser setStartTime pour la nouvelle série
     setStartTime = new Date();
     
     container.innerHTML = `
@@ -1443,7 +1444,8 @@ function validateDetailedConfig() {
 // ===== PROFIL & ONBOARDING =====
 function updateProfileSummary() {
     const name = document.getElementById('userName').value;
-    const age = document.getElementById('userAge').value;
+    const birthDate = new Date(document.getElementById('userBirthDate').value);
+    const age = Math.floor((new Date() - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
     const experience = document.getElementById('experienceLevel').value;
     const experienceText = document.querySelector(`#experienceLevel option[value="${experience}"]`).textContent;
     
@@ -1592,7 +1594,7 @@ async function saveUser() {
     
     const userData = {
         name: document.getElementById('userName').value.trim(),
-        age: parseInt(document.getElementById('userAge').value),
+        birth_date: document.getElementById('userBirthDate').value + 'T00:00:00',
         height: parseFloat(document.getElementById('userHeight').value),
         weight: parseFloat(document.getElementById('userWeight').value),
         experience_level: document.getElementById('experienceLevel').value,
@@ -1687,6 +1689,52 @@ async function loadDashboard() {
     } catch (error) {
         console.error('Erreur chargement stats:', error);
     }
+    loadWorkoutHistory();
+}
+
+async function loadWorkoutHistory() {
+    if (!currentUser) return;
+    
+    try {
+        const response = await fetch(`/api/workouts/${currentUser.id}/history`);
+        if (response.ok) {
+            const history = await response.json();
+            displayWorkoutHistory(history);
+        }
+    } catch (error) {
+        console.error('Erreur chargement historique:', error);
+    }
+}
+
+function displayWorkoutHistory(history) {
+    const container = document.getElementById('workoutHistory');
+    if (!container) return;
+    
+    if (history.length === 0) {
+        container.innerHTML = '<p class="no-history">Aucune séance enregistrée</p>';
+        return;
+    }
+    
+    container.innerHTML = history.map(workout => `
+        <div class="workout-history-item">
+            <div class="workout-date">
+                ${new Date(workout.date).toLocaleDateString('fr-FR', { 
+                    weekday: 'short', 
+                    day: 'numeric', 
+                    month: 'short' 
+                })}
+            </div>
+            <div class="workout-details">
+                <div class="workout-type">${workout.type === 'program' ? 'Programme' : 'Libre'}</div>
+                <div class="workout-stats">
+                    ${workout.total_sets} séries • ${Math.round(workout.total_volume)}kg total
+                </div>
+                <div class="workout-exercises">
+                    ${workout.exercises.join(', ')}
+                </div>
+            </div>
+        </div>
+    `).join('');
 }
 
 // ===== EXERCICES =====
@@ -1880,6 +1928,15 @@ function logout() {
 }
 
 // ===== INITIALISATION =====
+
+// Définir la date max pour la date de naissance (18 ans minimum)
+const today = new Date();
+const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+const birthDateInput = document.getElementById('userBirthDate');
+if (birthDateInput) {
+    birthDateInput.max = maxDate.toISOString().split('T')[0];
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     
     // Charger les exercices
@@ -1897,6 +1954,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     console.log('Application initialisée');
 });
+
+// Mode développement : raccourci pour charger le dernier profil
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // Ajouter un raccourci clavier Ctrl+D pour charger le dernier profil
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'd') {
+            const cachedProfile = localStorage.getItem('userProfile');
+            if (cachedProfile) {
+                currentUser = JSON.parse(cachedProfile);
+                showMainInterface();
+                showToast('Profil de dev chargé', 'success');
+            }
+        }
+    });
+}
 
 // Export des fonctions pour les rendre accessibles depuis le HTML
 window.pauseWorkout = pauseWorkout;

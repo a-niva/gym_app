@@ -64,7 +64,7 @@ class EquipmentConfig(BaseModel):
 # SCHEMAS UTILISATEUR
 class UserCreate(BaseModel):
     name: str
-    age: int
+    birth_date: datetime
     height: float
     weight: float
     experience_level: str
@@ -74,7 +74,7 @@ class UserCreate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     name: str
-    age: int
+    birth_date: datetime
     experience_level: str
     goals: List[str]
     equipment_config: EquipmentConfig

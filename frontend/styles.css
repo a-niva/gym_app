@@ -1268,18 +1268,79 @@ select.form-input {
     text-align: center;
 }
 
+/* Set Tracker */
 .set-tracker {
     background: rgba(255, 255, 255, 0.05);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: var(--radius);
     margin-bottom: 2rem;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .set-input-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    gap: 1rem;
     margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .set-input-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--light);
+}
+
+.weight-selector,
+.reps-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.btn-adjust {
+    width: 50px;
+    min-width: 50px;
+    padding: 0.75rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.btn-adjust:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.weight-display,
+.reps-display {
+    flex: 1;
+    min-width: 60px;
+    text-align: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    color: white;
+    padding: 0.5rem 0.25rem;
 }
 
 .input-group label {
@@ -1489,12 +1550,22 @@ select.form-input {
     color: #dc2626;
 }
 
-/* Effort colors */
-#effortSelector .emoji-option[data-value="1"] { filter: hue-rotate(120deg) brightness(1.2); } /* Vert */
-#effortSelector .emoji-option[data-value="2"] { filter: hue-rotate(90deg) brightness(1.1); }  /* Vert clair */
-#effortSelector .emoji-option[data-value="3"] { filter: hue-rotate(200deg); } /* Bleu */
-#effortSelector .emoji-option[data-value="4"] { filter: hue-rotate(30deg) brightness(1.1); }  /* Orange */
-#effortSelector .emoji-option[data-value="5"] { filter: hue-rotate(0deg) brightness(1.2); }   /* Rouge vif */
+/* Effort colors - sans filter pour éviter les problèmes */
+#effortSelector .emoji-option[data-value="1"] { 
+    color: #22c55e; /* Vert */
+}
+#effortSelector .emoji-option[data-value="2"] { 
+    color: #84cc16; /* Vert clair */
+}
+#effortSelector .emoji-option[data-value="3"] { 
+    color: #3b82f6; /* Bleu */
+}
+#effortSelector .emoji-option[data-value="4"] { 
+    color: #f97316; /* Orange */
+}
+#effortSelector .emoji-option[data-value="5"] { 
+    color: #ef4444; /* Rouge */
+}
 
 .set-duration {
     padding: 0.25rem 0.5rem;
@@ -1504,4 +1575,64 @@ select.form-input {
     font-size: 0.75rem;
     font-weight: 600;
     margin: 0 0.5rem;
+}
+
+/* Workout History */
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem;
+    color: var(--primary);
+}
+
+.workout-history {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.workout-history-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: var(--radius);
+    display: flex;
+    gap: 1rem;
+    transition: all 0.2s ease;
+}
+
+.workout-history-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(4px);
+}
+
+.workout-date {
+    font-weight: 600;
+    color: var(--primary);
+    min-width: 80px;
+}
+
+.workout-details {
+    flex: 1;
+}
+
+.workout-type {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.workout-stats {
+    font-size: 0.875rem;
+    color: var(--gray-light);
+    margin-bottom: 0.25rem;
+}
+
+.workout-exercises {
+    font-size: 0.75rem;
+    color: var(--gray);
+}
+
+.no-history {
+    text-align: center;
+    color: var(--gray);
+    padding: 2rem;
 }
