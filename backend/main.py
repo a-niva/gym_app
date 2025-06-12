@@ -196,7 +196,8 @@ async def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
 @app.get("/api/workouts/{user_id}/history")
 def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get_db)):
     workouts = db.query(Workout).filter(
-        Workout.user_id == user_id
+        Workout.user_id == user_id,
+        Workout.status == "completed"
     ).order_by(Workout.created_at.desc()).limit(limit).all()
     
     history = []

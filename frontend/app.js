@@ -960,8 +960,44 @@ function showExerciseSelector() {
     
     // Filtrer les exercices disponibles selon l'équipement de l'utilisateur
     const availableExercises = allExercises.filter(exercise => {
-        // TODO: Implémenter le filtrage selon equipment_config
-        return true; // Pour l'instant, tous les exercices
+        if (!currentUser?.equipment_config) return false;
+        
+        const config = currentUser.equipment_config;
+        
+        // Vérifier chaque équipement requis
+        return exercise.equipment.every(eq => {
+            switch(eq) {
+                case 'bodyweight':
+                    return true;
+                case 'dumbbells':
+                    return config.dumbbells?.available && 
+                        config.dumbbells?.weights?.length > 0;
+                case 'barbell_standard':
+                    return config.barres?.olympique?.available || 
+                        config.barres?.courte?.available;
+                case 'barbell_ez':
+                    return config.barres?.ez?.available;
+                case 'bench_plat':
+                    return config.banc?.available;
+                case 'bench_inclinable':
+                    return config.banc?.available && config.banc?.inclinable_haut;
+                case 'bench_declinable':
+                    return config.banc?.available && config.banc?.inclinable_bas;
+                case 'cables':
+                    return false; // Pas dans la config actuelle
+                case 'elastiques':
+                    return config.elastiques?.available && 
+                        config.elastiques?.bands?.length > 0;
+                case 'barre_traction':
+                    return config.autres?.barre_traction?.available;
+                case 'kettlebell':
+                    return config.autres?.kettlebell?.available &&
+                        config.autres?.kettlebell?.weights?.length > 0;
+                default:
+                    console.warn(`Équipement non géré: ${eq}`);
+                    return false;
+            }
+        });
     });
     
     // Grouper par partie du corps
@@ -1018,14 +1054,22 @@ function filterExerciseList() {
 
 let currentExercise = null;
 let currentSetNumber = 1;
+let currentTargetReps = 10; // Répétitions cibles pour l'exercice en cours
 let setStartTime = null;
 let lastSetEndTime = null;
+let currentRestTime = 0; // Temps de repos pour la série en cours
 
 function selectExercise(exerciseId) {
     currentExercise = allExercises.find(ex => ex.id === exerciseId);
     if (!currentExercise) return;
     
     currentSetNumber = 1;
+    // Récupérer les répétitions recommandées pour le niveau de l'utilisateur
+    if (currentUser && currentExercise.sets_reps) {
+        const userLevel = currentUser.experience_level;
+        const levelConfig = currentExercise.sets_reps.find(sr => sr.level === userLevel);
+        currentTargetReps = levelConfig ? levelConfig.reps : 10;
+    }
     showSetInput();
 }
 
@@ -1040,6 +1084,12 @@ function showSetInput() {
     // IMPORTANT : réinitialiser setStartTime pour la nouvelle série
     setStartTime = new Date();
     lastSetEndTime = null; // Arrêter le timer de repos
+    // Calculer le temps de repos écoulé depuis la dernière série
+    if (lastSetEndTime && currentSetNumber > 1) {
+        currentRestTime = Math.floor((new Date() - lastSetEndTime) / 1000);
+    } else {
+        currentRestTime = 0;
+    }
     
     container.innerHTML = `
         <div class="current-exercise">
@@ -1162,7 +1212,7 @@ function startTimers() {
             const restElapsed = Math.floor((new Date() - lastSetEndTime) / 1000);
             const minutes = Math.floor(restElapsed / 60);
             const seconds = restElapsed % 60;
-            const restTimer = document.getElementById('restTime');
+            const restTimer = document.getElementById('restTimer');
             if (restTimer) {
                 restTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
@@ -1241,10 +1291,10 @@ async function completeSet() {
         workout_id: currentWorkout.id,
         exercise_id: currentExercise.id,
         set_number: currentSetNumber,
-        target_reps: 10,
+        target_reps: currentTargetReps,
         actual_reps: parseInt(document.getElementById('setReps').value),
         weight: parseFloat(document.getElementById('setWeight').value),
-        rest_time: lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0,
+        rest_time: currentRestTime,
         fatigue_level: selectedFatigue * 2,
         perceived_exertion: selectedEffort * 2,
         skipped: false
@@ -1282,6 +1332,15 @@ async function completeSet() {
     } catch (error) {
         console.error('Erreur:', error);
         showToast('Série sauvegardée localement', 'warning');
+        
+        // Sauvegarder en local pour sync ultérieure
+        const localSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
+        localSets.push({
+            ...setData,
+            timestamp: new Date().toISOString(),
+            syncStatus: 'pending'
+        });
+        localStorage.setItem('pendingSets', JSON.stringify(localSets));
     }
 }
 
@@ -1358,7 +1417,7 @@ function startRestTimer(seconds) {
             restTimerInterval = null;
             vibrateDevice([500]); // Longer vibration in silent mode
         }
-    }, 100); // Check every 100ms for precision
+    , 1000); // Check every second
 }
 
 function playBeep(frequency, duration) {
