@@ -732,6 +732,7 @@ async function startWorkout(type) {
             
             // Démarrer le monitoring
             startWorkoutMonitoring();
+            syncPendingSets();
             
             showView('training');
             showToast('Séance démarrée !', 'success');
@@ -764,6 +765,7 @@ async function checkActiveWorkout() {
                     if (serverWorkout.status === 'started' || serverWorkout.status === 'paused') {
                         currentWorkout = serverWorkout;
                         startWorkoutMonitoring();
+                        syncPendingSets();
                         return serverWorkout;
                     }
                 }
@@ -781,6 +783,7 @@ async function checkActiveWorkout() {
                 currentWorkout = data.active_workout;
                 localStorage.setItem('currentWorkout', JSON.stringify(data.active_workout));
                 startWorkoutMonitoring();
+                syncPendingSets();
                 return data.active_workout;
             }
         }
@@ -924,9 +927,41 @@ function cleanupWorkout() {
     if (audioContext) {
     audioContext.close();
     audioContext = null;
+    // Nettoyer l'historique de la session
+    localStorage.removeItem('currentWorkoutHistory');
     }
 }
 
+async function syncPendingSets() {
+    const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
+    if (pendingSets.length === 0) return;
+    
+    const successfullySynced = [];
+    
+    for (const set of pendingSets) {
+        try {
+            const response = await fetch('/api/sets/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(set)
+            });
+            
+            if (response.ok) {
+                successfullySynced.push(set);
+            }
+        } catch (error) {
+            console.error('Erreur sync set:', error);
+        }
+    }
+    
+    // Retirer les sets synchronisés
+    const remaining = pendingSets.filter(s => !successfullySynced.includes(s));
+    localStorage.setItem('pendingSets', JSON.stringify(remaining));
+    
+    if (successfullySynced.length > 0) {
+        showToast(`${successfullySynced.length} série(s) synchronisée(s)`, 'success');
+    }
+}
 
 function updateTrainingInterface() {
     const container = document.getElementById('workoutInterface');
@@ -1136,11 +1171,11 @@ function showSetInput() {
         <div class="set-tracker">
             <h3>Série ${currentSetNumber}</h3>
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
-            ${lastSetEndTime ? `
+            ${currentSetNumber > 1 && lastSetEndTime ? `
             <div class="rest-timer">
-                <div class="rest-timer-label">Temps de repos</div>
+                <div class="rest-timer-label">Temps de repos écoulé</div>
                 <div class="rest-timer-display" id="restTimer">0:00</div>
-                <button class="btn-secondary btn-sm" onclick="skipRestTimer()">Passer le repos</button>
+                <button class="btn-secondary btn-sm" onclick="skipRestTimer()">Commencer maintenant</button>
             </div>
             ` : ''}
             
@@ -1378,6 +1413,10 @@ async function completeSet() {
             
             // Update lastSetEndTime AFTER calculating duration
             lastSetEndTime = new Date();
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
             setStartTime = null;
             
             // Save state before showSetInput resets everything
@@ -1393,6 +1432,9 @@ async function completeSet() {
             selectedEffort = previousEffort;
             selectFatigue(Math.round(selectedFatigue));
             selectEffort(selectedEffort);
+            if (currentSetNumber > 1) {
+                suggestNextSet(setData);
+            }
             
             // Start rest timer
             const restDuration = selectedEffort >= 4 ? 120 : 90;
@@ -1452,7 +1494,6 @@ function suggestNextSet(lastSet) {
     }
 }
 
-let restTimerInterval = null;
 let restEndTime = null;
 let audioContext = null;
 let isSilentMode = false;
@@ -1511,8 +1552,14 @@ function startRestTimer(seconds) {
 }
 
 function playBeep(frequency, duration) {
-    if (!audioContext) return;
-    
+    if (!audioContext || isSilentMode) {
+        if (!isSilentMode && !audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } else {
+            return;
+        }
+    }
+        
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
@@ -1579,6 +1626,18 @@ function finishExercise() {
     
     // Retourner au sélecteur d'exercices
     if (currentWorkout && currentWorkout.status === 'started') {
+        // Sauvegarder l'historique de l'exercice en localStorage
+        if (currentExercise) {
+            const exerciseHistory = {
+                exerciseId: currentExercise.id,
+                exerciseName: currentExercise.name_fr,
+                totalSets: currentSetNumber - 1,
+                timestamp: new Date().toISOString()
+            };
+            const workoutHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+            workoutHistory.push(exerciseHistory);
+            localStorage.setItem('currentWorkoutHistory', JSON.stringify(workoutHistory));
+        }
         showExerciseSelector();
     }
 }
@@ -1690,7 +1749,12 @@ function validateDetailedConfig() {
         // La barre de traction est toujours valide si sélectionnée
         equipmentConfig.autres.barre_traction = true;
     }
-    
+        
+    if (hasBarbell && !hasDisques) {
+        errors.push('Veuillez ajouter au moins un poids de disque pour utiliser les barres');
+        isValid = false;
+    }
+
     // Afficher toutes les erreurs
     if (!isValid && errors.length > 0) {
         errors.forEach(error => showToast(error, 'error'));
