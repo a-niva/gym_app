@@ -26,9 +26,14 @@ let equipmentConfig = {
         lest_poignets: []
     }
 };
+let selectedFatigue = 3;
+let selectedEffort = 3;
 let currentWorkout = null;
 let workoutCheckInterval = null;
 let lastSyncTime = null;
+let restTimerInterval = null;
+let lastSetEndTime = null;
+let allExercises = [];
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
@@ -867,7 +872,10 @@ async function completeWorkout() {
             showToast('Séance terminée !', 'success');
             cleanupWorkout();
             showView('dashboard');
-            loadDashboard(); // Rafraîchir les stats
+            // Add delay to ensure server has processed the completion
+            setTimeout(() => {
+                loadDashboard(); // Rafraîchir les stats
+            }, 500);
         }
     } catch (error) {
         console.error('Erreur fin workout:', error);
@@ -910,6 +918,12 @@ function cleanupWorkout() {
     if (restTimerInterval) {
         clearInterval(restTimerInterval);
         restTimerInterval = null;
+    }
+    localStorage.removeItem('lastCompletedSetId');
+    localStorage.removeItem('pendingSets');
+    if (audioContext) {
+    audioContext.close();
+    audioContext = null;
     }
 }
 
@@ -964,6 +978,12 @@ function updateTrainingInterface() {
 function showExerciseSelector() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
+
+    // Add validation for equipment config
+    if (!currentUser?.equipment_config) {
+        container.innerHTML = '<p style="color: var(--gray-light);">Configuration d\'équipement requise</p>';
+        return;
+    }
     
     // Filtrer les exercices disponibles selon l'équipement de l'utilisateur
     const availableExercises = allExercises.filter(exercise => {
@@ -1000,6 +1020,13 @@ function showExerciseSelector() {
                 case 'kettlebell':
                     return config.autres?.kettlebell?.available &&
                         config.autres?.kettlebell?.weights?.length > 0;
+                case 'disques':
+                    return config.disques?.available && 
+                        Object.keys(config.disques?.weights || {}).length > 0;
+                case 'machine_convergente':
+                case 'machine_pectoraux':
+                case 'machine_developpe':
+                    return false; // Machines non gérées actuellement
                 default:
                     console.warn(`Équipement non géré: ${eq}`);
                     return false;
@@ -1181,8 +1208,6 @@ function showSetInput() {
     startTimers();
 }
 
-let selectedFatigue = 3;
-let selectedEffort = 3;
 let timerInterval = null;
 
 function selectFatigue(value) {
@@ -1209,6 +1234,7 @@ function startTimers() {
         // ADD guards
         if (!document.getElementById('setTimer')) {
             clearInterval(timerInterval);
+            timerInterval = null;
             return;
         }
         // Timer de série
@@ -1391,10 +1417,13 @@ async function completeSet() {
 
 function addSetToHistory(setData) {
     const container = document.getElementById('previousSets');
+    if (!container) return; // Add safety check
+    
     // Remove old entries
     while (container.children.length >= 10) {
         container.removeChild(container.lastChild);
-    }
+    } // This closing brace was missing
+    
     const setElement = document.createElement('div');
     setElement.className = 'set-history-item';
     setElement.innerHTML = `
@@ -1435,7 +1464,13 @@ function startRestTimer(seconds) {
     }
     
     restEndTime = new Date(Date.now() + seconds * 1000);
-    
+
+    if (!currentWorkout || currentWorkout.status !== 'started') {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+        return;
+    }
+
     // Initialize audio context on first use
     if (!audioContext && !isSilentMode) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1443,6 +1478,12 @@ function startRestTimer(seconds) {
     
     // Start countdown
     restTimerInterval = setInterval(() => {
+        // Guard against timer running when not in training view
+        if (!document.getElementById('restTimer')) {
+            clearInterval(restTimerInterval);
+            restTimerInterval = null;
+            return;
+        }
         const remaining = Math.max(0, Math.floor((restEndTime - Date.now()) / 1000));
         updateRestTimerDisplay(remaining);
         
@@ -1738,7 +1779,7 @@ function updateProfileSummary() {
     }
     
     // Autres
-    if (selectedEquipment.includes('pullup_bar')) {
+    if (selectedEquipment.includes('pull_up_bar')) {
         summary += '<li>Barre de traction</li>';
     }
     
@@ -1820,7 +1861,9 @@ async function saveUser() {
     };
     
     // Validation finale
-    if (!userData.name || !userData.birth_date || !userData.experience_level) {
+    if (!userData.name || !userData.birth_date || !userData.experience_level || 
+        isNaN(userData.height) || isNaN(userData.weight) || 
+        userData.height <= 0 || userData.weight <= 0) {
         showToast('Informations personnelles incomplètes', 'error');
         return;
     }
@@ -1919,14 +1962,22 @@ async function loadDashboard() {
 async function loadWorkoutHistory() {
     if (!currentUser) return;
     
-    try {
-        const response = await fetch(`/api/workouts/${currentUser.id}/history`);
-        if (response.ok) {
-            const history = await response.json();
-            displayWorkoutHistory(history);
+    let retries = 0;
+    const maxRetries = 3;
+    
+    while (retries < maxRetries) {
+        try {
+            const response = await fetch(`/api/workouts/${currentUser.id}/history`);
+            if (response.ok) {
+                const history = await response.json();
+                displayWorkoutHistory(history);
+                return;
+            }
+        } catch (error) {
+            console.error(`Erreur chargement historique (tentative ${retries + 1}):`, error);
         }
-    } catch (error) {
-        console.error('Erreur chargement historique:', error);
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 500));
     }
 }
 
@@ -1951,7 +2002,7 @@ function displayWorkoutHistory(history) {
             <div class="workout-details">
                 <div class="workout-type">${workout.type === 'program' ? 'Programme' : 'Libre'}</div>
                 <div class="workout-stats">
-                    ${workout.total_sets} séries • ${Math.round(workout.total_volume)}kg total
+                    ${workout.total_sets} séries • ${workout.total_volume ? Math.round(workout.total_volume) : 0}kg total
                 </div>
                 <div class="workout-exercises">
                     ${workout.exercises.join(', ')}
@@ -1962,8 +2013,6 @@ function displayWorkoutHistory(history) {
 }
 
 // ===== EXERCICES =====
-let allExercises = [];
-
 async function loadExercises() {
     try {
         const response = await fetch('/api/exercises/');
@@ -1983,7 +2032,17 @@ function displayExercises(exercises = allExercises) {
     const container = document.getElementById('exercisesList');
     const bodyParts = [...new Set(exercises.map(e => e.body_part))];
     
-    container.innerHTML = bodyParts.map(part => {
+    const filterHTML = `
+        <div class="exercise-filters" style="margin-bottom: 1rem;">
+            <input type="text" id="exerciseSearch" placeholder="Rechercher..." 
+                onkeyup="filterExercises()" class="form-input">
+            <select id="bodyPartFilter" onchange="filterExercises()" class="form-input">
+                <option value="">Tous les muscles</option>
+                ${bodyParts.map(part => `<option value="${part}">${part}</option>`).join('')}
+            </select>
+        </div>
+    `;
+    container.innerHTML = filterHTML + bodyParts.map(part => {
         const partExercises = exercises.filter(e => e.body_part === part);
         return `
             <div class="body-part-section">
