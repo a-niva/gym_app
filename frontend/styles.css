@@ -1632,7 +1632,9 @@ select.form-input {
 }
 
 .rest-info {
-    font-weight: 600;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: var(--gray-light);
 }
 
 #setTimer, #restTime {

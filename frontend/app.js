@@ -37,6 +37,7 @@ let allExercises = [];
 let lastExerciseEndTime = null;
 let interExerciseRestTime = 0;
 let isInRestPeriod = false;
+let currentSetData = null; // Pour stocker temporairement les données de la série
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
@@ -1232,53 +1233,30 @@ function showSetInput() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
     
-    // Sauvegarder l'historique existant
+    // Sauvegarder l'historique existant pour éviter de le perdre
     const existingHistory = document.getElementById('previousSets');
     const savedHistory = existingHistory ? existingHistory.innerHTML : '';
     
-    // IMPORTANT : réinitialiser setStartTime pour la nouvelle série
+    // IMPORTANT : initialiser setStartTime immédiatement pour démarrer le timer
     setStartTime = new Date();
-    lastSetEndTime = null; // Arrêter le timer de repos
-    // Calculer le temps de repos écoulé depuis la dernière série
-    if (lastSetEndTime && currentSetNumber > 1) {
-        currentRestTime = Math.floor((new Date() - lastSetEndTime) / 1000);
-    } else {
-        currentRestTime = 0;
-    }
+    lastSetEndTime = null; // Arrêter tout timer de repos résiduel
     
     container.innerHTML = `
         <div class="current-exercise">
             <h2>${currentExercise.name_fr}</h2>
-            ${interExerciseRestTime > 10 ? `
-            <div class="inter-exercise-rest-indicator">
-                <div>Repos depuis le dernier exercice</div>
-                <div class="inter-exercise-rest-time">${Math.floor(interExerciseRestTime / 60)}:${(interExerciseRestTime % 60).toString().padStart(2, '0')}</div>
-            </div>
-            ` : ''}
             <p class="exercise-info">${currentExercise.body_part} • ${currentExercise.level}</p>
         </div>
         
         <div class="set-tracker">
-        ${currentSetNumber > 1 && !setStartTime ? `
-        <button class="btn btn-primary btn-start-set" onclick="startCurrentSet()">
-            ▶️ Commencer la série ${currentSetNumber}
-        </button>
-        ` : ''}
             <h3>Série ${currentSetNumber}</h3>
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
-            ${currentSetNumber > 1 ? `
-            <div class="rest-timer">
-                <div class="rest-timer-label">Temps de repos</div>
-                <div class="rest-timer-display" id="restTimer">0:00</div>
-            </div>
-            ` : ''}
             
             <div class="set-input-grid-vertical">
                 <div class="input-group">
                     <label>Poids total (kg)</label>
                     <div class="weight-selector">
                         <button onclick="adjustWeight(-2.5)" class="btn-adjust">-2.5</button>
-                        <input type="number" id="setWeight" value="20" step="2.5" class="weight-display">
+                        <input type="number" id="setWeight" value="20" step="2.5" class="weight-display" readonly>
                         <button onclick="adjustWeight(2.5)" class="btn-adjust">+2.5</button>
                     </div>
                     <div class="weight-info">Barre + disques inclus</div>
@@ -1288,7 +1266,7 @@ function showSetInput() {
                     <label>Répétitions</label>
                     <div class="reps-selector">
                         <button onclick="adjustReps(-1)" class="btn-adjust">-</button>
-                        <input type="number" id="setReps" value="10" class="reps-display">
+                        <input type="number" id="setReps" value="${currentTargetReps}" class="reps-display" readonly>
                         <button onclick="adjustReps(1)" class="btn-adjust">+</button>
                     </div>
                 </div>
@@ -1298,7 +1276,7 @@ function showSetInput() {
                     <div class="emoji-selector" id="fatigueSelector">
                         <span class="emoji-option" data-value="1" onclick="selectFatigue(1)">😄</span>
                         <span class="emoji-option" data-value="2" onclick="selectFatigue(2)">🙂</span>
-                        <span class="emoji-option selected" data-value="3" onclick="selectFatigue(3)">😐</span>
+                        <span class="emoji-option ${selectedFatigue === 3 ? 'selected' : ''}" data-value="3" onclick="selectFatigue(3)">😐</span>
                         <span class="emoji-option" data-value="4" onclick="selectFatigue(4)">😓</span>
                         <span class="emoji-option" data-value="5" onclick="selectFatigue(5)">😵</span>
                     </div>
@@ -1309,7 +1287,7 @@ function showSetInput() {
                     <div class="emoji-selector" id="effortSelector">
                         <span class="emoji-option" data-value="1" onclick="selectEffort(1)">🚶</span>
                         <span class="emoji-option" data-value="2" onclick="selectEffort(2)">🏃</span>
-                        <span class="emoji-option selected" data-value="3" onclick="selectEffort(3)">🏋️</span>
+                        <span class="emoji-option ${selectedEffort === 3 ? 'selected' : ''}" data-value="3" onclick="selectEffort(3)">🏋️</span>
                         <span class="emoji-option" data-value="4" onclick="selectEffort(4)">🔥</span>
                         <span class="emoji-option" data-value="5" onclick="selectEffort(5)">🌋</span>
                     </div>
@@ -1331,19 +1309,89 @@ function showSetInput() {
         <button class="btn btn-secondary" onclick="finishExercise()">
             Terminer cet exercice
         </button>
-        <div class="exercise-guidance">
-            <p style="color: var(--gray-light); font-size: 0.875rem; text-align: center; margin-top: 1rem;">
-                💡 Astuce : Terminez l'exercice quand vous ne pouvez plus maintenir la forme correcte
-            </p>
+    `;
+    
+    // Démarrer le timer de série uniquement
+    startTimers();
+    
+    // Restaurer les valeurs de fatigue et effort sélectionnées
+    selectFatigue(Math.round(selectedFatigue));
+    selectEffort(selectedEffort);
+    
+    // Si on a des données de la série précédente, suggérer les ajustements
+    const previousSetHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+    const lastSetForExercise = previousSetHistory
+        .filter(h => h.exerciseId === currentExercise.id)
+        .flatMap(h => h.sets || [])
+        .slice(-1)[0];
+        
+    if (lastSetForExercise && currentSetNumber > 1) {
+        // Ajuster le poids si nécessaire basé sur la performance précédente
+        if (lastSetForExercise.fatigue_level >= 8) {
+            document.getElementById('setWeight').value = Math.max(0, lastSetForExercise.weight * 0.9);
+        } else if (lastSetForExercise.actual_reps > lastSetForExercise.target_reps + 2) {
+            document.getElementById('setWeight').value = lastSetForExercise.weight + 2.5;
+        } else {
+            document.getElementById('setWeight').value = lastSetForExercise.weight;
+        }
+    }
+}
+
+
+function showRestInterface(setData) {
+    const container = document.getElementById('exerciseArea');
+    if (!container) return;
+    
+    isInRestPeriod = true;
+    lastSetEndTime = new Date();
+    
+    container.innerHTML = `
+        <div class="current-exercise">
+            <h2>${currentExercise.name_fr}</h2>
+            <p class="exercise-info">${currentExercise.body_part} • ${currentExercise.level}</p>
+        </div>
+        
+        <div class="rest-timer active">
+            <div class="rest-timer-label">Temps de repos</div>
+            <div class="rest-timer-display" id="restTimer">0:00</div>
+            <div class="rest-info">
+                Série ${setData.set_number} terminée : ${setData.weight}kg × ${setData.actual_reps} reps
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="finishExerciseDuringRest()">
+            Changer d'exercice
+        </button>
+        <div id="previousSets" class="previous-sets">
+            ${document.getElementById('previousSets')?.innerHTML || ''}
         </div>
     `;
     
-    // Démarrer les timers
-    startTimers();
-    // Démarrer automatiquement le timer pour la première série
-    if (currentSetNumber === 1 && !setStartTime) {
-        setStartTime = new Date();
+    // Démarrer le timer de repos
+    startRestTimer(60);
+}
+
+function finishExerciseDuringRest() {
+    // Capturer le temps de repos actuel
+    const restDuration = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
+    
+    // Mettre à jour le dernier set avec son temps de repos
+    const lastSetId = localStorage.getItem('lastCompletedSetId');
+    if (lastSetId && restDuration > 0) {
+        fetch(`/api/sets/${lastSetId}/rest-time`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rest_time: restDuration })
+        }).catch(err => console.error('Failed to update rest time:', err));
     }
+    
+    // Arrêter le timer de repos
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+    }
+    
+    // Terminer l'exercice
+    finishExercise();
 }
 
 function startCurrentSet() {
@@ -1376,13 +1424,13 @@ function startTimers() {
     
     timerInterval = setInterval(() => {
         if (document.hidden) return;
-        // ADD guards
         if (!document.getElementById('setTimer')) {
             clearInterval(timerInterval);
             timerInterval = null;
             return;
         }
-        // Timer de série
+        
+        // Timer de série UNIQUEMENT
         if (setStartTime) {
             const elapsed = Math.floor((new Date() - setStartTime) / 1000);
             const minutes = Math.floor(elapsed / 60);
@@ -1390,17 +1438,6 @@ function startTimers() {
             const setTimer = document.getElementById('setTimer');
             if (setTimer) {
                 setTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
-        }
-        
-        // Timer de repos
-        if (lastSetEndTime) {
-            const restElapsed = Math.floor((new Date() - lastSetEndTime) / 1000);
-            const minutes = Math.floor(restElapsed / 60);
-            const seconds = restElapsed % 60;
-            const restTimer = document.getElementById('restTimer');
-            if (restTimer) {
-                restTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
         }
     }, 1000);
@@ -1461,35 +1498,29 @@ function updateExertionDisplay(value) {
     document.getElementById('exertionDisplay').textContent = value;
 }
 
-async function completeSet(isLastSet = false) {
-    // Calculate set duration BEFORE updating lastSetEndTime
+async function completeSet() {
+    // Calculer la durée de la série AVANT toute modification de variables
     const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
     
-    // Calculate rest time from PREVIOUS set
-    let restTimeForPreviousSet = 0;
-    if (lastSetEndTime && currentSetNumber > 1) {
-        restTimeForPreviousSet = Math.floor((new Date() - lastSetEndTime) / 1000);
-        
-        // Update the PREVIOUS set's rest time if we stored its ID
-        const lastSetId = localStorage.getItem('lastCompletedSetId');
-        if (lastSetId && restTimeForPreviousSet > 0) {
-            // Fire and forget - don't await
-            fetch(`/api/sets/${lastSetId}/rest-time`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rest_time: restTimeForPreviousSet })
-            }).catch(err => console.error('Failed to update rest time:', err));
-        }
+    // Récupérer les valeurs des inputs
+    const weight = parseFloat(document.getElementById('setWeight').value);
+    const reps = parseInt(document.getElementById('setReps').value);
+    
+    // Validation basique
+    if (!weight || !reps || reps <= 0) {
+        showToast('Veuillez remplir tous les champs correctement', 'error');
+        return;
     }
     
+    // Préparer les données de la série
     const setData = {
         workout_id: currentWorkout.id,
         exercise_id: currentExercise.id,
         set_number: currentSetNumber,
         target_reps: currentTargetReps,
-        actual_reps: parseInt(document.getElementById('setReps').value),
-        weight: parseFloat(document.getElementById('setWeight').value),
-        rest_time: 0, // This set's rest time is unknown until NEXT set
+        actual_reps: reps,
+        weight: weight,
+        rest_time: 0, // Sera mis à jour quand on commencera la série suivante
         fatigue_level: selectedFatigue * 2,
         perceived_exertion: selectedEffort * 2,
         skipped: false
@@ -1505,72 +1536,78 @@ async function completeSet(isLastSet = false) {
         if (response.ok) {
             const savedSet = await response.json();
             
-            // Store this set's ID for updating its rest time later
+            // Stocker l'ID pour mise à jour ultérieure du temps de repos
             localStorage.setItem('lastCompletedSetId', savedSet.id);
             
-            showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
-            // Si c'est la dernière série, terminer l'exercice automatiquement
-            if (isLastSet) {
-                setTimeout(() => {
-                    finishExercise();
-                    showToast('Exercice terminé', 'success');
-                }, 500);
-                return;
-            }
-            
-            // Add to history with duration
+            // Ajouter à l'historique local avec la durée
             addSetToHistory({...setData, duration: setDuration});
             
-            // Update lastSetEndTime AFTER calculating duration
-            lastSetEndTime = new Date();
+            // Sauvegarder dans l'historique de la session
+            updateSessionHistory(setData);
+            
+            // Notification de succès
+            showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
+            
+            // Arrêter le timer de série
             if (timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
-            setStartTime = null;
             
-            // Save state before showSetInput resets everything
-            const previousFatigue = selectedFatigue;
-            const previousEffort = selectedEffort;
+            // Augmenter légèrement la fatigue pour la prochaine série
+            selectedFatigue = Math.min(5, selectedFatigue + 0.3);
             
-            // Prepare next set
-            currentSetNumber++;
-            showSetInput();
-            // Démarrer automatiquement le timer si c'est la première série
-            if (currentSetNumber === 2 && !setStartTime) {
-                startCurrentSet();
-            }
+            // Afficher l'interface de repos
+            showRestInterface({...setData, duration: setDuration});
             
-            // Restore and slightly increase fatigue
-            selectedFatigue = Math.min(5, previousFatigue + 0.2);
-            selectedEffort = previousEffort;
-            selectFatigue(Math.round(selectedFatigue));
-            selectEffort(selectedEffort);
-            if (currentSetNumber > 1) {
-                suggestNextSet(setData);
-            }
-            
-            // Start rest timer
-            // Toujours 60 secondes de repos
-            startRestTimer(60);
         } else {
+            const error = await response.json();
             showToast('Erreur lors de l\'enregistrement', 'error');
+            console.error('Erreur serveur:', error);
         }
     } catch (error) {
-        console.error('Erreur:', error);
+        console.error('Erreur réseau:', error);
         showToast('Série sauvegardée localement', 'warning');
         
-        // Local save logic...
-        const localSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
-        localSets.push({
+        // Sauvegarde locale en cas d'erreur réseau
+        const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
+        pendingSets.push({
             ...setData,
             timestamp: new Date().toISOString(),
             syncStatus: 'pending'
         });
-        localStorage.setItem('pendingSets', JSON.stringify(localSets));
+        localStorage.setItem('pendingSets', JSON.stringify(pendingSets));
+        
+        // Continuer malgré l'erreur
+        addSetToHistory({...setData, duration: setDuration});
+        updateSessionHistory(setData);
+        selectedFatigue = Math.min(5, selectedFatigue + 0.3);
+        showRestInterface({...setData, duration: setDuration});
     }
 }
 
+function updateSessionHistory(setData) {
+    const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+    
+    // Trouver ou créer l'entrée pour cet exercice
+    let exerciseEntry = sessionHistory.find(h => h.exerciseId === currentExercise.id);
+    
+    if (!exerciseEntry) {
+        exerciseEntry = {
+            exerciseId: currentExercise.id,
+            exerciseName: currentExercise.name_fr,
+            sets: [],
+            timestamp: new Date().toISOString()
+        };
+        sessionHistory.push(exerciseEntry);
+    }
+    
+    // Ajouter la série
+    exerciseEntry.sets.push(setData);
+    exerciseEntry.totalSets = exerciseEntry.sets.length;
+    
+    localStorage.setItem('currentWorkoutHistory', JSON.stringify(sessionHistory));
+}
 
 function addSetToHistory(setData) {
     const container = document.getElementById('previousSets');
@@ -1719,20 +1756,22 @@ function showContinueButton() {
     if (!restTimerContainer) return;
     
     const existingButton = restTimerContainer.querySelector('.btn-continue-rest');
-    if (existingButton) return; // Éviter les doublons
+    if (existingButton) return;
     
     const continueBtn = document.createElement('button');
     continueBtn.className = 'btn btn-primary btn-continue-rest';
-    continueBtn.textContent = 'Continuer';
+    continueBtn.textContent = 'Continuer vers la série suivante';
     continueBtn.onclick = () => {
         if (restTimerInterval) {
             clearInterval(restTimerInterval);
             restTimerInterval = null;
         }
-        lastSetEndTime = null;
-        showSetInput(); // Ne démarre PAS le timer automatiquement
+        isInRestPeriod = false;
+        currentSetNumber++;
+        setStartTime = new Date(); // Démarrer immédiatement le timer de la nouvelle série
+        showSetInput();
     };
-        
+    
     restTimerContainer.appendChild(continueBtn);
 }
 
@@ -2518,6 +2557,7 @@ window.skipSet = skipSet;
 
 window.toggleSilentMode = toggleSilentMode;
 window.completeSetAndFinish = completeSetAndFinish;
+window.finishExerciseDuringRest = finishExerciseDuringRest;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
