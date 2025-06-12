@@ -1033,8 +1033,13 @@ function showSetInput() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
     
+    // Sauvegarder l'historique existant
+    const existingHistory = document.getElementById('previousSets');
+    const savedHistory = existingHistory ? existingHistory.innerHTML : '';
+    
     // IMPORTANT : réinitialiser setStartTime pour la nouvelle série
     setStartTime = new Date();
+    lastSetEndTime = null; // Arrêter le timer de repos
     
     container.innerHTML = `
         <div class="current-exercise">
@@ -1042,17 +1047,11 @@ function showSetInput() {
             <p class="exercise-info">${currentExercise.body_part} • ${currentExercise.level}</p>
         </div>
         
-        ${lastSetEndTime ? `
-            <div class="rest-timer">
-                <div class="rest-info">Repos: <span id="restTime">0:00</span></div>
-            </div>
-        ` : ''}
-        
         <div class="set-tracker">
             <h3>Série ${currentSetNumber}</h3>
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
             
-            <div class="set-input-grid">
+            <div class="set-input-grid-vertical">
                 <div class="input-group">
                     <label>Poids total (kg)</label>
                     <div class="weight-selector">
@@ -1071,9 +1070,7 @@ function showSetInput() {
                         <button onclick="adjustReps(1)" class="btn-adjust">+</button>
                     </div>
                 </div>
-            </div>
-            
-            <div class="effort-selectors">
+                
                 <div class="selector-group">
                     <label>Fatigue</label>
                     <div class="emoji-selector" id="fatigueSelector">
@@ -1107,7 +1104,7 @@ function showSetInput() {
             </div>
         </div>
         
-        <div id="previousSets" class="previous-sets"></div>
+        <div id="previousSets" class="previous-sets">${savedHistory}</div>
         
         <button class="btn btn-secondary" onclick="finishExercise()">
             Terminer cet exercice
@@ -1116,9 +1113,6 @@ function showSetInput() {
     
     // Démarrer les timers
     startTimers();
-    
-    // Charger l'historique de cet exercice
-    loadExerciseHistory();
 }
 
 let selectedFatigue = 3;
@@ -1252,6 +1246,7 @@ async function completeSet() {
             
             // Ajouter à l'historique local avec la durée
             addSetToHistory({...setData, duration: setDuration});
+            // Ne pas réinitialiser setStartTime ici, ce sera fait dans showSetInput()
             
             // IMPORTANT : Mettre à jour lastSetEndTime APRÈS avoir calculé setDuration
             lastSetEndTime = new Date();
@@ -1322,7 +1317,9 @@ function finishExercise() {
     selectedEffort = 3;
     
     // Retourner au sélecteur d'exercices
-    showExerciseSelector();
+    if (currentWorkout && currentWorkout.status === 'started') {
+        showExerciseSelector();
+    }
 }
 
 function addElastique() {
