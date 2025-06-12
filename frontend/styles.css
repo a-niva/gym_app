@@ -1677,11 +1677,24 @@ select.form-input {
 }
 
 .rest-history-item {
-    background: rgba(16, 185, 129, 0.05);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.1));
     border-left: 3px solid var(--secondary);
     padding: 0.75rem 1rem;
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
     border-radius: var(--radius);
+    position: relative;
+    overflow: hidden;
+}
+
+.rest-history-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--secondary);
+    animation: pulse 2s infinite;
 }
 
 .rest-indicator {

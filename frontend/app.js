@@ -821,6 +821,21 @@ async function checkActiveWorkout() {
     return null;
 }
 
+function addRestToHistory(duration) {
+    const container = document.getElementById('previousSets');
+    if (!container || duration < 5) return; // Ignorer les repos très courts
+    
+    const restElement = document.createElement('div');
+    restElement.className = 'rest-history-item';
+    restElement.innerHTML = `
+        <div class="rest-indicator">
+            <span class="rest-icon">⏱️</span>
+            <span class="rest-duration">Repos: ${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}</span>
+        </div>
+    `;
+    container.insertBefore(restElement, container.firstChild);
+}
+
 function startWorkoutMonitoring() {
     // Sync toutes les 30 secondes pour gérer Render qui s'endort
     if (workoutCheckInterval) clearInterval(workoutCheckInterval);
@@ -1380,7 +1395,6 @@ function skipRestPeriod() {
         restTimerInterval = null;
     }
     
-    // Calculer et enregistrer le temps de repos écoulé
     const restDuration = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
     const lastSetId = localStorage.getItem('lastCompletedSetId');
     
@@ -1392,7 +1406,9 @@ function skipRestPeriod() {
         }).catch(err => console.error('Failed to update rest time:', err));
     }
     
-    // Son de confirmation
+    // Ajouter immédiatement le temps de repos à l'historique
+    addRestToHistory(restDuration);
+    
     if (!isSilentMode) {
         playBeep(600, 100);
     }
@@ -1404,10 +1420,7 @@ function skipRestPeriod() {
 }
 
 function finishExerciseDuringRest() {
-    // Capturer le temps de repos actuel
     const restDuration = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
-    
-    // Mettre à jour le dernier set avec son temps de repos
     const lastSetId = localStorage.getItem('lastCompletedSetId');
     if (lastSetId && restDuration > 0) {
         fetch(`/api/sets/${lastSetId}/rest-time`, {
@@ -1415,15 +1428,14 @@ function finishExerciseDuringRest() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ rest_time: restDuration })
         }).catch(err => console.error('Failed to update rest time:', err));
+        
+        // Ajouter le temps de repos à l'historique avant de changer d'exercice
+        addRestToHistory(restDuration);
     }
-    
-    // Arrêter le timer de repos
     if (restTimerInterval) {
         clearInterval(restTimerInterval);
         restTimerInterval = null;
     }
-    
-    // Terminer l'exercice
     finishExercise();
 }
 
@@ -1663,25 +1675,10 @@ function addSetToHistory(setData) {
     const container = document.getElementById('previousSets');
     if (!container) return;
     
-    // Supprimer les anciennes entrées si trop nombreuses
     while (container.children.length >= 20) {
         container.removeChild(container.lastChild);
     }
     
-    // Ajouter le temps de repos si ce n'est pas la première série
-    if (setData.set_number > 1 && setData.rest_time > 0) {
-        const restElement = document.createElement('div');
-        restElement.className = 'rest-history-item';
-        restElement.innerHTML = `
-            <div class="rest-indicator">
-                <span class="rest-icon">⏱️</span>
-                <span class="rest-duration">Repos: ${Math.floor(setData.rest_time / 60)}:${(setData.rest_time % 60).toString().padStart(2, '0')}</span>
-            </div>
-        `;
-        container.insertBefore(restElement, container.firstChild);
-    }
-    
-    // Ajouter la série
     const setElement = document.createElement('div');
     setElement.className = 'set-history-item';
     setElement.innerHTML = `
@@ -1831,7 +1828,20 @@ function showContinueButton() {
             restTimerInterval = null;
         }
         
-        // Son d'interruption du repos
+        const restDuration = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
+        const lastSetId = localStorage.getItem('lastCompletedSetId');
+        
+        if (lastSetId && restDuration > 0) {
+            fetch(`/api/sets/${lastSetId}/rest-time`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rest_time: restDuration })
+            }).catch(err => console.error('Failed to update rest time:', err));
+        }
+        
+        // Ajouter le temps de repos à l'historique
+        addRestToHistory(restDuration);
+        
         if (!isSilentMode) {
             playBeep(600, 100);
         }
@@ -2631,6 +2641,7 @@ window.toggleSilentMode = toggleSilentMode;
 window.completeSetAndFinish = completeSetAndFinish;
 window.finishExerciseDuringRest = finishExerciseDuringRest;
 window.skipRestPeriod = skipRestPeriod;
+window.addRestToHistory = addRestToHistory;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
