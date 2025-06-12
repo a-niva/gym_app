@@ -32,6 +32,18 @@ let lastSyncTime = null;
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
+    // Clean up any running timers when leaving training view
+    if (viewName !== 'training') {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        if (restTimerInterval) {
+            clearInterval(restTimerInterval);
+            restTimerInterval = null;
+        }
+    }
+    
     document.querySelectorAll('.view, .onboarding').forEach(view => {
         view.classList.remove('active');
     });
@@ -890,6 +902,15 @@ function cleanupWorkout() {
         clearInterval(workoutCheckInterval);
         workoutCheckInterval = null;
     }
+    // ADD THESE LINES
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+    }
 }
 
 
@@ -1042,7 +1063,6 @@ let currentExercise = null;
 let currentSetNumber = 1;
 let currentTargetReps = 10; // Répétitions cibles pour l'exercice en cours
 let setStartTime = null;
-let lastSetEndTime = null;
 let currentRestTime = 0; // Temps de repos pour la série en cours
 
 function selectExercise(exerciseId) {
@@ -1182,6 +1202,11 @@ function startTimers() {
     if (timerInterval) clearInterval(timerInterval);
     
     timerInterval = setInterval(() => {
+        // ADD guards
+        if (!document.getElementById('setTimer')) {
+            clearInterval(timerInterval);
+            return;
+        }
         // Timer de série
         if (setStartTime) {
             const elapsed = Math.floor((new Date() - setStartTime) / 1000);
@@ -1280,7 +1305,7 @@ async function completeSet() {
         target_reps: currentTargetReps,
         actual_reps: parseInt(document.getElementById('setReps').value),
         weight: parseFloat(document.getElementById('setWeight').value),
-        rest_time: currentRestTime,
+        rest_time: 0, // We don't know rest time yet!
         fatigue_level: selectedFatigue * 2,
         perceived_exertion: selectedEffort * 2,
         skipped: false
@@ -1307,8 +1332,16 @@ async function completeSet() {
             // Préparer la série suivante
             currentSetNumber++;
             
-            // Continuer avec la série suivante
+            // In completeSet(), before showSetInput():
+            const previousFatigue = selectedFatigue;
+            const previousEffort = selectedEffort;
             showSetInput();
+            // Restore state
+            selectedFatigue = Math.min(5, previousFatigue + 0.5); // Slight increase
+            selectedEffort = previousEffort;
+            selectFatigue(selectedFatigue);
+            selectEffort(selectedEffort);
+
             // Start rest timer with appropriate duration
             const restDuration = selectedEffort >= 4 ? 120 : 90; // 2 min for high effort, 90s default
             startRestTimer(restDuration);
@@ -1332,6 +1365,9 @@ async function completeSet() {
 
 function addSetToHistory(setData) {
     const container = document.getElementById('previousSets');
+    // Remove old entries
+    while (container.children.length >= 10) {
+        container.removeChild(container.lastChild);
     const setElement = document.createElement('div');
     setElement.className = 'set-history-item';
     setElement.innerHTML = `
