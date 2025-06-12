@@ -93,7 +93,19 @@ function nextStep() {
             showToast('Veuillez sélectionner au moins un équipement', 'error');
             return;
         }
-        generateDetailedEquipmentConfig();
+        
+        // Vérifier si l'équipement nécessite une configuration
+        const needsConfig = selectedEquipment.some(eq => 
+            ['dumbbells', 'barbell', 'resistance_bands', 'kettlebell'].includes(eq)
+        );
+        
+        if (!needsConfig) {
+            // Passer directement à l'étape 5 (récapitulatif)
+            currentStep = 4; // On met 4 pour que le ++currentStep en bas nous amène à 5
+            updateProfileSummary();
+        } else {
+            generateDetailedEquipmentConfig();
+        }
     } else if (currentStep === 4) {
         if (!validateDetailedConfig()) {
             return;
@@ -179,6 +191,15 @@ function generateDetailedEquipmentConfig() {
     `;
     
     container.innerHTML = html;
+    // Auto-configurer les équipements simples
+    if (selectedEquipment.includes('pull_up_bar')) {
+        equipmentConfig.autres.barre_traction = true;
+        updateEquipmentStatus('pull_up_bar');
+    }
+    if (selectedEquipment.includes('bench')) {
+        equipmentConfig.banc.available = true;
+        updateEquipmentStatus('bench');
+    }
     
     // Auto-ouvrir les panels pour l'équipement sélectionné
     selectedEquipment.forEach(eq => {
