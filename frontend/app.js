@@ -1050,6 +1050,13 @@ function showSetInput() {
         <div class="set-tracker">
             <h3>Série ${currentSetNumber}</h3>
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
+            ${lastSetEndTime ? `
+            <div class="rest-timer">
+                <div class="rest-timer-label">Temps de repos</div>
+                <div class="rest-timer-display" id="restTimer">0:00</div>
+                <button class="btn-secondary btn-sm" onclick="skipRestTimer()">Passer le repos</button>
+            </div>
+            ` : ''}
             
             <div class="set-input-grid-vertical">
                 <div class="input-group">
@@ -1163,6 +1170,15 @@ function startTimers() {
     }, 1000);
 }
 
+function skipRestTimer() {
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+        showToast('Repos passé', 'info');
+        updateRestTimerDisplay(0);
+    }
+}
+
 function loadExerciseHistory() {
     // TODO: Charger l'historique depuis l'API
 }
@@ -1257,6 +1273,9 @@ async function completeSet() {
             
             // Continuer avec la série suivante
             showSetInput();
+            // Start rest timer with appropriate duration
+            const restDuration = selectedEffort >= 4 ? 120 : 90; // 2 min for high effort, 90s default
+            startRestTimer(restDuration);
         } else {
             showToast('Erreur lors de l\'enregistrement', 'error');
         }
@@ -1296,9 +1315,102 @@ function suggestNextSet(lastSet) {
     }
 }
 
+let restTimerInterval = null;
+let restEndTime = null;
+let audioContext = null;
+let isSilentMode = false;
+
 function startRestTimer(seconds) {
-    // TODO: Implémenter le timer dans la phase 1.3
-    console.log(`Timer de repos: ${seconds}s`);
+    // Clear any existing timer
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+    }
+    
+    restEndTime = new Date(Date.now() + seconds * 1000);
+    
+    // Initialize audio context on first use
+    if (!audioContext && !isSilentMode) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    // Start countdown
+    restTimerInterval = setInterval(() => {
+        const remaining = Math.max(0, Math.floor((restEndTime - Date.now()) / 1000));
+        updateRestTimerDisplay(remaining);
+        
+        // Audio cues at specific intervals
+        if (!isSilentMode) {
+            if (remaining === 30 || remaining === 10) {
+                playBeep(800, 100); // Higher pitch for warnings
+            } else if (remaining === 3 || remaining === 2 || remaining === 1) {
+                playBeep(600, 150); // Countdown beeps
+            } else if (remaining === 0) {
+                playBeep(1000, 300); // End beep
+                vibrateDevice([200, 100, 200]); // Double vibration
+                clearInterval(restTimerInterval);
+                restTimerInterval = null;
+                showToast('Repos terminé ! Prochaine série', 'success');
+            }
+        }
+        
+        if (remaining === 0 && isSilentMode) {
+            clearInterval(restTimerInterval);
+            restTimerInterval = null;
+            vibrateDevice([500]); // Longer vibration in silent mode
+        }
+    }, 100); // Check every 100ms for precision
+}
+
+function playBeep(frequency, duration) {
+    if (!audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration / 1000);
+}
+
+function vibrateDevice(pattern) {
+    if ('vibrate' in navigator) {
+        navigator.vibrate(pattern);
+    }
+}
+
+function updateRestTimerDisplay(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const display = `${minutes}:${secs.toString().padStart(2, '0')}`;
+    
+    // Update all rest timer displays
+    const restTimerEl = document.getElementById('restTimer');
+    if (restTimerEl) {
+        restTimerEl.textContent = display;
+        
+        // Visual warning at 10 seconds
+        if (seconds <= 10 && seconds > 0) {
+            restTimerEl.style.color = '#ef4444'; // Red
+            restTimerEl.style.fontSize = '1.5rem';
+        } else {
+            restTimerEl.style.color = '#10b981'; // Green
+            restTimerEl.style.fontSize = '1.25rem';
+        }
+    }
+}
+
+function toggleSilentMode() {
+    isSilentMode = !isSilentMode;
+    localStorage.setItem('silentMode', isSilentMode);
+    showToast(isSilentMode ? 'Mode silencieux activé' : 'Sons activés', 'info');
 }
 
 function finishExercise() {
@@ -1957,6 +2069,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Charger les exercices
     await loadExercises();
+    // Load silent mode preference
+    isSilentMode = localStorage.getItem('silentMode') === 'true';
     
     // Vérifier si un utilisateur existe
     const userId = localStorage.getItem('userId');
@@ -2036,6 +2150,9 @@ window.finishExercise = finishExercise;
 window.selectFatigue = selectFatigue;
 window.selectEffort = selectEffort;
 window.skipSet = skipSet;
+
+window.toggleSilentMode = toggleSilentMode;
+window.skipRestTimer = skipRestTimer;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
