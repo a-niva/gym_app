@@ -1087,11 +1087,11 @@ function showSetInput() {
                 <div class="selector-group">
                     <label>Effort perçu</label>
                     <div class="emoji-selector" id="effortSelector">
-                        <span class="emoji-option" data-value="5" onclick="selectEffort(5)">💪</span>
-                        <span class="emoji-option" data-value="4" onclick="selectEffort(4)">💪💪</span>
-                        <span class="emoji-option selected" data-value="3" onclick="selectEffort(3)">💪💪💪</span>
-                        <span class="emoji-option" data-value="2" onclick="selectEffort(2)">💪💪💪💪</span>
-                        <span class="emoji-option" data-value="1" onclick="selectEffort(1)">💪💪💪💪💪</span>
+                        <span class="emoji-option" data-value="1" onclick="selectEffort(1)">🚶</span>
+                        <span class="emoji-option" data-value="2" onclick="selectEffort(2)">🏃</span>
+                        <span class="emoji-option selected" data-value="3" onclick="selectEffort(3)">🏋️</span>
+                        <span class="emoji-option" data-value="4" onclick="selectEffort(4)">🔥</span>
+                        <span class="emoji-option" data-value="5" onclick="selectEffort(5)">🌋</span>
                     </div>
                 </div>
             </div>
@@ -1223,16 +1223,19 @@ function updateExertionDisplay(value) {
 }
 
 async function completeSet() {
+    // Calculer la durée de la série AVANT de mettre à jour lastSetEndTime
+    const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
+    
     const setData = {
         workout_id: currentWorkout.id,
         exercise_id: currentExercise.id,
         set_number: currentSetNumber,
-        target_reps: 10, // TODO: Obtenir depuis le programme ou l'historique
+        target_reps: 10,
         actual_reps: parseInt(document.getElementById('setReps').value),
         weight: parseFloat(document.getElementById('setWeight').value),
         rest_time: lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0,
-        fatigue_level: selectedFatigue * 2, // Convertir 1-5 en 2-10
-        perceived_exertion: (6 - selectedEffort) * 2, // Convertir 5-1 en 2-10
+        fatigue_level: selectedFatigue * 2,
+        perceived_exertion: selectedEffort * 2,
         skipped: false
     };
     
@@ -1244,13 +1247,14 @@ async function completeSet() {
         });
         
         if (response.ok) {
-            showToast(`Série ${currentSetNumber} enregistrée !`, 'success');
+            showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
             
-            // Ajouter à l'historique local
-            addSetToHistory(setData);
+            // Ajouter à l'historique local avec la durée
+            addSetToHistory({...setData, duration: setDuration});
             
-            // Mettre à jour les timings
+            // IMPORTANT : Mettre à jour lastSetEndTime APRÈS avoir calculé setDuration
             lastSetEndTime = new Date();
+            setStartTime = null; // Réinitialiser pour la prochaine série
             
             // Préparer la série suivante
             currentSetNumber++;
@@ -1274,6 +1278,7 @@ function addSetToHistory(setData) {
         <div class="set-number">Série ${setData.set_number}</div>
         <div class="set-details">
             ${setData.weight}kg × ${setData.actual_reps} reps
+            ${setData.duration ? `<span class="set-duration">${setData.duration}s</span>` : ''}
             <span class="fatigue-badge fatigue-${setData.fatigue_level}">
                 Fatigue: ${setData.fatigue_level}/10
             </span>
@@ -1617,6 +1622,8 @@ async function saveUser() {
             const user = await response.json();
             currentUser = user;
             localStorage.setItem('userId', user.id);
+            // Sauvegarder aussi le profil complet
+            localStorage.setItem('userProfile', JSON.stringify(user));
             
             // Réinitialiser l'interface
             document.getElementById('progressContainer').style.display = 'none';
@@ -1782,6 +1789,9 @@ async function loadUser(userId) {
         if (response.ok) {
             currentUser = await response.json();
             
+            // Sauvegarder le profil complet en localStorage
+            localStorage.setItem('userProfile', JSON.stringify(currentUser));
+            
             // Vérifier s'il y a une session active
             const activeWorkout = await checkActiveWorkout();
             if (activeWorkout) {
@@ -1792,13 +1802,30 @@ async function loadUser(userId) {
                 showMainInterface();
             }
         } else {
-            localStorage.removeItem('userId');
-            showView('onboarding');
+            // Essayer de charger depuis le cache local
+            const cachedProfile = localStorage.getItem('userProfile');
+            if (cachedProfile) {
+                currentUser = JSON.parse(cachedProfile);
+                showToast('Profil chargé depuis le cache', 'info');
+                showMainInterface();
+            } else {
+                localStorage.removeItem('userId');
+                showView('onboarding');
+            }
         }
     } catch (error) {
         console.error('Erreur chargement utilisateur:', error);
-        localStorage.removeItem('userId');
-        showView('onboarding');
+        
+        // Essayer le cache local en cas d'erreur réseau
+        const cachedProfile = localStorage.getItem('userProfile');
+        if (cachedProfile) {
+            currentUser = JSON.parse(cachedProfile);
+            showToast('Mode hors-ligne - Profil chargé depuis le cache', 'warning');
+            showMainInterface();
+        } else {
+            localStorage.removeItem('userId');
+            showView('onboarding');
+        }
     }
 }
 
