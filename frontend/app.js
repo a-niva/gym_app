@@ -1721,6 +1721,10 @@ function validateDetailedConfig() {
     let isValid = true;
     let errors = [];
     
+    // Définir les variables au début pour éviter les erreurs de portée
+    let hasBarbell = false;
+    let hasDisques = false;
+    
     // Valider selon l'équipement sélectionné
     if (selectedEquipment.includes('dumbbells')) {
         const dumbellCount = Object.keys(equipmentConfig.dumbbells).length;
@@ -1731,8 +1735,8 @@ function validateDetailedConfig() {
     }
     
     if (selectedEquipment.includes('barbell')) {
-        const hasBarbell = Object.values(equipmentConfig.barres).some(b => b.available && b.count > 0);
-        const hasDisques = Object.keys(equipmentConfig.disques).length > 0;
+        hasBarbell = Object.values(equipmentConfig.barres).some(b => b.available && b.count > 0);
+        hasDisques = Object.keys(equipmentConfig.disques).length > 0;
         
         if (!hasBarbell) {
             errors.push('Veuillez sélectionner au moins un type de barre');
@@ -1770,7 +1774,8 @@ function validateDetailedConfig() {
         // La barre de traction est toujours valide si sélectionnée
         equipmentConfig.autres.barre_traction = true;
     }
-        
+    
+    // Vérifier si des barres sont sélectionnées mais pas de disques
     if (hasBarbell && !hasDisques) {
         errors.push('Veuillez ajouter au moins un poids de disque pour utiliser les barres');
         isValid = false;
