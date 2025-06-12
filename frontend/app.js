@@ -1394,6 +1394,7 @@ function addSetToHistory(setData) {
     // Remove old entries
     while (container.children.length >= 10) {
         container.removeChild(container.lastChild);
+    }
     const setElement = document.createElement('div');
     setElement.className = 'set-history-item';
     setElement.innerHTML = `
