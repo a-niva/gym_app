@@ -1538,6 +1538,25 @@ select.form-input {
     animation: pulse 1s infinite;
 }
 
+.btn-start-set {
+    width: 100%;
+    padding: 1.5rem;
+    font-size: 1.25rem;
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+    margin-bottom: 2rem;
+    animation: pulse 2s infinite;
+}
+
+.rest-timer.active {
+    border-color: var(--secondary);
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.rest-timer-mandatory {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
 .btn-continue-rest {
     margin-top: 1rem;
     animation: pulse 2s infinite;

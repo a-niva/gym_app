@@ -36,6 +36,7 @@ let lastSetEndTime = null;
 let allExercises = [];
 let lastExerciseEndTime = null;
 let interExerciseRestTime = 0;
+let isInRestPeriod = false;
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
@@ -1258,6 +1259,11 @@ function showSetInput() {
         </div>
         
         <div class="set-tracker">
+        ${currentSetNumber > 1 && !setStartTime ? `
+        <button class="btn btn-primary btn-start-set" onclick="startCurrentSet()">
+            ▶️ Commencer la série ${currentSetNumber}
+        </button>
+        ` : ''}
             <h3>Série ${currentSetNumber}</h3>
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
             ${currentSetNumber > 1 ? `
@@ -1314,9 +1320,6 @@ function showSetInput() {
                 <button class="btn btn-primary" onclick="completeSet()">
                     ✓ Valider la série
                 </button>
-                <button class="btn btn-secondary" onclick="completeSetAndFinish()">
-                    ✓ Dernière série
-                </button>
                 <button class="btn btn-secondary btn-sm" onclick="skipSet()">
                     ⏭️ Passer
                 </button>
@@ -1328,9 +1331,25 @@ function showSetInput() {
         <button class="btn btn-secondary" onclick="finishExercise()">
             Terminer cet exercice
         </button>
+        <div class="exercise-guidance">
+            <p style="color: var(--gray-light); font-size: 0.875rem; text-align: center; margin-top: 1rem;">
+                💡 Astuce : Terminez l'exercice quand vous ne pouvez plus maintenir la forme correcte
+            </p>
+        </div>
     `;
     
     // Démarrer les timers
+    startTimers();
+    // Démarrer automatiquement le timer pour la première série
+    if (currentSetNumber === 1 && !setStartTime) {
+        setStartTime = new Date();
+    }
+}
+
+function startCurrentSet() {
+    setStartTime = new Date();
+    const startBtn = document.querySelector('.btn-start-set');
+    if (startBtn) startBtn.style.display = 'none';
     startTimers();
 }
 
@@ -1517,6 +1536,10 @@ async function completeSet(isLastSet = false) {
             // Prepare next set
             currentSetNumber++;
             showSetInput();
+            // Démarrer automatiquement le timer si c'est la première série
+            if (currentSetNumber === 2 && !setStartTime) {
+                startCurrentSet();
+            }
             
             // Restore and slightly increase fatigue
             selectedFatigue = Math.min(5, previousFatigue + 0.2);
@@ -1548,13 +1571,6 @@ async function completeSet(isLastSet = false) {
     }
 }
 
-async function completeSetAndFinish() {
-    await completeSet();
-    setTimeout(() => {
-        finishExercise();
-        showToast('Exercice terminé', 'success');
-    }, 500);
-}
 
 function addSetToHistory(setData) {
     const container = document.getElementById('previousSets');
@@ -1601,6 +1617,12 @@ function startRestTimer(seconds = 60) {
     // Clear any existing timer
     if (restTimerInterval) {
         clearInterval(restTimerInterval);
+    }
+
+    // Ajouter une classe pour l'état actif du repos
+    const restTimerContainer = document.querySelector('.rest-timer');
+    if (restTimerContainer) {
+        restTimerContainer.classList.add('active');
     }
     
     const restStartTime = new Date();
@@ -1707,11 +1729,10 @@ function showContinueButton() {
             clearInterval(restTimerInterval);
             restTimerInterval = null;
         }
-        // Reset pour la prochaine série
         lastSetEndTime = null;
-        showSetInput();
+        showSetInput(); // Ne démarre PAS le timer automatiquement
     };
-    
+        
     restTimerContainer.appendChild(continueBtn);
 }
 
