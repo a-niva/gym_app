@@ -351,6 +351,116 @@ def get_active_workout(user_id: int, db: Session = Depends(get_db)):
         }
     }
 
+@app.get("/api/users/{user_id}/program/next-weight/{exercise_id}")
+def get_next_weight(user_id: int, exercise_id: int, db: Session = Depends(get_db)):
+    """Endpoint optimisé pour Render Free - calcul rapide sans ML lourd"""
+    
+    # Récupérer les 3 dernières séries
+    recent_sets = db.query(Set).join(Workout).filter(
+        Workout.user_id == user_id,
+        Set.exercise_id == exercise_id,
+        Set.skipped == False
+    ).order_by(Set.completed_at.desc()).limit(3).all()
+    
+    if not recent_sets:
+        # Poids par défaut selon le type d'exercice
+        exercise = db.query(Exercise).filter(Exercise.id == exercise_id).first()
+        default_weights = {
+            "Pectoraux": 40,
+            "Dos": 50,
+            "Jambes": 60,
+            "Épaules": 20,
+            "Biceps": 15,
+            "Triceps": 20
+        }
+        return {"weight": default_weights.get(exercise.body_part, 20) if exercise else 20}
+    
+    # Calcul simple de progression
+    last_set = recent_sets[0]
+    
+    # Si la dernière série était facile, augmenter
+    if last_set.fatigue_level <= 4 and last_set.actual_reps >= last_set.target_reps:
+        suggested = last_set.weight * 1.025
+    # Si c'était dur, maintenir ou réduire
+    elif last_set.fatigue_level >= 8 or last_set.actual_reps < last_set.target_reps * 0.8:
+        suggested = last_set.weight * 0.95
+    else:
+        suggested = last_set.weight
+    
+    return {"weight": round(suggested, 2.5)}
+
+@app.post("/api/workouts/{workout_id}/fatigue-check")
+def check_workout_fatigue(workout_id: int, db: Session = Depends(get_db)):
+    """Analyse rapide de fatigue pour éviter le surmenage"""
+    
+    sets = db.query(Set).filter(
+        Set.workout_id == workout_id
+    ).order_by(Set.completed_at.desc()).limit(10).all()
+    
+    if len(sets) < 3:
+        return {"risk": "low", "message": "Continuez !"}
+    
+    # Moyenne de fatigue sur les 3 dernières séries
+    recent_fatigue = sum(s.fatigue_level for s in sets[:3]) / 3
+    
+    # Tendance de fatigue
+    if len(sets) >= 5:
+        early_fatigue = sum(s.fatigue_level for s in sets[-5:-2]) / 3
+        fatigue_increase = recent_fatigue - early_fatigue
+    else:
+        fatigue_increase = 0
+    
+    if recent_fatigue >= 8 or fatigue_increase > 3:
+        return {
+            "risk": "high",
+            "message": "Fatigue élevée détectée. Pensez à terminer bientôt.",
+            "recommendation": "reduce_weight"
+        }
+    elif recent_fatigue >= 6:
+        return {
+            "risk": "medium",
+            "message": "Fatigue modérée. Restez vigilant.",
+            "recommendation": "maintain"
+        }
+    else:
+        return {
+            "risk": "low",
+            "message": "Bonne forme ! Continuez.",
+            "recommendation": "increase_weight"
+        }
+
+@app.get("/api/workouts/{workout_id}/muscle-summary")
+def get_muscle_summary(workout_id: int, db: Session = Depends(get_db)):
+    """Résumé des muscles travaillés avec alertes"""
+    
+    sets = db.query(Set).filter(Set.workout_id == workout_id).all()
+    
+    muscle_volumes = {}
+    for set_item in sets:
+        if set_item.skipped:
+            continue
+            
+        exercise = db.query(Exercise).filter(Exercise.id == set_item.exercise_id).first()
+        if exercise:
+            volume = set_item.weight * set_item.actual_reps
+            muscle = exercise.body_part
+            muscle_volumes[muscle] = muscle_volumes.get(muscle, 0) + volume
+    
+    # Détecter les déséquilibres
+    warning = None
+    if muscle_volumes:
+        max_volume = max(muscle_volumes.values())
+        avg_volume = sum(muscle_volumes.values()) / len(muscle_volumes)
+        
+        if max_volume > avg_volume * 2:
+            dominant_muscle = max(muscle_volumes, key=muscle_volumes.get)
+            warning = f"Attention : {dominant_muscle} très sollicité aujourd'hui"
+    
+    return {
+        "volumes": muscle_volumes,
+        "warning": warning
+    }
+
 @app.get("/api/users/{user_id}/stats")
 def get_user_stats(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()

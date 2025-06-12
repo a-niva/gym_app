@@ -1876,3 +1876,52 @@ select.form-input {
     color: var(--gray);
     padding: 2rem;
 }
+
+.muscle-heatmap {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    margin: 1rem 0;
+}
+
+.muscle-heatmap h4 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.muscle-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.muscle-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.muscle-name {
+    min-width: 100px;
+    font-size: 0.875rem;
+}
+
+.muscle-progress {
+    flex: 1;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.muscle-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.muscle-warning {
+    margin-top: 1rem;
+    color: #f97316;
+    font-size: 0.875rem;
+    text-align: center;
+}
