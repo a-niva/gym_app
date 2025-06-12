@@ -63,7 +63,7 @@ function nextStep() {
         
         if (!name || !birthDate || !height || !weight || !experience) {
             showToast('Veuillez remplir tous les champs', 'error');
-            console.error('Validation échouée:', {name, age, height, weight, experience});
+            console.error('Validation échouée:', {name, birthDate, height, weight, experience});
             return;
         }
     } else if (currentStep === 2) {
@@ -1603,7 +1603,7 @@ async function saveUser() {
     };
     
     // Validation finale
-    if (!userData.name || !userData.age || !userData.experience_level) {
+    if (!userData.name || !userData.birth_date || !userData.experience_level) {
         showToast('Informations personnelles incomplètes', 'error');
         return;
     }
