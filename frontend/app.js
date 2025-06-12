@@ -1685,12 +1685,32 @@ async function loadDashboard() {
             document.getElementById('totalWorkouts').textContent = stats.total_workouts || '0';
             document.getElementById('weekStreak').textContent = stats.week_streak || '0';
             document.getElementById('lastWorkout').textContent = stats.last_workout || 'Jamais';
+            // Ajouter la section historique dans le HTML du dashboard
+            const dashboardContainer = document.getElementById('dashboard');
+            const historySection = dashboardContainer.querySelector('.history-section');
+            if (!historySection) {
+                const actionGrid = dashboardContainer.querySelector('.action-grid');
+                if (actionGrid) {
+                    actionGrid.insertAdjacentHTML('afterend', `
+                        <div class="history-section">
+                            <div class="section-title">Historique récent</div>
+                            <div id="workoutHistory" class="workout-history">
+                                <!-- Historique chargé ici -->
+                            </div>
+                        </div>
+                    `);
+                }
+            }
+
+            // Charger l'historique
+            loadWorkoutHistory();
         }
     } catch (error) {
         console.error('Erreur chargement stats:', error);
     }
-    loadWorkoutHistory();
 }
+
+
 
 async function loadWorkoutHistory() {
     if (!currentUser) return;
@@ -1928,16 +1948,15 @@ function logout() {
 }
 
 // ===== INITIALISATION =====
-
-// Définir la date max pour la date de naissance (18 ans minimum)
-const today = new Date();
-const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-const birthDateInput = document.getElementById('userBirthDate');
-if (birthDateInput) {
-    birthDateInput.max = maxDate.toISOString().split('T')[0];
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
+    
+    // Définir la date max pour la date de naissance (18 ans minimum)
+    const today = new Date();
+    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    const birthDateInput = document.getElementById('userBirthDate');
+    if (birthDateInput) {
+        birthDateInput.max = maxDate.toISOString().split('T')[0];
+    }
     
     // Charger les exercices
     await loadExercises();
