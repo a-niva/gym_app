@@ -351,6 +351,34 @@ def get_active_workout(user_id: int, db: Session = Depends(get_db)):
         }
     }
 
+@app.get("/api/users/{user_id}/stats")
+def get_user_stats(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Compter les workouts
+    total_workouts = db.query(Workout).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed"
+    ).count()
+    
+    # Calculer le streak (simplifié)
+    last_workout = db.query(Workout).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed"
+    ).order_by(Workout.completed_at.desc()).first()
+    
+    last_workout_date = "Jamais"
+    if last_workout and last_workout.completed_at:
+        last_workout_date = last_workout.completed_at.strftime("%d/%m")
+    
+    return {
+        "total_workouts": total_workouts,
+        "week_streak": 0,  # À implémenter selon votre logique
+        "last_workout": last_workout_date
+    }
+
 # Set endpoints
 @app.post("/api/sets/")
 def create_set(set_data: SetCreate, db: Session = Depends(get_db)):

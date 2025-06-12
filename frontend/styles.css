@@ -1676,6 +1676,31 @@ select.form-input {
     align-items: center;
 }
 
+.rest-history-item {
+    background: rgba(16, 185, 129, 0.05);
+    border-left: 3px solid var(--secondary);
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    border-radius: var(--radius);
+}
+
+.rest-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--secondary);
+    font-size: 0.875rem;
+}
+
+.rest-icon {
+    font-size: 1.25rem;
+}
+
+.btn-skip-rest {
+    margin-top: 1rem;
+    width: 100%;
+}
+
 .set-number {
     font-weight: 600;
     color: var(--primary);

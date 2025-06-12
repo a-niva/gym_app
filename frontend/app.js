@@ -1357,17 +1357,50 @@ function showRestInterface(setData) {
             <div class="rest-info">
                 Série ${setData.set_number} terminée : ${setData.weight}kg × ${setData.actual_reps} reps
             </div>
+            <button class="btn btn-secondary btn-skip-rest" onclick="skipRestPeriod()">
+                ⏭️ Passer le repos
+            </button>
         </div>
-        <button class="btn btn-secondary" onclick="finishExerciseDuringRest()">
-            Changer d'exercice
-        </button>
+        
         <div id="previousSets" class="previous-sets">
             ${document.getElementById('previousSets')?.innerHTML || ''}
         </div>
+        
+        <button class="btn btn-secondary" onclick="finishExerciseDuringRest()">
+            Changer d'exercice
+        </button>
     `;
     
-    // Démarrer le timer de repos
     startRestTimer(60);
+}
+
+function skipRestPeriod() {
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+    }
+    
+    // Calculer et enregistrer le temps de repos écoulé
+    const restDuration = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
+    const lastSetId = localStorage.getItem('lastCompletedSetId');
+    
+    if (lastSetId && restDuration > 0) {
+        fetch(`/api/sets/${lastSetId}/rest-time`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rest_time: restDuration })
+        }).catch(err => console.error('Failed to update rest time:', err));
+    }
+    
+    // Son de confirmation
+    if (!isSilentMode) {
+        playBeep(600, 100);
+    }
+    
+    isInRestPeriod = false;
+    currentSetNumber++;
+    setStartTime = new Date();
+    showSetInput();
 }
 
 function finishExerciseDuringRest() {
@@ -1547,6 +1580,10 @@ async function completeSet() {
             
             // Notification de succès
             showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
+            // Son de validation de série
+            if (!isSilentMode) {
+                playBeep(800, 150);
+            }
             
             // Arrêter le timer de série
             if (timerInterval) {
@@ -1556,7 +1593,20 @@ async function completeSet() {
             
             // Augmenter légèrement la fatigue pour la prochaine série
             selectedFatigue = Math.min(5, selectedFatigue + 0.3);
-            
+
+            // Mettre à jour le temps de repos de la série PRÉCÉDENTE
+            if (currentSetNumber > 1) {
+                const previousSetId = localStorage.getItem('lastCompletedSetId');
+                const restTime = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
+                
+                if (previousSetId && restTime > 0) {
+                    fetch(`/api/sets/${previousSetId}/rest-time`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ rest_time: restTime })
+                    }).catch(err => console.error('Failed to update previous set rest time:', err));
+                }
+            }
             // Afficher l'interface de repos
             showRestInterface({...setData, duration: setDuration});
             
@@ -1611,13 +1661,27 @@ function updateSessionHistory(setData) {
 
 function addSetToHistory(setData) {
     const container = document.getElementById('previousSets');
-    if (!container) return; // Add safety check
+    if (!container) return;
     
-    // Remove old entries
-    while (container.children.length >= 10) {
+    // Supprimer les anciennes entrées si trop nombreuses
+    while (container.children.length >= 20) {
         container.removeChild(container.lastChild);
-    } // This closing brace was missing
+    }
     
+    // Ajouter le temps de repos si ce n'est pas la première série
+    if (setData.set_number > 1 && setData.rest_time > 0) {
+        const restElement = document.createElement('div');
+        restElement.className = 'rest-history-item';
+        restElement.innerHTML = `
+            <div class="rest-indicator">
+                <span class="rest-icon">⏱️</span>
+                <span class="rest-duration">Repos: ${Math.floor(setData.rest_time / 60)}:${(setData.rest_time % 60).toString().padStart(2, '0')}</span>
+            </div>
+        `;
+        container.insertBefore(restElement, container.firstChild);
+    }
+    
+    // Ajouter la série
     const setElement = document.createElement('div');
     setElement.className = 'set-history-item';
     setElement.innerHTML = `
@@ -1766,9 +1830,15 @@ function showContinueButton() {
             clearInterval(restTimerInterval);
             restTimerInterval = null;
         }
+        
+        // Son d'interruption du repos
+        if (!isSilentMode) {
+            playBeep(600, 100);
+        }
+        
         isInRestPeriod = false;
         currentSetNumber++;
-        setStartTime = new Date(); // Démarrer immédiatement le timer de la nouvelle série
+        setStartTime = new Date();
         showSetInput();
     };
     
@@ -2187,7 +2257,6 @@ async function loadDashboard() {
     
     document.getElementById('welcomeMessage').textContent = `Bonjour ${currentUser.name} !`;
     
-    // Charger les statistiques
     try {
         const response = await fetch(`/api/users/${currentUser.id}/stats`);
         if (response.ok) {
@@ -2195,16 +2264,19 @@ async function loadDashboard() {
             document.getElementById('totalWorkouts').textContent = stats.total_workouts || '0';
             document.getElementById('weekStreak').textContent = stats.week_streak || '0';
             document.getElementById('lastWorkout').textContent = stats.last_workout || 'Jamais';
-            // Ajouter la section historique dans le HTML du dashboard
-            const dashboardContainer = document.getElementById('dashboard');
-            const historySection = dashboardContainer.querySelector('.history-section');
-
-            // Charger l'historique
-            loadWorkoutHistory();
         }
     } catch (error) {
         console.error('Erreur chargement stats:', error);
+        // Valeurs par défaut si erreur
+        document.getElementById('totalWorkouts').textContent = '0';
+        document.getElementById('weekStreak').textContent = '0';
+        document.getElementById('lastWorkout').textContent = '-';
     }
+    
+    // Charger l'historique avec un délai pour s'assurer que la séance est bien terminée
+    setTimeout(() => {
+        loadWorkoutHistory();
+    }, 1000);
 }
 
 
@@ -2558,6 +2630,7 @@ window.skipSet = skipSet;
 window.toggleSilentMode = toggleSilentMode;
 window.completeSetAndFinish = completeSetAndFinish;
 window.finishExerciseDuringRest = finishExerciseDuringRest;
+window.skipRestPeriod = skipRestPeriod;
 
 // Service Worker pour PWA
 if ('serviceWorker' in navigator) {
