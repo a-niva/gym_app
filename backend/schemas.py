@@ -61,6 +61,27 @@ class EquipmentConfig(BaseModel):
     elastiques: ElastiquesConfig = ElastiquesConfig()
     autres: AutresEquipmentConfig = AutresEquipmentConfig()
 
+# SCHEMAS EXERCICES
+class ExerciseSpecs(BaseModel):
+    barbell_count: Optional[int] = None  # Nombre de barres nécessaires
+    dumbbell_count: Optional[int] = None  # Nombre d'haltères nécessaires
+    requires_rack: Optional[bool] = False
+    requires_incline: Optional[bool] = False
+    requires_decline: Optional[bool] = False
+    min_weight: Optional[float] = None
+    max_weight: Optional[float] = None
+
+
+# SCHEMAS STATS
+class UserStats(BaseModel):
+    total_workouts: int
+    week_streak: int
+    last_workout: Optional[str]
+    total_weight_lifted: float
+    favorite_exercises: List[Dict[str, Any]]
+    progress_data: Dict[str, List[Dict[str, Any]]]
+
+
 # SCHEMAS UTILISATEUR
 class UserCreate(BaseModel):
     name: str
