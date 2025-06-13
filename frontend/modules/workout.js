@@ -334,23 +334,6 @@ export function updateTrainingInterface() {
     container.innerHTML = content;
 }
 
-// Chargement de l'historique des séances
-export async function loadWorkoutHistory() {
-    const currentUser = getState('currentUser');
-    if (!currentUser) return;
-    
-    try {
-        const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.USERS}/${currentUser.id}/workouts?limit=10`);
-        if (response.ok) {
-            const workouts = await response.json();
-            displayWorkoutHistory(workouts);
-        }
-    } catch (error) {
-        console.error('Erreur chargement historique:', error);
-        showToast('Erreur lors du chargement de l\'historique', 'error');
-    }
-}
-
 // Affichage de l'historique
 function displayWorkoutHistory(workouts) {
     const historyContainer = document.getElementById('workoutHistory');
@@ -398,29 +381,6 @@ export async function loadWorkoutHistory() {
     }
 }
 
-// Affichage de l'historique
-function displayWorkoutHistory(workouts) {
-    const container = document.getElementById('workoutHistory');
-    if (!container) return;
-    
-    if (workouts.length === 0) {
-        container.innerHTML = '<p class="empty-state">Aucune séance enregistrée</p>';
-        return;
-    }
-    
-    const html = workouts.map(workout => `
-        <div class="workout-history-item">
-            <div class="workout-date">${formatDate(workout.created_at)}</div>
-            <div class="workout-info">
-                <span>${workout.type === 'program' ? 'Programme' : 'Libre'}</span>
-                <span>${workout.sets_count || 0} séries</span>
-                <span>${formatDuration(workout.duration || 0)}</span>
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
 
 // Formatage de la date
 function formatDate(dateString) {

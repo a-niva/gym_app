@@ -4,6 +4,14 @@ import { getState, setState } from '../core/state.js';
 import { API_ENDPOINTS, STORAGE_KEYS } from '../core/config.js';
 import { showToast } from './utils.js';
 import { showProfileForm } from './onboarding.js';
+import { loadWorkoutHistory } from './workout.js';
+
+// Import des fonctions depuis autres modules
+import { loadExercises } from './exercises.js';
+import { startWorkout } from './workout.js';
+import { logout } from './auth.js';
+
+
 
 // Affichage d'une vue spécifique
 export function showView(viewName) {
@@ -237,40 +245,6 @@ export async function loadWorkoutHistory() {
     }
 }
 
-// Affichage de l'historique
-function displayWorkoutHistory(workouts) {
-    const historyContainer = document.getElementById('workoutHistory');
-    if (!historyContainer) return;
-    
-    if (workouts.length === 0) {
-        historyContainer.innerHTML = '<div class="no-history">Aucune séance enregistrée</div>';
-        return;
-    }
-    
-    historyContainer.innerHTML = workouts.map(workout => {
-        const date = new Date(workout.completed_at || workout.created_at);
-        const formattedDate = date.toLocaleDateString('fr-FR', { 
-            day: '2-digit', 
-            month: '2-digit' 
-        });
-        
-        return `
-            <div class="workout-history-item">
-                <div class="workout-date">${formattedDate}</div>
-                <div class="workout-details">
-                    <div class="workout-type">${workout.type === 'program' ? 'Programme' : 'Libre'}</div>
-                    <div class="workout-stats">
-                        ${workout.total_sets} séries • ${workout.total_volume ? Math.round(workout.total_volume) : 0}kg total
-                    </div>
-                    <div class="workout-exercises">
-                        ${workout.exercises.join(', ')}
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
 // Affichage de la liste des exercices
 export function showExercisesList() {
     const container = document.getElementById('exercises');
@@ -484,11 +458,3 @@ export function toggleSilentMode() {
     
     showToast(isSilentMode ? 'Sons activés' : 'Mode silencieux activé', 'info');
 }
-
-// Import des fonctions depuis autres modules
-import { loadExercises } from './exercises.js';
-import { startWorkout } from './workout.js';
-import { logout } from './auth.js';
-
-// Export des fonctions pour les événements HTML
-export { startWorkout, logout };

@@ -3,6 +3,9 @@
 import { getState, setState } from '../core/state.js';
 import { API_ENDPOINTS, STORAGE_KEYS, MESSAGES, REST_TIMES, TIME_BASED_KEYWORDS } from '../core/config.js';
 import { showToast, startTimer, startRestTimer, calculateAvailableWeights } from './utils.js';
+// Import des fonctions depuis autres modules avec gestion des dépendances circulaires
+import { pauseWorkout, resumeWorkout, completeWorkout, abandonWorkout, updateTrainingInterface } from './workout.js';
+
 
 // Chargement de la liste des exercices
 export async function loadExercises() {
@@ -470,22 +473,6 @@ export function finishExercise() {
     }
 }
 
-// Utilitaires
-function addToSessionHistory(type, data) {
-    const sessionHistory = getState('sessionHistory');
-    const historyEntry = {
-        type: type,
-        timestamp: new Date(),
-        data: data
-    };
-    
-    sessionHistory.push(historyEntry);
-    setState('sessionHistory', sessionHistory);
-    
-    localStorage.setItem(STORAGE_KEYS.SESSION_HISTORY, JSON.stringify(sessionHistory));
-    updateHistoryDisplay();
-}
-
 function updateHistoryDisplay() {
     const container = document.getElementById('previousSets');
     if (!container) return;
@@ -525,55 +512,7 @@ function getEffortEmoji(level) {
     return emojis[level - 1] || '🔥';
 }
 
-// Export des fonctions d'interface d'entraînement
-export function updateTrainingInterface() {
-    const currentWorkout = getState('currentWorkout');
-    const container = document.getElementById('workoutInterface');
-    
-    if (!container || !currentWorkout) return;
-    
-    let content = '';
-    
-    if (currentWorkout.status === 'started') {
-        const currentExercise = getState('currentExercise');
-        if (!currentExercise) {
-            content = `
-                <div class="workout-status">
-                    <h3>Séance ${currentWorkout.type === 'program' ? 'Programme' : 'Libre'}</h3>
-                    <button class="btn btn-secondary" onclick="pauseWorkout()">Mettre en pause</button>
-                    <button class="btn btn-danger" onclick="abandonWorkout()">Abandonner</button>
-                </div>
-                <div id="exerciseArea"></div>
-            `;
-            
-            setTimeout(() => showExerciseSelector(), 100);
-        } else {
-            content = `
-                <div class="workout-status">
-                    <h3>Séance en cours</h3>
-                    <button class="btn btn-secondary" onclick="pauseWorkout()">Pause</button>
-                    <button class="btn btn-success" onclick="completeWorkout()">Terminer</button>
-                </div>
-                <div id="exerciseArea"></div>
-            `;
-        }
-    } else if (currentWorkout.status === 'paused') {
-        content = `
-            <div class="workout-status paused">
-                <h3>⏸️ Séance en pause</h3>
-                <button class="btn btn-primary" onclick="resumeWorkout()">Reprendre</button>
-                <button class="btn btn-danger" onclick="abandonWorkout()">Abandonner</button>
-            </div>
-        `;
-    }
-    
-    container.innerHTML = content;
-}
 
-// Import des fonctions depuis autres modules avec gestion des dépendances circulaires
-import { pauseWorkout, resumeWorkout, completeWorkout, abandonWorkout } from './workout.js';
-
-// Ajout de la fonction addToSessionHistory qui était manquante
 export function addToSessionHistory(type, data) {
     const sessionHistory = getState('sessionHistory');
     const historyEntry = {
