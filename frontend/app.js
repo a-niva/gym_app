@@ -137,20 +137,20 @@ function setupDevShortcuts() {
     document.body.appendChild(devBadge);
     
     document.addEventListener('keydown', async (e) => {
-        // Ctrl+D : Charger le profil dev
-        if (e.ctrlKey && e.key === 'd') {
+        // Alt+Shift+D : Charger le profil dev
+        if (e.altKey && e.shiftKey && e.key === 'D') {
             e.preventDefault();
             await loadDevProfile();
         }
         
-        // Ctrl+H : Afficher l'historique dans la console
-        if (e.ctrlKey && e.key === 'h') {
+        // Alt+Shift+H : Afficher l'historique dans la console
+        if (e.altKey && e.shiftKey && e.key === 'H') {
             e.preventDefault();
             console.log('State:', getState());
         }
         
-        // Ctrl+R : Reset le workout en cours
-        if (e.ctrlKey && e.key === 'r') {
+        // Alt+Shift+R : Reset le workout en cours
+        if (e.altKey && e.shiftKey && e.key === 'R') {
             e.preventDefault();
             const currentWorkout = getState('currentWorkout');
             if (currentWorkout && confirm('Réinitialiser le workout en cours ?')) {
