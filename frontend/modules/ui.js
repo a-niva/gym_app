@@ -67,18 +67,6 @@ export function showMainInterface() {
     loadDashboard();
 }
 
-// Chargement du dashboard
-async function loadDashboard() {
-    const currentUser = getState('currentUser');
-    if (!currentUser) return;
-    
-    // Afficher les statistiques
-    const stats = await loadUserStats(currentUser.id);
-    updateDashboardStats(stats);
-    
-    // Charger l'historique
-    loadWorkoutHistory();
-}
 
 // Chargement des statistiques utilisateur
 async function loadUserStats(userId) {
@@ -96,109 +84,6 @@ async function loadUserStats(userId) {
         week_streak: 0,
         last_workout: 'Jamais'
     };
-}
-
-// Mise à jour des statistiques du dashboard
-function updateDashboardStats(stats) {
-    const elements = {
-        'totalWorkouts': stats.total_workouts,
-        'weekStreak': stats.week_streak,
-        'lastWorkout': stats.last_workout
-    };
-    
-    Object.entries(elements).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (element) element.textContent = value;
-    });
-}
-
-// Affichage de la liste des exercices
-async function showExercisesList() {
-    const container = document.getElementById('exercises');
-    if (!container) return;
-    
-    const exercises = getState('allExercises');
-    if (!exercises || exercises.length === 0) {
-        await loadExercises();
-    }
-    
-    // Grouper par partie du corps
-    const grouped = exercises.reduce((acc, ex) => {
-        if (!acc[ex.body_part]) acc[ex.body_part] = [];
-        acc[ex.body_part].push(ex);
-        return acc;
-    }, {});
-    
-    // Générer l'HTML
-    const html = Object.entries(grouped).map(([part, exs]) => `
-        <div class="exercise-category">
-            <h3>${part}</h3>
-            <div class="exercise-list">
-                ${exs.map(ex => `
-                    <div class="exercise-item" onclick="showExerciseDetail(${ex.id})">
-                        <span>${ex.name_fr}</span>
-                        <span class="exercise-equipment">${ex.equipment.join(', ')}</span>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
-
-// Affichage des informations du profil
-function showProfileInfo() {
-    const currentUser = getState('currentUser');
-    if (!currentUser) return;
-    
-    const container = document.querySelector('.profile-info');
-    if (!container) return;
-    
-    const age = calculateAge(currentUser.birth_date);
-    
-    container.innerHTML = `
-        <div class="profile-details">
-            <h3>${currentUser.name}</h3>
-            <p>${age} ans • ${currentUser.height}cm • ${currentUser.weight}kg</p>
-            <p>Niveau : ${currentUser.experience_level}</p>
-            <p>Objectifs : ${currentUser.goals.join(', ')}</p>
-        </div>
-    `;
-}
-
-// Affichage du détail d'un exercice
-export function showExerciseDetail(exerciseId) {
-    const exercises = getState('allExercises');
-    const exercise = exercises.find(ex => ex.id === exerciseId);
-    if (!exercise) return;
-    
-    // Créer une modal ou naviguer vers une vue détaillée
-    showToast(`Détails de : ${exercise.name_fr}`, 'info');
-}
-
-export function toggleSilentMode() {
-    const currentMode = getState('isSilentMode');
-    setState('isSilentMode', !currentMode);
-    
-    const silentIcon = document.getElementById('silentModeIcon');
-    if (silentIcon) {
-        silentIcon.style.opacity = currentMode ? '0.5' : '1';
-    }
-    
-    showToast(currentMode ? 'Mode silencieux désactivé' : 'Mode silencieux activé', 'info');
-}
-
-// Calcul de l'âge (helper)
-function calculateAge(birthDate) {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    return age;
 }
 
 // Chargement du tableau de bord
@@ -238,22 +123,6 @@ function updateDashboardStats(stats) {
     
     if (lastWorkoutElement) {
         lastWorkoutElement.textContent = stats.last_workout || 'Jamais';
-    }
-}
-
-// Chargement de l'historique des séances
-export async function loadWorkoutHistory() {
-    const currentUser = getState('currentUser');
-    if (!currentUser) return;
-    
-    try {
-        const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.USERS}/${currentUser.id}/workouts?limit=10`);
-        if (response.ok) {
-            const workouts = await response.json();
-            displayWorkoutHistory(workouts);
-        }
-    } catch (error) {
-        console.error('Erreur chargement historique:', error);
     }
 }
 
