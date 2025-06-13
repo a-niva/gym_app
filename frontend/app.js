@@ -1,8 +1,8 @@
 // ===== APP.JS - FICHIER PRINCIPAL D'ORCHESTRATION =====
 
 // Import des modules core
-import { getState, setState } from './modules/core/state.js';
-import { DEV_CONFIG, STORAGE_KEYS } from './modules/core/config.js';
+import { getState, setState } from './core/state.js';
+import { DEV_CONFIG, STORAGE_KEYS } from './core/config.js';
 
 // Import des modules fonctionnels
 import { 
@@ -11,7 +11,7 @@ import {
     logout, 
     checkActiveWorkout, 
     loadDevProfile 
-} from './modules/modules/auth.js';
+} from './modules/auth.js';
 
 import { 
     showProfileForm, 
@@ -21,7 +21,7 @@ import {
     toggleEquipment,
     showStep,
     updateProgressBar
-} from './modules/modules/onboarding.js';
+} from './modules/onboarding.js';
 
 import {
     updateBarbell,
@@ -38,7 +38,7 @@ import {
     getColorHex,
     addLest,
     showConfigPanel
-} from './modules/modules/equipment.js';
+} from './modules/equipment.js';
 
 import {
     startWorkout,
@@ -48,7 +48,7 @@ import {
     abandonWorkout,
     updateTrainingInterface,
     loadWorkoutHistory
-} from './modules/modules/workout.js';
+} from './modules/workout.js';
 
 import {
     loadExercises,
@@ -63,14 +63,14 @@ import {
     completeSet,
     skipSet,
     finishExercise
-} from './modules/modules/exercises.js';
+} from './modules/exercises.js';
 
 import {
     showView,
     showMainInterface,
     toggleSilentMode,
     showExerciseDetail
-} from './modules/modules/ui.js';
+} from './modules/ui.js';
 
 import {
     showToast,
@@ -78,7 +78,7 @@ import {
     completeSetAndFinish,
     finishExerciseDuringRest,
     addRestToHistory
-} from './modules/modules/utils.js';
+} from './modules/utils.js';
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', async () => {
