@@ -211,8 +211,24 @@ function setupPWA() {
     // Enregistrement du service worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
-            .then(() => console.log('Service Worker enregistré'))
-            .catch(error => console.error('Erreur SW:', error));
+            .then(registration => {
+                console.log('SW enregistré:', registration.scope);
+                
+                // Écouter les changements d'état
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed') {
+                            console.log('SW installé avec succès');
+                        }
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Erreur SW détaillée:', error);
+                console.error('Message:', error.message);
+                console.error('Stack:', error.stack);
+            });
     }
     
     // Gestion de l'installation PWA
