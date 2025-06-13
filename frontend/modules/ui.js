@@ -1,3 +1,4 @@
+
 // ===== MODULES/UI.JS - INTERFACE UTILISATEUR ET NAVIGATION =====
 
 import { getState, setState } from '../core/state.js';
