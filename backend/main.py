@@ -538,9 +538,11 @@ def check_workout_fatigue(workout_id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/workouts/{workout_id}/muscle-summary")
 def get_muscle_summary(workout_id: int, db: Session = Depends(get_db)):
-    """Résumé des muscles travaillés avec alertes"""
+    """Résumé des muscles travaillés avec calcul de volume adapté"""
     
     sets = db.query(Set).filter(Set.workout_id == workout_id).all()
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    user = db.query(User).filter(User.id == workout.user_id).first() if workout else None
     
     muscle_volumes = {}
     for set_item in sets:
@@ -549,7 +551,23 @@ def get_muscle_summary(workout_id: int, db: Session = Depends(get_db)):
             
         exercise = db.query(Exercise).filter(Exercise.id == set_item.exercise_id).first()
         if exercise:
-            volume = set_item.weight * set_item.actual_reps
+            # Déterminer le type d'exercice
+            is_bodyweight = "bodyweight" in exercise.equipment
+            is_time_based = any(keyword in exercise.name_fr.lower() 
+                               for keyword in ['gainage', 'planche', 'plank', 'vacuum'])
+            
+            # Calculer le volume selon le type
+            if is_time_based:
+                # Pour les exercices temporels : durée × (1 + charge/100)
+                volume = set_item.actual_reps * (1 + set_item.weight / 100)
+            elif is_bodyweight and set_item.weight == 0:
+                # Exercice au poids du corps sans charge : utiliser le poids de l'utilisateur
+                body_weight = user.weight if user else 75
+                volume = body_weight * set_item.actual_reps
+            else:
+                # Calcul standard
+                volume = set_item.weight * set_item.actual_reps
+            
             muscle = exercise.body_part
             muscle_volumes[muscle] = muscle_volumes.get(muscle, 0) + volume
     

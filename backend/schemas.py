@@ -134,6 +134,10 @@ class SetCreate(BaseModel):
     fatigue_level: int
     perceived_exertion: int
     skipped: bool = False
+    # Nouveaux champs optionnels
+    is_bodyweight: Optional[bool] = False
+    is_time_based: Optional[bool] = False
+    body_weight: Optional[float] = None
 
 class SetResponse(BaseModel):
     id: int

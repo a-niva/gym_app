@@ -46,6 +46,17 @@ let isDevMode = false;
 const DEV_USER_ID = 999;
 
 
+
+const EXERCISE_CATEGORIES = {
+    BODYWEIGHT_PURE: ['bodyweight'],  // Pompes, tractions...
+    BODYWEIGHT_WEIGHTED: ['bodyweight', 'lest_possible'],  // Peut ajouter du lest
+    TIME_BASED: ['gainage', 'planche', 'isometric'],  // En secondes
+    WEIGHTED: ['dumbbells', 'barbell', 'kettlebell', 'cables', 'machine']  // Avec poids
+};
+
+// Détection du type d'exercice basée sur le nom
+const TIME_BASED_KEYWORDS = ['gainage', 'planche', 'plank', 'vacuum', 'isométrique'];
+
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
     // Clean up any running timers when leaving training view
@@ -1418,9 +1429,27 @@ function showSetInput() {
     setStartTime = new Date();
     lastSetEndTime = null;
     
+    // Déterminer le type d'exercice
+    const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
+        currentExercise.name_fr.toLowerCase().includes(keyword)
+    );
+    const isBodyweight = currentExercise.equipment.includes('bodyweight');
+    
     // Calculer les poids disponibles pour cet exercice
     let availableWeights = calculateAvailableWeights(currentExercise);
-    let suggestedWeight = availableWeights.length > 0 ? availableWeights[Math.floor(availableWeights.length / 2)] : 20;
+    let suggestedWeight = availableWeights.length > 0 ? 
+        (isBodyweight && !isTimeBased ? currentUser.weight : availableWeights[Math.floor(availableWeights.length / 2)]) : 
+        20;
+    
+    // Adapter les labels selon le type d'exercice
+    const weightLabel = isBodyweight && !isTimeBased ? 
+        'Poids total (corps + charge)' : 
+        isTimeBased ? 
+        'Charge additionnelle (kg)' : 
+        'Poids total (kg)';
+    
+    const repsLabel = isTimeBased ? 'Durée (secondes)' : 'Répétitions';
+    const defaultReps = isTimeBased ? 30 : currentTargetReps;
     
     container.innerHTML = `
         <div class="current-exercise">
@@ -1433,8 +1462,9 @@ function showSetInput() {
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
             
             <div class="set-input-grid-vertical">
+                ${!isTimeBased ? `
                 <div class="input-group">
-                    <label>Poids total (kg)</label>
+                    <label>${weightLabel}</label>
                     <div class="weight-selector">
                         <button onclick="adjustWeightToNext(-1)" class="btn-adjust">-</button>
                         <input type="number" id="setWeight" value="${suggestedWeight}" 
@@ -1445,19 +1475,22 @@ function showSetInput() {
                         <button onclick="adjustWeightToNext(1)" class="btn-adjust">+</button>
                     </div>
                     <div class="weight-info">
-                        ${availableWeights.length > 0 ? 
-                          `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
-                          'Barre + disques inclus'}
+                        ${isBodyweight ? 
+                            `Poids du corps: ${currentUser.weight}kg${availableWeights.length > 1 ? ' • Avec lest disponible' : ''}` :
+                            availableWeights.length > 0 ? 
+                            `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
+                            'Aucun poids configuré'}
                     </div>
                 </div>
+                ` : '<input type="hidden" id="setWeight" value="0">'}
                 
                 <div class="input-group">
-                    <label>Répétitions</label>
+                    <label>${repsLabel}</label>
                     <div class="reps-selector">
-                        <button onclick="adjustReps(-1)" class="btn-adjust">-</button>
-                        <input type="number" id="setReps" value="${currentTargetReps}" 
-                               min="1" max="50" class="reps-display">
-                        <button onclick="adjustReps(1)" class="btn-adjust">+</button>
+                        <button onclick="adjustReps(${isTimeBased ? -5 : -1})" class="btn-adjust">-</button>
+                        <input type="number" id="setReps" value="${defaultReps}" 
+                               min="1" max="${isTimeBased ? 300 : 50}" class="reps-display">
+                        <button onclick="adjustReps(${isTimeBased ? 5 : 1})" class="btn-adjust">+</button>
                     </div>
                 </div>
                 
@@ -1507,7 +1540,7 @@ function showSetInput() {
     selectFatigue(Math.round(selectedFatigue));
     selectEffort(selectedEffort);
     
-    // Si on a des données de la série précédente, suggérer les ajustements
+    // Gestion des suggestions de poids basées sur l'historique
     const previousSetHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
     const lastSetForExercise = previousSetHistory
         .filter(h => h.exerciseId === currentExercise.id)
@@ -1515,7 +1548,6 @@ function showSetInput() {
         .slice(-1)[0];
         
     if (lastSetForExercise && currentSetNumber > 1) {
-        // Ajuster le poids si nécessaire basé sur la performance précédente
         let adjustedWeight;
         if (lastSetForExercise.fatigue_level >= 8) {
             adjustedWeight = Math.max(0, lastSetForExercise.weight * 0.9);
@@ -1525,7 +1557,6 @@ function showSetInput() {
             adjustedWeight = lastSetForExercise.weight;
         }
         
-        // Ajuster au poids disponible le plus proche
         if (availableWeights.length > 0) {
             adjustedWeight = availableWeights.reduce((prev, curr) => 
                 Math.abs(curr - adjustedWeight) < Math.abs(prev - adjustedWeight) ? curr : prev
@@ -1534,7 +1565,6 @@ function showSetInput() {
         
         document.getElementById('setWeight').value = adjustedWeight;
     } else if (currentSetNumber === 1) {
-        // Pour la première série, essayer de récupérer la suggestion ML
         getSuggestedWeight(currentExercise.id).then(weight => {
             if (weight && availableWeights.length > 0) {
                 const closest = availableWeights.reduce((prev, curr) => 
@@ -1545,7 +1575,6 @@ function showSetInput() {
         });
     }
 }
-
 
 function showRestInterface(setData) {
     const container = document.getElementById('exerciseArea');
@@ -1581,6 +1610,24 @@ function showRestInterface(setData) {
     `;
     
     startRestTimer(60);
+}
+
+function formatSetDisplay(setData, exercise) {
+    const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
+        exercise.name_fr.toLowerCase().includes(keyword)
+    );
+    const isBodyweight = exercise.equipment.includes('bodyweight');
+    
+    if (isTimeBased) {
+        return `${setData.actual_reps}s${setData.weight > 0 ? ` + ${setData.weight}kg` : ''}`;
+    } else if (isBodyweight && setData.weight === 0) {
+        return `Poids du corps × ${setData.actual_reps} reps`;
+    } else if (isBodyweight) {
+        const lestWeight = setData.weight - (currentUser?.weight || 75);
+        return `${setData.weight}kg (corps + ${lestWeight}kg) × ${setData.actual_reps} reps`;
+    } else {
+        return `${setData.weight}kg × ${setData.actual_reps} reps`;
+    }
 }
 
 function skipRestPeriod() {
@@ -1756,9 +1803,33 @@ function calculateAvailableWeights(exercise) {
     const config = currentUser.equipment_config;
     let weights = new Set();
     
-    // Poids du corps
+    // Déterminer si c'est un exercice temporel
+    const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
+        exercise.name_fr.toLowerCase().includes(keyword)
+    );
+    
+    // Exercices au poids du corps
     if (exercise.equipment.includes('bodyweight')) {
+        // Pour les exercices temporels, pas de poids
+        if (isTimeBased) {
+            weights.add(0);
+            return [0];
+        }
+        
+        // Poids du corps de base
+        const bodyWeight = currentUser.weight || 75;
+        weights.add(bodyWeight);
+        
+        // Si l'utilisateur a des lests, ajouter les options avec charge additionnelle
+        if (config.autres?.lest_corps?.weights?.length > 0) {
+            config.autres.lest_corps.weights.forEach(lestWeight => {
+                weights.add(bodyWeight + lestWeight);
+            });
+        }
+        
+        // Ajouter aussi l'option sans charge (0) pour certains exercices
         weights.add(0);
+        
         return Array.from(weights).sort((a, b) => a - b);
     }
     
@@ -1844,31 +1915,51 @@ function updateExertionDisplay(value) {
 }
 
 async function completeSet() {
-    // Calculer la durée de la série AVANT toute modification de variables
     const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
     
-    // Récupérer les valeurs des inputs
-    const weight = parseFloat(document.getElementById('setWeight').value);
+    // Récupérer les valeurs
+    let weight = parseFloat(document.getElementById('setWeight').value) || 0;
     const reps = parseInt(document.getElementById('setReps').value);
     
-    // Validation basique
-    if (!weight || !reps || reps <= 0) {
-        showToast('Veuillez remplir tous les champs correctement', 'error');
+    // Pour les exercices au poids du corps, ajuster si nécessaire
+    const isBodyweight = currentExercise.equipment.includes('bodyweight');
+    const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
+        currentExercise.name_fr.toLowerCase().includes(keyword)
+    );
+    
+    // Validation adaptée
+    if (!isTimeBased && weight === 0 && !isBodyweight) {
+        showToast('Veuillez indiquer un poids', 'error');
         return;
     }
     
-    // Préparer les données de la série
+    if (!reps || reps <= 0) {
+        showToast(`Veuillez indiquer ${isTimeBased ? 'une durée' : 'des répétitions'}`, 'error');
+        return;
+    }
+    
+    // Pour les exercices temporels, le "poids" est toujours la charge additionnelle
+    // Pour le calcul du volume, on peut utiliser une formule différente
+    const effectiveWeight = isTimeBased ? 
+        (weight > 0 ? weight : 1) :  // Utiliser 1 comme multiplicateur si pas de charge
+        weight;
+    
+    // Préparer les données
     const setData = {
         workout_id: currentWorkout.id,
         exercise_id: currentExercise.id,
         set_number: currentSetNumber,
         target_reps: currentTargetReps,
         actual_reps: reps,
-        weight: weight,
-        rest_time: 0, // Sera mis à jour quand on commencera la série suivante
+        weight: weight,  // Stocker le poids réel (0 pour bodyweight sans charge)
+        rest_time: 0,
         fatigue_level: selectedFatigue * 2,
         perceived_exertion: selectedEffort * 2,
-        skipped: false
+        skipped: false,
+        // Ajouter des métadonnées
+        is_bodyweight: isBodyweight,
+        is_time_based: isTimeBased,
+        body_weight: isBodyweight ? currentUser.weight : null
     };
     
     try {
