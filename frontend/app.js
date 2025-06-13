@@ -40,6 +40,12 @@ let isInRestPeriod = false;
 let currentSetData = null; // Pour stocker temporairement les données de la série
 let sessionHistory = []; // Historique complet de la séance en cours
 
+
+// Configuration du mode développement
+let isDevMode = false;
+const DEV_USER_ID = 999;
+
+
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
     // Clean up any running timers when leaving training view
@@ -722,6 +728,7 @@ function addCustomKettlebell() {
 async function startWorkout(type) {
     if (!currentUser) {
         showToast('Veuillez vous connecter', 'error');
+        showProfileForm();
         return;
     }
     
@@ -2549,6 +2556,11 @@ async function saveUser() {
 
 // ===== INTERFACE PRINCIPALE =====
 function showMainInterface() {
+    if (!currentUser) {
+        console.error('Aucun utilisateur chargé');
+        showProfileForm();
+        return;
+    }
     document.getElementById('onboarding').classList.remove('active');
     document.getElementById('progressContainer').style.display = 'none';
     document.getElementById('bottomNav').style.display = 'flex';
@@ -2812,6 +2824,102 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateProgressBar();
     }
     
+    // Vérifier et activer le mode développement
+    checkDevMode();
+
+    async function checkDevMode() {
+        try {
+            const response = await fetch('/api/dev/status');
+            if (response.ok) {
+                const status = await response.json();
+                isDevMode = status.dev_mode;
+                
+                if (isDevMode) {
+                    console.log('Mode développement activé');
+                    setupDevShortcuts();
+                }
+            }
+        } catch (error) {
+            // Si l'endpoint n'existe pas, on est probablement en production
+            isDevMode = false;
+        }
+    }
+
+    function setupDevShortcuts() {
+        // Afficher un indicateur visuel du mode dev
+        const devBadge = document.createElement('div');
+        devBadge.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #f59e0b;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 9999;
+        `;
+        devBadge.textContent = 'DEV MODE';
+        document.body.appendChild(devBadge);
+        
+        // Raccourcis clavier
+        document.addEventListener('keydown', async (e) => {
+            // Ctrl+D : Charger le profil dev
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                await loadDevProfile();
+            }
+            
+            // Ctrl+H : Afficher l'historique dans la console
+            if (e.ctrlKey && e.key === 'h') {
+                e.preventDefault();
+                console.log('Current User:', currentUser);
+                console.log('Current Workout:', currentWorkout);
+                console.log('Workout History:', localStorage.getItem('currentWorkoutHistory'));
+            }
+            
+            // Ctrl+R : Reset le workout en cours (sans recharger la page)
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                if (confirm('Réinitialiser le workout en cours ?')) {
+                    if (currentWorkout) {
+                        await abandonWorkout();
+                    }
+                    showMainInterface();
+                }
+            }
+        });
+    }
+
+    async function loadDevProfile() {
+        try {
+            // Initialiser le profil dev côté serveur
+            const initResponse = await fetch('/api/dev/init', { method: 'POST' });
+            if (!initResponse.ok) {
+                throw new Error('Impossible d\'initialiser le mode dev');
+            }
+            
+            const devData = await initResponse.json();
+            
+            // Charger l'utilisateur dev
+            const userResponse = await fetch(`/api/users/${devData.user_id}`);
+            if (!userResponse.ok) {
+                throw new Error('Impossible de charger le profil dev');
+            }
+            
+            currentUser = await userResponse.json();
+            localStorage.setItem('userProfile', JSON.stringify(currentUser));
+            localStorage.setItem('currentUserId', currentUser.id);
+            
+            showMainInterface();
+            showToast(`Profil dev chargé (${devData.workouts_count} workouts historiques)`, 'success');
+            
+        } catch (error) {
+            console.error('Erreur chargement profil dev:', error);
+            showToast('Erreur lors du chargement du profil dev', 'error');
+        }
+    }
+
     console.log('Application initialisée');
 });
 
