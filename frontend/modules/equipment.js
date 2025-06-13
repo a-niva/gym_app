@@ -1,6 +1,6 @@
 // ===== MODULES/EQUIPMENT.JS - CONFIGURATION DE L'ÉQUIPEMENT =====
 
-import { getState, setState, updateNestedState } from '../core/state.js';
+import { getState, updateNestedState } from '../core/state.js';
 import { ELASTIC_COLORS } from '../core/config.js';
 import { showToast } from './utils.js';
 
@@ -94,16 +94,18 @@ export function updateEquipmentStatus(equipment) {
     let isConfigured = false;
     
     switch(equipment) {
-        case 'dumbbells':
+        case 'dumbbells': {
             isConfigured = Object.keys(config.dumbbells).length > 0;
             break;
-        case 'barbell':
+        }
+        case 'barbell': {
             const hasBar = config.barres.olympique.available || 
                           config.barres.ez.available || 
                           config.barres.courte.available;
             const hasDisques = Object.keys(config.disques).length > 0;
             isConfigured = hasBar && hasDisques;
             break;
+        }
         case 'resistance_bands':
             isConfigured = config.elastiques.length > 0;
             break;
@@ -425,43 +427,56 @@ export function updateElastiquesList() {
     `).join('');
 }
 
-export function addLest(type, value) {
-    const weights = value.split(',')
-        .map(w => parseFloat(w.trim()))
-        .filter(w => !isNaN(w) && w > 0)
-        .sort((a, b) => a - b);
-    
-    updateNestedState(`equipmentConfig.autres.lest_${type}`, weights);
-}
-
-// Ajout de poids personnalisés
+// Fonctions pour les poids personnalisés
 export function addCustomDumbbell() {
-    const weight = prompt('Poids de l\'haltère (kg):');
-    if (weight && !isNaN(weight)) {
-        updateDumbbellWeight(parseFloat(weight), 1);
+    const weight = prompt('Entrez le poids de l\'haltère (kg):');
+    if (weight && !isNaN(weight) && weight > 0) {
+        const config = getState('equipmentConfig');
+        const newDumbbells = { ...config.dumbbells };
+        newDumbbells[parseFloat(weight)] = 1;
+        updateNestedState('equipmentConfig.dumbbells', newDumbbells);
         showConfigPanel('dumbbells');
+        updateEquipmentStatus('dumbbells');
+        showToast(`Haltère ${weight}kg ajouté`, 'success');
     }
 }
 
 export function addCustomDisque() {
-    const weight = prompt('Poids du disque (kg):');
-    if (weight && !isNaN(weight)) {
-        updateDisqueWeight(parseFloat(weight), 2);
+    const weight = prompt('Entrez le poids du disque (kg):');
+    if (weight && !isNaN(weight) && weight > 0) {
+        const config = getState('equipmentConfig');
+        const newDisques = { ...config.disques };
+        newDisques[parseFloat(weight)] = 2;
+        updateNestedState('equipmentConfig.disques', newDisques);
         showConfigPanel('barbell');
+        updateEquipmentStatus('barbell');
+        showToast(`Disque ${weight}kg ajouté`, 'success');
     }
 }
 
 export function addCustomKettlebell() {
-    const weight = prompt('Poids du kettlebell (kg):');
-    if (weight && !isNaN(weight)) {
-        updateKettlebellWeight(parseFloat(weight), 1);
+    const weight = prompt('Entrez le poids du kettlebell (kg):');
+    if (weight && !isNaN(weight) && weight > 0) {
+        const config = getState('equipmentConfig');
+        const newKettlebells = { ...config.kettlebells };
+        newKettlebells[parseFloat(weight)] = 1;
+        updateNestedState('equipmentConfig.kettlebells', newKettlebells);
         showConfigPanel('kettlebell');
+        updateEquipmentStatus('kettlebell');
+        showToast(`Kettlebell ${weight}kg ajouté`, 'success');
     }
+}
+
+// Gestion des lests
+export function addLest(type, value) {
+    const weights = value.split(',').map(w => parseFloat(w.trim())).filter(w => !isNaN(w) && w > 0);
+    updateNestedState(`equipmentConfig.autres.lest_${type}`, weights);
+    updateEquipmentStatus('dumbbells');
 }
 
 // Utilitaires
 export function getColorHex(colorName) {
-    return ELASTIC_COLORS[colorName.toLowerCase()] || '#666';
+    return ELASTIC_COLORS[colorName.toLowerCase()] || '#666666';
 }
 
 function getEquipmentIcon(type) {

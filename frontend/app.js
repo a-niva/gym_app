@@ -19,8 +19,7 @@ import {
     prevStep, 
     toggleGoal, 
     toggleEquipment,
-    showStep,
-    updateProgressBar
+    updateProfileSummary
 } from './modules/onboarding.js';
 
 import {
@@ -31,13 +30,11 @@ import {
     toggleBenchFeature,
     addElastique,
     removeElastique,
-    updateElastiquesList,
     addCustomDumbbell,
     addCustomDisque,
     addCustomKettlebell,
-    getColorHex,
     addLest,
-    showConfigPanel
+    generateDetailedEquipmentConfig
 } from './modules/equipment.js';
 
 import {
@@ -45,9 +42,7 @@ import {
     pauseWorkout,
     resumeWorkout,
     completeWorkout,
-    abandonWorkout,
-    updateTrainingInterface,
-    loadWorkoutHistory
+    abandonWorkout
 } from './modules/workout.js';
 
 import {
@@ -76,14 +71,62 @@ import {
     showToast,
     skipRestPeriod,
     completeSetAndFinish,
-    finishExerciseDuringRest,
-    addRestToHistory
+    finishExerciseDuringRest
 } from './modules/utils.js';
+
+// Exposition globale des fonctions pour les événements HTML
+window.nextStep = nextStep;
+window.prevStep = prevStep;
+window.toggleGoal = toggleGoal;
+window.toggleEquipment = toggleEquipment;
+window.updateBarbell = updateBarbell;
+window.updateDisqueWeight = updateDisqueWeight;
+window.updateDumbbellWeight = updateDumbbellWeight;
+window.updateKettlebellWeight = updateKettlebellWeight;
+window.toggleBenchFeature = toggleBenchFeature;
+window.addElastique = addElastique;
+window.removeElastique = removeElastique;
+window.addCustomDumbbell = addCustomDumbbell;
+window.addCustomDisque = addCustomDisque;
+window.addCustomKettlebell = addCustomKettlebell;
+window.addLest = addLest;
+window.saveUser = saveUser;
+window.startWorkout = startWorkout;
+window.pauseWorkout = pauseWorkout;
+window.resumeWorkout = resumeWorkout;
+window.completeWorkout = completeWorkout;
+window.abandonWorkout = abandonWorkout;
+window.showExerciseSelector = showExerciseSelector;
+window.selectExercise = selectExercise;
+window.filterExerciseList = filterExerciseList;
+window.adjustWeightToNext = adjustWeightToNext;
+window.adjustReps = adjustReps;
+window.validateWeight = validateWeight;
+window.selectFatigue = selectFatigue;
+window.selectEffort = selectEffort;
+window.completeSet = completeSet;
+window.skipSet = skipSet;
+window.finishExercise = finishExercise;
+window.showView = showView;
+window.toggleSilentMode = toggleSilentMode;
+window.showExerciseDetail = showExerciseDetail;
+window.logout = logout;
+window.showToast = showToast;
+window.skipRestPeriod = skipRestPeriod;
+window.completeSetAndFinish = completeSetAndFinish;
+window.finishExerciseDuringRest = finishExerciseDuringRest;
+window.loadDevProfile = loadDevProfile;
+window.generateDetailedEquipmentConfig = generateDetailedEquipmentConfig;
+window.updateProfileSummary = updateProfileSummary;
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('Initialisation de l\'application...');
+    
+    // Charger les exercices en premier
     await loadExercises();
     
+    // Vérifier si un utilisateur est déjà connecté
     const userId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
     const userProfile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
     
@@ -101,7 +144,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     checkDevMode();
-    console.log('Application initialisée');
+    setupPWA();
+    
+    console.log('Application initialisée avec succès');
 });
 
 // Vérification du mode développement
@@ -112,180 +157,137 @@ async function checkDevMode() {
             if (response.ok) {
                 setState('isDevMode', true);
                 setupDevShortcuts();
+                console.log('Mode développement activé');
             }
-        } catch (error) {
-            setState('isDevMode', false);
+        } catch {
+            console.log('API non disponible en local');
         }
     }
 }
 
 // Configuration des raccourcis développement
 function setupDevShortcuts() {
-    const devBadge = document.createElement('div');
-    devBadge.style.cssText = `
+    if (!DEV_CONFIG.SHORTCUTS_ENABLED) return;
+    
+    // Créer un bouton de chargement du profil dev
+    const devButton = document.createElement('button');
+    devButton.textContent = 'Dev Profile';
+    devButton.className = 'dev-button';
+    devButton.onclick = loadDevProfile;
+    devButton.style.cssText = `
         position: fixed;
-        top: 10px;
-        right: 10px;
-        background: #f59e0b;
+        bottom: 100px;
+        right: 20px;
+        padding: 10px;
+        background: #4CAF50;
         color: white;
-        padding: 5px 10px;
+        border: none;
         border-radius: 5px;
-        font-size: 12px;
+        cursor: pointer;
         z-index: 9999;
     `;
-    devBadge.textContent = 'DEV MODE';
-    document.body.appendChild(devBadge);
+    document.body.appendChild(devButton);
     
-    document.addEventListener('keydown', async (e) => {
-        // Alt+Shift+D : Charger le profil dev
-        if (e.altKey && e.shiftKey && e.key === 'D') {
-            e.preventDefault();
-            await loadDevProfile();
-        }
-        
-        // Alt+Shift+H : Afficher l'historique dans la console
-        if (e.altKey && e.shiftKey && e.key === 'H') {
-            e.preventDefault();
-            console.log('State:', getState());
-        }
-        
-        // Alt+Shift+R : Reset le workout en cours
-        if (e.altKey && e.shiftKey && e.key === 'R') {
-            e.preventDefault();
-            const currentWorkout = getState('currentWorkout');
-            if (currentWorkout && confirm('Réinitialiser le workout en cours ?')) {
-                await abandonWorkout();
-                showMainInterface();
+    // Raccourcis clavier
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey) {
+            switch(e.key) {
+                case 'D':
+                    loadDevProfile();
+                    break;
+                case 'L':
+                    logout();
+                    break;
+                case 'W':
+                    startWorkout('free_time');
+                    break;
             }
         }
     });
 }
 
-// Exposition des fonctions pour les événements HTML onclick
-window.nextStep = nextStep;
-window.prevStep = prevStep;
-window.toggleGoal = toggleGoal;
-window.toggleEquipment = toggleEquipment;
-window.showView = showView;
-window.saveUser = saveUser;
-window.startWorkout = startWorkout;
-window.logout = logout;
-
-// Fonctions de configuration d'équipement
-window.updateBarbell = updateBarbell;
-window.updateDisqueWeight = updateDisqueWeight;
-window.updateDumbbellWeight = updateDumbbellWeight;
-window.updateKettlebellWeight = updateKettlebellWeight;
-window.toggleBenchFeature = toggleBenchFeature;
-window.addElastique = addElastique;
-window.removeElastique = removeElastique;
-window.addCustomDumbbell = addCustomDumbbell;
-window.addCustomDisque = addCustomDisque;
-window.addCustomKettlebell = addCustomKettlebell;
-window.updateElastiquesList = updateElastiquesList;
-window.getColorHex = getColorHex;
-window.addLest = addLest;
-window.showConfigPanel = showConfigPanel;
-
-// Fonctions de tracking d'exercices
-window.showExerciseSelector = showExerciseSelector;
-window.selectExercise = selectExercise;
-window.filterExerciseList = filterExerciseList;
-window.adjustWeightToNext = adjustWeightToNext;
-window.adjustReps = adjustReps;
-window.validateWeight = validateWeight;
-window.selectFatigue = selectFatigue;
-window.selectEffort = selectEffort;
-window.completeSet = completeSet;
-window.skipSet = skipSet;
-window.finishExercise = finishExercise;
-
-// Fonctions de gestion des séances
-window.pauseWorkout = pauseWorkout;
-window.resumeWorkout = resumeWorkout;
-window.completeWorkout = completeWorkout;
-window.abandonWorkout = abandonWorkout;
-
-// Fonctions utilitaires
-window.toggleSilentMode = toggleSilentMode;
-window.completeSetAndFinish = completeSetAndFinish;
-window.finishExerciseDuringRest = finishExerciseDuringRest;
-window.skipRestPeriod = skipRestPeriod;
-window.addRestToHistory = addRestToHistory;
-window.showExerciseDetail = showExerciseDetail;
-
-// Service Worker pour PWA
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(registration => console.log('Service Worker enregistré'))
-        .catch(error => console.error('Erreur Service Worker:', error));
+// Configuration PWA
+function setupPWA() {
+    // Enregistrement du service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(() => console.log('Service Worker enregistré'))
+            .catch(error => console.error('Erreur SW:', error));
+    }
+    
+    // Gestion de l'installation PWA
+    let deferredPrompt;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Afficher le bouton d'installation après un délai
+        setTimeout(() => {
+            showInstallButton(deferredPrompt);
+        }, 30000);
+    });
 }
 
-// Gestion du raccourci de lancement PWA
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    const deferredPrompt = e;
-    
-    // Créer un bouton d'installation si nécessaire
+// Affichage du bouton d'installation PWA
+function showInstallButton(deferredPrompt) {
     const installButton = document.createElement('button');
-    installButton.textContent = 'Installer l\'app';
-    installButton.className = 'btn btn-primary install-button';
-    installButton.style.cssText = `
-        position: fixed;
-        bottom: 80px;
-        right: 20px;
-        z-index: 1000;
-        display: none;
+    installButton.className = 'install-button';
+    installButton.innerHTML = `
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+        </svg>
+        Installer l'app
     `;
     
-    installButton.addEventListener('click', async () => {
-        installButton.style.display = 'none';
+    installButton.onclick = async () => {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         console.log(`Installation ${outcome === 'accepted' ? 'acceptée' : 'refusée'}`);
-    });
+        if (outcome === 'accepted') {
+            installButton.remove();
+        }
+    };
     
     document.body.appendChild(installButton);
-    
-    // Afficher le bouton après 30 secondes
-    setTimeout(() => {
-        installButton.style.display = 'block';
-    }, 30000);
-});
+}
 
 // Gestion des paramètres URL pour les raccourcis PWA
-const urlParams = new URLSearchParams(window.location.search);
-const action = urlParams.get('action');
-
-if (action === 'new-workout') {
-    // Attendre que l'app soit chargée puis démarrer une séance
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            const currentUser = getState('currentUser');
-            if (currentUser) {
-                startWorkout('free_time');
-            }
-        }, 1000);
-    });
-} else if (action === 'program') {
-    // Attendre que l'app soit chargée puis afficher le programme
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            const currentUser = getState('currentUser');
-            if (currentUser) {
-                showView('program');
-            }
-        }, 1000);
-    });
+function handlePWAShortcuts() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'new-workout') {
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const currentUser = getState('currentUser');
+                if (currentUser) {
+                    startWorkout('free_time');
+                }
+            }, 1000);
+        });
+    } else if (action === 'program') {
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const currentUser = getState('currentUser');
+                if (currentUser) {
+                    showView('program');
+                }
+            }, 1000);
+        });
+    }
 }
+
+// Appeler la gestion des raccourcis PWA
+handlePWAShortcuts();
 
 // Export des modules pour débogage en développement
 if (DEV_CONFIG.SHORTCUTS_ENABLED && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     window.AppModules = {
         state: { getState, setState },
         auth: { loadUser, saveUser, logout, checkActiveWorkout, loadDevProfile },
-        onboarding: { showProfileForm, nextStep, prevStep, toggleGoal, toggleEquipment },
-        equipment: { updateBarbell, updateDisqueWeight, updateDumbbellWeight },
+        onboarding: { showProfileForm, nextStep, prevStep, toggleGoal, toggleEquipment, updateProfileSummary },
+        equipment: { updateBarbell, updateDisqueWeight, updateDumbbellWeight, generateDetailedEquipmentConfig },
         workout: { startWorkout, pauseWorkout, resumeWorkout, completeWorkout, abandonWorkout },
         exercises: { loadExercises, showExerciseSelector, selectExercise, completeSet },
         ui: { showView, showMainInterface, toggleSilentMode },

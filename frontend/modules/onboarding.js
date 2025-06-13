@@ -2,7 +2,8 @@
 
 import { getState, setState, resetState } from '../core/state.js';
 import { showToast } from './utils.js';
-import { generateDetailedEquipmentConfig, updateEquipmentStatus } from './equipment.js';
+import { generateDetailedEquipmentConfig } from './equipment.js';
+import { saveUser } from './auth.js';
 
 // Affichage du formulaire de profil
 export function showProfileForm() {
@@ -92,91 +93,6 @@ function validateCurrentStep() {
     
     switch(currentStep) {
         case 1:
-            const userName = document.getElementById('userName').value?.trim();
-            const birthDate = document.getElementById('userBirthDate').value;
-            const height = document.getElementById('userHeight').value;
-            const weight = document.getElementById('userWeight').value;
-            const experienceLevel = document.getElementById('experienceLevel').value;
-            
-            if (!userName || !birthDate || !height || !weight || !experienceLevel) {
-                showToast('Veuillez remplir tous les champs', 'error');
-                return false;
-            }
-            return true;
-            
-        case 2:
-            const selectedGoals = getState('selectedGoals');
-            if (selectedGoals.length === 0) {
-                showToast('Veuillez sélectionner au moins un objectif', 'error');
-                return false;
-            }
-            return true;
-            
-        case 3:
-            // L'équipement est optionnel
-            return true;
-            
-        default:
-            return true;
-    }
-}
-
-// Gestion de la transition vers l'étape équipement
-function handleEquipmentStepTransition() {
-    const selectedEquipment = getState('selectedEquipment');
-    if (selectedEquipment.length > 0) {
-        // Générer la configuration détaillée si des équipements sont sélectionnés
-        generateDetailedEquipmentConfig();
-    }
-}
-
-// Nettoyage des champs du formulaire
-function clearFormFields() {
-    const fields = ['userName', 'userBirthDate', 'userHeight', 'userWeight', 'experienceLevel'];
-    fields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) field.value = '';
-    });
-    
-    document.querySelectorAll('.chip').forEach(chip => {
-        chip.classList.remove('selected');
-    });
-    
-    document.querySelectorAll('.equipment-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-}
-
-// Calcul de l'âge
-function calculateAge(birthDate) {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    return age;
-}
-
-// Mise à jour de la barre de progression
-export function updateProgressBar() {
-    const currentStep = getState('currentStep');
-    const totalSteps = getState('totalSteps');
-    const progress = (currentStep - 1) / (totalSteps - 1) * 100;
-    
-    const progressBar = document.getElementById('progressBar');
-    if (progressBar) {
-        progressBar.style.width = `${progress}%`;
-    }
-}
-
-// Validation de l'étape courante
-function validateCurrentStep() {
-    const currentStep = getState('currentStep');
-    
-    switch (currentStep) {
-        case 1:
             return validatePersonalInfo();
         case 2:
             return validateGoals();
@@ -191,13 +107,13 @@ function validateCurrentStep() {
 
 // Validation des informations personnelles
 function validatePersonalInfo() {
-    const name = document.getElementById('userName').value?.trim();
+    const userName = document.getElementById('userName').value?.trim();
     const birthDate = document.getElementById('userBirthDate').value;
     const height = document.getElementById('userHeight').value;
     const weight = document.getElementById('userWeight').value;
-    const experience = document.getElementById('experienceLevel').value;
+    const experienceLevel = document.getElementById('experienceLevel').value;
     
-    if (!name || !birthDate || !height || !weight || !experience) {
+    if (!userName || !birthDate || !height || !weight || !experienceLevel) {
         showToast('Veuillez remplir tous les champs', 'error');
         return false;
     }
@@ -233,18 +149,14 @@ function validateGoals() {
 
 // Validation de l'équipement
 function validateEquipment() {
-    const equipment = getState('selectedEquipment');
-    if (equipment.length === 0) {
-        showToast('Veuillez sélectionner au moins un équipement', 'error');
-        return false;
-    }
+    // L'équipement est optionnel, donc on retourne toujours true
     return true;
 }
 
 // Validation de la configuration détaillée
 function validateDetailedConfig() {
-    const equipment = getState('selectedEquipment');
-    const needsConfig = equipment.some(eq => 
+    const selectedEquipment = getState('selectedEquipment');
+    const needsConfig = selectedEquipment.some(eq => 
         ['dumbbells', 'barbell', 'resistance_bands', 'kettlebell'].includes(eq)
     );
     
@@ -253,11 +165,11 @@ function validateDetailedConfig() {
     const config = getState('equipmentConfig');
     let hasValidConfig = false;
     
-    if (equipment.includes('dumbbells') && Object.keys(config.dumbbells).length > 0) {
+    if (selectedEquipment.includes('dumbbells') && Object.keys(config.dumbbells).length > 0) {
         hasValidConfig = true;
     }
     
-    if (equipment.includes('barbell')) {
+    if (selectedEquipment.includes('barbell')) {
         const hasBarbell = config.barres.olympique.available || 
                          config.barres.ez.available || 
                          config.barres.courte.available;
@@ -265,11 +177,11 @@ function validateDetailedConfig() {
         if (hasBarbell && hasDisques) hasValidConfig = true;
     }
     
-    if (equipment.includes('resistance_bands') && config.elastiques.length > 0) {
+    if (selectedEquipment.includes('resistance_bands') && config.elastiques.length > 0) {
         hasValidConfig = true;
     }
     
-    if (equipment.includes('kettlebell') && Object.keys(config.kettlebells).length > 0) {
+    if (selectedEquipment.includes('kettlebell') && Object.keys(config.kettlebells).length > 0) {
         hasValidConfig = true;
     }
     
@@ -288,9 +200,12 @@ function handleEquipmentStepTransition() {
         ['dumbbells', 'barbell', 'resistance_bands', 'kettlebell'].includes(eq)
     );
     
-    if (!needsConfig) {
+    if (!needsConfig && selectedEquipment.length > 0) {
+        // Si pas besoin de configuration détaillée, passer directement au résumé
         setState('currentStep', 4);
         updateProfileSummary();
+        showStep(5);
+        updateProgressBar();
     }
 }
 
@@ -361,7 +276,7 @@ export function updateProfileSummary() {
         'cardio': 'Cardio',
         'weight_loss': 'Perte de poids',
         'endurance': 'Endurance',
-        'flexibility': 'Souplesse'
+        'flexibility': 'Flexibilité'
     };
     
     const equipmentNames = {
@@ -374,47 +289,47 @@ export function updateProfileSummary() {
     };
     
     const summaryHTML = `
-        <div class="summary-sections">
-            <div class="summary-section">
-                <h4 class="summary-title">👤 Informations personnelles</h4>
-                <div class="summary-row">
-                    <span class="summary-label">Nom</span>
-                    <span class="summary-value">${userName}</span>
-                </div>
-                <div class="summary-row">
-                    <span class="summary-label">Âge</span>
-                    <span class="summary-value">${age} ans</span>
-                </div>
-                <div class="summary-row">
-                    <span class="summary-label">Taille</span>
-                    <span class="summary-value">${height} cm</span>
-                </div>
-                <div class="summary-row">
-                    <span class="summary-label">Poids</span>
-                    <span class="summary-value">${weight} kg</span>
-                </div>
-                <div class="summary-row">
-                    <span class="summary-label">Niveau</span>
-                    <span class="summary-value">${experienceLevels[experienceLevel]}</span>
-                </div>
+        <div class="summary-section">
+            <h4>Informations personnelles</h4>
+            <div class="summary-item">
+                <span class="summary-label">Nom:</span>
+                <span class="summary-value">${userName}</span>
             </div>
-            
-            <div class="summary-section">
-                <h4 class="summary-title">🎯 Objectifs</h4>
-                <div class="goal-badges">
-                    ${selectedGoals.map(goal => 
-                        `<span class="goal-badge">${goalNames[goal]}</span>`
-                    ).join('')}
-                </div>
+            <div class="summary-item">
+                <span class="summary-label">Âge:</span>
+                <span class="summary-value">${age} ans</span>
             </div>
-            
-            <div class="summary-section">
-                <h4 class="summary-title">🏋️ Équipement</h4>
+            <div class="summary-item">
+                <span class="summary-label">Taille:</span>
+                <span class="summary-value">${height} cm</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Poids:</span>
+                <span class="summary-value">${weight} kg</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Niveau:</span>
+                <span class="summary-value">${experienceLevels[experienceLevel]}</span>
+            </div>
+        </div>
+        
+        <div class="summary-section">
+            <h4>Objectifs</h4>
+            <div class="summary-chips">
+                ${selectedGoals.map(goal => `
+                    <div class="chip selected">${goalNames[goal] || goal}</div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div class="summary-section">
+            <h4>Équipement disponible</h4>
+            <div class="equipment-summary">
                 ${selectedEquipment.map(eq => {
-                    let details = getEquipmentDetails(eq, equipmentConfig);
+                    const details = getEquipmentDetails(eq, equipmentConfig);
                     return `
                         <div class="equipment-summary-item">
-                            <strong>${equipmentNames[eq]}</strong>
+                            <div class="equipment-name">${equipmentNames[eq] || eq}</div>
                             ${details ? `<div class="equipment-detail">${details}</div>` : ''}
                         </div>
                     `;
@@ -429,12 +344,13 @@ export function updateProfileSummary() {
 // Obtenir les détails de l'équipement
 function getEquipmentDetails(equipment, config) {
     switch (equipment) {
-        case 'dumbbells':
+        case 'dumbbells': {
             const dumbbellWeights = Object.keys(config.dumbbells).sort((a, b) => a - b);
             return dumbbellWeights.length > 0 ? 
                 `${dumbbellWeights.join('kg, ')}kg` : 'Non configuré';
+        }
                 
-        case 'barbell':
+        case 'barbell': {
             const barTypes = [];
             if (config.barres.olympique.available) barTypes.push('Olympique');
             if (config.barres.ez.available) barTypes.push('EZ');
@@ -443,25 +359,30 @@ function getEquipmentDetails(equipment, config) {
             return barTypes.length > 0 ? 
                 `${barTypes.join(', ')} + Disques: ${disqueWeights.join('kg, ')}kg` : 
                 'Non configuré';
+        }
                 
-        case 'resistance_bands':
+        case 'resistance_bands': {
             return config.elastiques.length > 0 ? 
                 `${config.elastiques.length} élastique(s) configuré(s)` : 
                 'Non configuré';
+        }
                 
-        case 'kettlebell':
+        case 'kettlebell': {
             const kettlebellWeights = Object.keys(config.kettlebells).sort((a, b) => a - b);
             return kettlebellWeights.length > 0 ? 
                 `${kettlebellWeights.join('kg, ')}kg` : 'Non configuré';
+        }
                 
-        case 'bench':
+        case 'bench': {
             const features = [];
             if (config.banc.inclinable) features.push('Inclinable');
             if (config.banc.declinable) features.push('Déclinable');
             return features.length > 0 ? features.join(', ') : 'Plat';
+        }
             
-        case 'pull_up_bar':
+        case 'pull_up_bar': {
             return config.autres.barre_traction ? 'Disponible' : 'Non configuré';
+        }
             
         default:
             return null;
@@ -494,8 +415,5 @@ function clearFormFields() {
     });
 }
 
-// Import depuis auth.js
-import { saveUser } from './auth.js';
-
-// Exposer la fonction saveUser
+// Export de la fonction saveUser depuis auth.js
 export { saveUser };
