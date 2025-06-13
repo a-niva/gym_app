@@ -1,6 +1,6 @@
 // ===== MODULES/ONBOARDING.JS - PROCESSUS D'INSCRIPTION =====
 
-import { getState, setState, resetState } from '../../core/state.js';
+import { getState, setState, resetState } from '../core/state.js';
 import { showToast } from './utils.js';
 import { generateDetailedEquipmentConfig, updateEquipmentStatus } from './equipment.js';
 
@@ -72,6 +72,91 @@ export function showStep(stepNumber) {
             }
         }
     }
+}
+
+// Mise à jour de la barre de progression
+export function updateProgressBar() {
+    const currentStep = getState('currentStep');
+    const totalSteps = getState('totalSteps');
+    const progressBar = document.getElementById('progressBar');
+    
+    if (progressBar) {
+        const percentage = (currentStep / totalSteps) * 100;
+        progressBar.style.width = `${percentage}%`;
+    }
+}
+
+// Validation de l'étape actuelle
+function validateCurrentStep() {
+    const currentStep = getState('currentStep');
+    
+    switch(currentStep) {
+        case 1:
+            const userName = document.getElementById('userName').value?.trim();
+            const birthDate = document.getElementById('userBirthDate').value;
+            const height = document.getElementById('userHeight').value;
+            const weight = document.getElementById('userWeight').value;
+            const experienceLevel = document.getElementById('experienceLevel').value;
+            
+            if (!userName || !birthDate || !height || !weight || !experienceLevel) {
+                showToast('Veuillez remplir tous les champs', 'error');
+                return false;
+            }
+            return true;
+            
+        case 2:
+            const selectedGoals = getState('selectedGoals');
+            if (selectedGoals.length === 0) {
+                showToast('Veuillez sélectionner au moins un objectif', 'error');
+                return false;
+            }
+            return true;
+            
+        case 3:
+            // L'équipement est optionnel
+            return true;
+            
+        default:
+            return true;
+    }
+}
+
+// Gestion de la transition vers l'étape équipement
+function handleEquipmentStepTransition() {
+    const selectedEquipment = getState('selectedEquipment');
+    if (selectedEquipment.length > 0) {
+        // Générer la configuration détaillée si des équipements sont sélectionnés
+        generateDetailedEquipmentConfig();
+    }
+}
+
+// Nettoyage des champs du formulaire
+function clearFormFields() {
+    const fields = ['userName', 'userBirthDate', 'userHeight', 'userWeight', 'experienceLevel'];
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = '';
+    });
+    
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.classList.remove('selected');
+    });
+    
+    document.querySelectorAll('.equipment-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+}
+
+// Calcul de l'âge
+function calculateAge(birthDate) {
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
 }
 
 // Mise à jour de la barre de progression

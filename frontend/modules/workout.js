@@ -1,6 +1,6 @@
 // ===== MODULES/WORKOUT.JS - GESTION DES SÉANCES D'ENTRAÎNEMENT =====
 
-import { getState, setState } from '../../core/state.js';
+import { getState, setState } from '../core/state.js';
 import { API_ENDPOINTS, STORAGE_KEYS, MESSAGES, TIMER_CONFIG } from '../core/config.js';
 import { showToast } from './utils.js';
 import { showView } from './ui.js';
@@ -380,4 +380,126 @@ function displayWorkoutHistory(workouts) {
             </div>
         `;
     }).join('');
+}
+
+// Chargement de l'historique des séances
+export async function loadWorkoutHistory() {
+    const currentUser = getState('currentUser');
+    if (!currentUser) return;
+    
+    try {
+        const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.USERS}/${currentUser.id}/workouts?limit=5`);
+        if (response.ok) {
+            const workouts = await response.json();
+            displayWorkoutHistory(workouts);
+        }
+    } catch (error) {
+        console.error('Erreur chargement historique:', error);
+    }
+}
+
+// Affichage de l'historique
+function displayWorkoutHistory(workouts) {
+    const container = document.getElementById('workoutHistory');
+    if (!container) return;
+    
+    if (workouts.length === 0) {
+        container.innerHTML = '<p class="empty-state">Aucune séance enregistrée</p>';
+        return;
+    }
+    
+    const html = workouts.map(workout => `
+        <div class="workout-history-item">
+            <div class="workout-date">${formatDate(workout.created_at)}</div>
+            <div class="workout-info">
+                <span>${workout.type === 'program' ? 'Programme' : 'Libre'}</span>
+                <span>${workout.sets_count || 0} séries</span>
+                <span>${formatDuration(workout.duration || 0)}</span>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = html;
+}
+
+// Formatage de la date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+        return "Aujourd'hui";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return "Hier";
+    } else {
+        return date.toLocaleDateString('fr-FR', { 
+            weekday: 'short', 
+            day: 'numeric', 
+            month: 'short' 
+        });
+    }
+}
+
+// Formatage de la durée
+function formatDuration(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} min`;
+}
+
+// Démarrage du monitoring
+export function startWorkoutMonitoring() {
+    const interval = setInterval(() => {
+        const currentWorkout = getState('currentWorkout');
+        if (currentWorkout && currentWorkout.status === 'started') {
+            // Mise à jour de l'interface si nécessaire
+            updateWorkoutTimer();
+        }
+    }, TIMER_CONFIG.WORKOUT_CHECK_INTERVAL);
+    
+    setState('workoutCheckInterval', interval);
+}
+
+// Mise à jour du timer de séance
+function updateWorkoutTimer() {
+    const currentWorkout = getState('currentWorkout');
+    if (!currentWorkout) return;
+    
+    const startTime = new Date(currentWorkout.created_at);
+    const now = new Date();
+    const elapsed = Math.floor((now - startTime) / 1000);
+    
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+    
+    const timerElement = document.getElementById('workoutTimer');
+    if (timerElement) {
+        timerElement.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+// Synchronisation des sets en attente
+export async function syncPendingSets() {
+    const pendingSets = JSON.parse(localStorage.getItem(STORAGE_KEYS.PENDING_SETS) || '[]');
+    if (pendingSets.length === 0) return;
+    
+    for (const setData of pendingSets) {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.SETS}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(setData)
+            });
+            
+            if (response.ok) {
+                // Retirer de la liste en attente
+                const updatedPending = pendingSets.filter(s => s !== setData);
+                localStorage.setItem(STORAGE_KEYS.PENDING_SETS, JSON.stringify(updatedPending));
+            }
+        } catch (error) {
+            console.error('Erreur sync set:', error);
+        }
+    }
 }

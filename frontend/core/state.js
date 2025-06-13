@@ -157,4 +157,71 @@ function getInitialState() {
     };
 }
 
+// Reset state
+export const resetState = (keys = []) => {
+    if (keys.length === 0) {
+        // Reset tout l'état
+        Object.keys(AppState).forEach(key => {
+            AppState[key] = getDefaultState()[key];
+        });
+    } else {
+        // Reset seulement les clés spécifiées
+        keys.forEach(key => {
+            AppState[key] = getDefaultState()[key];
+        });
+    }
+};
+
+// Obtenir l'état par défaut
+const getDefaultState = () => ({
+    currentUser: null,
+    currentStep: 1,
+    totalSteps: 5,
+    selectedGoals: [],
+    selectedEquipment: [],
+    equipmentConfig: {
+        barres: {
+            olympique: { available: false, count: 0, weight: 20 },
+            ez: { available: false, count: 0, weight: 10 },
+            courte: { available: false, count: 0, weight: 2.5 }
+        },
+        disques: {},
+        dumbbells: {},
+        kettlebells: {},
+        elastiques: [],
+        banc: {
+            available: false,
+            inclinable: false,
+            declinable: false
+        },
+        autres: {
+            barre_traction: false,
+            lest_corps: [],
+            lest_chevilles: [],
+            lest_poignets: []
+        }
+    },
+    currentWorkout: null,
+    currentExercise: null,
+    currentSetNumber: 1,
+    currentTargetReps: 10,
+    selectedFatigue: 3,
+    selectedEffort: 3,
+    setStartTime: null,
+    lastSetEndTime: null,
+    lastExerciseEndTime: null,
+    interExerciseRestTime: 0,
+    isInRestPeriod: false,
+    currentSetData: null,
+    sessionHistory: [],
+    allExercises: [],
+    workoutCheckInterval: null,
+    restTimerInterval: null,
+    timerInterval: null,
+    audioContext: null,
+    isSilentMode: false,
+    isDevMode: false,
+    DEV_USER_ID: 999
+});
+
 export default AppState;

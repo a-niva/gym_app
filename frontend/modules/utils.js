@@ -1,6 +1,6 @@
 // ===== MODULES/UTILS.JS - FONCTIONS UTILITAIRES =====
 
-import { getState, setState } from '../../core/state.js';
+import { getState, setState } from '../core/state.js';
 import { TIMER_CONFIG, AUDIO_CONFIG, REST_TIMES } from '../core/config.js';
 
 // Affichage des notifications toast
