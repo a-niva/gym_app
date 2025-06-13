@@ -1,6 +1,6 @@
 // ===== MODULES/WORKOUT.JS - GESTION DES SÉANCES D'ENTRAÎNEMENT =====
 
-import { getState, setState } from '../core/state.js';
+import { getState, setState } from '../../core/state.js';
 import { API_ENDPOINTS, STORAGE_KEYS, MESSAGES, TIMER_CONFIG } from '../core/config.js';
 import { showToast } from './utils.js';
 import { showView } from './ui.js';

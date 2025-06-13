@@ -1,6 +1,6 @@
 // ===== MODULES/EQUIPMENT.JS - CONFIGURATION DE L'ÉQUIPEMENT =====
 
-import { getState, setState, updateNestedState } from '../core/state.js';
+import { getState, setState, updateNestedState } from '../../core/state.js';
 import { ELASTIC_COLORS } from '../core/config.js';
 import { showToast } from './utils.js';
 

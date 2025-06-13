@@ -1,6 +1,6 @@
 // ===== MODULES/AUTH.JS - AUTHENTIFICATION ET PROFIL UTILISATEUR =====
 
-import { getState, setState } from '../core/state.js';
+import { getState, setState } from '../../core/state.js';
 import { API_ENDPOINTS, STORAGE_KEYS, MESSAGES } from '../core/config.js';
 import { showToast } from './utils.js';
 import { showView, showMainInterface } from './ui.js';

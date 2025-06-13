@@ -1,6 +1,6 @@
 // ===== MODULES/ONBOARDING.JS - PROCESSUS D'INSCRIPTION =====
 
-import { getState, setState, resetState } from '../core/state.js';
+import { getState, setState, resetState } from '../../core/state.js';
 import { showToast } from './utils.js';
 import { generateDetailedEquipmentConfig, updateEquipmentStatus } from './equipment.js';
 

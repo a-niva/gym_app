@@ -1,6 +1,6 @@
 // ===== MODULES/EXERCISES.JS - GESTION DES EXERCICES ET TRACKING =====
 
-import { getState, setState } from '../core/state.js';
+import { getState, setState } from '../../core/state.js';
 import { API_ENDPOINTS, STORAGE_KEYS, MESSAGES, REST_TIMES, TIME_BASED_KEYWORDS } from '../core/config.js';
 import { showToast, startTimer, startRestTimer, calculateAvailableWeights } from './utils.js';
 

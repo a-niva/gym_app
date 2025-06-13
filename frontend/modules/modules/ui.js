@@ -1,6 +1,6 @@
 // ===== MODULES/UI.JS - INTERFACE UTILISATEUR ET NAVIGATION =====
 
-import { getState, setState } from '../core/state.js';
+import { getState, setState } from '../../core/state.js';
 import { API_ENDPOINTS, STORAGE_KEYS } from '../core/config.js';
 import { showToast } from './utils.js';
 import { showProfileForm } from './onboarding.js';
