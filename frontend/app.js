@@ -1437,9 +1437,17 @@ function showSetInput() {
     
     // Calculer les poids disponibles pour cet exercice
     let availableWeights = calculateAvailableWeights(currentExercise);
-    let suggestedWeight = availableWeights.length > 0 ? 
-        (isBodyweight && !isTimeBased ? currentUser.weight : availableWeights[Math.floor(availableWeights.length / 2)]) : 
-        20;
+    let suggestedWeight = 0;
+    if (availableWeights.length > 0) {
+        if (isBodyweight && !isTimeBased) {
+            // Pour bodyweight, commencer sans charge additionnelle (0)
+            suggestedWeight = availableWeights.includes(0) ? 0 : availableWeights[0];
+        } else {
+            suggestedWeight = availableWeights[Math.floor(availableWeights.length / 2)];
+        }
+    } else {
+        suggestedWeight = 20;
+    }
     
     // Adapter les labels selon le type d'exercice
     const weightLabel = isBodyweight && !isTimeBased ? 
@@ -1621,7 +1629,7 @@ function formatSetDisplay(setData, exercise) {
     if (isTimeBased) {
         return `${setData.actual_reps}s${setData.weight > 0 ? ` + ${setData.weight}kg` : ''}`;
     } else if (isBodyweight && setData.weight === 0) {
-        return `Poids du corps × ${setData.actual_reps} reps`;
+        return `Poids du corps (${currentUser?.weight || 75}kg) × ${setData.actual_reps} reps`;
     } else if (isBodyweight) {
         const lestWeight = setData.weight - (currentUser?.weight || 75);
         return `${setData.weight}kg (corps + ${lestWeight}kg) × ${setData.actual_reps} reps`;
@@ -1827,10 +1835,12 @@ function calculateAvailableWeights(exercise) {
             });
         }
         
-        // Ajouter aussi l'option sans charge (0) pour certains exercices
-        weights.add(0);
-        
-        return Array.from(weights).sort((a, b) => a - b);
+        // Toujours ajouter l'option sans charge (0) en premier
+        const sortedWeights = Array.from(weights).sort((a, b) => a - b);
+        if (!sortedWeights.includes(0)) {
+            sortedWeights.unshift(0);
+        }
+        return sortedWeights;
     }
     
     // Barres + disques
@@ -3160,7 +3170,7 @@ window.showConfigPanel = showConfigPanel;
 window.showExerciseSelector = showExerciseSelector;
 window.selectExercise = selectExercise;
 window.filterExerciseList = filterExerciseList;
-window.adjustWeight = adjustWeight;
+window.adjustWeightToNext = adjustWeightToNext;
 window.adjustReps = adjustReps;
 window.updateFatigueDisplay = updateFatigueDisplay;
 window.updateExertionDisplay = updateExertionDisplay;
@@ -3179,7 +3189,6 @@ window.finishExerciseDuringRest = finishExerciseDuringRest;
 window.skipRestPeriod = skipRestPeriod;
 window.addRestToHistory = addRestToHistory;
 
-window.adjustWeightToNext = adjustWeightToNext;
 window.validateWeight = validateWeight;
 window.calculateAvailableWeights = calculateAvailableWeights;
 window.updateMuscleDistribution = updateMuscleDistribution;
