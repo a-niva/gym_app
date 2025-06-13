@@ -1,7 +1,7 @@
 // ===== MODULES/UTILS.JS - FONCTIONS UTILITAIRES =====
 
 import { getState, setState } from '../core/state.js';
-import { TIMER_CONFIG, AUDIO_CONFIG, REST_TIMES } from '../core/config.js';
+import { TIMER_CONFIG, AUDIO_CONFIG, REST_TIMES, STORAGE_KEYS } from '../core/config.js';
 
 // Affichage des notifications toast
 export function showToast(message, type = 'info') {
@@ -155,20 +155,32 @@ export function finishRestPeriod() {
     });
 }
 
-function addRestToHistory(duration) {
+// Ajout du repos à l'historique (version complète avec API)
+export function addRestToHistory(duration) {
     const sessionHistory = getState('sessionHistory');
-    const restEntry = {
+    const lastCompletedSetId = localStorage.getItem('lastCompletedSetId');
+    
+    if (lastCompletedSetId && duration > 0) {
+        // Mettre à jour le temps de repos sur le serveur
+        fetch(`/api/sets/${lastCompletedSetId}/rest-time`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rest_time: duration })
+        }).catch(err => console.error('Erreur mise à jour temps repos:', err));
+    }
+    
+    const historyEntry = {
         type: 'rest',
         timestamp: new Date(),
         data: {
             duration: duration,
-            type: 'inter_set'
+            type: 'between_sets'
         }
     };
     
-    sessionHistory.push(restEntry);
+    sessionHistory.push(historyEntry);
     setState('sessionHistory', sessionHistory);
-    localStorage.setItem(STORAGE_KEYS.SESSION_HISTORY, JSON.stringify(sessionHistory));
+    localStorage.setItem('currentSessionHistory', JSON.stringify(sessionHistory));
 }
 
 // Passer la période de repos
@@ -204,34 +216,6 @@ export function finishExerciseDuringRest() {
     import('./exercises.js').then(module => {
         module.finishExercise();
     });
-}
-
-// Ajout du repos à l'historique
-export function addRestToHistory(duration) {
-    const sessionHistory = getState('sessionHistory');
-    const lastCompletedSetId = localStorage.getItem('lastCompletedSetId');
-    
-    if (lastCompletedSetId && duration > 0) {
-        // Mettre à jour le temps de repos sur le serveur
-        fetch(`/api/sets/${lastCompletedSetId}/rest-time`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rest_time: duration })
-        }).catch(err => console.error('Erreur mise à jour temps repos:', err));
-    }
-    
-    const historyEntry = {
-        type: 'rest',
-        timestamp: new Date(),
-        data: {
-            duration: duration,
-            type: 'between_sets'
-        }
-    };
-    
-    sessionHistory.push(historyEntry);
-    setState('sessionHistory', sessionHistory);
-    localStorage.setItem('currentSessionHistory', JSON.stringify(sessionHistory));
 }
 
 // Gestion audio
