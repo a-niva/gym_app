@@ -155,6 +155,22 @@ export function finishRestPeriod() {
     });
 }
 
+function addRestToHistory(duration) {
+    const sessionHistory = getState('sessionHistory');
+    const restEntry = {
+        type: 'rest',
+        timestamp: new Date(),
+        data: {
+            duration: duration,
+            type: 'inter_set'
+        }
+    };
+    
+    sessionHistory.push(restEntry);
+    setState('sessionHistory', sessionHistory);
+    localStorage.setItem(STORAGE_KEYS.SESSION_HISTORY, JSON.stringify(sessionHistory));
+}
+
 // Passer la période de repos
 export function skipRestPeriod() {
     const restTimerInterval = getState('restTimerInterval');

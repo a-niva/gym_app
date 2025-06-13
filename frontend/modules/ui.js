@@ -177,6 +177,18 @@ export function showExerciseDetail(exerciseId) {
     showToast(`Détails de : ${exercise.name_fr}`, 'info');
 }
 
+export function toggleSilentMode() {
+    const currentMode = getState('isSilentMode');
+    setState('isSilentMode', !currentMode);
+    
+    const silentIcon = document.getElementById('silentModeIcon');
+    if (silentIcon) {
+        silentIcon.style.opacity = currentMode ? '0.5' : '1';
+    }
+    
+    showToast(currentMode ? 'Mode silencieux désactivé' : 'Mode silencieux activé', 'info');
+}
+
 // Calcul de l'âge (helper)
 function calculateAge(birthDate) {
     const birth = new Date(birthDate);

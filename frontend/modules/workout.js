@@ -6,6 +6,7 @@ import { showToast } from './utils.js';
 import { showView } from './ui.js';
 import { loadDashboard } from './ui.js';
 import { showExerciseSelector } from './exercises.js';
+import { formatDate, formatDuration } from './utils.js';
 
 // Démarrage d'une séance
 export async function startWorkout(type = 'free_time') {
@@ -48,7 +49,7 @@ export async function startWorkout(type = 'free_time') {
     }
 }
 
-// Mise en pause de la séance
+// Mise eformatDatepause de la séance
 export async function pauseWorkout() {
     const currentWorkout = getState('currentWorkout');
     if (!currentWorkout) return;
@@ -198,25 +199,6 @@ export function cleanupWorkout() {
     }
 }
 
-// Surveillance de la séance
-export function startWorkoutMonitoring() {
-    const existingInterval = getState('workoutCheckInterval');
-    if (existingInterval) {
-        clearInterval(existingInterval);
-    }
-    
-    const interval = setInterval(async () => {
-        const currentWorkout = getState('currentWorkout');
-        if (currentWorkout && currentWorkout.status === 'started') {
-            await checkWorkoutStatus();
-            await syncPendingSets();
-            await syncInterExerciseRests();
-        }
-    }, TIMER_CONFIG.WORKOUT_CHECK_INTERVAL);
-    
-    setState('workoutCheckInterval', interval);
-}
-
 // Vérification du statut
 async function checkWorkoutStatus() {
     const currentWorkout = getState('currentWorkout');
@@ -235,37 +217,6 @@ async function checkWorkoutStatus() {
         }
     } catch (error) {
         console.error('Erreur check status:', error);
-    }
-}
-
-// Synchronisation des sets en attente
-export async function syncPendingSets() {
-    const pendingSets = JSON.parse(localStorage.getItem(STORAGE_KEYS.PENDING_SETS) || '[]');
-    if (pendingSets.length === 0) return;
-    
-    const successfullySynced = [];
-    
-    for (const set of pendingSets) {
-        try {
-            const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.SETS}/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(set)
-            });
-            
-            if (response.ok) {
-                successfullySynced.push(set);
-            }
-        } catch (error) {
-            console.error('Erreur sync set:', error);
-        }
-    }
-    
-    const remaining = pendingSets.filter(s => !successfullySynced.includes(s));
-    localStorage.setItem(STORAGE_KEYS.PENDING_SETS, JSON.stringify(remaining));
-    
-    if (successfullySynced.length > 0) {
-        showToast(`${successfullySynced.length} série(s) synchronisée(s)`, 'success');
     }
 }
 
@@ -379,33 +330,6 @@ export async function loadWorkoutHistory() {
     } catch (error) {
         console.error('Erreur chargement historique:', error);
     }
-}
-
-
-// Formatage de la date
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-        return "Aujourd'hui";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-        return "Hier";
-    } else {
-        return date.toLocaleDateString('fr-FR', { 
-            weekday: 'short', 
-            day: 'numeric', 
-            month: 'short' 
-        });
-    }
-}
-
-// Formatage de la durée
-function formatDuration(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes} min`;
 }
 
 // Démarrage du monitoring
