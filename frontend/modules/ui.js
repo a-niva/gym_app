@@ -106,7 +106,7 @@ export async function loadDashboard() {
         console.error('Erreur chargement stats:', error);
     }
 }
-
+ 
 // Mise à jour des statistiques du tableau de bord
 function updateDashboardStats(stats) {
     const totalWorkoutsElement = document.getElementById('totalWorkouts');
