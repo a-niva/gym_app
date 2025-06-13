@@ -157,20 +157,6 @@ function getInitialState() {
     };
 }
 
-// Reset state
-export const resetState = (keys = []) => {
-    if (keys.length === 0) {
-        // Reset tout l'état
-        Object.keys(AppState).forEach(key => {
-            AppState[key] = getDefaultState()[key];
-        });
-    } else {
-        // Reset seulement les clés spécifiées
-        keys.forEach(key => {
-            AppState[key] = getDefaultState()[key];
-        });
-    }
-};
 
 // Obtenir l'état par défaut
 const getDefaultState = () => ({
