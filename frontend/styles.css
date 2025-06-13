@@ -1925,3 +1925,63 @@ select.form-input {
     font-size: 0.875rem;
     text-align: center;
 }
+
+/* Styles pour le résumé du profil */
+.summary-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.summary-section {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.summary-label {
+    color: var(--gray-light);
+}
+
+.summary-value {
+    font-weight: 600;
+    color: var(--light);
+}
+
+.goal-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    color: white;
+    border-radius: var(--radius-sm);
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.equipment-summary-item {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.equipment-detail {
+    margin-top: 0.5rem;
+    padding-left: 1rem;
+    color: var(--gray-light);
+    font-size: 0.9rem;
+}

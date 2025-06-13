@@ -104,7 +104,7 @@ async def init_dev_mode(db: Session = Depends(get_db)):
                 "barres": {
                     "olympique": {"available": True, "count": 1, "weight": 20},
                     "courte": {"available": True, "count": 1, "weight": 2.5},
-                    "ez": {"available": True, "count": 1, "weight": 10}
+                    "ez": {"available": False, "count": 0, "weight": 10}
                 },
                 "disques": {
                     "available": True,
