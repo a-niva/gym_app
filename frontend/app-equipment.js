@@ -19,25 +19,26 @@ function calculateAvailableWeights(exercise) {
     
     // Exercices au poids du corps
     if (exercise.equipment.includes('bodyweight')) {
-        // Pour les exercices temporels, pas de poids
+        // Pour les exercices temporels, seulement l'option sans poids
         if (isTimeBased) {
-            weights.add(0);
             return [0];
         }
         
         // Poids du corps de base
         const bodyWeight = currentUser.weight || 75;
         
-        // Pour bodyweight, 0 représente "sans charge additionnelle"
+        // Commencer avec l'option sans charge (0 = poids du corps seul)
         weights.add(0);
         
         // Si l'utilisateur a des lests, ajouter les options avec charge additionnelle
         if (config.autres?.lest_corps?.weights?.length > 0) {
+            // Pour chaque lest disponible, ajouter l'option
             config.autres.lest_corps.weights.forEach(lestWeight => {
-                weights.add(bodyWeight + lestWeight);
+                weights.add(lestWeight); // Stocker juste le poids du lest
             });
         }
         
+        // Retourner les poids triés
         return Array.from(weights).sort((a, b) => a - b);
     }
     
@@ -247,14 +248,13 @@ function formatWeightDisplay(weight, exercise) {
     
     if (exerciseType === 'time_based' && weight === 0) {
         return 'Sans charge';
-    } else if (exerciseType === 'bodyweight_pure' && weight === 0) {
-        return `Poids du corps (${userWeight}kg)`;
-    } else if (exerciseType === 'bodyweight_weighted' && weight > 0) {
-        const lestWeight = weight - userWeight;
-        if (lestWeight > 0) {
-            return `${weight}kg (corps + ${lestWeight}kg)`;
+    } else if (exerciseType === 'bodyweight_pure' || exerciseType === 'bodyweight_weighted') {
+        if (weight === 0) {
+            return `Poids du corps (${userWeight}kg)`;
         } else {
-            return `${weight}kg`;
+            // Pour bodyweight, weight représente le lest ajouté
+            const totalWeight = userWeight + weight;
+            return `${totalWeight}kg (corps ${userWeight}kg + lest ${weight}kg)`;
         }
     } else {
         return `${weight}kg`;

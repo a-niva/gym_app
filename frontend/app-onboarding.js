@@ -64,18 +64,63 @@ function toggleEquipment(card) {
     }
 }
 
+// ===== VALIDATION DES DONNÉES =====
+function validateEmail(email) {
+    const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return pattern.test(email);
+}
+
+function validatePersonalInfo() {
+    const name = document.getElementById('userName').value.trim();
+    const birthDate = document.getElementById('userBirthDate').value;
+    const height = document.getElementById('userHeight').value;
+    const weight = document.getElementById('userWeight').value;
+    const experience = document.getElementById('experienceLevel').value;
+    const email = document.getElementById('userEmail')?.value.trim();
+    
+    // Validation du nom
+    if (!name || name.length < 2) {
+        showToast('Le nom doit contenir au moins 2 caractères', 'error');
+        return false;
+    }
+    
+    // Validation de l'email si présent
+    if (email && !validateEmail(email)) {
+        showToast('Adresse email invalide', 'error');
+        return false;
+    }
+    
+    // Validation de l'âge (minimum 16 ans)
+    if (birthDate) {
+        const age = new Date().getFullYear() - new Date(birthDate).getFullYear();
+        if (age < 16) {
+            showToast('Vous devez avoir au moins 16 ans', 'error');
+            return false;
+        }
+    }
+    
+    // Validation de la taille et du poids
+    const heightNum = parseFloat(height);
+    const weightNum = parseFloat(weight);
+    
+    if (!heightNum || heightNum < 100 || heightNum > 250) {
+        showToast('La taille doit être entre 100 et 250 cm', 'error');
+        return false;
+    }
+    
+    if (!weightNum || weightNum < 30 || weightNum > 300) {
+        showToast('Le poids doit être entre 30 et 300 kg', 'error');
+        return false;
+    }
+    
+    return true;
+}
+
 // ===== NAVIGATION PERSONNALISÉE AVEC VALIDATION =====
 function nextStep() {
     // Validation selon l'étape actuelle
     if (currentStep === 1) {
-        const name = document.getElementById('userName').value.trim();
-        const birthDate = document.getElementById('userBirthDate').value;
-        const height = document.getElementById('userHeight').value;
-        const weight = document.getElementById('userWeight').value;
-        const experience = document.getElementById('experienceLevel').value;
-        
-        if (!name || !birthDate || !height || !weight || !experience) {
-            showToast('Veuillez remplir tous les champs', 'error');
+        if (!validatePersonalInfo()) {
             return;
         }
     } else if (currentStep === 2) {

@@ -1,51 +1,232 @@
-// ===== GESTIONNAIRE API =====
+// ===== GESTION DE SESSION =====
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function onRefreshed(token) {
+    refreshSubscribers.forEach(callback => callback(token));
+    refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(callback) {
+    refreshSubscribers.push(callback);
+}
+
+async function refreshAuthToken() {
+    if (isRefreshing) {
+        return new Promise((resolve) => {
+            addRefreshSubscriber(() => resolve());
+        });
+    }
+    
+    isRefreshing = true;
+    
+    try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) throw new Error('No refresh token');
+        
+        const response = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('authToken', data.access_token);
+            if (data.refresh_token) {
+                localStorage.setItem('refreshToken', data.refresh_token);
+            }
+            onRefreshed(data.access_token);
+            return data.access_token;
+        } else {
+            throw new Error('Failed to refresh token');
+        }
+    } catch (error) {
+        console.error('Token refresh failed:', error);
+        // Rediriger vers login si le refresh échoue
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userId');
+        if (window.showProfileForm) {
+            window.showProfileForm();
+        }
+        throw error;
+    } finally {
+        isRefreshing = false;
+    }
+}// ===== GESTIONNAIRE API =====
 // Ce fichier centralise tous les appels API avec gestion d'erreurs
 // Pas de complexité inutile, juste des fonctions async/await simples
 
 import { setAllExercises } from './app-state.js';
 import { showToast } from './app-ui.js';
 
-// ===== USERS API =====
-async function saveUser(userData) {
+// Configuration de base pour les requêtes
+const API_BASE_URL = '/api';
+const REQUEST_TIMEOUT = 30000; // 30 secondes
+
+// ===== GESTION DE SESSION =====
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function onRefreshed(token) {
+    refreshSubscribers.forEach(callback => callback(token));
+    refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(callback) {
+    refreshSubscribers.push(callback);
+}
+
+async function refreshAuthToken() {
+    if (isRefreshing) {
+        return new Promise((resolve) => {
+            addRefreshSubscriber(() => resolve());
+        });
+    }
+    
+    isRefreshing = true;
+    
     try {
-        const response = await fetch('/api/users/', {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) throw new Error('No refresh token');
+        
+        const response = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
+            body: JSON.stringify({ refresh_token: refreshToken })
         });
         
         if (response.ok) {
-            return await response.json();
-        } else {
-            const error = await response.json();
-            console.error('Erreur serveur:', error);
-
-            // Gérer les erreurs de validation (422)
-            if (Array.isArray(error.detail)) {
-                const errorMessages = error.detail.map(err => {
-                    const field = err.loc ? err.loc[err.loc.length - 1] : 'Champ';
-                    return `${field}: ${err.msg}`;
-                }).join('\n');
-                showToast(errorMessages || 'Erreur de validation', 'error');
-            } else {
-                showToast(error.detail || 'Erreur lors de la sauvegarde', 'error');
+            const data = await response.json();
+            localStorage.setItem('authToken', data.access_token);
+            if (data.refresh_token) {
+                localStorage.setItem('refreshToken', data.refresh_token);
             }
-            return null;
+            onRefreshed(data.access_token);
+            return data.access_token;
+        } else {
+            throw new Error('Failed to refresh token');
         }
     } catch (error) {
-        console.error('Erreur réseau:', error);
-        showToast('Erreur de connexion au serveur', 'error');
+        console.error('Token refresh failed:', error);
+        // Rediriger vers login si le refresh échoue
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userId');
+        if (window.showProfileForm) {
+            window.showProfileForm();
+        }
+        throw error;
+    } finally {
+        isRefreshing = false;
+    }
+}
+
+// Fonction helper pour les timeouts
+function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout de la requête')), timeout)
+        )
+    ]);
+}
+
+// Fonction générique pour les appels API avec retry
+async function apiCall(endpoint, options = {}, retries = 3) {
+    let lastError;
+    
+    for (let i = 0; i < retries; i++) {
+        try {
+            // Ajouter le token d'authentification si disponible
+            const authToken = localStorage.getItem('authToken');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            const response = await fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                headers
+            });
+            
+            // Gérer l'erreur 401 (non autorisé)
+            if (response.status === 401 && authToken) {
+                try {
+                    await refreshAuthToken();
+                    // Réessayer avec le nouveau token
+                    const newToken = localStorage.getItem('authToken');
+                    headers['Authorization'] = `Bearer ${newToken}`;
+                    
+                    const retryResponse = await fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
+                        ...options,
+                        headers
+                    });
+                    
+                    if (!retryResponse.ok) {
+                        throw new Error(`API Error: ${retryResponse.status}`);
+                    }
+                    
+                    return await retryResponse.json();
+                } catch (refreshError) {
+                    throw new Error('Session expirée');
+                }
+            }
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ detail: 'Erreur inconnue' }));
+                throw new Error(error.detail || `Erreur HTTP ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            lastError = error;
+            console.error(`Tentative ${i + 1}/${retries} échouée:`, error);
+            
+            // Ne pas réessayer pour certaines erreurs
+            if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Session expirée')) {
+                break;
+            }
+            
+            // Attendre avant de réessayer (backoff exponentiel)
+            if (i < retries - 1) {
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+        }
+    }
+    
+    throw lastError;
+}
+
+// ===== USERS API =====
+async function saveUser(userData) {
+    try {
+        const user = await apiCall('/users/', {
+            method: 'POST',
+            body: JSON.stringify(userData)
+        });
+        return user;
+    } catch (error) {
+        console.error('Erreur serveur:', error);
+        
+        // Gérer les erreurs de validation spécifiques
+        if (error.message.includes('422')) {
+            showToast('Données invalides, vérifiez le formulaire', 'error');
+        } else {
+            showToast(error.message || 'Erreur lors de la sauvegarde', 'error');
+        }
         return null;
     }
 }
 
 async function loadUserFromAPI(userId) {
     try {
-        const response = await fetch(`/api/users/${userId}`);
-        if (response.ok) {
-            return await response.json();
-        }
-        return null;
+        return await apiCall(`/users/${userId}`);
     } catch (error) {
         console.error('Erreur chargement utilisateur:', error);
         return null;
@@ -54,11 +235,7 @@ async function loadUserFromAPI(userId) {
 
 async function getUserStats(userId) {
     try {
-        const response = await fetch(`/api/users/${userId}/stats`);
-        if (response.ok) {
-            return await response.json();
-        }
-        return null;
+        return await apiCall(`/users/${userId}/stats`);
     } catch (error) {
         console.error('Erreur chargement stats:', error);
         return null;

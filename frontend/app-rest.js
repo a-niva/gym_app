@@ -60,24 +60,27 @@ function showRestInterface(setData) {
 
 // ===== FORMATAGE DE L'AFFICHAGE D'UNE SÉRIE =====
 function formatSetDisplay(setData) {
-    // Utilisons la fonction existante de app-equipment.js pour éviter la redondance
-    const baseDisplay = formatWeightDisplay(setData.weight, currentExercise);
-    
-    // Ajoutons les répétitions ou la durée selon le type d'exercice
+    // Déterminer le type d'exercice
     const isTimeBased = currentExercise && currentExercise.name_fr.toLowerCase().match(/gainage|planche|plank|vacuum|isométrique/);
+    const isBodyweight = currentExercise && currentExercise.equipment.includes('bodyweight');
     
     if (isTimeBased) {
         return `${setData.actual_reps} secondes${setData.weight > 0 ? ` avec ${setData.weight}kg` : ''}`;
+    } else if (isBodyweight) {
+        // Pour bodyweight, utiliser le formatage centralisé
+        const weightDisplay = formatWeightDisplay(setData.weight, currentExercise);
+        return `${weightDisplay} × ${setData.actual_reps} reps`;
     } else {
-        return `${baseDisplay} × ${setData.actual_reps} reps`;
+        return `${setData.weight}kg × ${setData.actual_reps} reps`;
     }
 }
 
 // ===== GESTION DU TIMER DE REPOS =====
 function startRestTimer(seconds = 60) {
-    // Clear any existing timer
+    // Clear any existing timer first
     if (restTimerInterval) {
         clearInterval(restTimerInterval);
+        setRestTimerInterval(null);
     }
 
     // Ajouter une classe pour l'état actif du repos
@@ -88,15 +91,22 @@ function startRestTimer(seconds = 60) {
     
     const restStartTime = new Date();
     let targetReached = false;
+    let lastSecond = -1; // Pour éviter les mises à jour inutiles
 
     const interval = setInterval(() => {
-        if (!document.getElementById('restTimer')) {
+        const restTimerEl = document.getElementById('restTimer');
+        if (!restTimerEl) {
             clearInterval(interval);
             setRestTimerInterval(null);
             return;
         }
 
         const elapsed = Math.floor((new Date() - restStartTime) / 1000);
+        
+        // Éviter les mises à jour inutiles
+        if (elapsed === lastSecond) return;
+        lastSecond = elapsed;
+        
         const remaining = Math.max(0, seconds - elapsed);
         
         updateRestTimerDisplay(elapsed);
@@ -124,6 +134,14 @@ function startRestTimer(seconds = 60) {
     }, 1000);
     
     setRestTimerInterval(interval);
+    
+    // Retourner une fonction de cleanup
+    return () => {
+        if (interval) {
+            clearInterval(interval);
+            setRestTimerInterval(null);
+        }
+    };
 }
 
 // ===== MISE À JOUR DE L'AFFICHAGE DU TIMER =====

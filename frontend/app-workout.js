@@ -289,17 +289,28 @@ async function syncPendingSets() {
     if (pendingSets.length === 0) return;
     
     const successfullySynced = [];
+    const failedSets = [];
     
     for (const set of pendingSets) {
-        const result = await createSet(set);
-        if (result) {
-            successfullySynced.push(set);
+        try {
+            const result = await createSet(set);
+            if (result) {
+                successfullySynced.push(set);
+            } else {
+                failedSets.push(set);
+            }
+        } catch (error) {
+            console.error('Erreur sync set:', error);
+            failedSets.push(set);
         }
     }
     
-    // Retirer les sets synchronisés
-    const remaining = pendingSets.filter(s => !successfullySynced.includes(s));
-    localStorage.setItem('pendingSets', JSON.stringify(remaining));
+    // Ne conserver que les sets qui ont échoué
+    if (failedSets.length > 0) {
+        localStorage.setItem('pendingSets', JSON.stringify(failedSets));
+    } else {
+        localStorage.removeItem('pendingSets');
+    }
     
     if (successfullySynced.length > 0) {
         showToast(`${successfullySynced.length} série(s) synchronisée(s)`, 'success');

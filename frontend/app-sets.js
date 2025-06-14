@@ -64,7 +64,7 @@ function showSetInput() {
     
     // Adapter les labels selon le type d'exercice
     const weightLabel = isBodyweight && !isTimeBased ? 
-        'Poids total (corps + charge)' : 
+        'Charge additionnelle (kg)' : 
         isTimeBased ? 
         'Charge additionnelle (kg)' : 
         'Poids total (kg)';
@@ -97,7 +97,7 @@ function showSetInput() {
                     </div>
                     <div class="weight-info">
                         ${isBodyweight ? 
-                            `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Avec lest disponible' : ''}` :
+                            `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
                             availableWeights.length > 0 ? 
                             `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
                             'Aucun poids configuré'}
@@ -163,6 +163,42 @@ function showSetInput() {
     
     // Gestion des suggestions de poids basées sur l'historique
     loadWeightSuggestion();
+    
+    // Scroll automatique vers les inputs sur mobile
+    setTimeout(() => {
+        const setTracker = document.querySelector('.set-tracker');
+        if (setTracker && window.innerWidth <= 768) {
+            setTracker.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 100);
+    
+    // Gérer le redimensionnement du viewport (clavier virtuel)
+    const handleViewportChange = () => {
+        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const isKeyboardOpen = viewportHeight < window.screen.height * 0.75;
+        const setTracker = document.querySelector('.set-tracker');
+        
+        if (setTracker) {
+            if (isKeyboardOpen) {
+                setTracker.style.paddingBottom = '260px';
+                // Scroll vers l'input actif
+                const activeElement = document.activeElement;
+                if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'SELECT')) {
+                    setTimeout(() => {
+                        activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            } else {
+                setTracker.style.paddingBottom = '';
+            }
+        }
+    };
+    
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportChange);
+    } else {
+        window.addEventListener('resize', handleViewportChange);
+    }
 }
 
 // ===== CHARGEMENT DES SUGGESTIONS DE POIDS =====
@@ -187,11 +223,15 @@ async function loadWeightSuggestion() {
 
 // ===== GESTION DES TIMERS =====
 function startTimers() {
-    if (timerInterval) clearInterval(timerInterval);
+    // Nettoyer l'ancien timer avant d'en créer un nouveau
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        setTimerInterval(null);
+    }
     
     const interval = setInterval(() => {
-        if (document.hidden) return;
-        if (!document.getElementById('setTimer')) {
+        // Vérifier que le document est visible et que l'élément existe
+        if (document.hidden || !document.getElementById('setTimer')) {
             clearInterval(interval);
             setTimerInterval(null);
             return;
@@ -210,6 +250,25 @@ function startTimers() {
     }, 1000);
     
     setTimerInterval(interval);
+    
+    // Nettoyer automatiquement si la page devient invisible
+    const handleVisibilityChange = () => {
+        if (document.hidden && timerInterval) {
+            clearInterval(timerInterval);
+            setTimerInterval(null);
+        }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Retourner une fonction de nettoyage
+    return () => {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            setTimerInterval(null);
+        }
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
 }
 
 // ===== SÉLECTION DE LA FATIGUE ET DE L'EFFORT =====
@@ -258,11 +317,27 @@ function validateWeightInput() {
 
 // ===== VALIDATION ET ENREGISTREMENT D'UNE SÉRIE =====
 async function completeSet() {
+    // Validation stricte des entrées
+    const weightInput = document.getElementById('setWeight');
+    const repsInput = document.getElementById('setReps');
+    
+    if (!weightInput || !repsInput) {
+        showToast('Interface non prête, veuillez patienter', 'error');
+        return;
+    }
+    
     const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
     
-    // Récupérer les valeurs
-    let weight = parseFloat(document.getElementById('setWeight').value) || 0;
-    const reps = parseInt(document.getElementById('setReps').value);
+    // Récupérer et valider les valeurs
+    let weight = parseFloat(weightInput.value);
+    const reps = parseInt(repsInput.value);
+    
+    // Validation stricte
+    if (isNaN(weight)) weight = 0;
+    if (isNaN(reps) || reps <= 0) {
+        showToast('Veuillez indiquer un nombre de répétitions valide', 'error');
+        return;
+    }
     
     // Pour les exercices au poids du corps, ajuster si nécessaire
     const isBodyweight = currentExercise.equipment.includes('bodyweight');
@@ -270,14 +345,25 @@ async function completeSet() {
         currentExercise.name_fr.toLowerCase().includes(keyword)
     );
     
-    // Validation adaptée
+    // Validation adaptée au type d'exercice
     if (!isTimeBased && weight === 0 && !isBodyweight) {
         showToast('Veuillez indiquer un poids', 'error');
         return;
     }
     
-    if (!reps || reps <= 0) {
-        showToast(`Veuillez indiquer ${isTimeBased ? 'une durée' : 'des répétitions'}`, 'error');
+    // Limites raisonnables
+    if (weight > 500) {
+        showToast('Le poids semble incorrect (max 500kg)', 'error');
+        return;
+    }
+    
+    if (!isTimeBased && reps > 100) {
+        showToast('Le nombre de répétitions semble incorrect (max 100)', 'error');
+        return;
+    }
+    
+    if (isTimeBased && reps > 600) {
+        showToast('La durée semble incorrecte (max 10 minutes)', 'error');
         return;
     }
     
@@ -288,90 +374,121 @@ async function completeSet() {
         set_number: currentSetNumber,
         target_reps: currentTargetReps,
         actual_reps: reps,
-        weight: weight,
+        weight: weight, // Pour bodyweight, c'est le poids du lest (0 = sans lest)
         rest_time: 0,
         fatigue_level: selectedFatigue * 2,
         perceived_exertion: selectedEffort * 2,
         skipped: false,
-        // Ajouter des métadonnées
+        // Ajouter des métadonnées pour clarifier
         is_bodyweight: isBodyweight,
         is_time_based: isTimeBased,
-        body_weight: isBodyweight ? currentUser.weight : null
+        body_weight: isBodyweight ? currentUser.weight : null,
+        total_weight: isBodyweight ? (currentUser.weight + weight) : weight
     };
     
-    const result = await createSet(setData);
-    
-    if (result) {
-        // Stocker l'ID pour mise à jour ultérieure du temps de repos
-        localStorage.setItem('lastCompletedSetId', result.id);
+    try {
+        const result = await createSet(setData);
         
-        // Ajouter à l'historique local avec la durée
-        addSetToHistory({...setData, duration: setDuration});
-        
-        // Sauvegarder dans l'historique de la session
-        updateSessionHistory(setData);
-        
-        // Notification de succès
-        showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
-        
-        // Son de validation de série
-        if (!isSilentMode && window.playBeep) {
-            window.playBeep(800, 150);
+        if (result) {
+            // Stocker l'ID pour mise à jour ultérieure du temps de repos
+            localStorage.setItem('lastCompletedSetId', result.id);
+            
+            // Supprimer cette série des données en attente si elle y était
+            const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
+            const filteredPending = pendingSets.filter(s => 
+                !(s.exercise_id === setData.exercise_id && 
+                  s.set_number === setData.set_number &&
+                  s.workout_id === setData.workout_id)
+            );
+            localStorage.setItem('pendingSets', JSON.stringify(filteredPending));
+            
+            handleSetSuccess(setData, setDuration);
+        } else {
+            throw new Error('Échec de l\'enregistrement');
         }
+    } catch (error) {
+        console.error('Erreur lors de l\'enregistrement:', error);
         
-        // Vérification fatigue toutes les 3 séries
-        if (currentSetNumber % 3 === 0) {
-            const fatigue = await checkFatigue(currentWorkout.id);
+        // Sauvegarder localement en mode hors-ligne
+        saveSetLocally(setData);
+        
+        // Continuer malgré l'erreur
+        handleSetSuccess(setData, setDuration);
+        
+        showToast('Série sauvegardée localement (hors-ligne)', 'warning');
+    }
+}
+
+// Fonction helper pour gérer le succès d'une série
+function handleSetSuccess(setData, setDuration) {
+    // Ajouter à l'historique local avec la durée
+    addSetToHistory({...setData, duration: setDuration});
+    
+    // Sauvegarder dans l'historique de la session
+    updateSessionHistory(setData);
+    
+    // Notification de succès
+    showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
+    
+    // Son de validation de série
+    if (!isSilentMode && window.playBeep) {
+        window.playBeep(800, 150);
+    }
+    
+    // Vérification fatigue toutes les 3 séries
+    if (currentSetNumber % 3 === 0) {
+        checkFatigue(currentWorkout.id).then(fatigue => {
             if (fatigue && fatigue.risk === 'high') {
                 showToast(`⚠️ ${fatigue.message}`, 'warning');
             }
-        }
-        
-        // Arrêter le timer de série
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            setTimerInterval(null);
-        }
-        
-        // Augmenter légèrement la fatigue pour la prochaine série
-        setSelectedFatigue(Math.min(5, selectedFatigue + 0.3));
+        }).catch(() => {
+            // Ignorer les erreurs de vérification de fatigue
+        });
+    }
+    
+    // Arrêter le timer de série
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        setTimerInterval(null);
+    }
+    
+    // Augmenter légèrement la fatigue pour la prochaine série
+    setSelectedFatigue(Math.min(5, selectedFatigue + 0.3));
 
-        // Mettre à jour le temps de repos de la série PRÉCÉDENTE
-        await updatePreviousSetRestTime();
-        
-        // Afficher l'interface de repos
-        if (window.showRestInterface) {
-            window.showRestInterface({...setData, duration: setDuration});
-        }
-        
-        // Mettre à jour la distribution musculaire
-        if (window.updateMuscleDistribution) {
-            window.updateMuscleDistribution();
-        }
-    } else {
-        // Sauvegarde locale en cas d'erreur réseau
-        console.error('Erreur réseau lors de l\'enregistrement');
-        showToast('Série sauvegardée localement', 'warning');
-        
-        const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
+    // Mettre à jour le temps de repos de la série PRÉCÉDENTE
+    updatePreviousSetRestTime().catch(() => {
+        // Ignorer les erreurs de mise à jour du temps de repos
+    });
+    
+    // Afficher l'interface de repos
+    if (window.showRestInterface) {
+        window.showRestInterface({...setData, duration: setDuration});
+    }
+    
+    // Mettre à jour la distribution musculaire
+    if (window.updateMuscleDistribution) {
+        window.updateMuscleDistribution();
+    }
+}
+
+// Fonction helper pour sauvegarder localement
+function saveSetLocally(setData) {
+    const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
+    
+    // Éviter les doublons
+    const exists = pendingSets.some(s => 
+        s.exercise_id === setData.exercise_id && 
+        s.set_number === setData.set_number &&
+        s.workout_id === setData.workout_id
+    );
+    
+    if (!exists) {
         pendingSets.push({
             ...setData,
             timestamp: new Date().toISOString(),
             syncStatus: 'pending'
         });
         localStorage.setItem('pendingSets', JSON.stringify(pendingSets));
-        
-        // Continuer malgré l'erreur
-        addSetToHistory({...setData, duration: setDuration});
-        updateSessionHistory(setData);
-        setSelectedFatigue(Math.min(5, selectedFatigue + 0.3));
-        
-        if (window.showRestInterface) {
-            window.showRestInterface({...setData, duration: setDuration});
-        }
-        if (window.updateMuscleDistribution) {
-            window.updateMuscleDistribution();
-        }
     }
 }
 

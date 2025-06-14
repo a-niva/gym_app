@@ -156,20 +156,43 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 // ===== DÉTECTION DE LA CONNEXION =====
+let isOnline = navigator.onLine;
+let syncRetryTimeout = null;
+
 window.addEventListener('online', () => {
+    isOnline = true;
     showToast('Connexion rétablie', 'success');
-    // Synchroniser les données en attente
-    if (window.syncPendingSets) {
-        window.syncPendingSets();
-    }
-    if (window.syncInterExerciseRests) {
-        window.syncInterExerciseRests();
-    }
+    
+    // Synchroniser les données en attente avec un délai
+    if (syncRetryTimeout) clearTimeout(syncRetryTimeout);
+    syncRetryTimeout = setTimeout(() => {
+        if (window.syncPendingSets) {
+            window.syncPendingSets();
+        }
+        if (window.syncInterExerciseRests) {
+            window.syncInterExerciseRests();
+        }
+    }, 2000); // Attendre 2 secondes que la connexion se stabilise
 });
 
 window.addEventListener('offline', () => {
+    isOnline = false;
     showToast('Mode hors-ligne - Les données seront synchronisées plus tard', 'warning');
 });
+
+// Vérification périodique de la connexion
+setInterval(() => {
+    const wasOnline = isOnline;
+    isOnline = navigator.onLine;
+    
+    if (!wasOnline && isOnline) {
+        // Connexion rétablie
+        window.dispatchEvent(new Event('online'));
+    } else if (wasOnline && !isOnline) {
+        // Connexion perdue
+        window.dispatchEvent(new Event('offline'));
+    }
+}, 5000); // Vérifier toutes les 5 secondes
 
 // ===== PRÉVENTION DE LA PERTE DE DONNÉES =====
 window.addEventListener('beforeunload', (event) => {
@@ -178,12 +201,54 @@ window.addEventListener('beforeunload', (event) => {
         event.preventDefault();
         event.returnValue = 'Une séance est en cours. Voulez-vous vraiment quitter ?';
     }
+    
+    // Vérifier s'il y a des données non synchronisées
+    const pendingSets = localStorage.getItem('pendingSets');
+    if (pendingSets && JSON.parse(pendingSets).length > 0) {
+        event.preventDefault();
+        event.returnValue = 'Des données n\'ont pas été synchronisées. Voulez-vous vraiment quitter ?';
+    }
 });
+
+// Gestion du bouton retour
+window.addEventListener('popstate', (event) => {
+    if (currentUser && window.currentWorkout && window.currentWorkout.status === 'started') {
+        if (!confirm('Une séance est en cours. Voulez-vous vraiment quitter cette page ?')) {
+            // Empêcher la navigation arrière
+            window.history.pushState(null, '', window.location.href);
+        }
+    }
+});
+
+// ===== KEEP-ALIVE POUR RENDER =====
+function startKeepAlive() {
+    // Ping le serveur toutes les 5 minutes pour éviter qu'il s'endorme
+    const keepAliveInterval = setInterval(async () => {
+        try {
+            // Utiliser une route légère qui ne fait que répondre OK
+            await fetch('/api/health', {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            console.log('Keep-alive ping sent');
+        } catch (error) {
+            console.error('Keep-alive failed:', error);
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    // Nettoyer l'interval si la page est fermée
+    window.addEventListener('beforeunload', () => {
+        clearInterval(keepAliveInterval);
+    });
+}
 
 // ===== LANCEMENT DE L'APPLICATION =====
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM chargé - Initialisation de l\'application');
     initializeApp();
+    startKeepAlive();
 });
 
 // Export de la fonction d'initialisation si nécessaire
