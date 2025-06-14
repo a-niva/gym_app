@@ -1,0 +1,140 @@
+// ===== NAVIGATION ET VUES =====
+// Ce fichier gère toute la navigation entre les vues et les étapes de l'onboarding
+
+import { 
+    currentStep, 
+    totalSteps,
+    setCurrentStep,
+    currentUser,
+    timerInterval,
+    restTimerInterval,
+    setTimerInterval,
+    setRestTimerInterval
+} from './app-state.js';
+
+// ===== NAVIGATION & VUES =====
+function showView(viewName) {
+    // Clean up any running timers when leaving training view
+    if (viewName !== 'training') {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            setTimerInterval(null);
+        }
+        if (restTimerInterval) {
+            clearInterval(restTimerInterval);
+            setRestTimerInterval(null);
+        }
+    }
+    
+    document.querySelectorAll('.view, .onboarding').forEach(view => {
+        view.classList.remove('active');
+    });
+    
+    const view = document.getElementById(viewName) || document.querySelector(`.${viewName}`);
+    if (view) {
+        view.classList.add('active');
+        if (viewName === 'onboarding') {
+            showStep(currentStep);
+        }
+    }
+}
+
+function showStep(step) {
+    document.querySelectorAll('.onboarding-step').forEach(s => {
+        s.classList.remove('active');
+    });
+    document.getElementById(`step${step}`).classList.add('active');
+}
+
+// Navigation dans l'onboarding
+function nextStep() {
+    // La validation est gérée dans app-onboarding.js
+    // Cette fonction sera appelée depuis là-bas après validation
+    if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+        showStep(currentStep);
+        updateProgressBar();
+    }
+}
+
+function prevStep() {
+    if (currentStep > 1) {
+        setCurrentStep(currentStep - 1);
+        showStep(currentStep);
+        updateProgressBar();
+    }
+}
+
+function updateProgressBar() {
+    const progress = (currentStep - 1) / (totalSteps - 1) * 100;
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+    }
+}
+
+// Affichage de l'interface principale après connexion
+function showMainInterface() {
+    if (!currentUser) {
+        console.error('Aucun utilisateur chargé');
+        showProfileForm();
+        return;
+    }
+    
+    document.getElementById('onboarding').classList.remove('active');
+    document.getElementById('progressContainer').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'flex';
+    
+    if (currentUser) {
+        document.getElementById('userInitial').textContent = currentUser.name[0].toUpperCase();
+        document.getElementById('userInitial').style.display = 'flex';
+    }
+    
+    showView('dashboard');
+    // loadDashboard sera appelé depuis app-dashboard.js
+    if (window.loadDashboard) {
+        window.loadDashboard();
+    }
+}
+
+function showProfileForm() {
+    // Réinitialiser l'état est géré dans app-onboarding.js
+    // Ici on gère juste l'affichage
+    
+    // Masquer l'interface principale
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('userInitial').style.display = 'none';
+    
+    // Afficher l'onboarding avec la barre de progression
+    document.getElementById('onboarding').classList.add('active');
+    document.getElementById('progressContainer').style.display = 'block';
+    
+    // Réinitialiser les vues
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
+    
+    // Afficher la première étape
+    setCurrentStep(1);
+    showStep(1);
+    updateProgressBar();
+}
+
+// Export des fonctions pour utilisation globale dans le HTML
+window.showView = showView;
+window.showStep = showStep;
+window.nextStep = nextStep;
+window.prevStep = prevStep;
+window.showMainInterface = showMainInterface;
+window.showProfileForm = showProfileForm;
+
+// Export pour les autres modules
+export { 
+    showView, 
+    showStep, 
+    nextStep, 
+    prevStep, 
+    updateProgressBar,
+    showMainInterface,
+    showProfileForm
+};
