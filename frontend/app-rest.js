@@ -14,11 +14,12 @@ import {
     setAudioContext,
     isSilentMode,
     incrementSetNumber,
-    setStartTime
+    setSetStartTime
 } from './app-state.js';
 
 import { updateSetRestTime } from './app-api.js';
 import { REST_TARGET_TIME } from './app-config.js';
+import { formatWeightDisplay } from './app-equipment.js';
 
 // ===== AFFICHAGE DE L'INTERFACE DE REPOS =====
 function showRestInterface(setData) {
@@ -59,15 +60,16 @@ function showRestInterface(setData) {
 
 // ===== FORMATAGE DE L'AFFICHAGE D'UNE SÉRIE =====
 function formatSetDisplay(setData) {
+    // Utilisons la fonction existante de app-equipment.js pour éviter la redondance
+    const baseDisplay = formatWeightDisplay(setData.weight, currentExercise);
+    
+    // Ajoutons les répétitions ou la durée selon le type d'exercice
     const isTimeBased = currentExercise && currentExercise.name_fr.toLowerCase().match(/gainage|planche|plank|vacuum|isométrique/);
-    const isBodyweight = currentExercise && currentExercise.equipment.includes('bodyweight');
     
     if (isTimeBased) {
-        return `${setData.actual_reps}s${setData.weight > 0 ? ` + ${setData.weight}kg` : ''}`;
-    } else if (isBodyweight && setData.weight === 0) {
-        return `Poids du corps × ${setData.actual_reps} reps`;
+        return `${setData.actual_reps} secondes${setData.weight > 0 ? ` avec ${setData.weight}kg` : ''}`;
     } else {
-        return `${setData.weight}kg × ${setData.actual_reps} reps`;
+        return `${baseDisplay} × ${setData.actual_reps} reps`;
     }
 }
 
@@ -222,10 +224,13 @@ function skipRestPeriod() {
     
     setIsInRestPeriod(false);
     incrementSetNumber();
-    setStartTime(new Date());
+    setSetStartTime(new Date());
     
+    // Vérification de sécurité avant d'appeler showSetInput
     if (window.showSetInput) {
         window.showSetInput();
+    } else {
+        console.error('showSetInput non disponible - vérifiez que app-sets.js est chargé');
     }
 }
 

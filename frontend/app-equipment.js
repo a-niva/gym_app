@@ -27,7 +27,9 @@ function calculateAvailableWeights(exercise) {
         
         // Poids du corps de base
         const bodyWeight = currentUser.weight || 75;
-        weights.add(bodyWeight);
+        
+        // Pour bodyweight, 0 représente "sans charge additionnelle"
+        weights.add(0);
         
         // Si l'utilisateur a des lests, ajouter les options avec charge additionnelle
         if (config.autres?.lest_corps?.weights?.length > 0) {
@@ -36,12 +38,7 @@ function calculateAvailableWeights(exercise) {
             });
         }
         
-        // Toujours ajouter l'option sans charge (0) en premier
-        const sortedWeights = Array.from(weights).sort((a, b) => a - b);
-        if (!sortedWeights.includes(0)) {
-            sortedWeights.unshift(0);
-        }
-        return sortedWeights;
+        return Array.from(weights).sort((a, b) => a - b);
     }
     
     // Barres + disques
@@ -246,14 +243,14 @@ function calculateSuggestedWeight(exercise, lastSet = null) {
 // ===== FORMATAGE DE L'AFFICHAGE DU POIDS =====
 function formatWeightDisplay(weight, exercise) {
     const exerciseType = getExerciseType(exercise);
+    const userWeight = currentUser?.weight || 75;
     
     if (exerciseType === 'time_based' && weight === 0) {
         return 'Sans charge';
     } else if (exerciseType === 'bodyweight_pure' && weight === 0) {
-        return `Poids du corps (${currentUser?.weight || 75}kg)`;
+        return `Poids du corps (${userWeight}kg)`;
     } else if (exerciseType === 'bodyweight_weighted' && weight > 0) {
-        const bodyWeight = currentUser?.weight || 75;
-        const lestWeight = weight - bodyWeight;
+        const lestWeight = weight - userWeight;
         if (lestWeight > 0) {
             return `${weight}kg (corps + ${lestWeight}kg)`;
         } else {

@@ -97,7 +97,7 @@ function showSetInput() {
                     </div>
                     <div class="weight-info">
                         ${isBodyweight ? 
-                            `Poids du corps: ${currentUser.weight}kg${availableWeights.length > 1 ? ' • Avec lest disponible' : ''}` :
+                            `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Avec lest disponible' : ''}` :
                             availableWeights.length > 0 ? 
                             `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
                             'Aucun poids configuré'}

@@ -278,3 +278,10 @@ export function setLastSyncTime(time) {
 export function setCurrentTargetReps(reps) {
     currentTargetReps = reps;
 }
+
+// ===== EXPORTS GLOBAUX POUR LES AUTRES MODULES =====
+// Ces fonctions doivent être accessibles globalement pour l'interopérabilité
+window.setSetStartTime = setSetStartTime;
+window.setLastSetEndTime = setLastSetEndTime;
+window.setSelectedFatigue = setSelectedFatigue;
+window.setSelectedEffort = setSelectedEffort;

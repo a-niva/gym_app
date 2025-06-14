@@ -190,8 +190,8 @@ function finishExercise() {
     setCurrentExercise(null);
     setCurrentSetNumber(1);
     
-    if (window.setStartTime) {
-        window.setStartTime(null);
+    if (window.setSetStartTime) {
+        window.setSetStartTime(null);
     }
     if (window.setLastSetEndTime) {
         window.setLastSetEndTime(null);
