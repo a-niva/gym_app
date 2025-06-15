@@ -485,6 +485,50 @@ select.form-input {
     }
 }
 
+/* ===== WELCOME SCREEN ===== */
+.welcome-container {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2rem;
+}
+
+.profiles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profile-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.profile-info h4 {
+    margin: 0 0 0.5rem;
+    color: white;
+}
+
+.profile-info p {
+    margin: 0;
+    color: var(--gray);
+    font-size: 0.875rem;
+}
+
 /* ===== AJOUTS CSS POUR L'ÉQUIPEMENT (votre code existant) ===== */
 
 /* Configuration équipement */

@@ -822,7 +822,7 @@ function logout() {
         
         updateProgressBar();
         showStep(1);
-        showProfileForm();
+        showWelcomeScreen();
         showToast('Déconnexion réussie', 'success');
     }
 }

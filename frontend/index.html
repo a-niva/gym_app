@@ -283,6 +283,28 @@
         </div>
     </div>
 
+    <!-- Welcome Screen -->
+    <div class="view active" id="welcome">
+        <div class="welcome-container">
+            <h1>💪 Fitness Coach</h1>
+            <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
+            
+            <button class="btn btn-primary" onclick="startNewProfile()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Créer un nouveau profil
+            </button>
+            
+            <div class="profiles-section" style="margin-top: 3rem;">
+                <h3 style="margin-bottom: 1.5rem;">Profils existants</h3>
+                <div id="profilesList" class="profiles-list">
+                    <!-- Chargé dynamiquement -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation -->
     <div class="bottom-nav" id="bottomNav" style="display: none;">
         <button class="nav-item active" onclick="showView('dashboard')">

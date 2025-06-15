@@ -31,42 +31,90 @@ import { showToast } from './app-ui.js';
 
 // ===== FONCTION D'INITIALISATION PRINCIPALE =====
 async function initializeApp() {
-    console.log('🚀 Initialisation de l\'application MuscleUp...');
+    const userId = localStorage.getItem('userId');
     
+    // Si pas d'utilisateur connecté, afficher l'écran d'accueil
+    if (!userId) {
+        showWelcomeScreen();
+        return;
+    }
+    
+    // Si utilisateur connecté, charger son profil
     try {
-        // 1. Configurer la date max pour la date de naissance (18 ans minimum)
-        setupBirthDateInput();
-        
-        // 2. Charger la préférence du mode silencieux
-        loadSilentModePreference();
-        
-        // 3. Charger les exercices depuis l'API
-        console.log('📋 Chargement des exercices...');
-        await loadExercises();
-        
-        // 4. Vérifier si un utilisateur existe
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-            console.log('👤 Chargement du profil utilisateur...');
-            await loadUser(userId);
+        const response = await fetch(`/api/users/${userId}`);
+        if (response.ok) {
+            const userData = await response.json();
+            currentUser = userData;
+            showMainInterface();
         } else {
-            console.log('🆕 Nouvel utilisateur - Affichage de l\'onboarding');
-            // Afficher la barre de progression pour l'onboarding
-            document.getElementById('progressContainer').style.display = 'block';
-            updateProgressBar();
-            showView('onboarding');
+            // Utilisateur introuvable, retour à l'accueil
+            localStorage.removeItem('userId');
+            showWelcomeScreen();
         }
-        
-        // 5. Enregistrer le Service Worker pour PWA
-        registerServiceWorker();
-        
-        console.log('✅ Application initialisée avec succès');
-        
     } catch (error) {
-        console.error('❌ Erreur lors de l\'initialisation:', error);
-        showToast('Erreur lors de l\'initialisation de l\'application', 'error');
+        console.error('Erreur lors du chargement du profil:', error);
+        showWelcomeScreen();
     }
 }
+
+async function showWelcomeScreen() {
+    // Masquer tout sauf l'écran d'accueil
+    document.getElementById('onboarding').classList.remove('active');
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('progressContainer').style.display = 'none';
+    document.getElementById('userInitial').style.display = 'none';
+    
+    // Afficher l'écran d'accueil
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
+    document.getElementById('welcome').classList.add('active');
+    
+    // Charger la liste des profils
+    await loadProfiles();
+}
+
+async function loadProfiles() {
+    try {
+        const response = await fetch('/api/users/');
+        const profiles = await response.json();
+        
+        const container = document.getElementById('profilesList');
+        if (profiles.length === 0) {
+            container.innerHTML = '<p style="color: var(--gray);">Aucun profil existant</p>';
+            return;
+        }
+        
+        container.innerHTML = profiles.map(profile => `
+            <div class="profile-card" onclick="loadProfile(${profile.id})">
+                <div class="profile-info">
+                    <h4>${profile.name}</h4>
+                    <p>Créé le ${new Date(profile.created_at).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Erreur lors du chargement des profils:', error);
+    }
+}
+
+async function loadProfile(userId) {
+    localStorage.setItem('userId', userId);
+    window.location.reload(); // Recharger pour initialiser avec le bon profil
+}
+
+function startNewProfile() {
+    document.getElementById('welcome').classList.remove('active');
+    showProfileForm();
+}
+
+// Export des nouvelles fonctions
+window.showWelcomeScreen = showWelcomeScreen;
+window.loadProfile = loadProfile;
+window.startNewProfile = startNewProfile;
 
 // ===== CONFIGURATION DE L'INPUT DATE DE NAISSANCE =====
 function setupBirthDateInput() {

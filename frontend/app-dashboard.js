@@ -30,6 +30,13 @@ function updateWelcomeMessage() {
     }
 }
 
+function updateProfileSummary() {
+    const summaryEl = document.getElementById('profileSummary');
+    if (summaryEl && currentUser) {
+        summaryEl.textContent = `${currentUser.height}cm • ${currentUser.weight}kg`;
+    }
+}
+
 // ===== CHARGEMENT DES STATISTIQUES UTILISATEUR =====
 async function loadUserStats() {
     if (!currentUser) return;
@@ -84,6 +91,13 @@ function displayStats(stats) {
         }
     }
 }
+
+function logout() {
+    localStorage.clear();
+    setCurrentUser(null);
+    showView('onboarding');
+}
+window.logout = logout;
 
 // ===== RAFRAÎCHISSEMENT DU DASHBOARD =====
 async function refreshDashboard() {

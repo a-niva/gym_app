@@ -633,6 +633,13 @@ def create_set(set_data: SetCreate, db: Session = Depends(get_db)):
     db.refresh(db_set)
     return {"id": db_set.id, "created": True}
 
+
+@app.get("/api/users/")
+def get_all_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return [{"id": u.id, "name": u.name, "created_at": u.created_at} for u in users]
+
+
 @app.get("/api/sets/{workout_id}")
 def get_workout_sets(workout_id: int, db: Session = Depends(get_db)):
     sets = db.query(Set).filter(Set.workout_id == workout_id).all()
