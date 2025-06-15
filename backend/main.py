@@ -656,7 +656,9 @@ def get_user_progression(
         query = query.filter(Set.exercise_id == exercise_id)
     
     results = query.group_by(func.date(Set.created_at)).order_by('date').all()
-    
+    if not results:
+        return {"dates": [], "weights": []}
+
     return {
         "dates": [r.date.isoformat() for r in results],
         "weights": [round(r.estimated_1rm, 1) for r in results]
@@ -695,11 +697,18 @@ def get_muscle_volume(
     
     volumes = {r.body_part: float(r.volume or 0) for r in results}
     total = sum(volumes.values())
-    
+
+    if total == 0:
+        return {
+            "volumes": {},
+            "total": 0,
+            "percentages": {}
+        }
+
     return {
         "volumes": volumes,
         "total": total,
-        "percentages": {k: round(v/total*100, 1) if total > 0 else 0 for k, v in volumes.items()}
+        "percentages": {k: round(v/total*100, 1) for k, v in volumes.items()}
     }
 
 @app.get("/api/users/{user_id}/fatigue-trends")

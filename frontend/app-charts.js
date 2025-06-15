@@ -70,7 +70,22 @@ async function loadProgressionChart(exerciseId = null) {
 
     try {
         const params = exerciseId ? `?exercise_id=${exerciseId}` : '';
+    try {
         const response = await fetch(`/api/users/${currentUser.id}/progression${params}`);
+        
+        // Vérifier que la réponse est OK
+        if (!response.ok) {
+            console.error(`Erreur API: ${response.status} ${response.statusText}`);
+            return;
+        }
+        
+        // Vérifier que c'est bien du JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.error("La réponse n'est pas du JSON");
+            return;
+        }
+        
         const data = await response.json();
 
         const chartData = {
@@ -339,23 +354,24 @@ function initializePeriodSelectors() {
 
 // Charger la liste des exercices pour le sélecteur
 async function loadExerciseSelector() {
-    const selector = document.getElementById('progressionExerciseSelector');
-    if (!selector) return;
-    
-    try {
-        const response = await fetch(`/api/exercises`);
-        const exercises = await response.json();
+    const response = await fetch(`/api/exercises`);
+    if (!response.ok) return;
+
+    const exercises = await response.json();
+
+    // Vérifier que c'est bien un tableau
+    if (!Array.isArray(exercises)) {
+        console.error('La réponse exercises n\'est pas un tableau:', exercises);
+        return;
+    }
         
         // Ajouter les options
-        exercises.forEach(exercise => {
-            const option = document.createElement('option');
-            option.value = exercise.id;
-            option.textContent = exercise.name;
-            selector.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Erreur chargement exercices:', error);
-    }
+    exercises.forEach(exercise => {
+        const option = document.createElement('option');
+        option.value = exercise.id;
+        option.textContent = exercise.name;
+        selector.appendChild(option);
+    });
 }
 
 // ===== CHARGEMENT DE TOUS LES GRAPHIQUES =====
