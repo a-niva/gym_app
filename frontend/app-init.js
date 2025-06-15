@@ -22,7 +22,9 @@ import './app-onboarding.js';   // Onboarding (dépend de tous les modules préc
 import { loadExercises, loadUserFromAPI } from './app-api.js';
 import { 
     setCurrentUser, 
-    setIsSilentMode
+    setIsSilentMode,
+    getCurrentUser,
+    getCurrentWorkout
 } from './app-state.js';
 import { showView, showMainInterface, updateProgressBar } from './app-navigation.js';
 import { checkActiveWorkout } from './app-workout.js';
@@ -310,7 +312,7 @@ setInterval(() => {
 // ===== PRÉVENTION DE LA PERTE DE DONNÉES =====
 window.addEventListener('beforeunload', (event) => {
     // Vérifier s'il y a une séance en cours
-    if (currentUser && currentUser.id && window.currentWorkout && window.currentWorkout.status === 'started') {
+    if (getCurrentUser && getCurrentUser.id && getCurrentWorkout && getCurrentWorkout.status === 'started') {
         event.preventDefault();
         event.returnValue = 'Une séance est en cours. Voulez-vous vraiment quitter ?';
     }
@@ -325,7 +327,8 @@ window.addEventListener('beforeunload', (event) => {
 
 // Gestion du bouton retour
 window.addEventListener('popstate', (event) => {
-    if (currentUser && currentUser.id && window.currentWorkout && window.currentWorkout.status === 'started') {
+    const user = getCurrentUser();
+    if (user && user.id && window.currentWorkout && window.currentWorkout.status === 'started') {
         if (!confirm('Une séance est en cours. Voulez-vous vraiment quitter cette page ?')) {
             // Empêcher la navigation arrière
             window.history.pushState(null, '', window.location.href);
