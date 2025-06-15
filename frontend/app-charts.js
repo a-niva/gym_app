@@ -91,13 +91,6 @@ async function loadProgressionChart(exerciseId = null) {
             return;
         }
 
-        // Vérifier le content-type
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            console.error("La réponse muscle-volume n'est pas du JSON");
-            return;
-        }
-
         const data = await response.json();
 
         // Vérifier que les données sont valides
