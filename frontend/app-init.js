@@ -16,14 +16,13 @@ import './app-workout.js';      // Workout (dépend de state, navigation, ui et 
 import './app-exercises.js';    // Exercices (dépend de state et equipment)
 import './app-sets.js';         // Sets (dépend de state, ui, equipment et api)
 import './app-onboarding.js';   // Onboarding (dépend de tous les modules précédents)
-import './app-dev.js';          // Dev mode (peut dépendre de tous les modules)
+// import './app-dev.js';          // Dev mode (peut dépendre de tous les modules)
 
 // Import des fonctions nécessaires à l'initialisation
 import { loadExercises, loadUserFromAPI } from './app-api.js';
 import { 
     setCurrentUser, 
-    setIsSilentMode,
-    currentUser
+    setIsSilentMode
 } from './app-state.js';
 import { showView, showMainInterface, updateProgressBar } from './app-navigation.js';
 import { checkActiveWorkout } from './app-workout.js';
@@ -31,32 +30,64 @@ import { showToast } from './app-ui.js';
 
 // ===== FONCTION D'INITIALISATION PRINCIPALE =====
 async function initializeApp() {
-    const userId = localStorage.getItem('userId');
+    console.log('🚀 Initialisation de l\'application...');
     
-    // Si pas d'utilisateur connecté, afficher l'écran d'accueil
-    if (!userId) {
-        showWelcomeScreen();
-        return;
-    }
-    
-    // Si utilisateur connecté, charger son profil
     try {
-        const response = await fetch(`/api/users/${userId}`);
-        if (response.ok) {
-            const userData = await response.json();
-            currentUser = userData;
-            showMainInterface();
-        } else {
-            // Utilisateur introuvable, retour à l'accueil
-            localStorage.removeItem('userId');
+        // 1. Configurer la date max pour la date de naissance
+        setupBirthDateInput();
+        
+        // 2. Charger la préférence du mode silencieux
+        loadSilentModePreference();
+        
+        // 3. Charger les exercices depuis l'API
+        console.log('📋 Chargement des exercices...');
+        await loadExercises();
+        
+        // 4. Vérifier si un utilisateur existe
+        const userId = localStorage.getItem('userId');
+        
+        if (!userId) {
+            // Pas d'utilisateur connecté, afficher l'écran d'accueil
+            showWelcomeScreen();
+            return;
+        }
+        
+        // Si utilisateur connecté, charger son profil
+        try {
+            const response = await fetch(`/api/users/${userId}`);
+            if (response.ok) {
+                const userData = await response.json();
+                setCurrentUser(userData);
+                showMainInterface();
+                
+                // Vérifier s'il y a une session active
+                const activeWorkout = await checkActiveWorkout();
+                if (activeWorkout) {
+                    showToast('Session en cours récupérée', 'info');
+                    showView('training');
+                }
+            } else {
+                // Utilisateur introuvable, retour à l'accueil
+                localStorage.removeItem('userId');
+                showWelcomeScreen();
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement du profil:', error);
             showWelcomeScreen();
         }
+        
+        // 5. Enregistrer le Service Worker pour PWA
+        registerServiceWorker();
+        
+        console.log('✅ Application initialisée avec succès');
+        
     } catch (error) {
-        console.error('Erreur lors du chargement du profil:', error);
-        showWelcomeScreen();
+        console.error('❌ Erreur lors de l\'initialisation:', error);
+        showToast('Erreur lors de l\'initialisation de l\'application', 'error');
     }
 }
 
+// ===== ÉCRAN D'ACCUEIL =====
 async function showWelcomeScreen() {
     // Masquer tout sauf l'écran d'accueil
     document.getElementById('onboarding').classList.remove('active');
@@ -68,7 +99,39 @@ async function showWelcomeScreen() {
     document.querySelectorAll('.view').forEach(view => {
         view.classList.remove('active');
     });
-    document.getElementById('welcome').classList.add('active');
+    
+    // Créer ou afficher l'écran d'accueil s'il n'existe pas
+    let welcomeView = document.getElementById('welcome');
+    if (!welcomeView) {
+        // Créer l'écran d'accueil s'il n'existe pas
+        const container = document.querySelector('.container');
+        welcomeView = document.createElement('div');
+        welcomeView.className = 'view active';
+        welcomeView.id = 'welcome';
+        welcomeView.innerHTML = `
+            <div class="welcome-container">
+                <h1>💪 Fitness Coach</h1>
+                <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
+                
+                <button class="btn btn-primary" onclick="startNewProfile()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Créer un nouveau profil
+                </button>
+                
+                <div class="profiles-section" style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1.5rem;">Profils existants</h3>
+                    <div id="profilesList" class="profiles-list">
+                        <!-- Chargé dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(welcomeView);
+    }
+    
+    welcomeView.classList.add('active');
     
     // Charger la liste des profils
     await loadProfiles();
@@ -80,6 +143,8 @@ async function loadProfiles() {
         const profiles = await response.json();
         
         const container = document.getElementById('profilesList');
+        if (!container) return;
+        
         if (profiles.length === 0) {
             container.innerHTML = '<p style="color: var(--gray);">Aucun profil existant</p>';
             return;
@@ -103,7 +168,7 @@ async function loadProfiles() {
 
 async function loadProfile(userId) {
     localStorage.setItem('userId', userId);
-    window.location.reload(); // Recharger pour initialiser avec le bon profil
+    window.location.reload();
 }
 
 function startNewProfile() {
