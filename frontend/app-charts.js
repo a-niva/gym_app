@@ -85,7 +85,56 @@ async function loadProgressionChart(exerciseId = null) {
             return;
         }
         
+        // Vérifier que la réponse est OK
+        if (!response.ok) {
+            console.error(`Erreur API muscle-volume: ${response.status}`);
+            return;
+        }
+
+        // Vérifier le content-type
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.error("La réponse muscle-volume n'est pas du JSON");
+            return;
+        }
+
         const data = await response.json();
+
+        // Vérifier que les données sont valides
+        if (!data.volumes || Object.keys(data.volumes).length === 0) {
+            console.log("Pas de données de volume musculaire");
+            // Afficher un graphique vide
+            const emptyData = {
+                labels: ['Aucune donnée'],
+                datasets: [{
+                    label: 'Volume par muscle',
+                    data: [0],
+                    backgroundColor: chartColors.primary,
+                    borderWidth: 0
+                }]
+            };
+            
+            charts.muscleVolume = new Chart(ctx, {
+                type: 'bar',
+                data: emptyData,
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Aucune donnée disponible',
+                            color: '#f3f4f6',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+            return;
+        }
 
         const chartData = {
             labels: data.dates.map(d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })),
@@ -287,7 +336,57 @@ async function loadPersonalRecordsChart() {
 
     try {
         const response = await fetch(`/api/users/${currentUser.id}/personal-records`);
+        // Vérifier que la réponse est OK
+        if (!response.ok) {
+            console.error(`Erreur API personal-records: ${response.status}`);
+            return;
+        }
+
+        // Vérifier le content-type
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.error("La réponse personal-records n'est pas du JSON");
+            return;
+        }
+
         const data = await response.json();
+
+        // Vérifier que les données sont valides
+        if (!data.exercises || data.exercises.length === 0) {
+            console.log("Pas de records personnels");
+            // Afficher un graphique vide avec message
+            const emptyData = {
+                labels: ['Aucun record'],
+                datasets: [{
+                    label: 'Records',
+                    data: [0],
+                    backgroundColor: chartColors.primary,
+                    borderWidth: 0
+                }]
+            };
+            
+            charts.records = new Chart(ctx, {
+                type: 'bar',
+                data: emptyData,
+                options: {
+                    ...chartDefaults,
+                    indexAxis: 'y',
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Commencez à vous entraîner pour voir vos records !',
+                            color: '#f3f4f6',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+            return;
+        }
 
         const chartData = {
             labels: data.exercises,

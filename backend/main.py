@@ -666,7 +666,7 @@ def get_user_progression(
     
     query = db.query(
         func.date(Set.created_at).label('date'),
-        func.max(Set.weight * (1 + Set.actual_reps * 0.033)).label('estimated_1rm')
+        func.max(Set.weight*(1 + Set.actual_reps * 0.033)).label('estimated_1rm')
     ).join(
         Exercise, Set.exercise_id == Exercise.id
     ).join(
@@ -804,6 +804,14 @@ def get_personal_records(
     ).join(
         subquery, Exercise.id == subquery.c.exercise_id
     ).order_by(subquery.c.max_weight.desc()).limit(10).all()
+    
+    # Vérifier s'il y a des résultats
+    if not results:
+        return {
+            "exercises": [],
+            "current_records": [],
+            "targets": []
+        }
     
     exercises = []
     current_records = []
