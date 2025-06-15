@@ -668,13 +668,12 @@ def get_user_progression(
         func.date(Set.created_at).label('date'),
         func.max(Set.weight*(1 + Set.actual_reps * 0.033)).label('estimated_1rm')
     ).join(
-        Exercise, Set.exercise_id == Exercise.id
-    ).join(
         Workout, Set.workout_id == Workout.id
     ).filter(
         Workout.user_id == user_id,
         Workout.status == "completed",
-        Set.created_at >= start_date
+        Set.created_at >= start_date,
+        Set.skipped == False  # Ajouter ce filtre pour ignorer les sets sautés
     )
     
     if exercise_id:
@@ -706,13 +705,15 @@ def get_muscle_volume(
     query = db.query(
         Exercise.body_part,
         func.sum(Set.weight * Set.actual_reps).label('volume')
-    ).join(
-        Exercise, Set.exercise_id == Exercise.id
-    ).join(
+    ).select_from(Set).join(
         Workout, Set.workout_id == Workout.id
+    ).outerjoin(  # Utiliser outerjoin au lieu de join
+        Exercise, Set.exercise_id == Exercise.id
     ).filter(
         Workout.user_id == user_id,
-        Workout.status == "completed"
+        Workout.status == "completed",
+        Exercise.body_part.isnot(None),  # Filtrer les exercices non trouvés
+        Set.skipped == False  # Ignorer les sets sautés
     )
     
     if start_date:
