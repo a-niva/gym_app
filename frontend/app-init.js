@@ -247,9 +247,29 @@ function startKeepAlive() {
 // ===== LANCEMENT DE L'APPLICATION =====
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM chargé - Initialisation de l\'application');
+    
+    // Vérification que les fonctions critiques sont disponibles
+    const criticalFunctions = ['nextStep', 'prevStep', 'showView', 'toggleGoal', 'toggleEquipment'];
+    const missingFunctions = criticalFunctions.filter(fn => !window[fn]);
+    
+    if (missingFunctions.length > 0) {
+        console.error('Fonctions critiques manquantes:', missingFunctions);
+        // Tenter de recharger les modules
+        setTimeout(() => {
+            if (!window.nextStep) {
+                console.error('nextStep toujours manquant après délai');
+                // Fonction de secours
+                window.nextStep = () => {
+                    console.error('nextStep appelé mais non chargé correctement');
+                    showToast('Erreur de chargement, veuillez rafraîchir la page', 'error');
+                };
+            }
+        }, 1000);
+    }
+    
     initializeApp();
     startKeepAlive();
 });
 
 // Export de la fonction d'initialisation si nécessaire
-export { initializeApp };  
+export { initializeApp };

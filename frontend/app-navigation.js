@@ -46,15 +46,18 @@ function showStep(step) {
     document.getElementById(`step${step}`).classList.add('active');
 }
 
-// Navigation dans l'onboarding
-function nextStep() {
-    // La validation est gérée dans app-onboarding.js
-    // Cette fonction sera appelée depuis là-bas après validation
+// Navigation dans l'onboarding - version simple sans validation
+function nextStepSimple() {
     if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
         showStep(currentStep);
         updateProgressBar();
     }
+}
+
+// Navigation avec validation (sera remplacée par app-onboarding.js)
+function nextStep() {
+    nextStepSimple();
 }
 
 function prevStep() {
@@ -127,12 +130,14 @@ window.nextStep = nextStep;
 window.prevStep = prevStep;
 window.showMainInterface = showMainInterface;
 window.showProfileForm = showProfileForm;
+window.updateProgressBar = updateProgressBar;
 
 // Export pour les autres modules
 export { 
     showView, 
     showStep, 
-    nextStep, 
+    nextStep,
+    nextStepSimple,
     prevStep, 
     updateProgressBar,
     showMainInterface,

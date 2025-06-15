@@ -16,7 +16,7 @@ import {
 } from './app-state.js';
 
 import { 
-    nextStep as navigateNext,
+    nextStepSimple as navigateNext,
     prevStep as navigatePrev,
     updateProgressBar,
     showMainInterface,

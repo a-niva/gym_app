@@ -1,60 +1,4 @@
-// ===== GESTION DE SESSION =====
-let isRefreshing = false;
-let refreshSubscribers = [];
-
-function onRefreshed(token) {
-    refreshSubscribers.forEach(callback => callback(token));
-    refreshSubscribers = [];
-}
-
-function addRefreshSubscriber(callback) {
-    refreshSubscribers.push(callback);
-}
-
-async function refreshAuthToken() {
-    if (isRefreshing) {
-        return new Promise((resolve) => {
-            addRefreshSubscriber(() => resolve());
-        });
-    }
-    
-    isRefreshing = true;
-    
-    try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) throw new Error('No refresh token');
-        
-        const response = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refreshToken })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem('authToken', data.access_token);
-            if (data.refresh_token) {
-                localStorage.setItem('refreshToken', data.refresh_token);
-            }
-            onRefreshed(data.access_token);
-            return data.access_token;
-        } else {
-            throw new Error('Failed to refresh token');
-        }
-    } catch (error) {
-        console.error('Token refresh failed:', error);
-        // Rediriger vers login si le refresh échoue
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
-        if (window.showProfileForm) {
-            window.showProfileForm();
-        }
-        throw error;
-    } finally {
-        isRefreshing = false;
-    }
-}// ===== GESTIONNAIRE API =====
+// ===== GESTIONNAIRE API =====
 // Ce fichier centralise tous les appels API avec gestion d'erreurs
 // Pas de complexité inutile, juste des fonctions async/await simples
 
@@ -69,6 +13,17 @@ const REQUEST_TIMEOUT = 30000; // 30 secondes
 let isRefreshing = false;
 let refreshSubscribers = [];
 
+// Fonction helper pour les timeouts
+function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout de la requête')), timeout)
+        )
+    ]);
+}
+
+// Fonction helper pour la gestion des tokens
 function onRefreshed(token) {
     refreshSubscribers.forEach(callback => callback(token));
     refreshSubscribers = [];
@@ -121,16 +76,6 @@ async function refreshAuthToken() {
     } finally {
         isRefreshing = false;
     }
-}
-
-// Fonction helper pour les timeouts
-function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
-    return Promise.race([
-        fetch(url, options),
-        new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout de la requête')), timeout)
-        )
-    ]);
 }
 
 // Fonction générique pour les appels API avec retry
@@ -509,4 +454,4 @@ export {
     createRestPeriod,
     checkDevMode,
     initDevMode
-}; 
+};
