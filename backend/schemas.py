@@ -103,6 +103,18 @@ class UserResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        
+class ExerciseResponse(BaseModel):
+    id: int
+    name_fr: str
+    name_eng: str
+    equipment: List[str]
+    level: str
+    body_part: str
+    sets_reps: Dict[str, Any]
+    
+    class Config:
+        from_attributes = True
 
 class ExerciseResponse(BaseModel):
     id: int

@@ -347,6 +347,31 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
     
     return history
 
+@app.delete("/api/users/{user_id}/workout-history")
+def delete_workout_history(user_id: int, db: Session = Depends(get_db)):
+    """Supprime tout l'historique des séances d'un utilisateur"""
+    # Vérifier que l'utilisateur existe
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Récupérer tous les workouts de l'utilisateur
+    workouts = db.query(Workout).filter(Workout.user_id == user_id).all()
+    
+    # Supprimer toutes les séries associées
+    for workout in workouts:
+        db.query(Set).filter(Set.workout_id == workout.id).delete()
+    
+    # Supprimer tous les workouts
+    db.query(Workout).filter(Workout.user_id == user_id).delete()
+    
+    db.commit()
+    
+    return {
+        "message": "Historique supprimé avec succès",
+        "deleted_workouts": len(workouts)
+    }
+
 @app.put("/api/workouts/{workout_id}/complete")
 def complete_workout(workout_id: int, db: Session = Depends(get_db)):
     workout = db.query(Workout).filter(Workout.id == workout_id).first()
@@ -617,15 +642,15 @@ def get_user_stats(user_id: int, db: Session = Depends(get_db)):
         Workout.user_id == user_id,
         Workout.status == "completed"
     ).order_by(Workout.completed_at.desc()).first()
-    
-    last_workout_date = "Jamais"
+
+    last_workout_date = None
     if last_workout and last_workout.completed_at:
-        last_workout_date = last_workout.completed_at.strftime("%d/%m")
-    
+        last_workout_date = last_workout.completed_at.isoformat()
+
     return {
         "total_workouts": total_workouts,
         "week_streak": 0,  # À implémenter selon votre logique
-        "last_workout": last_workout_date
+        "last_workout": last_workout_date  # Retourner la date ISO ou None
     }
 
 @app.get("/api/users/{user_id}/progression")
@@ -725,7 +750,7 @@ def get_fatigue_trends(
         func.date(Workout.created_at).label('date'),
         func.avg(Set.fatigue_level).label('avg_fatigue'),
         func.avg(Set.perceived_exertion).label('avg_exertion'),
-        func.count(distinct(Workout.id)).label('workout_count')
+        func.count(func.distinct(Workout.id)).label('workout_count')
     ).join(
         Set, Workout.id == Set.workout_id
     ).filter(
@@ -795,6 +820,12 @@ def get_personal_records(
         "current_records": current_records,
         "targets": targets
     }
+
+@app.get("/api/exercises", response_model=List[ExerciseResponse])
+def get_exercises(db: Session = Depends(get_db)):
+    """Récupère la liste des exercices"""
+    exercises = db.query(Exercise).all()
+    return exercises
 
 
 # Set endpoints

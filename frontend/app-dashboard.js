@@ -7,7 +7,7 @@ import { getUserStats } from './app-api.js';
 import { loadWorkoutHistory } from './app-history.js';
 import { loadAllCharts, initializePeriodSelectors } from './app-charts.js';
 import { showView } from './app-navigation.js';
-
+import { showToast } from './app-ui.js';
 
 // ===== CHARGEMENT DU DASHBOARD =====
 async function loadDashboard() {
@@ -93,7 +93,7 @@ if (lastWorkoutElement) {
                 lastWorkoutElement.textContent = date.toLocaleDateString('fr-FR');
             }
         } else {
-            lastWorkoutElement.textContent = 'Invalid Date';
+            lastWorkoutElement.textContent = 'Jamais';
         }
     } else {
         lastWorkoutElement.textContent = 'Jamais';
@@ -119,6 +119,62 @@ async function showDetailedStats() {
     await loadAllCharts();
     initializePeriodSelectors();
 }
+
+// ===== SUPPRESSION DE L'HISTORIQUE =====
+async function clearWorkoutHistory() {
+    if (!currentUser) return;
+    
+    // Double confirmation pour éviter les erreurs
+    const firstConfirm = confirm(
+        "⚠️ ATTENTION ⚠️\n\n" +
+        "Voulez-vous vraiment supprimer TOUT l'historique de vos séances ?\n\n" +
+        "Cette action est IRRÉVERSIBLE et supprimera :\n" +
+        "- Toutes vos séances enregistrées\n" +
+        "- Toutes vos séries et performances\n" +
+        "- Tous vos records personnels\n\n" +
+        "Êtes-vous sûr ?"
+    );
+    
+    if (!firstConfirm) return;
+    
+    const secondConfirm = confirm(
+        "🔴 DERNIÈRE CONFIRMATION 🔴\n\n" +
+        "Cliquez sur OK pour supprimer définitivement tout votre historique.\n\n" +
+        "Cette action ne peut pas être annulée."
+    );
+    
+    if (!secondConfirm) return;
+    
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/workout-history`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showToast(`${result.deleted_workouts} séances supprimées`, 'success');
+            
+            // Recharger le dashboard pour mettre à jour les stats
+            await loadDashboard();
+            
+            // Si on est sur la vue stats, recharger les graphiques
+            if (document.querySelector('.view.active')?.id === 'stats') {
+                await loadAllCharts();
+            }
+        } else {
+            showToast('Erreur lors de la suppression', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur suppression historique:', error);
+        showToast('Erreur de connexion', 'error');
+    }
+}
+
+// Export global
+window.clearWorkoutHistory = clearWorkoutHistory;
 
 // ===== EXPORT GLOBAL =====
 window.loadDashboard = loadDashboard;
