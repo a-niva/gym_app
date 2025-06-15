@@ -183,48 +183,91 @@ async function loadMuscleVolumeChart(period = 'week') {
 
     try {
         const response = await fetch(`/api/users/${currentUser.id}/muscle-volume?period=${period}`);
+        
+        // Vérifier que la réponse est OK
+        if (!response.ok) {
+            console.error(`Erreur API muscle-volume: ${response.status}`);
+            return;
+        }
+        
+        // Vérifier le content-type
+        const respContentType = response.headers.get("content-type");
+        if (!respContentType || !respContentType.includes("application/json")) {
+            console.error("La réponse muscle-volume n'est pas du JSON");
+            return;
+        }
+        
         const data = await response.json();
 
+        // Vérifier que les données sont valides
+        if (!data.volumes || Object.keys(data.volumes).length === 0) {
+            console.log("Pas de données de volume musculaire");
+            // Afficher un graphique vide
+            const emptyData = {
+                labels: ['Aucune donnée'],
+                datasets: [{
+                    label: 'Volume par muscle',
+                    data: [0],
+                    backgroundColor: chartColors.primary,
+                    borderWidth: 0
+                }]
+            };
+            
+            charts.muscleVolume = new Chart(ctx, {
+                type: 'bar',
+                data: emptyData,
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Aucune donnée disponible',
+                            color: '#f3f4f6',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+            return;
+        }
+
         const chartData = {
-            labels: Object.keys(data.volumes),
+            labels: Object.keys(data.percentages),
             datasets: [{
-                data: Object.values(data.volumes),
-                backgroundColor: [
-                    chartColors.primary,
-                    chartColors.secondary,
-                    chartColors.success,
-                    chartColors.warning,
-                    chartColors.danger,
-                    chartColors.gray
-                ],
-                borderWidth: 0
+                label: 'Volume par muscle (%)',
+                data: Object.values(data.percentages),
+                backgroundColor: chartColors.primary,
+                borderColor: chartColors.primary,
+                borderWidth: 1
             }]
         };
 
         charts.muscleVolume = new Chart(ctx, {
-            type: 'doughnut',
+            type: 'bar',
             data: chartData,
             options: {
                 ...chartDefaults,
+                indexAxis: 'y',
                 plugins: {
                     ...chartDefaults.plugins,
                     title: {
                         display: true,
-                        text: 'Répartition du volume par muscle',
+                        text: `Répartition du volume (${period === 'week' ? 'semaine' : 'mois'})`,
                         color: '#f3f4f6',
                         font: {
                             size: 16,
                             weight: 'bold'
                         }
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            font: {
-                                size: 12
-                            }
-                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ...chartDefaults.scales.x,
+                        max: 100
                     }
                 }
             }
@@ -336,19 +379,20 @@ async function loadPersonalRecordsChart() {
 
     try {
         const response = await fetch(`/api/users/${currentUser.id}/personal-records`);
+        
         // Vérifier que la réponse est OK
         if (!response.ok) {
             console.error(`Erreur API personal-records: ${response.status}`);
             return;
         }
-
+        
         // Vérifier le content-type
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
+        const recordsContentType = response.headers.get("content-type");
+        if (!recordsContentType || !recordsContentType.includes("application/json")) {
             console.error("La réponse personal-records n'est pas du JSON");
             return;
         }
-
+        
         const data = await response.json();
 
         // Vérifier que les données sont valides
