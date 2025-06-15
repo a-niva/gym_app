@@ -105,9 +105,10 @@ async function refreshDashboard() {
 }
 
 // ===== AFFICHAGE DES STATISTIQUES DÉTAILLÉES =====
-function showDetailedStats() {
-    // TODO: Implémenter une vue détaillée des statistiques
-    console.log('Statistiques détaillées à implémenter');
+async function showDetailedStats() {
+    showView('stats');
+    await loadAllCharts();
+    initializePeriodSelectors();
 }
 
 // ===== EXPORT GLOBAL =====

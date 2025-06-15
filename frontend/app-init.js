@@ -12,6 +12,7 @@ import './app-equipment.js';    // Équipement (dépend de state et config)
 import './app-history.js';      // Historique (dépend de state, config et api)
 import './app-rest.js';         // Repos (dépend de state et api)
 import './app-dashboard.js';    // Dashboard (dépend de state, api et history)
+import './app-charts.js';      // Graphiques
 import './app-workout.js';      // Workout (dépend de state, navigation, ui et api)
 import './app-exercises.js';    // Exercices (dépend de state et equipment)
 import './app-sets.js';         // Sets (dépend de state, ui, equipment et api)

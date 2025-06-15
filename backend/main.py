@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, text
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
-
+from sqlalchemy import func, distinct
 import json
 import os
 
@@ -623,6 +623,166 @@ def get_user_stats(user_id: int, db: Session = Depends(get_db)):
         "week_streak": 0,  # À implémenter selon votre logique
         "last_workout": last_workout_date
     }
+
+@app.get("/api/users/{user_id}/progression")
+def get_user_progression(
+    user_id: int, 
+    exercise_id: int = None,
+    days: int = 30,
+    db: Session = Depends(get_db)
+):
+    """Récupère la progression de l'utilisateur sur une période donnée"""
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=days)
+    
+    query = db.query(
+        func.date(Set.created_at).label('date'),
+        func.max(Set.weight * (1 + Set.actual_reps * 0.033)).label('estimated_1rm')
+    ).join(
+        Exercise, Set.exercise_id == Exercise.id
+    ).join(
+        Workout, Set.workout_id == Workout.id
+    ).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed",
+        Set.created_at >= start_date
+    )
+    
+    if exercise_id:
+        query = query.filter(Set.exercise_id == exercise_id)
+    
+    results = query.group_by(func.date(Set.created_at)).order_by('date').all()
+    
+    return {
+        "dates": [r.date.isoformat() for r in results],
+        "weights": [round(r.estimated_1rm, 1) for r in results]
+    }
+
+@app.get("/api/users/{user_id}/muscle-volume")
+def get_muscle_volume(
+    user_id: int,
+    period: str = "week",
+    db: Session = Depends(get_db)
+):
+    """Récupère la répartition du volume par groupe musculaire"""
+    if period == "week":
+        start_date = datetime.utcnow() - timedelta(days=7)
+    elif period == "month":
+        start_date = datetime.utcnow() - timedelta(days=30)
+    else:
+        start_date = None
+    
+    query = db.query(
+        Exercise.body_part,
+        func.sum(Set.weight * Set.actual_reps).label('volume')
+    ).join(
+        Exercise, Set.exercise_id == Exercise.id
+    ).join(
+        Workout, Set.workout_id == Workout.id
+    ).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed"
+    )
+    
+    if start_date:
+        query = query.filter(Set.created_at >= start_date)
+    
+    results = query.group_by(Exercise.body_part).all()
+    
+    volumes = {r.body_part: float(r.volume or 0) for r in results}
+    total = sum(volumes.values())
+    
+    return {
+        "volumes": volumes,
+        "total": total,
+        "percentages": {k: round(v/total*100, 1) if total > 0 else 0 for k, v in volumes.items()}
+    }
+
+@app.get("/api/users/{user_id}/fatigue-trends")
+def get_fatigue_trends(
+    user_id: int,
+    days: int = 14,
+    db: Session = Depends(get_db)
+):
+    """Récupère les tendances de fatigue et performance"""
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=days)
+    
+    results = db.query(
+        func.date(Workout.created_at).label('date'),
+        func.avg(Set.fatigue_level).label('avg_fatigue'),
+        func.avg(Set.perceived_exertion).label('avg_exertion'),
+        func.count(distinct(Workout.id)).label('workout_count')
+    ).join(
+        Set, Workout.id == Set.workout_id
+    ).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed",
+        Workout.created_at >= start_date
+    ).group_by(
+        func.date(Workout.created_at)
+    ).order_by('date').all()
+    
+    # Calculer la performance relative (inverse de la fatigue)
+    dates = []
+    fatigue = []
+    performance = []
+    
+    for r in results:
+        dates.append(r.date.isoformat())
+        fatigue.append(round(r.avg_fatigue or 5, 1))
+        # Performance = 100% - (fatigue * 10)
+        perf = 100 - (r.avg_fatigue or 5) * 10
+        performance.append(max(0, min(100, perf)))
+    
+    return {
+        "dates": dates,
+        "fatigue": fatigue,
+        "performance": performance
+    }
+
+@app.get("/api/users/{user_id}/personal-records")
+def get_personal_records(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """Récupère les records personnels par exercice"""
+    # Sous-requête pour obtenir le max par exercice
+    subquery = db.query(
+        Set.exercise_id,
+        func.max(Set.weight).label('max_weight')
+    ).join(
+        Workout, Set.workout_id == Workout.id
+    ).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed"
+    ).group_by(Set.exercise_id).subquery()
+    
+    # Requête principale avec jointure sur les exercices
+    results = db.query(
+        Exercise.name,
+        subquery.c.max_weight,
+        Exercise.body_part
+    ).join(
+        subquery, Exercise.id == subquery.c.exercise_id
+    ).order_by(subquery.c.max_weight.desc()).limit(10).all()
+    
+    exercises = []
+    current_records = []
+    targets = []
+    
+    for r in results:
+        exercises.append(r.name)
+        current_records.append(float(r.max_weight))
+        # Objectif = record actuel + 10%
+        targets.append(round(float(r.max_weight) * 1.1, 1))
+    
+    return {
+        "exercises": exercises,
+        "current_records": current_records,
+        "targets": targets
+    }
+
 
 # Set endpoints
 @app.post("/api/sets/")

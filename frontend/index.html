@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#2563eb">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="data:,">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -238,6 +239,11 @@
                     <div class="stat-value" id="lastWorkout">-</div>
                     <div class="stat-label">Dernière séance</div>
                 </div>
+                <div style="text-align: center; margin: 2rem 0;">
+                <button class="btn-primary" onclick="showDetailedStats()">
+                    📊 Voir les statistiques détaillées
+                </button>
+                </div>
             </div>
             
             <div class="action-grid">
@@ -255,6 +261,105 @@
             <div id="workoutHistory" class="workout-history">
                 <!-- Historique chargé ici -->
             </div>
+
+<!-- Statistiques détaillées -->
+        <div class="view" id="stats">
+            <div class="stats-header">
+                <h1>Statistiques détaillées</h1>
+                <button class="btn-secondary" onclick="showView('dashboard')">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Retour
+                </button>
+            </div>
+
+            <div id="chartsContainer" class="charts-container">
+                <!-- Graphique de progression -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Progression sur 30 jours</h3>
+                        <div class="chart-controls">
+                            <select id="progressionExerciseSelector" class="chart-select">
+                                <option value="">Tous les exercices</option>
+                            </select>
+                            <button class="btn-icon" onclick="exportChart('progression')" title="Exporter">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="progressionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Graphique volume par muscle -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Répartition du volume</h3>
+                        <div class="chart-controls">
+                            <select id="volumePeriodSelector" class="chart-select">
+                                <option value="week">Cette semaine</option>
+                                <option value="month">Ce mois</option>
+                                <option value="all">Tout</option>
+                            </select>
+                            <button class="btn-icon" onclick="exportChart('muscleVolume')" title="Exporter">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper chart-wrapper-small">
+                        <canvas id="muscleVolumeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Graphique fatigue/performance -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Tendances Fatigue vs Performance</h3>
+                        <button class="btn-icon" onclick="exportChart('fatigue')" title="Exporter">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="fatigueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Graphique records personnels -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Records personnels</h3>
+                        <button class="btn-icon" onclick="exportChart('records')" title="Exporter">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="recordsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-footer">
+                <button class="btn-primary" onclick="refreshCharts()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Actualiser
+                </button>
+            </div>
+        </div>
+
+
+
         </div>
 
         <!-- Entraînement -->
