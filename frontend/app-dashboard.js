@@ -2,9 +2,12 @@
 // Ce fichier gère l'affichage du tableau de bord et des statistiques
 // Il coordonne le chargement des données et leur affichage
 
-import { currentUser } from './app-state.js';
+import { currentUser, setCurrentUser } from './app-state.js';
 import { getUserStats } from './app-api.js';
 import { loadWorkoutHistory } from './app-history.js';
+import { loadAllCharts, initializePeriodSelectors } from './app-charts.js';
+import { showView } from './app-navigation.js';
+
 
 // ===== CHARGEMENT DU DASHBOARD =====
 async function loadDashboard() {
@@ -70,10 +73,13 @@ function displayStats(stats) {
     }
     
     // Dernière séance
-    const lastWorkoutElement = document.getElementById('lastWorkout');
-    if (lastWorkoutElement) {
-        if (stats.last_workout) {
-            const date = new Date(stats.last_workout);
+// Dernière séance
+const lastWorkoutElement = document.getElementById('lastWorkout');
+if (lastWorkoutElement) {
+    if (stats.last_workout) {
+        const date = new Date(stats.last_workout);
+        // Vérifier que la date est valide
+        if (!isNaN(date.getTime())) {
             const today = new Date();
             const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
             
@@ -87,9 +93,12 @@ function displayStats(stats) {
                 lastWorkoutElement.textContent = date.toLocaleDateString('fr-FR');
             }
         } else {
-            lastWorkoutElement.textContent = 'Jamais';
+            lastWorkoutElement.textContent = 'Invalid Date';
         }
+    } else {
+        lastWorkoutElement.textContent = 'Jamais';
     }
+}
 }
 
 function logout() {
