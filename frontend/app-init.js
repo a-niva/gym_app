@@ -252,4 +252,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Export de la fonction d'initialisation si nécessaire
-export { initializeApp };
+export { initializeApp };  

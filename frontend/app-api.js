@@ -509,4 +509,4 @@ export {
     createRestPeriod,
     checkDevMode,
     initDevMode
-};
+}; 
