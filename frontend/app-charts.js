@@ -2,7 +2,6 @@
 // Ce fichier gère tous les graphiques de progression avec Chart.js
 
 import { currentUser } from './app-state.js';
-import { API_URL } from './app-config.js';
 
 // Configuration des graphiques
 const chartColors = {
@@ -71,7 +70,7 @@ async function loadProgressionChart(exerciseId = null) {
 
     try {
         const params = exerciseId ? `?exercise_id=${exerciseId}` : '';
-        const response = await fetch(`${API_URL}/api/users/${currentUser.id}/progression${params}`);
+        const response = await fetch(`/api/users/${currentUser.id}/progression${params}`);
         const data = await response.json();
 
         const chartData = {
@@ -120,7 +119,7 @@ async function loadMuscleVolumeChart(period = 'week') {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/users/${currentUser.id}/muscle-volume?period=${period}`);
+        const response = await fetch(`/api/users/${currentUser.id}/muscle-volume?period=${period}`);
         const data = await response.json();
 
         const chartData = {
@@ -182,7 +181,7 @@ async function loadFatigueChart() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/users/${currentUser.id}/fatigue-trends`);
+        const response = await fetch(`/api/users/${currentUser.id}/fatigue-trends`);
         const data = await response.json();
 
         const chartData = {
@@ -273,7 +272,7 @@ async function loadPersonalRecordsChart() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/users/${currentUser.id}/personal-records`);
+        const response = await fetch(`/api/users/${currentUser.id}/personal-records`);
         const data = await response.json();
 
         const chartData = {
@@ -344,7 +343,7 @@ async function loadExerciseSelector() {
     if (!selector) return;
     
     try {
-        const response = await fetch(`${API_URL}/api/exercises`);
+        const response = await fetch(`/api/exercises`);
         const exercises = await response.json();
         
         // Ajouter les options
