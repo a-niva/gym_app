@@ -305,7 +305,8 @@ select.form-input {
 .dashboard-grid {
     display: grid;
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem; /* augmenter de 2rem à 3rem */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 .stat-card {
@@ -335,6 +336,14 @@ select.form-input {
 .action-grid {
     display: grid;
     gap: 1rem;
+    margin: 2rem 0;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 480px) {
+    .action-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .action-card {
