@@ -798,7 +798,7 @@ def get_personal_records(
     
     # Requête principale avec jointure sur les exercices
     results = db.query(
-        Exercise.name,
+        Exercise.name_fr,
         subquery.c.max_weight,
         Exercise.body_part
     ).join(
@@ -810,7 +810,7 @@ def get_personal_records(
     targets = []
     
     for r in results:
-        exercises.append(r.name)
+        exercises.append(r.name_fr)
         current_records.append(float(r.max_weight))
         # Objectif = record actuel + 10%
         targets.append(round(float(r.max_weight) * 1.1, 1))
