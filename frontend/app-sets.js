@@ -464,7 +464,11 @@ async function completeSet() {
     
     try {
         const result = await createSet(setData);
-        
+        if (result && result.id) {
+            // Stocker l'ID pour le prochain rest time
+            localStorage.setItem('previousSetId', result.id);
+        }
+            
         if (result) {
             // Stocker l'ID pour mise à jour ultérieure du temps de repos
             localStorage.setItem('lastCompletedSetId', result.id);

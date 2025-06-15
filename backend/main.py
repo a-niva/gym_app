@@ -313,16 +313,20 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
         
         # Calculate total volume - pour les exercices au poids du corps, utiliser le poids de l'utilisateur
         total_volume = 0
+        total_sets_count = 0
         for s in sets:
             if not s.skipped:
-                # Récupérer l'exercice pour vérifier si c'est du bodyweight
+                total_sets_count += 1
+                # Récupérer l'exercice pour vérifier le type
                 exercise = db.query(Exercise).filter(Exercise.id == s.exercise_id).first()
-                if exercise and 'bodyweight' in exercise.equipment:
-                    # Si pas de charge additionnelle, utiliser le poids du corps
-                    effective_weight = s.weight if s.weight > 0 else (db.query(User).filter(User.id == user_id).first().weight or 75)
-                    total_volume += effective_weight * s.actual_reps
-                else:
-                    total_volume += s.weight * s.actual_reps
+                if exercise:
+                    # Pour les exercices au poids du corps sans charge additionnelle
+                    if 'bodyweight' in exercise.equipment and s.weight == 0:
+                        user = db.query(User).filter(User.id == user_id).first()
+                        effective_weight = user.weight if user else 75
+                        total_volume += effective_weight * s.actual_reps
+                    else:
+                        total_volume += s.weight * s.actual_reps
         
         # Get unique exercises
         exercise_ids = list(set(s.exercise_id for s in sets))
@@ -337,7 +341,7 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
             "date": workout.created_at,
             "type": workout.type,
             "total_volume": total_volume,
-            "total_sets": len(sets),
+            "total_sets": total_sets_count,
             "exercises": exercises
         })
     

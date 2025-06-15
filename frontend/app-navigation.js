@@ -33,6 +33,13 @@ function showView(viewName) {
     const view = document.getElementById(viewName) || document.querySelector(`.${viewName}`);
     if (view) {
         view.classList.add('active');
+        // Charger les graphiques si on affiche la vue stats
+        if (viewName === 'stats' && window.loadAllCharts) {
+            window.loadAllCharts();
+            if (window.initializePeriodSelectors) {
+                window.initializePeriodSelectors();
+            }
+        }
         if (viewName === 'onboarding') {
             showStep(currentStep);
         }
