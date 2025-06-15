@@ -279,9 +279,11 @@ export function setCurrentTargetReps(reps) {
     currentTargetReps = reps;
 }
 
-// ===== EXPORTS GLOBAUX POUR LES AUTRES MODULES =====
-// Ces fonctions doivent être accessibles globalement pour l'interopérabilité
-window.setSetStartTime = setSetStartTime;
-window.setLastSetEndTime = setLastSetEndTime;
-window.setSelectedFatigue = setSelectedFatigue;
-window.setSelectedEffort = setSelectedEffort;
+// Export de getters pour les variables globales nécessaires
+Object.defineProperty(window, 'currentWorkout', {
+    get: function() { return currentWorkout; }
+});
+
+Object.defineProperty(window, 'currentExercise', {
+    get: function() { return currentExercise; }
+});

@@ -23,7 +23,7 @@ import {
     clearSessionHistory
 } from './app-state.js';
 
-import { showView } from './app-navigation.js';
+import { showView, showProfileForm } from './app-navigation.js';
 import { showToast } from './app-ui.js';
 import { 
     createWorkout,

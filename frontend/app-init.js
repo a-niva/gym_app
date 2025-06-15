@@ -197,7 +197,7 @@ setInterval(() => {
 // ===== PRÉVENTION DE LA PERTE DE DONNÉES =====
 window.addEventListener('beforeunload', (event) => {
     // Vérifier s'il y a une séance en cours
-    if (currentUser && window.currentWorkout && window.currentWorkout.status === 'started') {
+    if (currentUser && currentUser.id && window.currentWorkout && window.currentWorkout.status === 'started') {
         event.preventDefault();
         event.returnValue = 'Une séance est en cours. Voulez-vous vraiment quitter ?';
     }
@@ -212,7 +212,7 @@ window.addEventListener('beforeunload', (event) => {
 
 // Gestion du bouton retour
 window.addEventListener('popstate', (event) => {
-    if (currentUser && window.currentWorkout && window.currentWorkout.status === 'started') {
+    if (currentUser && currentUser.id && window.currentWorkout && window.currentWorkout.status === 'started') {
         if (!confirm('Une séance est en cours. Voulez-vous vraiment quitter cette page ?')) {
             // Empêcher la navigation arrière
             window.history.pushState(null, '', window.location.href);

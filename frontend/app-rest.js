@@ -4,6 +4,7 @@
 
 import {
     currentExercise,
+    currentUser,
     lastSetEndTime,
     setLastSetEndTime,
     restTimerInterval,
@@ -20,6 +21,7 @@ import {
 import { updateSetRestTime } from './app-api.js';
 import { REST_TARGET_TIME } from './app-config.js';
 import { formatWeightDisplay } from './app-equipment.js';
+import { addToSessionHistory } from './app-history.js';
 
 // ===== AFFICHAGE DE L'INTERFACE DE REPOS =====
 function showRestInterface(setData) {
@@ -280,12 +282,10 @@ function finishExerciseDuringRest() {
 function addRestToHistory(duration) {
     if (duration < 5) return; // Ignorer les repos très courts
     
-    if (window.addToSessionHistory) {
-        window.addToSessionHistory('rest', {
-            duration: duration,
-            type: 'between_sets'
-        });
-    }
+    addToSessionHistory('rest', {
+        duration: duration,
+        type: 'between_sets'
+    });
 }
 
 // ===== EXPORT GLOBAL =====

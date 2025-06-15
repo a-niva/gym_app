@@ -65,7 +65,7 @@ import { showToast } from './app-ui.js';
 const API_BASE_URL = '/api';
 const REQUEST_TIMEOUT = 30000; // 30 secondes
 
-// ===== GESTION DE SESSION =====
+// Variables pour la gestion de session
 let isRefreshing = false;
 let refreshSubscribers = [];
 

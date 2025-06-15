@@ -14,11 +14,16 @@ import {
     setLastExerciseEndTime,
     interExerciseRestTime,
     setInterExerciseRestTime,
-    currentWorkout
+    currentWorkout,
+    setSelectedFatigue,
+    setSelectedEffort,
+    setSetStartTime,
+    setLastSetEndTime
 } from './app-state.js';
 
 import { filterExercisesByEquipment } from './app-equipment.js';
 import { createRestPeriod } from './app-api.js';
+import { addToSessionHistory } from './app-history.js';
 
 // ===== AFFICHAGE DU SÉLECTEUR D'EXERCICES =====
 function showExerciseSelector() {
@@ -99,12 +104,10 @@ function selectExercise(exerciseId) {
         
         if (restTime > 10) {
             // Ajouter le repos inter-exercices à l'historique
-            if (window.addToSessionHistory) {
-                window.addToSessionHistory('rest', {
-                    duration: restTime,
-                    type: 'inter_exercise'
-                });
-            }
+            addToSessionHistory('rest', {
+                duration: restTime,
+                type: 'inter_exercise'
+            });
             
             const restData = {
                 workout_id: currentWorkout.id,
@@ -131,13 +134,11 @@ function selectExercise(exerciseId) {
     setCurrentExercise(exercise);
     
     // Ajouter le changement d'exercice à l'historique
-    if (window.addToSessionHistory) {
-        window.addToSessionHistory('exercise_change', {
-            exerciseId: exercise.id,
-            exerciseName: exercise.name_fr,
-            bodyPart: exercise.body_part
-        });
-    }
+    addToSessionHistory('exercise_change', {
+        exerciseId: exercise.id,
+        exerciseName: exercise.name_fr,
+        bodyPart: exercise.body_part
+    });
     
     setCurrentSetNumber(1);
     
@@ -189,19 +190,10 @@ function finishExercise() {
     // Réinitialiser
     setCurrentExercise(null);
     setCurrentSetNumber(1);
-    
-    if (window.setSetStartTime) {
-        window.setSetStartTime(null);
-    }
-    if (window.setLastSetEndTime) {
-        window.setLastSetEndTime(null);
-    }
-    if (window.setSelectedFatigue) {
-        window.setSelectedFatigue(3);
-    }
-    if (window.setSelectedEffort) {
-        window.setSelectedEffort(3);
-    }
+    setSetStartTime(null);
+    setLastSetEndTime(null);
+    setSelectedFatigue(3);
+    setSelectedEffort(3);
     
     if (currentWorkout && currentWorkout.status === 'started') {
         showExerciseSelector();

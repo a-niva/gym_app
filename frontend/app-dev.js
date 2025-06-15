@@ -200,7 +200,10 @@ function clearLocalStorage() {
 function resetCurrentWorkout() {
     if (currentWorkout && window.abandonWorkout) {
         window.abandonWorkout();
+    } else if (currentWorkout) {
+        console.warn('abandonWorkout non disponible');
     }
+    
     showMainInterface();
     showToast('Workout réinitialisé', 'info');
 }
