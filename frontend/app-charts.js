@@ -68,8 +68,7 @@ async function loadProgressionChart(exerciseId = null) {
         charts.progression.destroy();
     }
 
-    try {
-        const params = exerciseId ? `?exercise_id=${exerciseId}` : '';
+    const params = exerciseId ? `?exercise_id=${exerciseId}` : '';
     try {
         const response = await fetch(`/api/users/${currentUser.id}/progression${params}`);
         
@@ -354,6 +353,9 @@ function initializePeriodSelectors() {
 
 // Charger la liste des exercices pour le sélecteur
 async function loadExerciseSelector() {
+    const selector = document.getElementById('progressionExerciseSelector'); // ADD THIS LINE
+    if (!selector) return; // ADD THIS SAFETY CHECK
+    
     const response = await fetch(`/api/exercises`);
     if (!response.ok) return;
 
