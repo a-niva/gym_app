@@ -3,6 +3,8 @@
 
 import { currentUser } from './app-state.js';
 
+
+
 // Configuration des graphiques
 const chartColors = {
     primary: '#3b82f6',
@@ -55,13 +57,37 @@ const chartDefaults = {
     }
 };
 
-// Stockage des instances de graphiques
-let charts = {};
+// Stockage des instances de graphiques avec protection
+let charts = {
+    progression: null,
+    muscleVolume: null,
+    fatigue: null,
+    records: null
+};
+
+// Fonction utilitaire pour détruire un graphique en toute sécurité
+function safeDestroyChart(chartName) {
+    if (charts[chartName]) {
+        try {
+            charts[chartName].destroy();
+            charts[chartName] = null;
+        } catch (e) {
+            console.warn(`Erreur lors de la destruction du graphique ${chartName}:`, e);
+            charts[chartName] = null;
+        }
+    }
+}
 
 // ===== GRAPHIQUE DE PROGRESSION SUR 30 JOURS =====
 async function loadProgressionChart(exerciseId = null) {
     const ctx = document.getElementById('progressionChart');
     if (!ctx) return;
+
+    // Détruire le graphique existant de manière sécurisée
+    safeDestroyChart('progression');
+    
+    // Petite pause pour s'assurer que le canvas est libéré
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     // Détruire le graphique existant
     if (charts.progression) {
@@ -170,6 +196,12 @@ async function loadMuscleVolumeChart(period = 'week') {
     const ctx = document.getElementById('muscleVolumeChart');
     if (!ctx) return;
 
+    // Détruire le graphique existant de manière sécurisée
+    safeDestroyChart('progression');
+    
+    // Petite pause pour s'assurer que le canvas est libéré
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     if (charts.muscleVolume) {
         charts.muscleVolume.destroy();
     }
@@ -275,6 +307,12 @@ async function loadFatigueChart() {
     const ctx = document.getElementById('fatigueChart');
     if (!ctx) return;
 
+    // Détruire le graphique existant de manière sécurisée
+    safeDestroyChart('progression');
+    
+    // Petite pause pour s'assurer que le canvas est libéré
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     if (charts.fatigue) {
         charts.fatigue.destroy();
     }
@@ -365,6 +403,12 @@ async function loadFatigueChart() {
 async function loadPersonalRecordsChart() {
     const ctx = document.getElementById('recordsChart');
     if (!ctx) return;
+
+    // Détruire le graphique existant de manière sécurisée
+    safeDestroyChart('progression');
+    
+    // Petite pause pour s'assurer que le canvas est libéré
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     if (charts.records) {
         charts.records.destroy();
@@ -523,13 +567,14 @@ async function loadAllCharts() {
     }
 
     try {
-        await Promise.all([
-            loadExerciseSelector(),
-            loadProgressionChart(),
-            loadMuscleVolumeChart(),
-            loadFatigueChart(),
-            loadPersonalRecordsChart()
-        ]);
+        // Chargement séquentiel pour éviter les conflits de canvas
+        await loadExerciseSelector();
+        await loadProgressionChart();
+        await loadMuscleVolumeChart();
+        await loadFatigueChart();
+        await loadPersonalRecordsChart();
+    } catch (error) {
+        console.error('Erreur lors du chargement des graphiques:', error);
     } finally {
         if (chartsContainer) {
             chartsContainer.classList.remove('loading');

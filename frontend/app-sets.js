@@ -454,12 +454,7 @@ async function completeSet() {
         rest_time: 0,
         fatigue_level: selectedFatigue * 2,
         perceived_exertion: selectedEffort * 2,
-        skipped: false,
-        // Ajouter des métadonnées pour clarifier
-        is_bodyweight: isBodyweight,
-        is_time_based: isTimeBased,
-        body_weight: isBodyweight ? currentUser.weight : null,
-        total_weight: isBodyweight ? (currentUser.weight + weight) : weight
+        skipped: false
     };
     
     try {

@@ -142,9 +142,11 @@ function filterExercisesByEquipment(allExercises) {
     return allExercises.filter(exercise => {
         // Vérifier chaque équipement requis
         return exercise.equipment.every(eq => {
+            // Équipements toujours disponibles
+            if (eq === 'bodyweight' || eq === 'none') return true;
+            
+            // Équipements vérifiables
             switch(eq) {
-                case 'bodyweight':
-                    return true;
                 case 'dumbbells':
                     return config.dumbbells?.available && 
                         config.dumbbells?.weights?.length > 0;
@@ -159,8 +161,6 @@ function filterExercisesByEquipment(allExercises) {
                     return config.banc?.available && config.banc?.inclinable_haut;
                 case 'bench_declinable':
                     return config.banc?.available && config.banc?.inclinable_bas;
-                case 'cables':
-                    return false; // Pas dans la config actuelle
                 case 'elastiques':
                     return config.elastiques?.available && 
                         config.elastiques?.bands?.length > 0;
@@ -172,13 +172,20 @@ function filterExercisesByEquipment(allExercises) {
                 case 'disques':
                     return config.disques?.available && 
                         Object.keys(config.disques?.weights || {}).length > 0;
-                case 'machine_convergente':
-                case 'machine_pectoraux':
-                case 'machine_developpe':
-                    return false; // Machines non gérées actuellement
                 default:
-                    console.warn(`Équipement non géré: ${eq}`);
-                    return false;
+                    // Pour tous les équipements non gérés (machines, dip_bars, etc.)
+                    // On les considère comme disponibles si l'utilisateur peut les voir
+                    // Cela permet une approche plus flexible
+                    if (eq.includes('machine') || eq.includes('cable')) {
+                        // Les machines ne sont pas dans la config utilisateur
+                        // donc on les filtre
+                        return false;
+                    }
+                    // Pour les autres équipements non spécifiés, on les accepte
+                    // Cela permet d'utiliser des exercices avec des équipements
+                    // non encore implémentés dans le système
+                    console.info(`Équipement non vérifié accepté: ${eq}`);
+                    return true;
             }
         });
     });
