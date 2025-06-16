@@ -21,8 +21,7 @@ import {
     updateProgressBar,
     showMainInterface,
     showProfileForm,
-    showStep,
-    showWelcomeScreen  // Ajouter cette ligne
+    showStep
 } from './app-navigation.js';
 
 import { showToast, getEquipmentIcon, getEquipmentName } from './app-ui.js';
@@ -823,7 +822,7 @@ function logout() {
         
         updateProgressBar();
         showStep(1);
-        showWelcomeScreen();
+        window.showWelcomeScreen();
         showToast('Déconnexion réussie', 'success');
     }
 }
