@@ -65,17 +65,51 @@ let charts = {
     records: null
 };
 
+// État pour gérer les event listeners et éviter les duplications
+let eventListenersInitialized = false;
+let isLoadingCharts = false;
+
+// Stockage des références aux event listeners pour pouvoir les retirer
+const eventListeners = {
+    volumePeriod: null,
+    progressionExercise: null
+};
+
+// Fonction utilitaire pour détruire un graphique en toute sécurité
 // Fonction utilitaire pour détruire un graphique en toute sécurité
 function safeDestroyChart(chartName) {
     if (charts[chartName]) {
         try {
+            // Appeler destroy() sur le graphique
             charts[chartName].destroy();
             charts[chartName] = null;
+            
+            // Forcer le nettoyage du canvas
+            const canvasId = getCanvasIdFromChartName(chartName);
+            const canvas = document.getElementById(canvasId);
+            if (canvas) {
+                const context = canvas.getContext('2d');
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Réinitialiser les dimensions pour forcer Chart.js à recalculer
+                canvas.width = canvas.width;
+            }
         } catch (e) {
             console.warn(`Erreur lors de la destruction du graphique ${chartName}:`, e);
             charts[chartName] = null;
         }
     }
+}
+
+// Helper pour mapper les noms de graphiques aux IDs de canvas
+function getCanvasIdFromChartName(chartName) {
+    const mapping = {
+        progression: 'progressionChart',
+        muscleVolume: 'muscleVolumeChart',
+        fatigue: 'fatigueChart',
+        records: 'recordsChart'
+    };
+    return mapping[chartName] || chartName;
 }
 
 // ===== GRAPHIQUE DE PROGRESSION SUR 30 JOURS =====
@@ -87,7 +121,7 @@ async function loadProgressionChart(exerciseId = null) {
     safeDestroyChart('progression');
     
     // Petite pause pour s'assurer que le canvas est libéré
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const params = exerciseId ? `?exercise_id=${exerciseId}` : '';
     try {
@@ -191,7 +225,7 @@ async function loadMuscleVolumeChart(period = 'week') {
     safeDestroyChart('muscleVolume');
     
     // Petite pause pour s'assurer que le canvas est libéré
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
         const response = await fetch(`/api/users/${currentUser.id}/muscle-volume?period=${period}`);
@@ -298,7 +332,7 @@ async function loadFatigueChart() {
     safeDestroyChart('fatigue');
     
     // Petite pause pour s'assurer que le canvas est libéré
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
         const response = await fetch(`/api/users/${currentUser.id}/fatigue-trends`);
@@ -451,7 +485,7 @@ async function loadPersonalRecordsChart() {
     safeDestroyChart('records');
     
     // Petite pause pour s'assurer que le canvas est libéré
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
         const response = await fetch(`/api/users/${currentUser.id}/personal-records`);
@@ -553,21 +587,67 @@ async function loadPersonalRecordsChart() {
 
 // ===== SÉLECTEURS DE PÉRIODE =====
 function initializePeriodSelectors() {
+    // Éviter d'initialiser plusieurs fois
+    if (eventListenersInitialized) {
+        return;
+    }
+    
     // Sélecteur pour le graphique de volume
     const volumePeriodSelector = document.getElementById('volumePeriodSelector');
     if (volumePeriodSelector) {
-        volumePeriodSelector.addEventListener('change', (e) => {
-            loadMuscleVolumeChart(e.target.value);
-        });
+        // Retirer l'ancien listener s'il existe
+        if (eventListeners.volumePeriod) {
+            volumePeriodSelector.removeEventListener('change', eventListeners.volumePeriod);
+        }
+        
+        // Créer et stocker le nouveau listener
+        eventListeners.volumePeriod = async (e) => {
+            if (!isLoadingCharts) {
+                await loadMuscleVolumeChart(e.target.value);
+            }
+        };
+        
+        volumePeriodSelector.addEventListener('change', eventListeners.volumePeriod);
     }
 
     // Sélecteur pour le graphique de progression
     const exerciseSelector = document.getElementById('progressionExerciseSelector');
     if (exerciseSelector) {
-        exerciseSelector.addEventListener('change', (e) => {
-            loadProgressionChart(e.target.value || null);
-        });
+        // Retirer l'ancien listener s'il existe
+        if (eventListeners.progressionExercise) {
+            exerciseSelector.removeEventListener('change', eventListeners.progressionExercise);
+        }
+        
+        // Créer et stocker le nouveau listener
+        eventListeners.progressionExercise = async (e) => {
+            if (!isLoadingCharts) {
+                await loadProgressionChart(e.target.value || null);
+            }
+        };
+        
+        exerciseSelector.addEventListener('change', eventListeners.progressionExercise);
     }
+    
+    eventListenersInitialized = true;
+}
+
+// Fonction pour réinitialiser les sélecteurs (utile lors du changement de vue)
+function resetPeriodSelectors() {
+    eventListenersInitialized = false;
+    
+    // Nettoyer les listeners existants
+    const volumePeriodSelector = document.getElementById('volumePeriodSelector');
+    if (volumePeriodSelector && eventListeners.volumePeriod) {
+        volumePeriodSelector.removeEventListener('change', eventListeners.volumePeriod);
+    }
+    
+    const exerciseSelector = document.getElementById('progressionExerciseSelector');
+    if (exerciseSelector && eventListeners.progressionExercise) {
+        exerciseSelector.removeEventListener('change', eventListeners.progressionExercise);
+    }
+    
+    eventListeners.volumePeriod = null;
+    eventListeners.progressionExercise = null;
 }
 
 // Charger la liste des exercices pour le sélecteur
@@ -600,8 +680,12 @@ async function loadExerciseSelector() {
 }
 
 // ===== CHARGEMENT DE TOUS LES GRAPHIQUES =====
+// ===== CHARGEMENT DE TOUS LES GRAPHIQUES =====
 async function loadAllCharts() {
-    if (!currentUser) return;
+    if (!currentUser || isLoadingCharts) return;
+    
+    // Empêcher les appels multiples simultanés
+    isLoadingCharts = true;
 
     // Afficher un loader
     const chartsContainer = document.getElementById('chartsContainer');
@@ -610,6 +694,14 @@ async function loadAllCharts() {
     }
 
     try {
+        // Détruire tous les graphiques existants avant de recharger
+        Object.keys(charts).forEach(chartName => {
+            safeDestroyChart(chartName);
+        });
+        
+        // Attendre un peu plus pour s'assurer que les canvas sont libérés
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Chargement séquentiel pour éviter les conflits de canvas
         await loadExerciseSelector();
         await loadProgressionChart();
@@ -622,6 +714,7 @@ async function loadAllCharts() {
         if (chartsContainer) {
             chartsContainer.classList.remove('loading');
         }
+        isLoadingCharts = false;
     }
 }
 
@@ -646,6 +739,7 @@ function refreshCharts() {
 window.loadAllCharts = loadAllCharts;
 window.refreshCharts = refreshCharts;
 window.exportChart = exportChart;
+window.resetPeriodSelectors = resetPeriodSelectors;
 
 export {
     loadAllCharts,
@@ -655,5 +749,6 @@ export {
     loadPersonalRecordsChart,
     refreshCharts,
     exportChart,
-    initializePeriodSelectors
+    initializePeriodSelectors,
+    resetPeriodSelectors  // Ajouter cette ligne
 };

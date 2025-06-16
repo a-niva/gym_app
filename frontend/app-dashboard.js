@@ -115,7 +115,17 @@ async function refreshDashboard() {
 
 // ===== AFFICHAGE DES STATISTIQUES DÉTAILLÉES =====
 async function showDetailedStats() {
+    // Réinitialiser l'état des sélecteurs avant de changer de vue
+    if (window.resetPeriodSelectors) {
+        window.resetPeriodSelectors();
+    }
+    
     showView('stats');
+    
+    // Attendre que la vue soit complètement chargée
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    // Charger les graphiques et initialiser les sélecteurs
     await loadAllCharts();
     initializePeriodSelectors();
 }
