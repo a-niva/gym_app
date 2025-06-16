@@ -4,10 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, text
-from typing import Optional, List, Dict, Any
+from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
-from sqlalchemy import func, distinct
+
 import json
 import os
 
@@ -46,6 +46,7 @@ async def lifespan(app: FastAPI):
     # Shutdown (nothing to do)
 
 app = FastAPI(title="Gym Coach API", lifespan=lifespan)
+app.include_router(ml_router)
 
 # Configuration du mode développement
 DEV_MODE = os.getenv("DEV_MODE", "false").lower() == "true"
@@ -78,11 +79,6 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
-
-@app.get("/api/users", response_model=List[dict])
-def get_all_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
-    return [{"id": u.id, "name": u.name, "created_at": u.created_at, "goals": u.goals, "experience_level": u.experience_level} for u in users]
 
 @app.post("/api/dev/init")
 async def init_dev_mode(db: Session = Depends(get_db)):
@@ -163,10 +159,11 @@ async def init_dev_mode(db: Session = Depends(get_db)):
                             target_reps=10,
                             actual_reps=10 - (set_num - 1),
                             weight=weight_progression,
-                            rest_time=120,
-                            fatigue_level=3 + set_num,
-                            perceived_exertion=6 + set_num,
-                            completed_at=workout.created_at + timedelta(minutes=5*set_num)  # AJOUTER CETTE LIGNE
+                            rest_time=90,
+                            fatigue_level=4 + set_num,
+                            perceived_exertion=5 + (set_num - 1),
+                            skipped=False,
+                            completed_at=workout.created_at + timedelta(minutes=5*set_num)
                         )
                         db.add(set_record)
                 
@@ -316,20 +313,16 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
         
         # Calculate total volume - pour les exercices au poids du corps, utiliser le poids de l'utilisateur
         total_volume = 0
-        total_sets_count = 0
         for s in sets:
             if not s.skipped:
-                total_sets_count += 1
-                # Récupérer l'exercice pour vérifier le type
+                # Récupérer l'exercice pour vérifier si c'est du bodyweight
                 exercise = db.query(Exercise).filter(Exercise.id == s.exercise_id).first()
-                if exercise:
-                    # Pour les exercices au poids du corps sans charge additionnelle
-                    if 'bodyweight' in exercise.equipment and s.weight == 0:
-                        user = db.query(User).filter(User.id == user_id).first()
-                        effective_weight = user.weight if user else 75
-                        total_volume += effective_weight * s.actual_reps
-                    else:
-                        total_volume += s.weight * s.actual_reps
+                if exercise and 'bodyweight' in exercise.equipment:
+                    # Si pas de charge additionnelle, utiliser le poids du corps
+                    effective_weight = s.weight if s.weight > 0 else (db.query(User).filter(User.id == user_id).first().weight or 75)
+                    total_volume += effective_weight * s.actual_reps
+                else:
+                    total_volume += s.weight * s.actual_reps
         
         # Get unique exercises
         exercise_ids = list(set(s.exercise_id for s in sets))
@@ -344,44 +337,11 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
             "date": workout.created_at,
             "type": workout.type,
             "total_volume": total_volume,
-            "total_sets": total_sets_count,
+            "total_sets": len(sets),
             "exercises": exercises
         })
     
     return history
-
-@app.delete("/api/users/{user_id}/workout-history")
-def delete_workout_history(user_id: int, db: Session = Depends(get_db)):
-    """Supprime tout l'historique des séances d'un utilisateur"""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    try:
-        # Utiliser SQL brut pour éviter les problèmes de mémoire et de contraintes
-        from sqlalchemy import text
-        
-        # Supprimer d'abord les sets
-        db.execute(text("""
-            DELETE FROM sets 
-            WHERE workout_id IN (
-                SELECT id FROM workouts WHERE user_id = :user_id
-            )
-        """), {"user_id": user_id})
-        
-        # Puis les workouts
-        count = db.query(Workout).filter(Workout.user_id == user_id).count()
-        db.execute(text("DELETE FROM workouts WHERE user_id = :user_id"), {"user_id": user_id})
-        
-        db.commit()
-        
-        return {
-            "message": "Historique supprimé avec succès",
-            "deleted_workouts": count
-        }
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.put("/api/workouts/{workout_id}/complete")
 def complete_workout(workout_id: int, db: Session = Depends(get_db)):
@@ -478,16 +438,14 @@ def get_workout_status(workout_id: int, db: Session = Depends(get_db)):
     }
 
 @app.patch("/api/sets/{set_id}/rest-time")
-def update_set_rest_time(set_id: int, data: dict, db: Session = Depends(get_db)):
+def update_set_rest_time(set_id: int, rest_time: int, db: Session = Depends(get_db)):
     """Update rest time for a completed set"""
     set_obj = db.query(Set).filter(Set.id == set_id).first()
     if not set_obj:
         raise HTTPException(status_code=404, detail="Set not found")
     
-    rest_time = data.get('rest_time', 0)
     set_obj.rest_time = rest_time
     db.commit()
-    
     return {"updated": True, "set_id": set_id, "rest_time": rest_time}
 
 @app.get("/api/users/{user_id}/active-workout")
@@ -655,233 +613,31 @@ def get_user_stats(user_id: int, db: Session = Depends(get_db)):
         Workout.user_id == user_id,
         Workout.status == "completed"
     ).order_by(Workout.completed_at.desc()).first()
-
-    last_workout_date = None
+    
+    last_workout_date = "Jamais"
     if last_workout and last_workout.completed_at:
-        last_workout_date = last_workout.completed_at.isoformat()
-
+        last_workout_date = last_workout.completed_at.strftime("%d/%m")
+    
     return {
         "total_workouts": total_workouts,
         "week_streak": 0,  # À implémenter selon votre logique
-        "last_workout": last_workout_date  # Retourner la date ISO ou None
+        "last_workout": last_workout_date
     }
-
-@app.get("/api/users/{user_id}/progression")
-def get_user_progression(
-    user_id: int, 
-    exercise_id: int = None,
-    days: int = 30,
-    db: Session = Depends(get_db)
-):
-    """Récupère la progression de l'utilisateur sur une période donnée"""
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=days)
-        
-    query = db.query(
-        func.date(func.coalesce(Set.completed_at, Workout.created_at)).label('date'),
-        func.max(Set.weight*(1 + Set.actual_reps * 0.033)).label('estimated_1rm')
-    ).join(
-        Workout, Set.workout_id == Workout.id
-    ).filter(
-        Workout.user_id == user_id,
-        Workout.status == "completed",
-        func.coalesce(Set.completed_at, Workout.created_at) >= start_date,  # Fallback sur workout created_at
-        Set.skipped == False
-    )
-    
-    if exercise_id:
-        query = query.filter(Set.exercise_id == exercise_id)
-    
-    results = query.group_by(func.date(func.coalesce(Set.completed_at, Workout.created_at))).order_by('date').all()
-    if not results:
-        return {"dates": [], "weights": []}
-
-    return {
-        "dates": [r.date.isoformat() for r in results],
-        "weights": [round(r.estimated_1rm, 1) for r in results]
-    }
-
-@app.get("/api/users/{user_id}/muscle-volume")
-def get_muscle_volume(
-    user_id: int,
-    period: str = "week",
-    db: Session = Depends(get_db)
-):
-    """Récupère la répartition du volume par groupe musculaire"""
-    if period == "week":
-        start_date = datetime.utcnow() - timedelta(days=7)
-    elif period == "month":
-        start_date = datetime.utcnow() - timedelta(days=30)
-    else:
-        start_date = None
-    
-    query = db.query(
-        Exercise.body_part,
-        func.sum(Set.weight * Set.actual_reps).label('volume')
-    ).select_from(Set).join(
-        Workout, Set.workout_id == Workout.id
-    ).outerjoin(
-        Exercise, Set.exercise_id == Exercise.id
-    ).filter(
-        Workout.user_id == user_id,
-        Workout.status == "completed",
-        Exercise.body_part.isnot(None),
-        Set.skipped == False
-    )
-    
-    if start_date:
-        query = query.filter(func.coalesce(Set.completed_at, Workout.created_at) >= start_date)
-                
-    results = query.group_by(Exercise.body_part).all()
-    
-    volumes = {r.body_part: float(r.volume or 0) for r in results}
-    total = sum(volumes.values())
-
-    if total == 0:
-        return {
-            "volumes": {},
-            "total": 0,
-            "percentages": {}
-        }
-
-    return {
-        "volumes": volumes,
-        "total": total,
-        "percentages": {k: round(v/total*100, 1) for k, v in volumes.items()}
-    }
-
-@app.get("/api/users/{user_id}/fatigue-trends")
-def get_fatigue_trends(
-    user_id: int,
-    days: int = 14,
-    db: Session = Depends(get_db)
-):
-    """Récupère les tendances de fatigue et performance"""
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=days)
-    
-    results = db.query(
-        func.date(Workout.created_at).label('date'),
-        func.avg(Set.fatigue_level).label('avg_fatigue'),
-        func.avg(Set.perceived_exertion).label('avg_exertion'),
-        func.count(func.distinct(Workout.id)).label('workout_count')
-    ).join(
-        Set, Workout.id == Set.workout_id
-    ).filter(
-        Workout.user_id == user_id,
-        Workout.status == "completed",
-        Workout.created_at >= start_date
-    ).group_by(
-        func.date(Workout.created_at)
-    ).order_by('date').all()
-    
-    # Calculer la performance relative (inverse de la fatigue)
-    dates = []
-    fatigue = []
-    performance = []
-    
-    for r in results:
-        dates.append(r.date.isoformat())
-        fatigue.append(round(r.avg_fatigue or 5, 1))
-        # Performance = 100% - (fatigue * 10)
-        perf = 100 - (r.avg_fatigue or 5) * 10
-        performance.append(max(0, min(100, perf)))
-    
-    return {
-        "dates": dates,
-        "fatigue": fatigue,
-        "performance": performance
-    }
-
-@app.get("/api/users/{user_id}/personal-records")
-def get_personal_records(
-    user_id: int,
-    db: Session = Depends(get_db)
-):
-    """Récupère les records personnels par exercice"""
-    # Sous-requête pour obtenir le max par exercice
-    subquery = db.query(
-        Set.exercise_id,
-        func.max(Set.weight).label('max_weight')
-    ).join(
-        Workout, Set.workout_id == Workout.id
-    ).filter(
-        Workout.user_id == user_id,
-        Workout.status == "completed"
-    ).group_by(Set.exercise_id).subquery()
-    
-    # Requête principale avec jointure sur les exercices
-    results = db.query(
-        Exercise.name_fr,
-        subquery.c.max_weight,
-        Exercise.body_part
-    ).join(
-        subquery, Exercise.id == subquery.c.exercise_id
-    ).order_by(subquery.c.max_weight.desc()).limit(10).all()
-    
-    # Vérifier s'il y a des résultats
-    if not results:
-        return {
-            "exercises": [],
-            "current_records": [],
-            "targets": []
-        }
-    
-    exercises = []
-    current_records = []
-    targets = []
-    
-    for r in results:
-        exercises.append(r.name_fr)
-        current_records.append(float(r.max_weight))
-        # Objectif = record actuel + 10%
-        targets.append(round(float(r.max_weight) * 1.1, 1))
-    
-    return {
-        "exercises": exercises,
-        "current_records": current_records,
-        "targets": targets
-    }
-
-@app.get("/api/exercises", response_model=List[ExerciseResponse])
-def get_exercises(db: Session = Depends(get_db)):
-    """Récupère la liste des exercices"""
-    exercises = db.query(Exercise).all()
-    return exercises
-
 
 # Set endpoints
 @app.post("/api/sets/")
 def create_set(set_data: SetCreate, db: Session = Depends(get_db)):
-    try:
-        # Créer l'objet Set avec seulement les champs du modèle
-        db_set = Set(
-            workout_id=set_data.workout_id,
-            exercise_id=set_data.exercise_id,
-            set_number=set_data.set_number,
-            target_reps=set_data.target_reps,
-            actual_reps=set_data.actual_reps,
-            weight=set_data.weight,
-            rest_time=set_data.rest_time,
-            fatigue_level=set_data.fatigue_level,
-            perceived_exertion=set_data.perceived_exertion,
-            skipped=set_data.skipped
-        )
-        
-        db.add(db_set)
-        db.commit()
-        db.refresh(db_set)
-        
-        return {"id": db_set.id, "created": True}
-        
-    except Exception as e:
-        db.rollback()
-        print(f"Erreur création set: {str(e)}")
-        print(f"Data reçue: {set_data.dict()}")
-        raise HTTPException(
-            status_code=400,
-            detail=f"Erreur lors de la création de la série: {str(e)}"
-        )
+    db_set = Set(**set_data.dict())
+    db.add(db_set)
+    db.commit()
+    db.refresh(db_set)
+    return {"id": db_set.id, "created": True}
+
+
+@app.get("/api/users/")
+def get_all_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return [{"id": u.id, "name": u.name, "created_at": u.created_at} for u in users]
 
 
 @app.get("/api/sets/{workout_id}")
@@ -889,64 +645,5 @@ def get_workout_sets(workout_id: int, db: Session = Depends(get_db)):
     sets = db.query(Set).filter(Set.workout_id == workout_id).all()
     return sets
 
-# ENDPOINT MANQUANT 1 : pause workout
-@app.put("/api/workouts/{workout_id}/pause")
-def pause_workout(workout_id: int, db: Session = Depends(get_db)):
-    workout = db.query(Workout).filter(Workout.id == workout_id).first()
-    if not workout:
-        raise HTTPException(status_code=404, detail="Workout not found")
-    
-    if workout.status != "started":
-        raise HTTPException(status_code=400, detail="Can only pause started workouts")
-    
-    workout.status = "paused"
-    workout.paused_at = datetime.utcnow()
-    db.commit()
-    
-    return {"status": "paused", "paused_at": workout.paused_at}
-
-# ENDPOINT MANQUANT 2 : resume workout
-@app.put("/api/workouts/{workout_id}/resume")
-def resume_workout(workout_id: int, db: Session = Depends(get_db)):
-    workout = db.query(Workout).filter(Workout.id == workout_id).first()
-    if not workout:
-        raise HTTPException(status_code=404, detail="Workout not found")
-    
-    if workout.status != "paused":
-        raise HTTPException(status_code=400, detail="Can only resume paused workouts")
-    
-    # Calculer la durée de pause
-    if workout.paused_at:
-        pause_duration = (datetime.utcnow() - workout.paused_at).total_seconds()
-        workout.total_pause_duration += int(pause_duration)
-    
-    workout.status = "started"
-    workout.paused_at = None
-    db.commit()
-    
-    return {"status": "resumed", "total_pause_duration": workout.total_pause_duration}
-
-# ENDPOINT MANQUANT 3 : abandon workout
-@app.put("/api/workouts/{workout_id}/abandon")
-def abandon_workout(workout_id: int, db: Session = Depends(get_db)):
-    workout = db.query(Workout).filter(Workout.id == workout_id).first()
-    if not workout:
-        raise HTTPException(status_code=404, detail="Workout not found")
-    
-    workout.status = "abandoned"
-    workout.completed_at = datetime.utcnow()
-    db.commit()
-    
-    return {"status": "abandoned"}
-
-# ENDPOINT MANQUANT 4 : rest periods (même si non utilisé actuellement)
-@app.post("/api/workouts/rest-periods/")
-def create_rest_period(rest_data: dict, db: Session = Depends(get_db)):
-    # Pour l'instant, on retourne juste un succès
-    # Plus tard, on pourra créer une table RestPeriod si nécessaire
-    return {"success": True, "message": "Rest period logged"}
-
-
-app.include_router(ml_router)
 # Static files
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

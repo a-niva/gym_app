@@ -151,7 +151,7 @@ async function apiCall(endpoint, options = {}, retries = 3) {
 // ===== USERS API =====
 async function saveUser(userData) {
     try {
-        const user = await apiCall('/users', {
+        const user = await apiCall('/users/', {
             method: 'POST',
             body: JSON.stringify(userData)
         });
@@ -368,24 +368,9 @@ async function createSet(setData) {
         });
         
         if (response.ok) {
-            const result = await response.json();
-            return result;
-        } else {
-            // Log détaillé pour debug
-            const errorText = await response.text();
-            console.error('Erreur serveur:', response.status, errorText);
-            
-            // Parser l'erreur si possible
-            try {
-                const errorData = JSON.parse(errorText);
-                console.error('Détail erreur:', errorData);
-            } catch (e) {
-                // Si ce n'est pas du JSON, on log le texte brut
-                console.error('Réponse serveur non-JSON:', errorText);
-            }
-            
-            return null;
+            return await response.json();
         }
+        return null;
     } catch (error) {
         console.error('Erreur création set:', error);
         return null;

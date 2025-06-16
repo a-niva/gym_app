@@ -1,194 +1,95 @@
-// ===== MODULE NAVIGATION =====
-// Ce fichier gère la navigation entre les vues et les étapes
-import { currentUser, setCurrentStep, getCurrentStep } from './app-state.js';
+// ===== NAVIGATION ET VUES =====
+// Ce fichier gère toute la navigation entre les vues et les étapes de l'onboarding
 
-// ===== GESTION DES VUES =====
-function showView(viewId) {
-    // Récupérer la vue active actuelle
-    const previousView = document.querySelector('.view.active')?.id;
+import { 
+    currentStep, 
+    totalSteps,
+    setCurrentStep,
+    currentUser,
+    timerInterval,
+    restTimerInterval,
+    setTimerInterval,
+    setRestTimerInterval
+} from './app-state.js';
+
+// ===== NAVIGATION & VUES =====
+function showView(viewName) {
+    // Clean up any running timers when leaving training view
+    if (viewName !== 'training') {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            setTimerInterval(null);
+        }
+        if (restTimerInterval) {
+            clearInterval(restTimerInterval);
+            setRestTimerInterval(null);
+        }
+    }
     
-    // Masquer toutes les vues
-    document.querySelectorAll('.view').forEach(view => {
+    document.querySelectorAll('.view, .onboarding').forEach(view => {
         view.classList.remove('active');
     });
     
-    // Afficher la vue demandée
-    const targetView = document.getElementById(viewId);
-    if (targetView) {
-        targetView.classList.add('active');
-    }
-    
-    // Mettre à jour la navigation active
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // Déterminer quel élément de navigation activer
-    const navMapping = {
-        'dashboard': 0,
-        'exercises': 1,
-        'stats': 2,
-        'training': 3,
-        'profile': 4
-    };
-    
-    const navIndex = navMapping[viewId];
-    if (navIndex !== undefined) {
-        const navItems = document.querySelectorAll('.nav-item');
-        if (navItems[navIndex]) {
-            navItems[navIndex].classList.add('active');
+    const view = document.getElementById(viewName) || document.querySelector(`.${viewName}`);
+    if (view) {
+        view.classList.add('active');
+        if (viewName === 'onboarding') {
+            showStep(currentStep);
         }
     }
-    
-    // Nettoyer les graphiques quand on quitte la vue stats
-    if (previousView === 'stats' && viewId !== 'stats' && window.cleanupCharts) {
-        window.cleanupCharts();
-    }
 }
 
-// ===== GESTION DES ÉTAPES D'ONBOARDING =====
-function showStep(stepNumber) {
-    // Masquer toutes les étapes
-    document.querySelectorAll('.onboarding-step').forEach(step => {
-        step.classList.remove('active');
+function showStep(step) {
+    document.querySelectorAll('.onboarding-step').forEach(s => {
+        s.classList.remove('active');
     });
-    
-    // Afficher l'étape demandée
-    const targetStep = document.getElementById(`step${stepNumber}`);
-    if (targetStep) {
-        targetStep.classList.add('active');
-    }
-    
-    // Mettre à jour l'état
-    setCurrentStep(stepNumber);
-    
-    // Mettre à jour la barre de progression
-    updateProgressBar();
+    document.getElementById(`step${step}`).classList.add('active');
 }
 
-// ===== NAVIGATION ENTRE LES ÉTAPES =====
-function nextStep() {
-    const currentStep = getCurrentStep();
-    
-    if (currentStep === 1 && !validateStep1()) {
-        return;
-    }
-    
-    if (currentStep === 2 && !validateStep2()) {
-        return;
-    }
-    
-    if (currentStep === 4 && !validateStep4()) {
-        return;
-    }
-    
-    showStep(currentStep + 1);
-}
-
+// Navigation dans l'onboarding - version simple sans validation
 function nextStepSimple() {
-    const currentStep = getCurrentStep();
-    showStep(currentStep + 1);
+    if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+        showStep(currentStep);
+        updateProgressBar();
+    }
+}
+
+// Navigation avec validation (sera remplacée par app-onboarding.js)
+function nextStep() {
+    nextStepSimple();
 }
 
 function prevStep() {
-    const currentStep = getCurrentStep();
     if (currentStep > 1) {
-        showStep(currentStep - 1);
+        setCurrentStep(currentStep - 1);
+        showStep(currentStep);
+        updateProgressBar();
     }
 }
 
-// ===== VALIDATION DES ÉTAPES =====
-function validateStep1() {
-    const name = document.getElementById('userName').value.trim();
-    const birthDate = document.getElementById('userBirthDate').value;
-    
-    if (!name || !birthDate) {
-        if (window.showToast) {
-            window.showToast('Veuillez remplir tous les champs', 'error');
-        }
-        return false;
-    }
-    
-    const birthYear = new Date(birthDate).getFullYear();
-    const currentYear = new Date().getFullYear();
-    const age = currentYear - birthYear;
-    
-    if (age < 16 || age > 100) {
-        if (window.showToast) {
-            window.showToast('L\'âge doit être entre 16 et 100 ans', 'error');
-        }
-        return false;
-    }
-    
-    return true;
-}
-
-function validateStep2() {
-    const height = document.getElementById('userHeight').value;
-    const weight = document.getElementById('userWeight').value;
-    
-    if (!height || !weight) {
-        if (window.showToast) {
-            window.showToast('Veuillez remplir tous les champs', 'error');
-        }
-        return false;
-    }
-    
-    if (height < 120 || height > 250) {
-        if (window.showToast) {
-            window.showToast('La taille doit être entre 120 et 250 cm', 'error');
-        }
-        return false;
-    }
-    
-    if (weight < 30 || weight > 300) {
-        if (window.showToast) {
-            window.showToast('Le poids doit être entre 30 et 300 kg', 'error');
-        }
-        return false;
-    }
-    
-    return true;
-}
-
-function validateStep4() {
-    const selectedGoals = document.querySelectorAll('.chip.selected');
-    if (selectedGoals.length === 0) {
-        if (window.showToast) {
-            window.showToast('Veuillez sélectionner au moins un objectif', 'error');
-        }
-        return false;
-    }
-    return true;
-}
-
-// ===== MISE À JOUR DE LA BARRE DE PROGRESSION =====
 function updateProgressBar() {
-    const totalSteps = 7;
-    const currentStep = getCurrentStep();
-    const progress = (currentStep / totalSteps) * 100;
-    
+    const progress = (currentStep - 1) / (totalSteps - 1) * 100;
     const progressBar = document.getElementById('progressBar');
     if (progressBar) {
         progressBar.style.width = `${progress}%`;
     }
 }
 
-// ===== AFFICHAGE DE L'INTERFACE PRINCIPALE =====
+// Affichage de l'interface principale après connexion
 function showMainInterface() {
-    // Masquer l'onboarding
+    if (!currentUser) {
+        console.error('Aucun utilisateur chargé');
+        showProfileForm();
+        return;
+    }
+    
     document.getElementById('onboarding').classList.remove('active');
     document.getElementById('progressContainer').style.display = 'none';
-    
-    // Afficher la navigation et l'interface principale
     document.getElementById('bottomNav').style.display = 'flex';
     
-    // Afficher l'avatar utilisateur
-    if (currentUser && currentUser.name) {
-        const userInitial = document.getElementById('userInitial');
-        userInitial.textContent = currentUser.name.charAt(0).toUpperCase();
-        userInitial.style.display = 'flex';
-    } else {
+    if (currentUser) {
+        document.getElementById('userInitial').textContent = currentUser.name[0].toUpperCase();
         document.getElementById('userInitial').style.display = 'flex';
     }
     

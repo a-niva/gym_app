@@ -8,7 +8,6 @@
     <meta name="theme-color" content="#2563eb">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="data:,">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -29,9 +28,9 @@
     <!-- Main Container -->
     <div class="container">
         <!-- Onboarding -->
-        <div class="onboarding" id="onboarding">
+        <div class="onboarding active" id="onboarding">
             <!-- Étape 1: Informations personnelles -->
-            <div class="onboarding-step" id="step1">
+            <div class="onboarding-step active" id="step1">
                 <h2>Bienvenue ! 👋</h2>
                 <p style="color: var(--gray); margin-bottom: 2rem;">Commençons par faire connaissance</p>
                 
@@ -240,6 +239,7 @@
                     <div class="stat-label">Dernière séance</div>
                 </div>
             </div>
+            
             <div class="action-grid">
                 <div class="action-card" onclick="startWorkout('free_time')">
                     <h3>🏃 Séance libre</h3>
@@ -254,101 +254,6 @@
             <div class="section-title">Historique récent</div>
             <div id="workoutHistory" class="workout-history">
                 <!-- Historique chargé ici -->
-            </div>
-
-<!-- Statistiques détaillées -->
-        <div class="view" id="stats">
-            <div class="stats-header">
-                <h1>Statistiques détaillées</h1>
-                <button class="btn-secondary" onclick="showView('dashboard')">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Retour
-                </button>
-            </div>
-
-            <div id="chartsContainer" class="charts-container">
-                <!-- Graphique de progression -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Progression sur 30 jours</h3>
-                        <div class="chart-controls">
-                            <select id="progressionExerciseSelector" class="chart-select">
-                                <option value="">Tous les exercices</option>
-                            </select>
-                            <button class="btn-icon" onclick="exportChart('progression')" title="Exporter">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="progressionChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Graphique volume par muscle -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Répartition du volume</h3>
-                        <div class="chart-controls">
-                            <select id="volumePeriodSelector" class="chart-select">
-                                <option value="week">Cette semaine</option>
-                                <option value="month">Ce mois</option>
-                                <option value="all">Tout</option>
-                            </select>
-                            <button class="btn-icon" onclick="exportChart('muscleVolume')" title="Exporter">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="chart-wrapper chart-wrapper-small">
-                        <canvas id="muscleVolumeChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Graphique fatigue/performance -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Tendances Fatigue vs Performance</h3>
-                        <button class="btn-icon" onclick="exportChart('fatigue')" title="Exporter">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="fatigueChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Graphique records personnels -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Records personnels</h3>
-                        <button class="btn-icon" onclick="exportChart('records')" title="Exporter">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="recordsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stats-footer">
-                <button class="btn-primary" onclick="refreshCharts()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Actualiser
-                </button>
             </div>
         </div>
 
@@ -368,8 +273,18 @@
             </div>
         </div>
 
+        <!-- Profil -->
+        <div class="view" id="profile">
+            <h1>Mon Profil</h1>
+            <div class="profile-info">
+                <!-- Informations générées dynamiquement -->
+            </div>
+            <button class="btn btn-secondary" onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
     <!-- Welcome Screen -->
-    <div class="view" id="welcome">
+    <div class="view active" id="welcome">
         <div class="welcome-container">
             <h1>💪 Fitness Coach</h1>
             <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
@@ -390,27 +305,9 @@
         </div>
     </div>
 
-        <!-- Profil -->
-        <div class="view" id="profile">
-            <h1>Mon Profil</h1>
-            <div class="profile-info">
-                <!-- Informations générées dynamiquement -->
-            </div>
-            <button class="btn btn-danger" onclick="clearWorkoutHistory()" style="margin-bottom: 1rem;">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                Effacer l'historique
-            </button>
-            <button class="btn btn-secondary" onclick="logout()">Déconnexion</button>
-        </div>
-    </div>
-
-
-
     <!-- Bottom Navigation -->
     <div class="bottom-nav" id="bottomNav" style="display: none;">
-        <button class="nav-item" onclick="showView('dashboard')">
+        <button class="nav-item active" onclick="showView('dashboard')">
             <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
             </svg>
@@ -421,12 +318,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
             </svg>
             <span>Exercices</span>
-        </button>
-        <button class="nav-item" onclick="showDetailedStats()">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            <span>Stats</span>
         </button>
         <button class="nav-item" onclick="showView('training')">
             <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
