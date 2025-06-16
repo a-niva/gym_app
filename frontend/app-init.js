@@ -31,6 +31,56 @@ import { showView, showMainInterface, updateProgressBar } from './app-navigation
 import { checkActiveWorkout } from './app-workout.js';
 import { showToast } from './app-ui.js';
 
+
+async function showWelcomeScreen() {
+    // Masquer tout sauf l'écran d'accueil
+    document.getElementById('onboarding').classList.remove('active');
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('progressContainer').style.display = 'none';
+    document.getElementById('userInitial').style.display = 'none';
+    
+    // Afficher l'écran d'accueil
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
+    
+    // Créer ou afficher l'écran d'accueil s'il n'existe pas
+    let welcomeView = document.getElementById('welcome');
+    if (!welcomeView) {
+        // Créer l'écran d'accueil s'il n'existe pas
+        const container = document.querySelector('.container');
+        welcomeView = document.createElement('div');
+        welcomeView.className = 'view active';
+        welcomeView.id = 'welcome';
+        welcomeView.innerHTML = `
+            <div class="welcome-container">
+                <h1>💪 Fitness Coach</h1>
+                <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
+                
+                <button class="btn btn-primary" onclick="startNewProfile()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Créer un nouveau profil
+                </button>
+                
+                <div class="profiles-section" style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1.5rem;">Profils existants</h3>
+                    <div id="profilesList" class="profiles-list">
+                        <!-- Chargé dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(welcomeView);
+    }
+    
+    welcomeView.classList.add('active');
+    
+    // Charger la liste des profils
+    await loadProfiles();
+}
+
 // ===== FONCTION D'INITIALISATION PRINCIPALE =====
 async function initializeApp() {
     console.log('🚀 Initialisation de l\'application...');
@@ -91,55 +141,6 @@ async function initializeApp() {
 }
 
 // ===== ÉCRAN D'ACCUEIL =====
-async function showWelcomeScreen() {
-    // Masquer tout sauf l'écran d'accueil
-    document.getElementById('onboarding').classList.remove('active');
-    document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('progressContainer').style.display = 'none';
-    document.getElementById('userInitial').style.display = 'none';
-    
-    // Afficher l'écran d'accueil
-    document.querySelectorAll('.view').forEach(view => {
-        view.classList.remove('active');
-    });
-    
-    // Créer ou afficher l'écran d'accueil s'il n'existe pas
-    let welcomeView = document.getElementById('welcome');
-    if (!welcomeView) {
-        // Créer l'écran d'accueil s'il n'existe pas
-        const container = document.querySelector('.container');
-        welcomeView = document.createElement('div');
-        welcomeView.className = 'view active';
-        welcomeView.id = 'welcome';
-        welcomeView.innerHTML = `
-            <div class="welcome-container">
-                <h1>💪 Fitness Coach</h1>
-                <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
-                
-                <button class="btn btn-primary" onclick="startNewProfile()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Créer un nouveau profil
-                </button>
-                
-                <div class="profiles-section" style="margin-top: 3rem;">
-                    <h3 style="margin-bottom: 1.5rem;">Profils existants</h3>
-                    <div id="profilesList" class="profiles-list">
-                        <!-- Chargé dynamiquement -->
-                    </div>
-                </div>
-            </div>
-        `;
-        container.appendChild(welcomeView);
-    }
-    
-    welcomeView.classList.add('active');
-    
-    // Charger la liste des profils
-    await loadProfiles();
-}
-
 async function loadProfiles() {
     try {
         const response = await fetch('/api/users/');
@@ -387,6 +388,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     startKeepAlive();
 });
+
+// Exposer les fonctions au niveau global pour les onclick HTML
+window.showWelcomeScreen = showWelcomeScreen;
+window.loadProfile = loadProfile;
+window.startNewProfile = startNewProfile;
 
 // Export de la fonction d'initialisation si nécessaire
 export { initializeApp };

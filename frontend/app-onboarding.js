@@ -21,7 +21,8 @@ import {
     updateProgressBar,
     showMainInterface,
     showProfileForm,
-    showStep
+    showStep,
+    showWelcomeScreen  // Ajouter cette ligne
 } from './app-navigation.js';
 
 import { showToast, getEquipmentIcon, getEquipmentName } from './app-ui.js';
