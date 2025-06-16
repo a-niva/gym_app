@@ -51,7 +51,7 @@ class Workout(Base):
     notes = Column(Text, nullable=True)
     
     user = relationship("User", back_populates="workouts")
-    sets = relationship("Set", back_populates="workout")
+    sets = relationship("Set", back_populates="workout", cascade="all, delete-orphan")
 
 class Set(Base):
     __tablename__ = "sets"

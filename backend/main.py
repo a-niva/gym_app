@@ -349,27 +349,35 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
 @app.delete("/api/users/{user_id}/workout-history")
 def delete_workout_history(user_id: int, db: Session = Depends(get_db)):
     """Supprime tout l'historique des séances d'un utilisateur"""
-    # Vérifier que l'utilisateur existe
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Récupérer tous les workouts de l'utilisateur
-    workouts = db.query(Workout).filter(Workout.user_id == user_id).all()
-    
-    # Supprimer toutes les séries associées
-    for workout in workouts:
-        db.query(Set).filter(Set.workout_id == workout.id).delete()
-    
-    # Supprimer tous les workouts
-    db.query(Workout).filter(Workout.user_id == user_id).delete()
-    
-    db.commit()
-    
-    return {
-        "message": "Historique supprimé avec succès",
-        "deleted_workouts": len(workouts)
-    }
+    try:
+        # Utiliser SQL brut pour éviter les problèmes de mémoire et de contraintes
+        from sqlalchemy import text
+        
+        # Supprimer d'abord les sets
+        db.execute(text("""
+            DELETE FROM sets 
+            WHERE workout_id IN (
+                SELECT id FROM workouts WHERE user_id = :user_id
+            )
+        """), {"user_id": user_id})
+        
+        # Puis les workouts
+        count = db.query(Workout).filter(Workout.user_id == user_id).count()
+        db.execute(text("DELETE FROM workouts WHERE user_id = :user_id"), {"user_id": user_id})
+        
+        db.commit()
+        
+        return {
+            "message": "Historique supprimé avec succès",
+            "deleted_workouts": count
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.put("/api/workouts/{workout_id}/complete")
 def complete_workout(workout_id: int, db: Session = Depends(get_db)):
@@ -666,7 +674,7 @@ def get_user_progression(
     start_date = end_date - timedelta(days=days)
         
     query = db.query(
-        func.date(func.coalesce(Set.completed_at, Set.id)).label('date'),  # Utiliser l'ID comme fallback pour l'ordre
+        func.date(func.coalesce(Set.completed_at, Workout.created_at)).label('date'),
         func.max(Set.weight*(1 + Set.actual_reps * 0.033)).label('estimated_1rm')
     ).join(
         Workout, Set.workout_id == Workout.id
