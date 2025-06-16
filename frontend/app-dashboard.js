@@ -73,32 +73,31 @@ function displayStats(stats) {
     }
     
     // Dernière séance
-// Dernière séance
-const lastWorkoutElement = document.getElementById('lastWorkout');
-if (lastWorkoutElement) {
-    if (stats.last_workout) {
-        const date = new Date(stats.last_workout);
-        // Vérifier que la date est valide
-        if (!isNaN(date.getTime())) {
-            const today = new Date();
-            const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 0) {
-                lastWorkoutElement.textContent = "Aujourd'hui";
-            } else if (diffDays === 1) {
-                lastWorkoutElement.textContent = "Hier";
-            } else if (diffDays < 7) {
-                lastWorkoutElement.textContent = `Il y a ${diffDays} jours`;
+    const lastWorkoutElement = document.getElementById('lastWorkout');
+    if (lastWorkoutElement) {
+        if (stats.last_workout) {
+            const date = new Date(stats.last_workout);
+            // Vérifier que la date est valide
+            if (!isNaN(date.getTime())) {
+                const today = new Date();
+                const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) {
+                    lastWorkoutElement.textContent = "Aujourd'hui";
+                } else if (diffDays === 1) {
+                    lastWorkoutElement.textContent = "Hier";
+                } else if (diffDays < 7) {
+                    lastWorkoutElement.textContent = `Il y a ${diffDays} jours`;
+                } else {
+                    lastWorkoutElement.textContent = date.toLocaleDateString('fr-FR');
+                }
             } else {
-                lastWorkoutElement.textContent = date.toLocaleDateString('fr-FR');
+                lastWorkoutElement.textContent = 'Jamais';
             }
         } else {
             lastWorkoutElement.textContent = 'Jamais';
         }
-    } else {
-        lastWorkoutElement.textContent = 'Jamais';
     }
-}
 }
 
 function logout() {

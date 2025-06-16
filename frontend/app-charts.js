@@ -3,7 +3,10 @@
 
 import { currentUser } from './app-state.js';
 
-
+// Vérifier que Chart.js est chargé
+if (typeof Chart === 'undefined') {
+    console.error('Chart.js n\'est pas chargé !');
+}
 
 // Configuration des graphiques
 const chartColors = {
@@ -57,83 +60,97 @@ const chartDefaults = {
     }
 };
 
-// Stockage des instances de graphiques avec protection
-let charts = {
-    progression: null,
-    muscleVolume: null,
-    fatigue: null,
-    records: null
-};
+// Stockage des instances de graphiques
+let charts = {};
 
-// État pour gérer les event listeners et éviter les duplications
-let eventListenersInitialized = false;
+// État pour gérer l'initialisation
+let chartsInitialized = false;
 let isLoadingCharts = false;
 
-// Stockage des références aux event listeners pour pouvoir les retirer
-const eventListeners = {
-    volumePeriod: null,
-    progressionExercise: null
-};
-
-// Fonction utilitaire pour détruire un graphique en toute sécurité
-// Fonction utilitaire pour détruire un graphique en toute sécurité
-function safeDestroyChart(chartName) {
-    if (charts[chartName]) {
-        try {
-            // Appeler destroy() sur le graphique
-            charts[chartName].destroy();
-            charts[chartName] = null;
-            
-            // Forcer le nettoyage du canvas
-            const canvasId = getCanvasIdFromChartName(chartName);
-            const canvas = document.getElementById(canvasId);
-            if (canvas) {
-                const context = canvas.getContext('2d');
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Réinitialiser les dimensions pour forcer Chart.js à recalculer
-                canvas.width = canvas.width;
+// Fonction pour détruire TOUS les graphiques Chart.js
+function destroyAllCharts() {
+    // Détruire nos références
+    Object.keys(charts).forEach(key => {
+        if (charts[key]) {
+            try {
+                charts[key].destroy();
+            } catch (e) {
+                console.warn(`Erreur destruction graphique ${key}:`, e);
             }
-        } catch (e) {
-            console.warn(`Erreur lors de la destruction du graphique ${chartName}:`, e);
-            charts[chartName] = null;
+            charts[key] = null;
         }
+    });
+    charts = {};
+    
+    // Nettoyer tous les canvas pour forcer Chart.js à libérer ses références
+    const canvasIds = ['progressionChart', 'muscleVolumeChart', 'fatigueChart', 'recordsChart'];
+    canvasIds.forEach(id => {
+        const canvas = document.getElementById(id);
+        if (canvas) {
+            const context = canvas.getContext('2d');
+            if (context) {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            // Forcer la réinitialisation du canvas
+            canvas.width = canvas.width;
+        }
+    });
+    
+    // Forcer Chart.js à libérer toutes ses instances
+    if (window.Chart && Chart.instances) {
+        Object.keys(Chart.instances).forEach(key => {
+            try {
+                Chart.instances[key].destroy();
+            } catch (e) {
+                // Ignorer les erreurs
+            }
+        });
     }
 }
 
-// Helper pour mapper les noms de graphiques aux IDs de canvas
-function getCanvasIdFromChartName(chartName) {
-    const mapping = {
-        progression: 'progressionChart',
-        muscleVolume: 'muscleVolumeChart',
-        fatigue: 'fatigueChart',
-        records: 'recordsChart'
-    };
-    return mapping[chartName] || chartName;
+// Fonction utilitaire pour créer un graphique en toute sécurité
+async function safeCreateChart(canvasId, config, chartKey) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) {
+        console.error(`Canvas ${canvasId} non trouvé`);
+        return null;
+    }
+    
+    // S'assurer que l'ancien graphique est détruit
+    if (charts[chartKey]) {
+        try {
+            charts[chartKey].destroy();
+            charts[chartKey] = null;
+        } catch (e) {
+            console.warn(`Erreur destruction ${chartKey}:`, e);
+        }
+    }
+    
+    // Attendre un cycle de rendu
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    try {
+        // Créer le nouveau graphique
+        charts[chartKey] = new Chart(ctx, config);
+        return charts[chartKey];
+    } catch (error) {
+        console.error(`Erreur création graphique ${chartKey}:`, error);
+        return null;
+    }
 }
 
 // ===== GRAPHIQUE DE PROGRESSION SUR 30 JOURS =====
 async function loadProgressionChart(exerciseId = null) {
-    const ctx = document.getElementById('progressionChart');
-    if (!ctx) return;
-
-    // Détruire le graphique existant de manière sécurisée
-    safeDestroyChart('progression');
-    
-    // Petite pause pour s'assurer que le canvas est libéré
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     const params = exerciseId ? `?exercise_id=${exerciseId}` : '';
+
     try {
         const response = await fetch(`/api/users/${currentUser.id}/progression${params}`);
         
-        // Vérifier que la réponse est OK
         if (!response.ok) {
-            console.error(`Erreur API progression: ${response.status} ${response.statusText}`);
+            console.error(`Erreur API progression: ${response.status}`);
             return;
         }
         
-        // Vérifier que c'est bien du JSON
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
             console.error("La réponse progression n'est pas du JSON");
@@ -142,14 +159,12 @@ async function loadProgressionChart(exerciseId = null) {
         
         const data = await response.json();
 
-        // Vérifier que les données sont valides
-        if (!data.weights || data.weights.length === 0) {
+        if (!data.dates || data.dates.length === 0) {
             console.log("Pas de données de progression");
-            // Afficher un graphique vide
             const emptyData = {
                 labels: ['Aucune donnée'],
                 datasets: [{
-                    label: '1RM estimé (kg)',
+                    label: 'Progression',
                     data: [0],
                     borderColor: chartColors.primary,
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -158,7 +173,7 @@ async function loadProgressionChart(exerciseId = null) {
                 }]
             };
             
-            charts.progression = new Chart(ctx, {
+            await safeCreateChart('progressionChart', {
                 type: 'line',
                 data: emptyData,
                 options: {
@@ -176,7 +191,7 @@ async function loadProgressionChart(exerciseId = null) {
                         }
                     }
                 }
-            });
+            }, 'progression');
             return;
         }
 
@@ -192,7 +207,7 @@ async function loadProgressionChart(exerciseId = null) {
             }]
         };
 
-        charts.progression = new Chart(ctx, {
+        await safeCreateChart('progressionChart', {
             type: 'line',
             data: chartData,
             options: {
@@ -210,7 +225,7 @@ async function loadProgressionChart(exerciseId = null) {
                     }
                 }
             }
-        });
+        }, 'progression');
     } catch (error) {
         console.error('Erreur chargement progression:', error);
     }
@@ -218,25 +233,14 @@ async function loadProgressionChart(exerciseId = null) {
 
 // ===== GRAPHIQUE VOLUME PAR MUSCLE =====
 async function loadMuscleVolumeChart(period = 'week') {
-    const ctx = document.getElementById('muscleVolumeChart');
-    if (!ctx) return;
-
-    // Détruire le graphique existant de manière sécurisée
-    safeDestroyChart('muscleVolume');
-    
-    // Petite pause pour s'assurer que le canvas est libéré
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     try {
         const response = await fetch(`/api/users/${currentUser.id}/muscle-volume?period=${period}`);
         
-        // Vérifier que la réponse est OK
         if (!response.ok) {
             console.error(`Erreur API muscle-volume: ${response.status}`);
             return;
         }
         
-        // Vérifier le content-type
         const respContentType = response.headers.get("content-type");
         if (!respContentType || !respContentType.includes("application/json")) {
             console.error("La réponse muscle-volume n'est pas du JSON");
@@ -245,10 +249,8 @@ async function loadMuscleVolumeChart(period = 'week') {
         
         const data = await response.json();
 
-        // Vérifier que les données sont valides
         if (!data.volumes || Object.keys(data.volumes).length === 0) {
             console.log("Pas de données de volume musculaire");
-            // Afficher un graphique vide
             const emptyData = {
                 labels: ['Aucune donnée'],
                 datasets: [{
@@ -259,7 +261,7 @@ async function loadMuscleVolumeChart(period = 'week') {
                 }]
             };
             
-            charts.muscleVolume = new Chart(ctx, {
+            await safeCreateChart('muscleVolumeChart', {
                 type: 'bar',
                 data: emptyData,
                 options: {
@@ -277,7 +279,7 @@ async function loadMuscleVolumeChart(period = 'week') {
                         }
                     }
                 }
-            });
+            }, 'muscleVolume');
             return;
         }
 
@@ -292,7 +294,7 @@ async function loadMuscleVolumeChart(period = 'week') {
             }]
         };
 
-        charts.muscleVolume = new Chart(ctx, {
+        await safeCreateChart('muscleVolumeChart', {
             type: 'bar',
             data: chartData,
             options: {
@@ -317,7 +319,7 @@ async function loadMuscleVolumeChart(period = 'week') {
                     }
                 }
             }
-        });
+        }, 'muscleVolume');
     } catch (error) {
         console.error('Erreur chargement volume muscles:', error);
     }
@@ -325,25 +327,14 @@ async function loadMuscleVolumeChart(period = 'week') {
 
 // ===== GRAPHIQUE FATIGUE/PERFORMANCE =====
 async function loadFatigueChart() {
-    const ctx = document.getElementById('fatigueChart');
-    if (!ctx) return;
-
-    // Détruire le graphique existant de manière sécurisée
-    safeDestroyChart('fatigue');
-    
-    // Petite pause pour s'assurer que le canvas est libéré
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     try {
         const response = await fetch(`/api/users/${currentUser.id}/fatigue-trends`);
         
-        // Vérifier que la réponse est OK
         if (!response.ok) {
             console.error(`Erreur API fatigue-trends: ${response.status}`);
             return;
         }
         
-        // Vérifier le content-type
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
             console.error("La réponse fatigue-trends n'est pas du JSON");
@@ -352,10 +343,8 @@ async function loadFatigueChart() {
         
         const data = await response.json();
 
-        // Vérifier que les données sont valides
         if (!data.fatigue || data.fatigue.length === 0 || !data.performance || data.performance.length === 0) {
             console.log("Pas de données de fatigue/performance");
-            // Afficher un graphique vide
             const emptyData = {
                 labels: ['Aucune donnée'],
                 datasets: [
@@ -376,7 +365,7 @@ async function loadFatigueChart() {
                 ]
             };
             
-            charts.fatigue = new Chart(ctx, {
+            await safeCreateChart('fatigueChart', {
                 type: 'line',
                 data: emptyData,
                 options: {
@@ -394,7 +383,7 @@ async function loadFatigueChart() {
                         }
                     }
                 }
-            });
+            }, 'fatigue');
             return;
         }
 
@@ -420,7 +409,7 @@ async function loadFatigueChart() {
             ]
         };
 
-        charts.fatigue = new Chart(ctx, {
+        await safeCreateChart('fatigueChart', {
             type: 'line',
             data: chartData,
             options: {
@@ -430,15 +419,17 @@ async function loadFatigueChart() {
                     intersect: false,
                 },
                 scales: {
-                    x: chartDefaults.scales.x,
+                    ...chartDefaults.scales,
                     y: {
                         ...chartDefaults.scales.y,
                         type: 'linear',
                         display: true,
                         position: 'left',
+                        min: 0,
+                        max: 10,
                         title: {
                             display: true,
-                            text: 'Fatigue (1-10)',
+                            text: 'Fatigue (0-10)',
                             color: '#9ca3af'
                         }
                     },
@@ -447,30 +438,20 @@ async function loadFatigueChart() {
                         type: 'linear',
                         display: true,
                         position: 'right',
+                        min: 0,
+                        max: 150,
+                        grid: {
+                            drawOnChartArea: false,
+                        },
                         title: {
                             display: true,
                             text: 'Performance (%)',
                             color: '#9ca3af'
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    }
-                },
-                plugins: {
-                    ...chartDefaults.plugins,
-                    title: {
-                        display: true,
-                        text: 'Tendances Fatigue vs Performance',
-                        color: '#f3f4f6',
-                        font: {
-                            size: 16,
-                            weight: 'bold'
                         }
                     }
                 }
             }
-        });
+        }, 'fatigue');
     } catch (error) {
         console.error('Erreur chargement fatigue:', error);
     }
@@ -478,25 +459,14 @@ async function loadFatigueChart() {
 
 // ===== GRAPHIQUE RECORDS PERSONNELS =====
 async function loadPersonalRecordsChart() {
-    const ctx = document.getElementById('recordsChart');
-    if (!ctx) return;
-
-    // Détruire le graphique existant de manière sécurisée
-    safeDestroyChart('records');
-    
-    // Petite pause pour s'assurer que le canvas est libéré
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     try {
         const response = await fetch(`/api/users/${currentUser.id}/personal-records`);
         
-        // Vérifier que la réponse est OK
         if (!response.ok) {
             console.error(`Erreur API personal-records: ${response.status}`);
             return;
         }
         
-        // Vérifier le content-type
         const recordsContentType = response.headers.get("content-type");
         if (!recordsContentType || !recordsContentType.includes("application/json")) {
             console.error("La réponse personal-records n'est pas du JSON");
@@ -505,10 +475,8 @@ async function loadPersonalRecordsChart() {
         
         const data = await response.json();
 
-        // Vérifier que les données sont valides
         if (!data.exercises || data.exercises.length === 0) {
             console.log("Pas de records personnels");
-            // Afficher un graphique vide avec message
             const emptyData = {
                 labels: ['Aucun record'],
                 datasets: [{
@@ -519,7 +487,7 @@ async function loadPersonalRecordsChart() {
                 }]
             };
             
-            charts.records = new Chart(ctx, {
+            await safeCreateChart('recordsChart', {
                 type: 'bar',
                 data: emptyData,
                 options: {
@@ -538,7 +506,7 @@ async function loadPersonalRecordsChart() {
                         }
                     }
                 }
-            });
+            }, 'records');
             return;
         }
 
@@ -560,7 +528,7 @@ async function loadPersonalRecordsChart() {
             ]
         };
 
-        charts.records = new Chart(ctx, {
+        await safeCreateChart('recordsChart', {
             type: 'bar',
             data: chartData,
             options: {
@@ -579,28 +547,30 @@ async function loadPersonalRecordsChart() {
                     }
                 }
             }
-        });
+        }, 'records');
     } catch (error) {
         console.error('Erreur chargement records:', error);
     }
 }
 
 // ===== SÉLECTEURS DE PÉRIODE =====
+let eventListenersInitialized = false;
+const eventListeners = {
+    volumePeriod: null,
+    progressionExercise: null
+};
+
 function initializePeriodSelectors() {
-    // Éviter d'initialiser plusieurs fois
     if (eventListenersInitialized) {
         return;
     }
     
-    // Sélecteur pour le graphique de volume
     const volumePeriodSelector = document.getElementById('volumePeriodSelector');
     if (volumePeriodSelector) {
-        // Retirer l'ancien listener s'il existe
         if (eventListeners.volumePeriod) {
             volumePeriodSelector.removeEventListener('change', eventListeners.volumePeriod);
         }
         
-        // Créer et stocker le nouveau listener
         eventListeners.volumePeriod = async (e) => {
             if (!isLoadingCharts) {
                 await loadMuscleVolumeChart(e.target.value);
@@ -610,15 +580,12 @@ function initializePeriodSelectors() {
         volumePeriodSelector.addEventListener('change', eventListeners.volumePeriod);
     }
 
-    // Sélecteur pour le graphique de progression
     const exerciseSelector = document.getElementById('progressionExerciseSelector');
     if (exerciseSelector) {
-        // Retirer l'ancien listener s'il existe
         if (eventListeners.progressionExercise) {
             exerciseSelector.removeEventListener('change', eventListeners.progressionExercise);
         }
         
-        // Créer et stocker le nouveau listener
         eventListeners.progressionExercise = async (e) => {
             if (!isLoadingCharts) {
                 await loadProgressionChart(e.target.value || null);
@@ -631,11 +598,9 @@ function initializePeriodSelectors() {
     eventListenersInitialized = true;
 }
 
-// Fonction pour réinitialiser les sélecteurs (utile lors du changement de vue)
 function resetPeriodSelectors() {
     eventListenersInitialized = false;
     
-    // Nettoyer les listeners existants
     const volumePeriodSelector = document.getElementById('volumePeriodSelector');
     if (volumePeriodSelector && eventListeners.volumePeriod) {
         volumePeriodSelector.removeEventListener('change', eventListeners.volumePeriod);
@@ -668,6 +633,7 @@ async function loadExerciseSelector() {
             return;
         }
 
+        selector.innerHTML = '<option value="">Tous les exercices</option>';
         exercises.forEach(exercise => {
             const option = document.createElement('option');
             option.value = exercise.id;
@@ -680,34 +646,31 @@ async function loadExerciseSelector() {
 }
 
 // ===== CHARGEMENT DE TOUS LES GRAPHIQUES =====
-// ===== CHARGEMENT DE TOUS LES GRAPHIQUES =====
 async function loadAllCharts() {
     if (!currentUser || isLoadingCharts) return;
     
-    // Empêcher les appels multiples simultanés
     isLoadingCharts = true;
-
-    // Afficher un loader
     const chartsContainer = document.getElementById('chartsContainer');
+    
     if (chartsContainer) {
         chartsContainer.classList.add('loading');
     }
 
     try {
-        // Détruire tous les graphiques existants avant de recharger
-        Object.keys(charts).forEach(chartName => {
-            safeDestroyChart(chartName);
-        });
+        // Détruire TOUS les graphiques existants
+        destroyAllCharts();
         
-        // Attendre un peu plus pour s'assurer que les canvas sont libérés
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Attendre que le DOM soit prêt
+        await new Promise(resolve => requestAnimationFrame(resolve));
         
-        // Chargement séquentiel pour éviter les conflits de canvas
+        // Charger les graphiques séquentiellement
         await loadExerciseSelector();
         await loadProgressionChart();
         await loadMuscleVolumeChart();
         await loadFatigueChart();
         await loadPersonalRecordsChart();
+        
+        chartsInitialized = true;
     } catch (error) {
         console.error('Erreur lors du chargement des graphiques:', error);
     } finally {
@@ -720,8 +683,20 @@ async function loadAllCharts() {
 
 // ===== EXPORT DES GRAPHIQUES =====
 function exportChart(chartId) {
-    const chart = charts[chartId];
-    if (!chart) return;
+    const chartMapping = {
+        'progression': 'progression',
+        'muscleVolume': 'muscleVolume',
+        'fatigue': 'fatigue',
+        'records': 'records'
+    };
+    
+    const chartKey = chartMapping[chartId];
+    const chart = charts[chartKey];
+    
+    if (!chart) {
+        console.error(`Graphique ${chartId} non trouvé`);
+        return;
+    }
 
     const url = chart.toBase64Image();
     const link = document.createElement('a');
@@ -735,10 +710,17 @@ function refreshCharts() {
     loadAllCharts();
 }
 
+// ===== NETTOYAGE DES GRAPHIQUES =====
+function cleanupCharts() {
+    destroyAllCharts();
+    chartsInitialized = false;
+}
+
 // ===== EXPORT GLOBAL =====
 window.loadAllCharts = loadAllCharts;
 window.refreshCharts = refreshCharts;
 window.exportChart = exportChart;
+window.cleanupCharts = cleanupCharts;
 window.resetPeriodSelectors = resetPeriodSelectors;
 
 export {
@@ -750,5 +732,6 @@ export {
     refreshCharts,
     exportChart,
     initializePeriodSelectors,
-    resetPeriodSelectors  // Ajouter cette ligne
+    resetPeriodSelectors,
+    cleanupCharts
 };
