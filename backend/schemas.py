@@ -103,18 +103,6 @@ class UserResponse(BaseModel):
     
     class Config:
         from_attributes = True
-        
-class ExerciseResponse(BaseModel):
-    id: int
-    name_fr: str
-    name_eng: str
-    equipment: List[str]
-    level: str
-    body_part: str
-    sets_reps: Dict[str, Any]
-    
-    class Config:
-        from_attributes = True
 
 class ExerciseResponse(BaseModel):
     id: int
@@ -146,6 +134,10 @@ class SetCreate(BaseModel):
     fatigue_level: int
     perceived_exertion: int
     skipped: bool = False
+    # Nouveaux champs optionnels
+    is_bodyweight: Optional[bool] = False
+    is_time_based: Optional[bool] = False
+    body_weight: Optional[float] = None
 
 class SetResponse(BaseModel):
     id: int

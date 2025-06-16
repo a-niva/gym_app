@@ -444,26 +444,27 @@ async function completeSet() {
     }
     
     // Préparer les données
-const setData = {
-    workout_id: currentWorkout.id,
-    exercise_id: currentExercise.id,
-    set_number: currentSetNumber,
-    target_reps: currentTargetReps || 10,  // Valeur par défaut si non défini
-    actual_reps: reps,
-    weight: weight,
-    rest_time: 0,
-    fatigue_level: Math.round(selectedFatigue),  // Pas de multiplication par 2
-    perceived_exertion: selectedEffort,          // Pas de multiplication par 2
-    skipped: false
-};
-        
+    const setData = {
+        workout_id: currentWorkout.id,
+        exercise_id: currentExercise.id,
+        set_number: currentSetNumber,
+        target_reps: currentTargetReps,
+        actual_reps: reps,
+        weight: weight, // Pour bodyweight, c'est le poids du lest (0 = sans lest)
+        rest_time: 0,
+        fatigue_level: selectedFatigue * 2,
+        perceived_exertion: selectedEffort * 2,
+        skipped: false,
+        // Ajouter des métadonnées pour clarifier
+        is_bodyweight: isBodyweight,
+        is_time_based: isTimeBased,
+        body_weight: isBodyweight ? currentUser.weight : null,
+        total_weight: isBodyweight ? (currentUser.weight + weight) : weight
+    };
+    
     try {
         const result = await createSet(setData);
-        if (result && result.id) {
-            // Stocker l'ID pour le prochain rest time
-            localStorage.setItem('previousSetId', result.id);
-        }
-            
+        
         if (result) {
             // Stocker l'ID pour mise à jour ultérieure du temps de repos
             localStorage.setItem('lastCompletedSetId', result.id);

@@ -136,9 +136,9 @@ function displayWorkoutHistory(history) {
             </div>
             <div class="workout-details">
                 <div class="workout-type">${workout.type === 'program' ? 'Programme' : 'Libre'}</div>
-                    <div class="workout-stats">
-                        ${workout.total_sets || 0} séries • ${Math.round(workout.total_volume || 0)}kg total
-                    </div>
+                <div class="workout-stats">
+                    ${workout.total_sets} séries • ${workout.total_volume ? Math.round(workout.total_volume) : 0}kg total
+                </div>
                 <div class="workout-exercises">
                     ${workout.exercises.join(', ')}
                 </div>

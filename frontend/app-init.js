@@ -12,7 +12,6 @@ import './app-equipment.js';    // Équipement (dépend de state et config)
 import './app-history.js';      // Historique (dépend de state, config et api)
 import './app-rest.js';         // Repos (dépend de state et api)
 import './app-dashboard.js';    // Dashboard (dépend de state, api et history)
-import './app-charts.js';      // Graphiques
 import './app-workout.js';      // Workout (dépend de state, navigation, ui et api)
 import './app-exercises.js';    // Exercices (dépend de state et equipment)
 import './app-sets.js';         // Sets (dépend de state, ui, equipment et api)
@@ -30,56 +29,6 @@ import {
 import { showView, showMainInterface, updateProgressBar } from './app-navigation.js';
 import { checkActiveWorkout } from './app-workout.js';
 import { showToast } from './app-ui.js';
-
-
-async function showWelcomeScreen() {
-    // Masquer tout sauf l'écran d'accueil
-    document.getElementById('onboarding').classList.remove('active');
-    document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('progressContainer').style.display = 'none';
-    document.getElementById('userInitial').style.display = 'none';
-    
-    // Afficher l'écran d'accueil
-    document.querySelectorAll('.view').forEach(view => {
-        view.classList.remove('active');
-    });
-    
-    // Créer ou afficher l'écran d'accueil s'il n'existe pas
-    let welcomeView = document.getElementById('welcome');
-    if (!welcomeView) {
-        // Créer l'écran d'accueil s'il n'existe pas
-        const container = document.querySelector('.container');
-        welcomeView = document.createElement('div');
-        welcomeView.className = 'view active';
-        welcomeView.id = 'welcome';
-        welcomeView.innerHTML = `
-            <div class="welcome-container">
-                <h1>💪 Fitness Coach</h1>
-                <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
-                
-                <button class="btn btn-primary" onclick="startNewProfile()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Créer un nouveau profil
-                </button>
-                
-                <div class="profiles-section" style="margin-top: 3rem;">
-                    <h3 style="margin-bottom: 1.5rem;">Profils existants</h3>
-                    <div id="profilesList" class="profiles-list">
-                        <!-- Chargé dynamiquement -->
-                    </div>
-                </div>
-            </div>
-        `;
-        container.appendChild(welcomeView);
-    }
-    
-    welcomeView.classList.add('active');
-    
-    // Charger la liste des profils
-    await loadProfiles();
-}
 
 // ===== FONCTION D'INITIALISATION PRINCIPALE =====
 async function initializeApp() {
@@ -141,37 +90,81 @@ async function initializeApp() {
 }
 
 // ===== ÉCRAN D'ACCUEIL =====
-async function loadProfiles() {
-    const profilesList = document.getElementById('profilesList');
-    if (!profilesList) return;
+async function showWelcomeScreen() {
+    // Masquer tout sauf l'écran d'accueil
+    document.getElementById('onboarding').classList.remove('active');
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('progressContainer').style.display = 'none';
+    document.getElementById('userInitial').style.display = 'none';
     
-    try {
-        const response = await fetch('/api/users');
-        if (response.ok) {
-            const users = await response.json();
-            if (users.length === 0) {
-                profilesList.innerHTML = '<p style="color: var(--gray); text-align: center;">Aucun profil existant</p>';
-                return;
-            }
-            
-            profilesList.innerHTML = users.map(user => `
-                <div class="profile-card" onclick="loadProfile(${user.id})">
-                    <div class="profile-initial">${user.name.charAt(0).toUpperCase()}</div>
-                    <div class="profile-info">
-                        <div class="profile-name">${user.name}</div>
-                        <div class="profile-meta">${(user.goals || []).length} objectif(s) • ${user.experience_level || 'débutant'}</div>
+    // Afficher l'écran d'accueil
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
+    
+    // Créer ou afficher l'écran d'accueil s'il n'existe pas
+    let welcomeView = document.getElementById('welcome');
+    if (!welcomeView) {
+        // Créer l'écran d'accueil s'il n'existe pas
+        const container = document.querySelector('.container');
+        welcomeView = document.createElement('div');
+        welcomeView.className = 'view active';
+        welcomeView.id = 'welcome';
+        welcomeView.innerHTML = `
+            <div class="welcome-container">
+                <h1>💪 Fitness Coach</h1>
+                <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
+                
+                <button class="btn btn-primary" onclick="startNewProfile()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Créer un nouveau profil
+                </button>
+                
+                <div class="profiles-section" style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1.5rem;">Profils existants</h3>
+                    <div id="profilesList" class="profiles-list">
+                        <!-- Chargé dynamiquement -->
                     </div>
                 </div>
-            `).join('');
-        } else if (response.status === 404) {
-            console.warn('Endpoint /api/users non trouvé - mode développement ?');
-            profilesList.innerHTML = '<p style="color: var(--gray); text-align: center;">Aucun profil existant</p>';
-        } else {
-            throw new Error(`Erreur serveur: ${response.status}`);
+            </div>
+        `;
+        container.appendChild(welcomeView);
+    }
+    
+    welcomeView.classList.add('active');
+    
+    // Charger la liste des profils
+    await loadProfiles();
+}
+
+async function loadProfiles() {
+    try {
+        const response = await fetch('/api/users/');
+        const profiles = await response.json();
+        
+        const container = document.getElementById('profilesList');
+        if (!container) return;
+        
+        if (profiles.length === 0) {
+            container.innerHTML = '<p style="color: var(--gray);">Aucun profil existant</p>';
+            return;
         }
+        
+        container.innerHTML = profiles.map(profile => `
+            <div class="profile-card" onclick="loadProfile(${profile.id})">
+                <div class="profile-info">
+                    <h4>${profile.name}</h4>
+                    <p>Créé le ${new Date(profile.created_at).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </div>
+        `).join('');
     } catch (error) {
-        console.error('Erreur chargement profils:', error);
-        profilesList.innerHTML = '<p style="color: var(--gray); text-align: center;">Connexion au serveur impossible</p>';
+        console.error('Erreur lors du chargement des profils:', error);
     }
 }
 
@@ -393,12 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     startKeepAlive();
 });
-
-// Exposer les fonctions au niveau global pour les onclick HTML
-window.showWelcomeScreen = showWelcomeScreen;
-window.loadProfile = loadProfile;
-window.loadProfiles = loadProfiles;
-window.startNewProfile = startNewProfile;
 
 // Export de la fonction d'initialisation si nécessaire
 export { initializeApp };
