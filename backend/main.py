@@ -46,7 +46,6 @@ async def lifespan(app: FastAPI):
     # Shutdown (nothing to do)
 
 app = FastAPI(title="Gym Coach API", lifespan=lifespan)
-app.include_router(ml_router)
 
 # Configuration du mode développement
 DEV_MODE = os.getenv("DEV_MODE", "false").lower() == "true"
@@ -947,5 +946,7 @@ def create_rest_period(rest_data: dict, db: Session = Depends(get_db)):
     # Plus tard, on pourra créer une table RestPeriod si nécessaire
     return {"success": True, "message": "Rest period logged"}
 
+
+app.include_router(ml_router)
 # Static files
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

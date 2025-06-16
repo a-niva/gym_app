@@ -146,7 +146,7 @@ async function loadProfiles() {
     if (!profilesList) return;
     
     try {
-        const response = await fetch('/api/users');
+        const response = await fetch('/api/users/');
         if (response.ok) {
             const users = await response.json();
             if (users.length === 0) {
@@ -159,7 +159,7 @@ async function loadProfiles() {
                     <div class="profile-initial">${user.name.charAt(0).toUpperCase()}</div>
                     <div class="profile-info">
                         <div class="profile-name">${user.name}</div>
-                        <div class="profile-meta">${user.goals?.length || 0} objectif(s) • ${user.experience_level || 'débutant'}</div>
+                        <div class="profile-meta">${(user.goals || []).length} objectif(s) • ${user.experience_level || 'débutant'}</div>
                     </div>
                 </div>
             `).join('');
