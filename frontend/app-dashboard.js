@@ -189,6 +189,7 @@ window.clearWorkoutHistory = clearWorkoutHistory;
 window.loadDashboard = loadDashboard;
 window.refreshDashboard = refreshDashboard;
 window.showDetailedStats = showDetailedStats;
+window.updateProfileSummary = updateProfileSummary;
 
 // Export pour les autres modules
 export {

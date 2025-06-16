@@ -843,6 +843,11 @@ window.removeBand = removeBand;
 window.toggleBenchFeature = toggleBenchFeature;
 window.showConfigPanel = showConfigPanel;
 window.logout = logout;
+window.createBarbellPanel = createBarbellPanel;
+window.createDumbbellPanel = createDumbbellPanel;
+window.createBandPanel = createBandPanel;
+window.createBenchPanel = createBenchPanel;
+window.createKettlebellPanel = createKettlebellPanel;
 
 // Export pour les autres modules
 export {
