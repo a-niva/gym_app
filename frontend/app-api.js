@@ -368,11 +368,22 @@ async function createSet(setData) {
         });
         
         if (response.ok) {
-            return await response.json();
+            const result = await response.json();
+            return result;
         } else {
-            // Log l'erreur pour debug
+            // Log détaillé pour debug
             const errorText = await response.text();
             console.error('Erreur serveur:', response.status, errorText);
+            
+            // Parser l'erreur si possible
+            try {
+                const errorData = JSON.parse(errorText);
+                console.error('Détail erreur:', errorData);
+            } catch (e) {
+                // Si ce n'est pas du JSON, on log le texte brut
+                console.error('Réponse serveur non-JSON:', errorText);
+            }
+            
             return null;
         }
     } catch (error) {

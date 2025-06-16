@@ -444,17 +444,18 @@ async function completeSet() {
     }
     
     // Préparer les données
-    const setData = {
-        workout_id: currentWorkout.id,
-        exercise_id: currentExercise.id,
-        set_number: currentSetNumber,
-        target_reps: currentTargetReps,  // AJOUT DE CETTE LIGNE
-        actual_reps: reps,
-        weight: weight,
-        rest_time: 0,
-        fatigue_level: Math.round(selectedFatigue),
-        perceived_exertion: selectedEffort
-    };
+const setData = {
+    workout_id: currentWorkout.id,
+    exercise_id: currentExercise.id,
+    set_number: currentSetNumber,
+    target_reps: currentTargetReps || 10,  // Valeur par défaut si non défini
+    actual_reps: reps,
+    weight: weight,
+    rest_time: 0,
+    fatigue_level: Math.round(selectedFatigue),  // Pas de multiplication par 2
+    perceived_exertion: selectedEffort,          // Pas de multiplication par 2
+    skipped: false
+};
         
     try {
         const result = await createSet(setData);

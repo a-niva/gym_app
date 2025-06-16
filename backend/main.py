@@ -467,14 +467,16 @@ def get_workout_status(workout_id: int, db: Session = Depends(get_db)):
     }
 
 @app.patch("/api/sets/{set_id}/rest-time")
-def update_set_rest_time(set_id: int, rest_time: int, db: Session = Depends(get_db)):
+def update_set_rest_time(set_id: int, data: dict, db: Session = Depends(get_db)):
     """Update rest time for a completed set"""
     set_obj = db.query(Set).filter(Set.id == set_id).first()
     if not set_obj:
         raise HTTPException(status_code=404, detail="Set not found")
     
+    rest_time = data.get('rest_time', 0)
     set_obj.rest_time = rest_time
     db.commit()
+    
     return {"updated": True, "set_id": set_id, "rest_time": rest_time}
 
 @app.get("/api/users/{user_id}/active-workout")
@@ -841,16 +843,32 @@ def get_exercises(db: Session = Depends(get_db)):
 @app.post("/api/sets/")
 def create_set(set_data: SetCreate, db: Session = Depends(get_db)):
     try:
-        db_set = Set(**set_data.dict())
+        # Créer l'objet Set avec seulement les champs du modèle
+        db_set = Set(
+            workout_id=set_data.workout_id,
+            exercise_id=set_data.exercise_id,
+            set_number=set_data.set_number,
+            target_reps=set_data.target_reps,
+            actual_reps=set_data.actual_reps,
+            weight=set_data.weight,
+            rest_time=set_data.rest_time,
+            fatigue_level=set_data.fatigue_level,
+            perceived_exertion=set_data.perceived_exertion,
+            skipped=set_data.skipped
+        )
+        
         db.add(db_set)
         db.commit()
         db.refresh(db_set)
+        
         return {"id": db_set.id, "created": True}
+        
     except Exception as e:
         db.rollback()
-        print(f"Erreur création set: {str(e)}")  # Pour debug
+        print(f"Erreur création set: {str(e)}")
+        print(f"Data reçue: {set_data.dict()}")
         raise HTTPException(
-            status_code=422,
+            status_code=400,
             detail=f"Erreur lors de la création de la série: {str(e)}"
         )
 
@@ -865,6 +883,63 @@ def get_all_users(db: Session = Depends(get_db)):
 def get_workout_sets(workout_id: int, db: Session = Depends(get_db)):
     sets = db.query(Set).filter(Set.workout_id == workout_id).all()
     return sets
+
+# ENDPOINT MANQUANT 1 : pause workout
+@app.put("/api/workouts/{workout_id}/pause")
+def pause_workout(workout_id: int, db: Session = Depends(get_db)):
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    
+    if workout.status != "started":
+        raise HTTPException(status_code=400, detail="Can only pause started workouts")
+    
+    workout.status = "paused"
+    workout.paused_at = datetime.utcnow()
+    db.commit()
+    
+    return {"status": "paused", "paused_at": workout.paused_at}
+
+# ENDPOINT MANQUANT 2 : resume workout
+@app.put("/api/workouts/{workout_id}/resume")
+def resume_workout(workout_id: int, db: Session = Depends(get_db)):
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    
+    if workout.status != "paused":
+        raise HTTPException(status_code=400, detail="Can only resume paused workouts")
+    
+    # Calculer la durée de pause
+    if workout.paused_at:
+        pause_duration = (datetime.utcnow() - workout.paused_at).total_seconds()
+        workout.total_pause_duration += int(pause_duration)
+    
+    workout.status = "started"
+    workout.paused_at = None
+    db.commit()
+    
+    return {"status": "resumed", "total_pause_duration": workout.total_pause_duration}
+
+# ENDPOINT MANQUANT 3 : abandon workout
+@app.put("/api/workouts/{workout_id}/abandon")
+def abandon_workout(workout_id: int, db: Session = Depends(get_db)):
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    
+    workout.status = "abandoned"
+    workout.completed_at = datetime.utcnow()
+    db.commit()
+    
+    return {"status": "abandoned"}
+
+# ENDPOINT MANQUANT 4 : rest periods (même si non utilisé actuellement)
+@app.post("/api/workouts/rest-periods/")
+def create_rest_period(rest_data: dict, db: Session = Depends(get_db)):
+    # Pour l'instant, on retourne juste un succès
+    # Plus tard, on pourra créer une table RestPeriod si nécessaire
+    return {"success": True, "message": "Rest period logged"}
 
 # Static files
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
