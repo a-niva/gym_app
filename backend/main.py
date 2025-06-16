@@ -719,8 +719,7 @@ def get_muscle_volume(
     
     if start_date:
         query = query.filter(func.coalesce(Set.completed_at, Workout.created_at) >= start_date)
-            query = query.filter(Set.completed_at >= start_date)  # ICI: changer created_at en completed_at
-        
+                
     results = query.group_by(Exercise.body_part).all()
     
     volumes = {r.body_part: float(r.volume or 0) for r in results}
