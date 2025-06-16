@@ -151,7 +151,7 @@ async function apiCall(endpoint, options = {}, retries = 3) {
 // ===== USERS API =====
 async function saveUser(userData) {
     try {
-        const user = await apiCall('/users/', {
+        const user = await apiCall('/users', {
             method: 'POST',
             body: JSON.stringify(userData)
         });

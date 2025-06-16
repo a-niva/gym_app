@@ -146,7 +146,7 @@ async function loadProfiles() {
     if (!profilesList) return;
     
     try {
-        const response = await fetch('/api/users/');
+        const response = await fetch('/api/users');
         if (response.ok) {
             const users = await response.json();
             if (users.length === 0) {
