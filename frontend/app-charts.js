@@ -89,52 +89,43 @@ async function loadProgressionChart(exerciseId = null) {
     // Petite pause pour s'assurer que le canvas est libéré
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    // Détruire le graphique existant
-    if (charts.progression) {
-        charts.progression.destroy();
-    }
-
     const params = exerciseId ? `?exercise_id=${exerciseId}` : '';
     try {
         const response = await fetch(`/api/users/${currentUser.id}/progression${params}`);
         
         // Vérifier que la réponse est OK
         if (!response.ok) {
-            console.error(`Erreur API: ${response.status} ${response.statusText}`);
+            console.error(`Erreur API progression: ${response.status} ${response.statusText}`);
             return;
         }
         
         // Vérifier que c'est bien du JSON
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-            console.error("La réponse n'est pas du JSON");
+            console.error("La réponse progression n'est pas du JSON");
             return;
         }
         
-        // Vérifier que la réponse est OK
-        if (!response.ok) {
-            console.error(`Erreur API muscle-volume: ${response.status}`);
-            return;
-        }
-
         const data = await response.json();
 
         // Vérifier que les données sont valides
-        if (!data.volumes || Object.keys(data.volumes).length === 0) {
-            console.log("Pas de données de volume musculaire");
+        if (!data.weights || data.weights.length === 0) {
+            console.log("Pas de données de progression");
             // Afficher un graphique vide
             const emptyData = {
                 labels: ['Aucune donnée'],
                 datasets: [{
-                    label: 'Volume par muscle',
+                    label: '1RM estimé (kg)',
                     data: [0],
-                    backgroundColor: chartColors.primary,
-                    borderWidth: 0
+                    borderColor: chartColors.primary,
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
                 }]
             };
             
-            charts.muscleVolume = new Chart(ctx, {
-                type: 'bar',
+            charts.progression = new Chart(ctx, {
+                type: 'line',
                 data: emptyData,
                 options: {
                     ...chartDefaults,
@@ -197,14 +188,10 @@ async function loadMuscleVolumeChart(period = 'week') {
     if (!ctx) return;
 
     // Détruire le graphique existant de manière sécurisée
-    safeDestroyChart('progression');
+    safeDestroyChart('muscleVolume');
     
     // Petite pause pour s'assurer que le canvas est libéré
     await new Promise(resolve => setTimeout(resolve, 50));
-
-    if (charts.muscleVolume) {
-        charts.muscleVolume.destroy();
-    }
 
     try {
         const response = await fetch(`/api/users/${currentUser.id}/muscle-volume?period=${period}`);
@@ -308,18 +295,74 @@ async function loadFatigueChart() {
     if (!ctx) return;
 
     // Détruire le graphique existant de manière sécurisée
-    safeDestroyChart('progression');
+    safeDestroyChart('fatigue');
     
     // Petite pause pour s'assurer que le canvas est libéré
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    if (charts.fatigue) {
-        charts.fatigue.destroy();
-    }
-
     try {
         const response = await fetch(`/api/users/${currentUser.id}/fatigue-trends`);
+        
+        // Vérifier que la réponse est OK
+        if (!response.ok) {
+            console.error(`Erreur API fatigue-trends: ${response.status}`);
+            return;
+        }
+        
+        // Vérifier le content-type
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.error("La réponse fatigue-trends n'est pas du JSON");
+            return;
+        }
+        
         const data = await response.json();
+
+        // Vérifier que les données sont valides
+        if (!data.fatigue || data.fatigue.length === 0 || !data.performance || data.performance.length === 0) {
+            console.log("Pas de données de fatigue/performance");
+            // Afficher un graphique vide
+            const emptyData = {
+                labels: ['Aucune donnée'],
+                datasets: [
+                    {
+                        label: 'Fatigue moyenne',
+                        data: [0],
+                        borderColor: chartColors.danger,
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Performance relative (%)',
+                        data: [0],
+                        borderColor: chartColors.success,
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }
+                ]
+            };
+            
+            charts.fatigue = new Chart(ctx, {
+                type: 'line',
+                data: emptyData,
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Aucune donnée disponible',
+                            color: '#f3f4f6',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+            return;
+        }
 
         const chartData = {
             labels: data.dates.map(d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })),
@@ -405,14 +448,10 @@ async function loadPersonalRecordsChart() {
     if (!ctx) return;
 
     // Détruire le graphique existant de manière sécurisée
-    safeDestroyChart('progression');
+    safeDestroyChart('records');
     
     // Petite pause pour s'assurer que le canvas est libéré
     await new Promise(resolve => setTimeout(resolve, 50));
-
-    if (charts.records) {
-        charts.records.destroy();
-    }
 
     try {
         const response = await fetch(`/api/users/${currentUser.id}/personal-records`);
@@ -533,27 +572,31 @@ function initializePeriodSelectors() {
 
 // Charger la liste des exercices pour le sélecteur
 async function loadExerciseSelector() {
-    const selector = document.getElementById('progressionExerciseSelector'); // ADD THIS LINE
-    if (!selector) return; // ADD THIS SAFETY CHECK
+    const selector = document.getElementById('progressionExerciseSelector');
+    if (!selector) return;
     
-    const response = await fetch(`/api/exercises`);
-    if (!response.ok) return;
+    try {
+        const response = await fetch(`/api/exercises`);
+        if (!response.ok) {
+            console.error(`Erreur API exercises: ${response.status}`);
+            return;
+        }
 
-    const exercises = await response.json();
+        const exercises = await response.json();
+        if (!Array.isArray(exercises)) {
+            console.error('La réponse exercises n\'est pas un tableau:', exercises);
+            return;
+        }
 
-    // Vérifier que c'est bien un tableau
-    if (!Array.isArray(exercises)) {
-        console.error('La réponse exercises n\'est pas un tableau:', exercises);
-        return;
+        exercises.forEach(exercise => {
+            const option = document.createElement('option');
+            option.value = exercise.id;
+            option.textContent = exercise.name;
+            selector.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erreur chargement exercices:', error);
     }
-        
-        // Ajouter les options
-    exercises.forEach(exercise => {
-        const option = document.createElement('option');
-        option.value = exercise.id;
-        option.textContent = exercise.name;
-        selector.appendChild(option);
-    });
 }
 
 // ===== CHARGEMENT DE TOUS LES GRAPHIQUES =====
