@@ -110,6 +110,42 @@ function showDetailedStats() {
     console.log('Statistiques détaillées à implémenter');
 }
 
+async function clearWorkoutHistory() {
+    if (!currentUser) return;
+    
+    // Double confirmation
+    const firstConfirm = confirm(
+        "⚠️ ATTENTION ⚠️\n\n" +
+        "Voulez-vous vraiment supprimer TOUT l'historique de vos séances ?\n\n" +
+        "Cette action est IRRÉVERSIBLE."
+    );
+    
+    if (!firstConfirm) return;
+    
+    const secondConfirm = confirm("Dernière confirmation - Cette action ne peut pas être annulée.");
+    
+    if (!secondConfirm) return;
+    
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/workout-history`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showToast(`${result.deleted_workouts} séances supprimées`, 'success');
+            await loadDashboard();
+        } else {
+            showToast('Erreur lors de la suppression', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur suppression historique:', error);
+        showToast('Erreur de connexion', 'error');
+    }
+}
+
+window.clearWorkoutHistory = clearWorkoutHistory;
+
 // ===== EXPORT GLOBAL =====
 window.loadDashboard = loadDashboard;
 window.refreshDashboard = refreshDashboard;

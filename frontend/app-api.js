@@ -369,8 +369,13 @@ async function createSet(setData) {
         
         if (response.ok) {
             return await response.json();
+        } else {
+            // Gestion des erreurs spécifiques
+            if (response.status === 422) {
+                console.error('Données de série invalides');
+            }
+            return null;
         }
-        return null;
     } catch (error) {
         console.error('Erreur création set:', error);
         return null;

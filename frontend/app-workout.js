@@ -318,21 +318,18 @@ async function syncPendingSets() {
 }
 
 async function syncInterExerciseRests() {
-    const interExerciseRests = JSON.parse(localStorage.getItem('interExerciseRests') || '[]');
-    if (interExerciseRests.length === 0) return;
+    const pendingRests = JSON.parse(localStorage.getItem('pendingInterExerciseRests') || '[]');
     
-    const successfullySynced = [];
+    if (pendingRests.length === 0) return;
     
-    for (const rest of interExerciseRests) {
-        const success = await createRestPeriod(rest);
-        if (success) {
-            successfullySynced.push(rest);
+    for (const rest of pendingRests) {
+        const synced = await createRestPeriod(rest);
+        if (synced) {
+            // Retirer de la liste des repos en attente
+            const remaining = pendingRests.filter(r => r !== rest);
+            localStorage.setItem('pendingInterExerciseRests', JSON.stringify(remaining));
         }
     }
-    
-    // Retirer les repos synchronisés
-    const remaining = interExerciseRests.filter(r => !successfullySynced.includes(r));
-    localStorage.setItem('interExerciseRests', JSON.stringify(remaining));
 }
 
 // ===== MISE À JOUR DE L'INTERFACE DE TRAINING =====

@@ -69,4 +69,4 @@ class Set(Base):
     completed_at = Column(DateTime, default=datetime.utcnow)
     skipped = Column(Boolean, default=False)
     
-    workout = relationship("Workout", back_populates="sets")
+    workout = relationship("Workout", back_populates="sets", cascade="all, delete-orphan")

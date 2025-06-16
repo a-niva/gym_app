@@ -343,6 +343,39 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
     
     return history
 
+@app.delete("/api/users/{user_id}/workout-history")
+def delete_workout_history(user_id: int, db: Session = Depends(get_db)):
+    """Supprime tout l'historique des séances d'un utilisateur"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    try:
+        # Utiliser SQL brut pour éviter les problèmes de contraintes
+        from sqlalchemy import text
+        
+        # Supprimer d'abord les sets
+        db.execute(text("""
+            DELETE FROM sets 
+            WHERE workout_id IN (
+                SELECT id FROM workouts WHERE user_id = :user_id
+            )
+        """), {"user_id": user_id})
+        
+        # Puis les workouts
+        count = db.query(Workout).filter(Workout.user_id == user_id).count()
+        db.execute(text("DELETE FROM workouts WHERE user_id = :user_id"), {"user_id": user_id})
+        
+        db.commit()
+        
+        return {
+            "message": "Historique supprimé avec succès",
+            "deleted_workouts": count
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.put("/api/workouts/{workout_id}/complete")
 def complete_workout(workout_id: int, db: Session = Depends(get_db)):
     workout = db.query(Workout).filter(Workout.id == workout_id).first()

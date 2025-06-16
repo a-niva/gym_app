@@ -232,12 +232,26 @@ function calculateSuggestedWeight(exercise, lastSet = null) {
     // Sinon, prendre un poids au milieu de la gamme
     const exerciseType = getExerciseType(exercise);
     
-    if (exerciseType === 'bodyweight_pure' || exerciseType === 'bodyweight_weighted') {
-        // Pour bodyweight, commencer sans charge additionnelle
-        return availableWeights.includes(0) ? 0 : availableWeights[0];
-    } else {
-        // Pour les exercices avec poids, prendre le milieu
-        return availableWeights[Math.floor(availableWeights.length / 2)];
+    // Exercices au poids du corps
+    if (exercise.equipment.includes('bodyweight')) {
+        // Pour les exercices temporels, seulement l'option sans poids
+        if (isTimeBased) {
+            return [0];
+        }
+        
+        // Commencer avec l'option sans charge (0 = poids du corps seul)
+        weights.add(0);
+        
+        // Si l'utilisateur a des lests, ajouter les options avec charge additionnelle
+        if (config.autres?.lest_corps?.weights?.length > 0) {
+            // Pour chaque lest disponible, ajouter l'option
+            config.autres.lest_corps.weights.forEach(lestWeight => {
+                weights.add(lestWeight); // Stocker juste le poids du lest
+            });
+        }
+        
+        // Retourner les poids triés
+        return Array.from(weights).sort((a, b) => a - b);
     }
 }
 
