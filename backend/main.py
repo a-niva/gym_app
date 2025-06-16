@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, text
-from typing import List, Optional, Dict, Any
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from sqlalchemy import func, distinct
@@ -79,6 +79,11 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@app.get("/api/users", response_model=List[dict])
+def get_all_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return [{"id": u.id, "name": u.name, "created_at": u.created_at, "goals": u.goals, "experience_level": u.experience_level} for u in users]
 
 @app.post("/api/dev/init")
 async def init_dev_mode(db: Session = Depends(get_db)):
@@ -878,12 +883,6 @@ def create_set(set_data: SetCreate, db: Session = Depends(get_db)):
             status_code=400,
             detail=f"Erreur lors de la création de la série: {str(e)}"
         )
-
-
-@app.get("/api/users/")
-def get_all_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
-    return [{"id": u.id, "name": u.name, "created_at": u.created_at} for u in users]
 
 
 @app.get("/api/sets/{workout_id}")

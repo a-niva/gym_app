@@ -159,14 +159,19 @@ async function loadProfiles() {
                     <div class="profile-initial">${user.name.charAt(0).toUpperCase()}</div>
                     <div class="profile-info">
                         <div class="profile-name">${user.name}</div>
-                        <div class="profile-meta">${user.goals.length} objectif(s) • ${user.experience_level}</div>
+                        <div class="profile-meta">${user.goals?.length || 0} objectif(s) • ${user.experience_level || 'débutant'}</div>
                     </div>
                 </div>
             `).join('');
+        } else if (response.status === 404) {
+            console.warn('Endpoint /api/users non trouvé - mode développement ?');
+            profilesList.innerHTML = '<p style="color: var(--gray); text-align: center;">Aucun profil existant</p>';
+        } else {
+            throw new Error(`Erreur serveur: ${response.status}`);
         }
     } catch (error) {
         console.error('Erreur chargement profils:', error);
-        profilesList.innerHTML = '<p style="color: var(--error); text-align: center;">Erreur de chargement</p>';
+        profilesList.innerHTML = '<p style="color: var(--gray); text-align: center;">Connexion au serveur impossible</p>';
     }
 }
 
