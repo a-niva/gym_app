@@ -487,14 +487,13 @@ select.form-input {
 
 /* ===== WELCOME SCREEN ===== */
 .welcome-container {
-    max-width: 500px;
-    margin: 0 auto;
-    text-align: center;
-    padding: 2rem;
-    min-height: calc(100vh - 180px); /* 80px header + 100px bottom nav */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    min-height: 100vh;
+    padding-top: 80px;  /* Pour compenser le header */
+    padding-bottom: 90px;  /* Pour compenser la bottom nav */
+}
+
+.profiles-section {
+    margin-top: auto;  /* Pousse la section vers le bas */
 }
 
 .profiles-list {
@@ -885,7 +884,6 @@ select.form-input {
     font-weight: 700;
     margin-bottom: 8px;
     background: linear-gradient(135deg, #fff, #cbd5e1);
-    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 

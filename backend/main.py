@@ -317,9 +317,11 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
             if not s.skipped:
                 # Récupérer l'exercice pour vérifier si c'est du bodyweight
                 exercise = db.query(Exercise).filter(Exercise.id == s.exercise_id).first()
-                if exercise and 'bodyweight' in exercise.equipment:
-                    # Si pas de charge additionnelle, utiliser le poids du corps
-                    effective_weight = s.weight if s.weight > 0 else (db.query(User).filter(User.id == user_id).first().weight or 75)
+                if exercise and any('bodyweight' in eq for eq in exercise.equipment):
+                    # Pour bodyweight, ajouter le poids du corps à la charge additionnelle
+                    user = db.query(User).filter(User.id == user_id).first()
+                    body_weight = user.weight if user else 75
+                    effective_weight = body_weight + s.weight  # s.weight est le lest additionnel
                     total_volume += effective_weight * s.actual_reps
                 else:
                     total_volume += s.weight * s.actual_reps

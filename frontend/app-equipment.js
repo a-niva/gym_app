@@ -235,8 +235,8 @@ function calculateSuggestedWeight(exercise, lastSet = null) {
     // Exercices au poids du corps
     if (exercise.equipment.includes('bodyweight')) {
         // Pour les exercices temporels, seulement l'option sans poids
-        if (isTimeBased) {
-            return [0];
+        if (getExerciseType(exercise) === 'time_based') {
+            return 0;  // Note: retourner 0, pas [0]
         }
         
         // Commencer avec l'option sans charge (0 = poids du corps seul)
