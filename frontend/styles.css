@@ -486,14 +486,40 @@ select.form-input {
 }
 
 /* ===== WELCOME SCREEN ===== */
+/* Remplacer l'existant .welcome-container par : */
 .welcome-container {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2rem;
     min-height: 100vh;
-    padding-top: 80px;  /* Pour compenser le header */
-    padding-bottom: 90px;  /* Pour compenser la bottom nav */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
 }
 
+/* Ajuster profiles-section pour qu'elle ne pousse pas le contenu */
 .profiles-section {
-    margin-top: auto;  /* Pousse la section vers le bas */
+    margin-top: 3rem;
+    width: 100%;
+}
+
+/* Si le view welcome a un problème de hauteur */
+.view#welcome {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Forcer le centrage vertical même avec peu de contenu */
+@media (max-height: 700px) {
+    .welcome-container {
+        min-height: calc(100vh - 80px); /* Ajuster pour petits écrans */
+        padding: 1rem;
+    }
 }
 
 .profiles-list {
