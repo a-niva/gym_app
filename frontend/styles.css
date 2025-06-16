@@ -486,7 +486,6 @@ select.form-input {
 }
 
 /* ===== WELCOME SCREEN ===== */
-/* Remplacer l'existant .welcome-container par : */
 .welcome-container {
     max-width: 500px;
     margin: 0 auto;
@@ -495,31 +494,27 @@ select.form-input {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: relative;
+    justify-content: center;  /* Centre verticalement */
+    align-items: center;      /* Centre horizontalement */
 }
 
-/* Ajuster profiles-section pour qu'elle ne pousse pas le contenu */
+/* Supprimer le margin-top: auto qui pousse tout en bas */
 .profiles-section {
-    margin-top: 3rem;
-    width: 100%;
+    margin-top: 3rem;  /* Espace normal, pas auto */
+    width: 100%;       /* Pour que la section prenne toute la largeur */
 }
 
-/* Si le view welcome a un problème de hauteur */
+/* S'assurer que la view welcome a aussi les bonnes propriétés */
 .view#welcome {
-    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 100vh;
 }
 
-/* Forcer le centrage vertical même avec peu de contenu */
-@media (max-height: 700px) {
-    .welcome-container {
-        min-height: calc(100vh - 80px); /* Ajuster pour petits écrans */
-        padding: 1rem;
-    }
+/* Ajuster le container principal pour l'écran welcome */
+.view#welcome .container {
+    padding: 0;  /* Enlever le padding pour la page welcome */
 }
 
 .profiles-list {
