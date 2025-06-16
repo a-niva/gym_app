@@ -142,31 +142,31 @@ async function initializeApp() {
 
 // ===== ÉCRAN D'ACCUEIL =====
 async function loadProfiles() {
+    const profilesList = document.getElementById('profilesList');
+    if (!profilesList) return;
+    
     try {
-        const response = await fetch('/api/users/');
-        const profiles = await response.json();
-        
-        const container = document.getElementById('profilesList');
-        if (!container) return;
-        
-        if (profiles.length === 0) {
-            container.innerHTML = '<p style="color: var(--gray);">Aucun profil existant</p>';
-            return;
-        }
-        
-        container.innerHTML = profiles.map(profile => `
-            <div class="profile-card" onclick="loadProfile(${profile.id})">
-                <div class="profile-info">
-                    <h4>${profile.name}</h4>
-                    <p>Créé le ${new Date(profile.created_at).toLocaleDateString('fr-FR')}</p>
+        const response = await fetch('/api/users');
+        if (response.ok) {
+            const users = await response.json();
+            if (users.length === 0) {
+                profilesList.innerHTML = '<p style="color: var(--gray); text-align: center;">Aucun profil existant</p>';
+                return;
+            }
+            
+            profilesList.innerHTML = users.map(user => `
+                <div class="profile-card" onclick="loadProfile(${user.id})">
+                    <div class="profile-initial">${user.name.charAt(0).toUpperCase()}</div>
+                    <div class="profile-info">
+                        <div class="profile-name">${user.name}</div>
+                        <div class="profile-meta">${user.goals.length} objectif(s) • ${user.experience_level}</div>
+                    </div>
                 </div>
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
-        `).join('');
+            `).join('');
+        }
     } catch (error) {
-        console.error('Erreur lors du chargement des profils:', error);
+        console.error('Erreur chargement profils:', error);
+        profilesList.innerHTML = '<p style="color: var(--error); text-align: center;">Erreur de chargement</p>';
     }
 }
 
@@ -392,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Exposer les fonctions au niveau global pour les onclick HTML
 window.showWelcomeScreen = showWelcomeScreen;
 window.loadProfile = loadProfile;
+window.loadProfiles = loadProfiles;
 window.startNewProfile = startNewProfile;
 
 // Export de la fonction d'initialisation si nécessaire

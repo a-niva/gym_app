@@ -391,6 +391,7 @@ window.pauseWorkout = pauseWorkout;
 window.resumeWorkout = resumeWorkout;
 window.completeWorkout = completeWorkout;
 window.abandonWorkout = abandonWorkout;
+window.checkActiveWorkout = checkActiveWorkout;
 
 // Export pour les autres modules
 export {

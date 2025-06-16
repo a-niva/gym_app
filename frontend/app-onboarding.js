@@ -420,6 +420,20 @@ function updateKettlebellWeight(weight, count) {
     updateEquipmentStatus('kettlebell');
 }
 
+function addCustomDumbbell() {
+    const weight = prompt('Entrez le poids de l\'haltère (en kg):');
+    if (weight && !isNaN(weight)) {
+        const weightNum = parseFloat(weight);
+        if (weightNum > 0 && weightNum <= 100) {
+            equipmentConfig.dumbbells[weightNum] = 1;
+            generateDetailedEquipmentConfig();
+            showToast(`Haltère de ${weightNum}kg ajouté`, 'success');
+        } else {
+            showToast('Poids invalide (1-100kg)', 'error');
+        }
+    }
+}
+
 function addBand() {
     const color = document.getElementById('bandColor').value;
     const resistance = document.getElementById('bandResistance').value;
@@ -842,10 +856,11 @@ window.addBand = addBand;
 window.removeBand = removeBand;
 window.toggleBenchFeature = toggleBenchFeature;
 window.showConfigPanel = showConfigPanel;
+window.addCustomDumbbell = addCustomDumbbell;
 window.logout = logout;
 window.createBarbellPanel = createBarbellPanel;
-window.createDumbbellPanel = createDumbbellPanel;
-window.createBandPanel = createBandPanel;
+window.createDumbbellsPanel = createDumbbellsPanel;
+window.createBandsPanel = createBandsPanel;
 window.createBenchPanel = createBenchPanel;
 window.createKettlebellPanel = createKettlebellPanel;
 
