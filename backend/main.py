@@ -665,21 +665,21 @@ def get_user_progression(
     start_date = end_date - timedelta(days=days)
     
     query = db.query(
-        func.date(Set.created_at).label('date'),
+        func.date(Set.completed_at).label('date'),  # ICI: changer created_at en completed_at
         func.max(Set.weight*(1 + Set.actual_reps * 0.033)).label('estimated_1rm')
     ).join(
         Workout, Set.workout_id == Workout.id
     ).filter(
         Workout.user_id == user_id,
         Workout.status == "completed",
-        Set.created_at >= start_date,
-        Set.skipped == False  # Ajouter ce filtre pour ignorer les sets sautés
+        Set.completed_at >= start_date,  # ICI: changer created_at en completed_at
+        Set.skipped == False
     )
     
     if exercise_id:
         query = query.filter(Set.exercise_id == exercise_id)
     
-    results = query.group_by(func.date(Set.created_at)).order_by('date').all()
+    results = query.group_by(func.date(Set.completed_at)).order_by('date').all()  # ICI: changer created_at en completed_at
     if not results:
         return {"dates": [], "weights": []}
 
@@ -707,17 +707,17 @@ def get_muscle_volume(
         func.sum(Set.weight * Set.actual_reps).label('volume')
     ).select_from(Set).join(
         Workout, Set.workout_id == Workout.id
-    ).outerjoin(  # Utiliser outerjoin au lieu de join
+    ).outerjoin(
         Exercise, Set.exercise_id == Exercise.id
     ).filter(
         Workout.user_id == user_id,
         Workout.status == "completed",
-        Exercise.body_part.isnot(None),  # Filtrer les exercices non trouvés
-        Set.skipped == False  # Ignorer les sets sautés
+        Exercise.body_part.isnot(None),
+        Set.skipped == False
     )
     
     if start_date:
-        query = query.filter(Set.created_at >= start_date)
+        query = query.filter(Set.completed_at >= start_date)  # ICI: changer created_at en completed_at
     
     results = query.group_by(Exercise.body_part).all()
     
