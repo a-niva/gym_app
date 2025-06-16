@@ -159,11 +159,10 @@ async def init_dev_mode(db: Session = Depends(get_db)):
                             target_reps=10,
                             actual_reps=10 - (set_num - 1),
                             weight=weight_progression,
-                            rest_time=90,
-                            fatigue_level=4 + set_num,
-                            perceived_exertion=5 + (set_num - 1),
-                            skipped=False,
-                            completed_at=workout.created_at + timedelta(minutes=5*set_num)
+                            rest_time=120,
+                            fatigue_level=3 + set_num,
+                            perceived_exertion=6 + set_num,
+                            completed_at=workout.created_at + timedelta(minutes=5*set_num)  # AJOUTER CETTE LIGNE
                         )
                         db.add(set_record)
                 
@@ -665,23 +664,23 @@ def get_user_progression(
     """Récupère la progression de l'utilisateur sur une période donnée"""
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=days)
-    
+        
     query = db.query(
-        func.date(Set.completed_at).label('date'),  # ICI: changer created_at en completed_at
+        func.date(func.coalesce(Set.completed_at, Set.id)).label('date'),  # Utiliser l'ID comme fallback pour l'ordre
         func.max(Set.weight*(1 + Set.actual_reps * 0.033)).label('estimated_1rm')
     ).join(
         Workout, Set.workout_id == Workout.id
     ).filter(
         Workout.user_id == user_id,
         Workout.status == "completed",
-        Set.completed_at >= start_date,  # ICI: changer created_at en completed_at
+        func.coalesce(Set.completed_at, Workout.created_at) >= start_date,  # Fallback sur workout created_at
         Set.skipped == False
     )
     
     if exercise_id:
         query = query.filter(Set.exercise_id == exercise_id)
     
-    results = query.group_by(func.date(Set.completed_at)).order_by('date').all()  # ICI: changer created_at en completed_at
+    results = query.group_by(func.date(func.coalesce(Set.completed_at, Workout.created_at))).order_by('date').all()
     if not results:
         return {"dates": [], "weights": []}
 
@@ -719,8 +718,9 @@ def get_muscle_volume(
     )
     
     if start_date:
-        query = query.filter(Set.completed_at >= start_date)  # ICI: changer created_at en completed_at
-    
+        query = query.filter(func.coalesce(Set.completed_at, Workout.created_at) >= start_date)
+            query = query.filter(Set.completed_at >= start_date)  # ICI: changer created_at en completed_at
+        
     results = query.group_by(Exercise.body_part).all()
     
     volumes = {r.body_part: float(r.volume or 0) for r in results}
