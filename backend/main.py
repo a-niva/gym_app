@@ -840,11 +840,19 @@ def get_exercises(db: Session = Depends(get_db)):
 # Set endpoints
 @app.post("/api/sets/")
 def create_set(set_data: SetCreate, db: Session = Depends(get_db)):
-    db_set = Set(**set_data.dict())
-    db.add(db_set)
-    db.commit()
-    db.refresh(db_set)
-    return {"id": db_set.id, "created": True}
+    try:
+        db_set = Set(**set_data.dict())
+        db.add(db_set)
+        db.commit()
+        db.refresh(db_set)
+        return {"id": db_set.id, "created": True}
+    except Exception as e:
+        db.rollback()
+        print(f"Erreur création set: {str(e)}")  # Pour debug
+        raise HTTPException(
+            status_code=422,
+            detail=f"Erreur lors de la création de la série: {str(e)}"
+        )
 
 
 @app.get("/api/users/")

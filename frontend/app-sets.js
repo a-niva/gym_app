@@ -448,15 +448,14 @@ async function completeSet() {
         workout_id: currentWorkout.id,
         exercise_id: currentExercise.id,
         set_number: currentSetNumber,
-        target_reps: currentTargetReps,
+        target_reps: currentTargetReps,  // AJOUT DE CETTE LIGNE
         actual_reps: reps,
-        weight: weight, // Pour bodyweight, c'est le poids du lest (0 = sans lest)
+        weight: weight,
         rest_time: 0,
-        fatigue_level: selectedFatigue * 2,
-        perceived_exertion: selectedEffort * 2,
-        skipped: false
+        fatigue_level: Math.round(selectedFatigue),
+        perceived_exertion: selectedEffort
     };
-    
+        
     try {
         const result = await createSet(setData);
         if (result && result.id) {

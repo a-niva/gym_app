@@ -369,8 +369,12 @@ async function createSet(setData) {
         
         if (response.ok) {
             return await response.json();
+        } else {
+            // Log l'erreur pour debug
+            const errorText = await response.text();
+            console.error('Erreur serveur:', response.status, errorText);
+            return null;
         }
-        return null;
     } catch (error) {
         console.error('Erreur création set:', error);
         return null;
