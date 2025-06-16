@@ -53,7 +53,7 @@ async function showWelcomeScreen() {
         welcomeView.className = 'view active';
         welcomeView.id = 'welcome';
         welcomeView.innerHTML = `
-        <div class="welcome-container">
+            <div class="welcome-container">
                 <h1>💪 Fitness Coach</h1>
                 <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
                 
