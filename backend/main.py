@@ -556,7 +556,13 @@ def get_user_stats(user_id: int, db: Session = Depends(get_db)):
 # Set endpoints
 @app.post("/api/sets/")
 def create_set(set_data: SetCreate, db: Session = Depends(get_db)):
-    db_set = Set(**set_data.dict())
+    # Filtrer uniquement les champs qui existent dans le modèle Set
+    set_dict = set_data.dict()
+    valid_fields = ['workout_id', 'exercise_id', 'set_number', 'target_reps', 
+                    'actual_reps', 'weight', 'rest_time', 'fatigue_level', 
+                    'perceived_exertion', 'skipped']
+    filtered_data = {k: v for k, v in set_dict.items() if k in valid_fields}
+    db_set = Set(**filtered_data)
     db.add(db_set)
     db.commit()
     db.refresh(db_set)
