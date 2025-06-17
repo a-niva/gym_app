@@ -2059,6 +2059,21 @@ select.form-input {
     font-size: 0.9rem;
 }
 
+
+/* Tooltip pour le sunburst */
+.sunburst-tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 8px 12px;
+    font-size: 12px;
+    background: rgba(15, 23, 42, 0.95);
+    color: white;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 1000;
+}
+
 /* ===== STATS PAGE ENHANCEMENTS ===== */
 .chart-card-wide {
     grid-column: 1 / -1;
@@ -2082,80 +2097,65 @@ select.form-input {
 }
 
 /* ===== FIX DEFINITIF POUR LES GRAPHIQUES STATS ===== */
+.view#stats .stats-container {
+    width: 90%;  /* Utiliser 90% de la largeur de l'écran */
+    max-width: 1600px;  /* Limite max pour les très grands écrans */
+    padding: 80px 0 100px;  /* Padding vertical uniquement */
+    margin: 0 auto;  /* Centrage automatique */
+    box-sizing: border-box;
+}
+
 .view#stats .charts-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Force 2 colonnes sur desktop */
-    gap: 2rem;
-    margin: 0 auto 2rem;
+    grid-template-columns: repeat(2, 1fr);  /* Force 2 colonnes */
+    gap: 3rem;  /* Espacement plus généreux */
+    margin: 2rem auto;
     padding: 0;
     box-sizing: border-box;
     width: 100%;
-    max-width: none !important;
 }
 
-/* Conteneur parent sans limite de largeur */
-.view#stats .stats-container {
-    width: 100%;
-    max-width: none;
-    padding: 80px 2rem 100px;
-    margin: 0 auto;
-    box-sizing: border-box;
+/* Augmenter la hauteur des graphes */
+.view#stats .chart-card {
+    min-height: 450px;  /* Hauteur minimale augmentée */
+}
+
+.view#stats .chart-wrapper {
+    height: 350px;  /* Hauteur fixe pour les canvas */
+    position: relative;
+    padding: 1rem;
 }
 
 /* Mobile - 1 colonne */
 @media (max-width: 768px) {
-    .view#stats .charts-container {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
     .view#stats .stats-container {
+        width: 95%;  /* Plus de largeur sur mobile */
         padding: 80px 1rem 100px;
     }
-}
-
-/* Desktop large - 3 colonnes */
-@media (min-width: 1400px) {
+    
     .view#stats .charts-container {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 2.5rem;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .view#stats .chart-card {
+        min-height: 400px;
     }
 }
 
-/* Très grands écrans - 4 colonnes */
+/* Très grands écrans - garder 2 colonnes mais plus larges */
 @media (min-width: 1800px) {
-    .view#stats .charts-container {
-        grid-template-columns: repeat(4, 1fr);
+    .view#stats .stats-container {
+        max-width: 1800px;  /* Augmenter la limite */
     }
 }
 
-/* Graphiques larges prennent 2 colonnes */
+/* Graphiques larges prennent toute la largeur */
 .view#stats .chart-card-wide {
-    grid-column: span 2;
+    grid-column: 1 / -1;  /* Prend les 2 colonnes */
 }
 
-/* Sur mobile, les graphiques larges prennent toute la largeur */
-@media (max-width: 768px) {
-    .view#stats .chart-card-wide {
-        grid-column: 1 / -1;
-    }
-}
-
-/* Forcer la suppression de toute limite de largeur héritée */
+/* Forcer la suppression de toute limite héritée */
 #chartsContainer {
     max-width: none !important;
-}
-
-/* Tooltip pour le sunburst */
-.sunburst-tooltip {
-    position: absolute;
-    text-align: center;
-    padding: 8px 12px;
-    font-size: 12px;
-    background: rgba(15, 23, 42, 0.95);
-    color: white;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 6px;
-    pointer-events: none;
-    z-index: 1000;
 }
