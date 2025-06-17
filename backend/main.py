@@ -728,6 +728,68 @@ def get_muscle_volume(user_id: int, period: str = "month", db: Session = Depends
     
     return {"volumes": muscle_volumes}
 
+@app.get("/api/users/{user_id}/muscle-distribution-detailed")
+def get_muscle_distribution_detailed(user_id: int, period: str = "month", db: Session = Depends(get_db)):
+    """Distribution détaillée par muscle et exercice pour le sunburst"""
+    from datetime import datetime, timedelta
+    
+    end_date = datetime.utcnow()
+    if period == "week":
+        start_date = end_date - timedelta(days=7)
+    elif period == "month":
+        start_date = end_date - timedelta(days=30)
+    else:  # year
+        start_date = end_date - timedelta(days=365)
+    
+    # Récupérer tous les sets de la période
+    sets = db.query(Set).join(Workout).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed",
+        Set.completed_at >= start_date,
+        Set.completed_at <= end_date,
+        Set.skipped == False
+    ).all()
+    
+    # Structure pour sunburst hiérarchique
+    muscle_data = {}
+    
+    for set_item in sets:
+        exercise = db.query(Exercise).filter(Exercise.id == set_item.exercise_id).first()
+        if not exercise:
+            continue
+        
+        muscle = exercise.body_part
+        exercise_name = exercise.name_fr
+        volume = set_item.weight * set_item.actual_reps
+        
+        if muscle not in muscle_data:
+            muscle_data[muscle] = {}
+        
+        if exercise_name not in muscle_data[muscle]:
+            muscle_data[muscle][exercise_name] = 0
+        
+        muscle_data[muscle][exercise_name] += volume
+    
+    # Convertir en format sunburst hiérarchique
+    children = []
+    for muscle, exercises in muscle_data.items():
+        muscle_children = []
+        for exercise, volume in exercises.items():
+            muscle_children.append({
+                "name": exercise,
+                "value": round(volume)
+            })
+        
+        children.append({
+            "name": muscle,
+            "children": muscle_children
+        })
+    
+    return {
+        "name": "Total",
+        "children": children
+    }
+
 @app.get("/api/users/{user_id}/equipment-usage")
 def get_equipment_usage(user_id: int, period: str = "month", db: Session = Depends(get_db)):
     """Utilisation d'équipement en format sunburst"""

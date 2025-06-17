@@ -373,22 +373,13 @@ async function updateBodyPartDistribution() {
     const period = document.getElementById('bodyPartPeriod').value;
     
     try {
-        const response = await fetch(`/api/users/${currentUser.id}/muscle-volume?period=${period}`);
+        const response = await fetch(`/api/users/${currentUser.id}/muscle-distribution-detailed?period=${period}`);
         const data = await response.json();
-        
-        // Transformer les données pour le sunburst
-        const sunburstData = {
-            name: "Total",
-            children: Object.entries(data.volumes || {}).map(([muscle, volume]) => ({
-                name: muscle,
-                value: volume
-            }))
-        };
         
         // Nettoyer et créer le sunburst
         const container = document.getElementById('bodyPartSunburst');
         container.innerHTML = '';
-        createBodyPartSunburst(sunburstData, container);
+        createBodyPartSunburst(data, container);
         
     } catch (error) {
         console.error('Erreur chargement distribution:', error);
@@ -419,16 +410,28 @@ function createBodyPartSunburst(data, container) {
     const arc = d3.arc()
         .startAngle(d => d.x0)
         .endAngle(d => d.x1)
-        .innerRadius(d => d.y0 * 0.7)
-        .outerRadius(d => d.y1 - 1);
+        .innerRadius(d => {
+            if (d.depth === 0) return 0;
+            if (d.depth === 1) return radius * 0.4;
+            return radius * 0.7;
+        })
+        .outerRadius(d => {
+            if (d.depth === 0) return 0;
+            if (d.depth === 1) return radius * 0.65;
+            return radius * 0.95;
+        });
     
     const g = svg.selectAll('g')
-        .data(root.descendants().filter(d => d.depth))
+        .data(root.descendants().filter(d => d.depth > 0))
         .enter().append('g');
     
     const paths = g.append('path')
         .attr('d', arc)
-        .style('fill', d => getColorForMuscle(d.data.name))
+        .style('fill', d => {
+            // Couleur par muscle (depth 1) ou version plus claire pour exercices (depth 2)
+            const muscle = d.depth === 1 ? d.data.name : d.parent.data.name;
+            return getColorForMuscle(muscle, d.depth === 1 ? 1 : 0.7);
+        })
         .style('stroke', '#1e293b')
         .style('stroke-width', 2)
         .attr('opacity', 0);
@@ -438,8 +441,9 @@ function createBodyPartSunburst(data, container) {
         .duration(750)
         .attr('opacity', 1);
     
-    // Labels
-    g.append('text')
+    // Labels uniquement pour les muscles (depth 1)
+    g.filter(d => d.depth === 1)
+        .append('text')
         .attr('transform', d => {
             const [x, y] = arc.centroid(d);
             return `translate(${x},${y})`;
@@ -448,11 +452,15 @@ function createBodyPartSunburst(data, container) {
         .attr('fill', 'white')
         .style('font-size', '12px')
         .style('font-weight', '600')
-        .text(d => d.data.value > 0 ? d.data.name : '');
+        .text(d => {
+            const percentage = ((d.value / root.value) * 100).toFixed(0);
+            return percentage > 5 ? d.data.name : '';
+        });
     
-    // Tooltip
+    // Tooltip amélioré
     paths.on('mouseover', function(event, d) {
-        const percentage = ((d.value / root.value) * 100).toFixed(1);
+        const totalVolume = root.value;
+        const percentage = ((d.value / totalVolume) * 100).toFixed(1);
         
         const tooltip = d3.select('body').append('div')
             .attr('class', 'sunburst-tooltip')
@@ -462,20 +470,62 @@ function createBodyPartSunburst(data, container) {
             .duration(200)
             .style('opacity', .9);
         
-        tooltip.html(`${d.data.name}: ${percentage}% (${Math.round(d.value)}kg)`)
+        let content = '';
+        if (d.depth === 1) {
+            // Tooltip pour muscle avec répartition des exercices
+            content = `<strong>${d.data.name}</strong><br/>
+                      Volume: ${Math.round(d.value)}kg (${percentage}%)<br/>`;
+            
+            if (d.children && d.children.length > 0) {
+                content += '<br/><strong>Exercices:</strong><br/>';
+                d.children
+                    .sort((a, b) => b.value - a.value)
+                    .forEach(child => {
+                        const exercisePercentage = ((child.value / d.value) * 100).toFixed(0);
+                        content += `• ${child.data.name}: ${exercisePercentage}%<br/>`;
+                    });
+            }
+        } else {
+            // Tooltip pour exercice
+            const muscleVolume = d.parent.value;
+            const exercisePercentage = ((d.value / muscleVolume) * 100).toFixed(0);
+            content = `<strong>${d.data.name}</strong><br/>
+                      Muscle: ${d.parent.data.name}<br/>
+                      Volume: ${Math.round(d.value)}kg<br/>
+                      ${exercisePercentage}% du muscle<br/>
+                      ${percentage}% du total`;
+        }
+        
+        tooltip.html(content)
             .style('left', (event.pageX + 10) + 'px')
             .style('top', (event.pageY - 28) + 'px');
         
+        // Effet de survol
         d3.select(this)
             .transition()
             .duration(200)
             .attr('opacity', 0.8);
+        
+        // Mettre en évidence les éléments liés
+        if (d.depth === 1) {
+            // Mettre en évidence tous les exercices de ce muscle
+            paths.filter(p => p.depth === 2 && p.parent === d)
+                .transition()
+                .duration(200)
+                .attr('opacity', 0.8);
+        } else if (d.depth === 2) {
+            // Mettre en évidence le muscle parent
+            paths.filter(p => p === d.parent)
+                .transition()
+                .duration(200)
+                .attr('opacity', 0.8);
+        }
     })
-    .on('mouseout', function() {
+    .on('mouseout', function(event, d) {
         d3.selectAll('.sunburst-tooltip').remove();
         
-        d3.select(this)
-            .transition()
+        // Restaurer l'opacité
+        paths.transition()
             .duration(200)
             .attr('opacity', 1);
     });
