@@ -576,7 +576,8 @@ window.initializeStatsPage = initializeStatsPage;
 export {
     initializeStatsPage,
     updateMuscleProgression,
+    updateVolumeChart,
     refreshMuscleRecovery,
-    updateEquipmentUsage,
+    updateBodyPartDistribution,
     updatePerformancePrediction
 };
