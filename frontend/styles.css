@@ -2073,3 +2073,98 @@ select.form-input {
     pointer-events: none;
     z-index: 1000;
 }
+
+
+#equipmentSunburst svg {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* ===== FIX DEFINITIF POUR LES GRAPHIQUES STATS ===== */
+
+/* Override du container général pour la page stats */
+.view#stats .container {
+    max-width: 100%;
+    padding: 80px 2rem 100px;
+}
+
+/* Container spécifique pour les stats */
+.view#stats .stats-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* Grid responsive avec colonnes adaptatives */
+.view#stats .charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+/* Cartes de graphiques plus grandes */
+.view#stats .chart-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Wrapper des graphiques */
+.view#stats .chart-wrapper {
+    flex: 1;
+    position: relative;
+    margin-top: 1rem;
+    min-height: 400px;
+}
+
+/* Canvas pleine taille */
+.view#stats .chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Header des graphiques */
+.view#stats .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Graphiques larges sur toute la largeur */
+.view#stats .chart-card-wide {
+    grid-column: 1 / -1;
+}
+
+/* Mobile - 1 colonne */
+@media (max-width: 768px) {
+    .view#stats .charts-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .view#stats .chart-card {
+        min-height: 400px;
+    }
+}
+
+/* Tablettes - 2 colonnes forcées */
+@media (min-width: 769px) and (max-width: 1200px) {
+    .view#stats .charts-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Desktop large - 2 colonnes avec plus d'espace */
+@media (min-width: 1201px) {
+    .view#stats .charts-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
+    }
+}
