@@ -26,13 +26,26 @@ function showView(viewName) {
         }
     }
     
+    // Masquer toutes les vues et l'onboarding
     document.querySelectorAll('.view, .onboarding').forEach(view => {
         view.classList.remove('active');
     });
     
+    // S'assurer que le welcome panel est bien masqué
+    const welcomePanel = document.getElementById('welcome');
+    if (welcomePanel && viewName !== 'welcome') {
+        welcomePanel.classList.remove('active');
+        welcomePanel.style.display = 'none';
+    }
+    
+    // Afficher la vue demandée
     const view = document.getElementById(viewName) || document.querySelector(`.${viewName}`);
     if (view) {
         view.classList.add('active');
+        
+        // S'assurer que la vue est bien visible
+        view.style.display = viewName === 'welcome' ? 'flex' : 'block';
+        
         if (viewName === 'onboarding') {
             showStep(currentStep);
         }
@@ -98,6 +111,12 @@ function showMainInterface() {
     if (currentUser) {
         document.getElementById('userInitial').textContent = currentUser.name[0].toUpperCase();
         document.getElementById('userInitial').style.display = 'flex';
+        // S'assurer que le welcome panel est masqué
+        const welcomeView = document.getElementById('welcome');
+        if (welcomeView) {
+            welcomeView.classList.remove('active');
+            welcomeView.style.display = 'none';
+        }
     }
     
     showView('dashboard');
