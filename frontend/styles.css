@@ -301,10 +301,7 @@ select.form-input {
     animation: fadeIn 0.3s ease;
 }
 
-/* Exception pour welcome qui utilise flex */
-.view#welcome.active {
-    display: flex !important;
-}
+
 
 /* ===== DASHBOARD ===== */
 .dashboard-grid {
@@ -491,44 +488,40 @@ select.form-input {
 }
 
 /* ===== WELCOME SCREEN ===== */
+.view#welcome {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+}
+
+.view#welcome.active {
+    display: flex !important;
+}
+
 .welcome-container {
     max-width: 500px;
-    margin: 0 auto;
+    width: 100%;
     text-align: center;
     padding: 2rem;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;  /* Centre verticalement */
-    align-items: center;      /* Centre horizontalement */
 }
 
-/* Reset spécifique pour la page welcome */
-body:has(.view#welcome.active) .container {
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-}
-
-/* Supprimer le margin-top: auto qui pousse tout en bas */
-.profiles-section {
-    margin-top: 3rem;  /* Espace normal, pas auto */
-    width: 100%;       /* Pour que la section prenne toute la largeur */
-}
-
-/* S'assurer que la view welcome a aussi les bonnes propriétés */
-.view#welcome {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-}
-
-/* Ajuster le container principal pour l'écran welcome */
+/* Reset du container principal quand welcome est actif */
 .view#welcome .container {
-    padding: 0;  /* Enlever le padding pour la page welcome */
+    padding: 0;
+    display: contents; /* Permet au contenu de s'échapper du container */
+}
+
+.profiles-section {
+    margin-top: 3rem;
+    width: 100%;
 }
 
 .profiles-list {
