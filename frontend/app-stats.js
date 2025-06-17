@@ -20,24 +20,34 @@ const chartColors = {
 };
 
 // ===== UTILITAIRES COULEURS =====
-function getMuscleColor(muscle, opacity = 1) {
-    const colors = {
-        'Pectoraux': `rgba(59, 130, 246, ${opacity})`,     // Bleu
-        'Dos': `rgba(16, 185, 129, ${opacity})`,           // Vert
-        'Épaules': `rgba(245, 158, 11, ${opacity})`,       // Orange
-        'Biceps': `rgba(139, 92, 246, ${opacity})`,        // Violet
-        'Triceps': `rgba(236, 72, 153, ${opacity})`,       // Rose
-        'Jambes': `rgba(239, 68, 68, ${opacity})`,         // Rouge
-        'Abdominaux': `rgba(6, 182, 212, ${opacity})`,     // Cyan
-        'Avant-bras': `rgba(156, 163, 175, ${opacity})`,   // Gris
-        'Mollets': `rgba(251, 146, 60, ${opacity})`,       // Orange clair
+function getColorForMuscle(muscle, opacity = 1) {
+    // Palette moderne avec des couleurs vibrantes
+    const colorMap = {
+        'Pectoraux': '#3b82f6',    // Bleu vif
+        'Dos': '#8b5cf6',          // Violet
+        'Épaules': '#f59e0b',      // Orange
+        'Biceps': '#10b981',       // Vert émeraude
+        'Triceps': '#ef4444',      // Rouge
+        'Jambes': '#ec4899',       // Rose
+        'Abdominaux': '#06b6d4',   // Cyan
+        'Mollets': '#6366f1',      // Indigo
+        'Avant-bras': '#84cc16',   // Vert lime
+        'Fessiers': '#a855f7'      // Purple
     };
-    return colors[muscle] || `rgba(107, 114, 128, ${opacity})`; // Gris par défaut
+    
+    const color = colorMap[muscle] || chartColors.gray;
+    
+    if (opacity < 1) {
+        const hex = color.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+    
+    return color;
 }
 
-function getColorForMuscle(muscle, opacity = 1) {
-    return getMuscleColor(muscle, opacity);
-}
 
 // Fonction pour créer des gradients
 function createGradient(ctx, color, opacity = 0.3) {
@@ -544,34 +554,7 @@ async function updatePerformancePrediction() {
     }
 }
 
-// ===== UTILITAIRES =====
-function getColorForMuscle(muscle, opacity = 1) {
-    // Palette moderne avec des couleurs vibrantes
-    const colorMap = {
-        'Pectoraux': '#3b82f6',    // Bleu vif
-        'Dos': '#8b5cf6',          // Violet
-        'Épaules': '#f59e0b',      // Orange
-        'Biceps': '#10b981',       // Vert émeraude
-        'Triceps': '#ef4444',      // Rouge
-        'Jambes': '#ec4899',       // Rose
-        'Abdominaux': '#06b6d4',   // Cyan
-        'Mollets': '#6366f1',      // Indigo
-        'Avant-bras': '#84cc16',   // Vert lime
-        'Fessiers': '#a855f7'      // Purple
-    };
-    
-    const color = colorMap[muscle] || chartColors.gray;
-    
-    if (opacity < 1) {
-        const hex = color.replace('#', '');
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    }
-    
-    return color;
-}
+
 
 // ===== INITIALISATION =====
 async function initializeStatsPage() {
