@@ -3,6 +3,8 @@
 
 import { currentUser } from './app-state.js';
 
+const statsCharts = {};
+
 // Configuration des graphiques
 // Palette de couleurs moderne avec gradients
 const chartColors = {
@@ -16,6 +18,26 @@ const chartColors = {
     cyan: '#06b6d4',
     indigo: '#6366f1'
 };
+
+// ===== UTILITAIRES COULEURS =====
+function getMuscleColor(muscle, opacity = 1) {
+    const colors = {
+        'Pectoraux': `rgba(59, 130, 246, ${opacity})`,     // Bleu
+        'Dos': `rgba(16, 185, 129, ${opacity})`,           // Vert
+        'Épaules': `rgba(245, 158, 11, ${opacity})`,       // Orange
+        'Biceps': `rgba(139, 92, 246, ${opacity})`,        // Violet
+        'Triceps': `rgba(236, 72, 153, ${opacity})`,       // Rose
+        'Jambes': `rgba(239, 68, 68, ${opacity})`,         // Rouge
+        'Abdominaux': `rgba(6, 182, 212, ${opacity})`,     // Cyan
+        'Avant-bras': `rgba(156, 163, 175, ${opacity})`,   // Gris
+        'Mollets': `rgba(251, 146, 60, ${opacity})`,       // Orange clair
+    };
+    return colors[muscle] || `rgba(107, 114, 128, ${opacity})`; // Gris par défaut
+}
+
+function getColorForMuscle(muscle, opacity = 1) {
+    return getMuscleColor(muscle, opacity);
+}
 
 // Fonction pour créer des gradients
 function createGradient(ctx, color, opacity = 0.3) {
@@ -128,9 +150,6 @@ const chartDefaults = {
         }
     }
 };
-
-// Stockage des instances de graphiques
-let statsCharts = {};
 
 // ===== 1. PROGRESSION PAR GROUPE MUSCULAIRE =====
 async function updateMuscleProgression() {
