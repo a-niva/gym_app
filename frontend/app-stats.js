@@ -337,15 +337,27 @@ function createSunburst(data, container) {
         .outerRadius(d => d.y1);
     
     // Échelle de couleurs
-    // Remplacer la palette de couleurs (dans updateEquipmentUsage)
     const color = d3.scaleOrdinal()
         .domain(['root', 'Barres', 'Haltères', 'Machines', 'Poids libre', 'Cardio', 'Autres'])
         .range(['#1e293b', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#6b7280']);
 
-    // Ajouter des transitions et effets (après la création des arcs)
-    g.selectAll('path')
-        .transition()
+    // Créer les éléments g pour chaque segment
+    const g = svg.selectAll('g')
+        .data(root.descendants())
+        .enter().append('g');
+    
+    // Ajouter les paths
+    const paths = g.append('path')
+        .attr('d', arc)
+        .style('fill', d => color(d.data.name))
+        .style('stroke', '#1e293b')
+        .style('stroke-width', 2)
+        .attr('opacity', 0);
+    
+    // Animation d'entrée
+    paths.transition()
         .duration(750)
+        .attr('opacity', 1)
         .attrTween('d', function(d) {
             const interpolate = d3.interpolate({x0: 0, x1: 0, y0: 0, y1: 0}, d);
             return function(t) {
@@ -353,21 +365,35 @@ function createSunburst(data, container) {
             };
         });
 
-    // Effet de survol amélioré
-    g.selectAll('path')
+    // Effet de survol
+    paths
         .on('mouseover', function(event, d) {
+            // Tooltip
+            const percentage = ((d.x1 - d.x0) * 100 / (2 * Math.PI)).toFixed(1);
+            const tooltip = d3.select('body').append('div')
+                .attr('class', 'sunburst-tooltip')
+                .style('opacity', 0);
+            
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+            
+            tooltip.html(`${d.data.name}: ${percentage}%`)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            
             d3.select(this)
                 .transition()
                 .duration(200)
-                .attr('opacity', 0.8)
-                .attr('transform', 'scale(1.05)');
+                .attr('opacity', 0.8);
         })
         .on('mouseout', function(event, d) {
+            d3.selectAll('.sunburst-tooltip').remove();
+            
             d3.select(this)
                 .transition()
                 .duration(200)
-                .attr('opacity', 1)
-                .attr('transform', 'scale(1)');
+                .attr('opacity', 1);
         });
 }
 

@@ -2084,13 +2084,13 @@ select.form-input {
 /* ===== FIX DEFINITIF POUR LES GRAPHIQUES STATS ===== */
 .view#stats .charts-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(2, 1fr); /* Force 2 colonnes sur desktop */
     gap: 2rem;
     margin: 0 auto 2rem;
     padding: 0;
     box-sizing: border-box;
     width: 100%;
-    max-width: none !important; /* Suppression de la limite de largeur */
+    max-width: none !important;
 }
 
 /* Conteneur parent sans limite de largeur */
@@ -2102,7 +2102,7 @@ select.form-input {
     box-sizing: border-box;
 }
 
-/* Responsive */
+/* Mobile - 1 colonne */
 @media (max-width: 768px) {
     .view#stats .charts-container {
         grid-template-columns: 1fr;
@@ -2114,23 +2114,48 @@ select.form-input {
     }
 }
 
-@media (min-width: 1200px) {
+/* Desktop large - 3 colonnes */
+@media (min-width: 1400px) {
     .view#stats .charts-container {
-        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 2.5rem;
-    }
-    
-    .view#stats .stats-container {
-        padding: 80px 3rem 100px;
     }
 }
 
-/* Graphiques larges */
+/* Très grands écrans - 4 colonnes */
+@media (min-width: 1800px) {
+    .view#stats .charts-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Graphiques larges prennent 2 colonnes */
 .view#stats .chart-card-wide {
-    grid-column: 1 / -1;
+    grid-column: span 2;
+}
+
+/* Sur mobile, les graphiques larges prennent toute la largeur */
+@media (max-width: 768px) {
+    .view#stats .chart-card-wide {
+        grid-column: 1 / -1;
+    }
 }
 
 /* Forcer la suppression de toute limite de largeur héritée */
 #chartsContainer {
     max-width: none !important;
+}
+
+/* Tooltip pour le sunburst */
+.sunburst-tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 8px 12px;
+    font-size: 12px;
+    background: rgba(15, 23, 42, 0.95);
+    color: white;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 1000;
 }
