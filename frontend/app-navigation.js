@@ -42,6 +42,13 @@ function showView(viewName) {
         }
     }
     
+    // Si on va vers training, vérifier s'il y a une session active
+    if (viewName === 'training' && window.currentWorkout && window.updateTrainingInterface) {
+        setTimeout(() => {
+            window.updateTrainingInterface();
+        }, 100);
+    }
+    
     // Charger les graphiques stats quand on arrive sur la vue
     if (viewName === 'stats' && window.initializeStatsPage) {
         setTimeout(() => {

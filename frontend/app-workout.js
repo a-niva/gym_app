@@ -48,12 +48,14 @@ async function startWorkout(type) {
         }
         return;
     }
-    
+        
     // Vérifier s'il y a déjà une session active
-    const activeCheck = await checkActiveWorkout();
-    if (activeCheck) {
-        showToast('Une session est déjà active', 'warning');
+    const activeWorkout = await checkActiveWorkout();
+    if (activeWorkout) {
+        setCurrentWorkout(activeWorkout);
         showView('training');
+        updateTrainingInterface();
+        showToast('Session en cours récupérée', 'info');
         return;
     }
     
@@ -145,7 +147,10 @@ async function checkActiveWorkout() {
     } catch (error) {
         console.error('Erreur vérification workout actif:', error);
     }
-    
+    // Si on arrive ici, il n'y a pas de session active
+    // Nettoyer le localStorage pour éviter des incohérences futures
+    localStorage.removeItem('currentWorkout');
+    localStorage.removeItem('currentSessionHistory');
     return null;
 }
 
@@ -410,7 +415,27 @@ function updateTrainingInterface() {
     }
 }
 
+// ===== NAVIGATION VERS L'ENTRAINEMENT =====
+async function handleTrainingNavigation() {
+    if (!currentUser) {
+        showToast('Veuillez vous connecter', 'error');
+        showProfileForm();
+        return;
+    }
+    
+    // Vérifier s'il y a une session active
+    const activeWorkout = await checkActiveWorkout();
+    if (activeWorkout) {
+        setCurrentWorkout(activeWorkout);
+        showView('training');
+        updateTrainingInterface();
+    } else {
+        showView('training');
+    }
+}
+
 // ===== EXPORT GLOBAL =====
+window.handleTrainingNavigation = handleTrainingNavigation;
 window.startWorkout = startWorkout;
 window.pauseWorkout = pauseWorkout;
 window.resumeWorkout = resumeWorkout;
