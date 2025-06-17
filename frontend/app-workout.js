@@ -283,6 +283,34 @@ function cleanupWorkout() {
     localStorage.removeItem('currentSessionHistory');
 }
 
+// ===== GESTION DES ACTIONS FATIGUE =====
+function reduceSetsRemaining() {
+    // Réduire le nombre de séries restantes
+    if (window.currentSetNumber) {
+        showToast('Programme adapté - Réduction des séries', 'info');
+        dismissFatigueModal();
+        if (window.finishExercise) {
+            window.finishExercise(); // Terminer l'exercice actuel
+        }
+    }
+}
+
+function switchToLighterExercise() {
+    // Proposer un exercice plus léger
+    showToast('Changement vers un exercice plus léger', 'info');
+    dismissFatigueModal();
+    if (window.showExerciseSelector) {
+        window.showExerciseSelector();
+    }
+}
+
+function dismissFatigueModal() {
+    const modal = document.querySelector('.fatigue-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
 // ===== SYNCHRONISATION DES DONNÉES EN ATTENTE =====
 async function syncPendingSets() {
     const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
@@ -388,6 +416,9 @@ window.pauseWorkout = pauseWorkout;
 window.resumeWorkout = resumeWorkout;
 window.completeWorkout = completeWorkout;
 window.abandonWorkout = abandonWorkout;
+window.reduceSetsRemaining = reduceSetsRemaining;
+window.switchToLighterExercise = switchToLighterExercise;
+window.dismissFatigueModal = dismissFatigueModal;
 
 // Export pour les autres modules
 export {

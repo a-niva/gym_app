@@ -29,6 +29,27 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+// ===== MODAL DE FATIGUE =====
+function showFatigueModal(fatigue) {
+    const modal = document.createElement('div');
+    modal.className = 'fatigue-modal';
+    modal.innerHTML = `
+        <div class="fatigue-content">
+            <h3>⚠️ Fatigue élevée détectée</h3>
+            <p>${fatigue.message}</p>
+            <div class="fatigue-options">
+                <button onclick="reduceSetsRemaining()">Réduire les séries</button>
+                <button onclick="switchToLighterExercise()">Exercice plus léger</button>
+                <button onclick="dismissFatigueModal()">Continuer</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Export global
+window.showFatigueModal = showFatigueModal;
+
 // ===== GESTION DU MODE SILENCIEUX =====
 function toggleSilentMode() {
     const newValue = !isSilentMode;

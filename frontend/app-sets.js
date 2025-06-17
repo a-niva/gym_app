@@ -368,6 +368,7 @@ function handleSetSuccess(setData, setDuration) {
         checkFatigue(currentWorkout.id).then(fatigue => {
             if (fatigue && fatigue.risk === 'high') {
                 showToast(`⚠️ ${fatigue.message}`, 'warning');
+                showFatigueModal(fatigue);
             }
         }).catch(() => {
             // Ignorer les erreurs de vérification de fatigue
