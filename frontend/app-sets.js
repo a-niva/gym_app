@@ -43,7 +43,7 @@ import { TIME_BASED_KEYWORDS } from './app-config.js';
 import { addToSessionHistory } from './app-history.js';
 
 // ===== AFFICHAGE DE L'INTERFACE DE SAISIE =====
-function showSetInput() {
+async function showSetInput() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
     
@@ -61,7 +61,12 @@ function showSetInput() {
     
     // Calculer les poids disponibles pour cet exercice
     let availableWeights = calculateAvailableWeights(currentExercise);
-    let suggestedWeight = calculateSuggestedWeight(currentExercise);
+    // Obtenir le poids suggéré depuis l'API ML
+    let suggestedWeight = await getSuggestedWeight(currentUser.id, currentExercise.id);
+    // Fallback sur le calcul local si l'API ne répond pas
+    if (!suggestedWeight && suggestedWeight !== 0) {
+        suggestedWeight = calculateSuggestedWeight(currentExercise);
+    }
     
     // Adapter les labels selon le type d'exercice
     const weightLabel = isBodyweight && !isTimeBased ? 
@@ -102,6 +107,9 @@ function showSetInput() {
                             availableWeights.length > 0 ? 
                             `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
                             'Aucun poids configuré'}
+                    </div>
+                    <div id="weightSuggestion" class="suggestion-hint">
+                        ${suggestedWeight ? '💡 Poids suggéré par l\'IA' : ''}
                     </div>
                 </div>
                 ` : '<input type="hidden" id="setWeight" value="0">'}

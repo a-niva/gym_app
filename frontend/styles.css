@@ -2168,3 +2168,11 @@ select.form-input {
         gap: 3rem;
     }
 }
+
+/* ===== STYLE POUR LES SUGGESTIONS DE POIDS ===== */
+.suggestion-hint {
+    font-size: 0.9em;
+    color: var(--primary);
+    margin-top: 4px;
+    font-style: italic;
+}
