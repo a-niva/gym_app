@@ -2286,3 +2286,18 @@ select.form-input {
         padding: 1rem;
     }
 }
+
+/* Container dédié aux statistiques */
+.stats-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 80px 2rem 100px;
+    min-height: 100vh;
+}
+
+/* Mobile first - réutilise les paddings existants */
+@media (max-width: 768px) {
+    .stats-container {
+        padding: 70px 1rem 90px;
+    }
+}
