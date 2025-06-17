@@ -2081,153 +2081,56 @@ select.form-input {
     }
 }
 
-/* ===== STATS PAGE - VERSION RIGOUREUSE ET RESPONSIVE COMPLÈTE ===== */
-
-/* Container principal adaptatif */
-.view#stats .stats-container {
-    width: 100%;
-    padding: 80px 1rem 100px;
-    margin: 0 auto;
-    box-sizing: border-box;
-    max-width: 100%;
-}
-
-/* Grille adaptative des graphiques */
-.charts-container {
+/* ===== FIX DEFINITIF POUR LES GRAPHIQUES STATS ===== */
+.view#stats .charts-container {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
     margin: 0 auto 2rem;
     padding: 0;
     box-sizing: border-box;
-    max-width: 1400px;
+    width: 100%;
+    max-width: none !important; /* Suppression de la limite de largeur */
 }
 
-/* Ajustements par écran */
-@media (min-width: 768px) {
-    .charts-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.75rem;
+/* Conteneur parent sans limite de largeur */
+.view#stats .stats-container {
+    width: 100%;
+    max-width: none;
+    padding: 80px 2rem 100px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .view#stats .charts-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .view#stats .stats-container {
+        padding: 80px 1rem 100px;
     }
 }
 
 @media (min-width: 1200px) {
-    .charts-container {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 2rem;
-    }
-
-    .chart-card-wide {
-        grid-column: span 2;
-    }
-}
-
-@media (min-width: 1800px) {
-    .charts-container {
-        grid-template-columns: repeat(4, 1fr);
+    .view#stats .charts-container {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
         gap: 2.5rem;
     }
-
-    .chart-card-wide {
-        grid-column: span 2;
+    
+    .view#stats .stats-container {
+        padding: 80px 3rem 100px;
     }
 }
 
-/* Carte graphique : responsive et animé */
-.chart-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-    animation: slideIn 0.5s ease-out;
-    animation-fill-mode: both;
-    position: relative;
-    overflow: hidden;
-    width: 100%;
+/* Graphiques larges */
+.view#stats .chart-card-wide {
+    grid-column: 1 / -1;
 }
 
-.chart-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.3);
-}
-
-.chart-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-    transition: left 0.5s ease;
-}
-
-.chart-card:hover::before {
-    left: 100%;
-}
-
-/* Délais d'apparition */
-.chart-card:nth-child(1) { animation-delay: 0.1s; }
-.chart-card:nth-child(2) { animation-delay: 0.2s; }
-.chart-card:nth-child(3) { animation-delay: 0.3s; }
-.chart-card:nth-child(4) { animation-delay: 0.4s; }
-.chart-card:nth-child(5) { animation-delay: 0.5s; }
-
-/* Wrapper pour chaque graphique */
-.chart-wrapper {
-    position: relative;
-    height: 300px;
-}
-
-.chart-card-wide .chart-wrapper {
-    height: 350px;
-}
-
-/* Sélecteur custom */
-.chart-select {
-    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-sm);
-    color: white;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.chart-select option {
-    background: #1e293b;
-    color: white;
-}
-
-.chart-select:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.chart-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-/* SVG Sunburst */
-#equipmentSunburst svg {
-    width: 100%;
-    height: 100%;
-}
-
-/* Animation */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Forcer la suppression de toute limite de largeur héritée */
+#chartsContainer {
+    max-width: none !important;
 }
