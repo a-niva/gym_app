@@ -4,52 +4,126 @@
 import { currentUser } from './app-state.js';
 
 // Configuration des graphiques
+// Palette de couleurs moderne avec gradients
 const chartColors = {
     primary: '#3b82f6',
     secondary: '#8b5cf6',
     success: '#10b981',
     warning: '#f59e0b',
     danger: '#ef4444',
-    gray: '#6b7280'
+    gray: '#6b7280',
+    pink: '#ec4899',
+    cyan: '#06b6d4',
+    indigo: '#6366f1'
 };
+
+// Fonction pour créer des gradients
+function createGradient(ctx, color, opacity = 0.3) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    const rgb = hexToRgb(color);
+    gradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`);
+    gradient.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.01)`);
+    return gradient;
+}
+
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
 
 const chartDefaults = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+        mode: 'index',
+        intersect: false
+    },
+    animation: {
+        duration: 1000,
+        easing: 'easeInOutCubic',
+        delay: (context) => {
+            let delay = 0;
+            if (context.type === 'data' && context.mode === 'default') {
+                delay = context.dataIndex * 100 + context.datasetIndex * 100;
+            }
+            return delay;
+        }
+    },
     plugins: {
         legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
             labels: {
                 color: '#e5e7eb',
                 font: {
-                    family: "'Inter', sans-serif"
-                }
+                    family: "'Inter', sans-serif",
+                    size: 12,
+                    weight: '500'
+                },
+                padding: 15,
+                usePointStyle: true,
+                pointStyle: 'circle',
+                boxWidth: 8,
+                boxHeight: 8
             }
         },
         tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
             titleColor: '#f3f4f6',
             bodyColor: '#e5e7eb',
-            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderColor: 'rgba(59, 130, 246, 0.3)',
             borderWidth: 1,
-            cornerRadius: 8,
-            padding: 12
+            cornerRadius: 12,
+            padding: 16,
+            displayColors: true,
+            boxPadding: 6,
+            caretSize: 8,
+            caretPadding: 10
         }
     },
     scales: {
         x: {
             grid: {
-                color: 'rgba(255, 255, 255, 0.05)'
+                color: 'rgba(255, 255, 255, 0.03)',
+                drawBorder: false,
+                tickLength: 0
             },
             ticks: {
-                color: '#9ca3af'
+                color: '#94a3b8',
+                font: {
+                    size: 11,
+                    weight: '400'
+                },
+                padding: 8
+            },
+            border: {
+                display: false
             }
         },
         y: {
             grid: {
-                color: 'rgba(255, 255, 255, 0.05)'
+                color: 'rgba(255, 255, 255, 0.05)',
+                drawBorder: false,
+                tickLength: 0
             },
             ticks: {
-                color: '#9ca3af'
+                color: '#94a3b8',
+                font: {
+                    size: 11,
+                    weight: '400'
+                },
+                padding: 12,
+                callback: function(value) {
+                    return value.toLocaleString('fr-FR');
+                }
+            },
+            border: {
+                display: false
             }
         }
     }
@@ -72,20 +146,42 @@ async function updateMuscleProgression() {
         
         const ctx = document.getElementById('muscleProgressionChart').getContext('2d');
         
-        // Préparer les datasets
-        const datasets = Object.entries(data.muscle_groups).map(([muscle, values]) => ({
-            label: muscle,
-            data: values,
-            borderColor: getColorForMuscle(muscle),
-            backgroundColor: getColorForMuscle(muscle, 0.1),
-            tension: 0.3,
-            fill: false
-        }));
+        // Créer des datasets avec gradients et effets
+        const datasets = Object.entries(data.muscle_groups).map(([muscle, values], index) => {
+            const color = getColorForMuscle(muscle);
+            return {
+                label: muscle,
+                data: values,
+                borderColor: color,
+                backgroundColor: createGradient(ctx, color, 0.2),
+                borderWidth: 3,
+                pointBackgroundColor: color,
+                pointBorderColor: '#1e293b',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: color,
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                // Effet d'animation décalé
+                animation: {
+                    delay: index * 200
+                }
+            };
+        });
         
         statsCharts.muscleProgression = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.dates,
+                labels: data.dates.map(d => {
+                    const date = new Date(d);
+                    return date.toLocaleDateString('fr-FR', { 
+                        day: 'numeric', 
+                        month: 'short' 
+                    });
+                }),
                 datasets: datasets
             },
             options: {
@@ -95,6 +191,10 @@ async function updateMuscleProgression() {
                     title: {
                         display: false
                     }
+                },
+                // Effet de survol amélioré
+                onHover: (event, activeElements) => {
+                    ctx.canvas.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
                 }
             }
         });
@@ -237,35 +337,38 @@ function createSunburst(data, container) {
         .outerRadius(d => d.y1);
     
     // Échelle de couleurs
+    // Remplacer la palette de couleurs (dans updateEquipmentUsage)
     const color = d3.scaleOrdinal()
-        .domain(['Total', 'barbell_standard', 'dumbbells', 'bodyweight', 'bench_plat', 'elastiques'])
-        .range([chartColors.gray, chartColors.primary, chartColors.secondary, chartColors.success, chartColors.warning, chartColors.danger]);
-    
-    // Ajouter les arcs
-    svg.selectAll('path')
-        .data(root.descendants())
-        .join('path')
-        .attr('d', arc)
-        .style('fill', d => color(d.data.name))
-        .style('stroke', '#0f172a')
-        .style('stroke-width', 2)
-        .append('title')
-        .text(d => `${d.data.name}: ${d.value ? Math.round(d.value) : 0} kg`);
-    
-    // Ajouter les labels
-    svg.selectAll('text')
-        .data(root.descendants().filter(d => d.depth && (d.x1 - d.x0) > 0.1))
-        .join('text')
-        .attr('transform', d => {
-            const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
-            const y = (d.y0 + d.y1) / 2;
-            return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+        .domain(['root', 'Barres', 'Haltères', 'Machines', 'Poids libre', 'Cardio', 'Autres'])
+        .range(['#1e293b', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#6b7280']);
+
+    // Ajouter des transitions et effets (après la création des arcs)
+    g.selectAll('path')
+        .transition()
+        .duration(750)
+        .attrTween('d', function(d) {
+            const interpolate = d3.interpolate({x0: 0, x1: 0, y0: 0, y1: 0}, d);
+            return function(t) {
+                return arc(interpolate(t));
+            };
+        });
+
+    // Effet de survol amélioré
+    g.selectAll('path')
+        .on('mouseover', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('opacity', 0.8)
+                .attr('transform', 'scale(1.05)');
         })
-        .attr('dy', '0.35em')
-        .attr('text-anchor', 'middle')
-        .style('fill', 'white')
-        .style('font-size', '12px')
-        .text(d => d.data.name);
+        .on('mouseout', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('opacity', 1)
+                .attr('transform', 'scale(1)');
+        });
 }
 
 // ===== 5. PRÉDICTION DE PERFORMANCE =====
@@ -294,15 +397,22 @@ async function updatePerformancePrediction() {
                     {
                         label: 'Charge actuelle (kg)',
                         data: currentMax,
-                        backgroundColor: chartColors.primary,
-                        borderWidth: 0
+                        backgroundColor: muscles.map(m => getColorForMuscle(m)),
+                        borderWidth: 0,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        barThickness: 40
                     },
                     {
                         label: 'Prédiction 30j (kg)',
                         data: predictedMax,
-                        backgroundColor: 'rgba(59, 130, 246, 0.3)',
-                        borderColor: chartColors.primary,
-                        borderWidth: 2
+                        backgroundColor: muscles.map(m => getColorForMuscle(m, 0.3)),
+                        borderColor: muscles.map(m => getColorForMuscle(m)),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        borderDash: [5, 5],
+                        barThickness: 40
                     }
                 ]
             },
@@ -333,20 +443,23 @@ async function updatePerformancePrediction() {
 
 // ===== UTILITAIRES =====
 function getColorForMuscle(muscle, opacity = 1) {
+    // Palette moderne avec des couleurs vibrantes
     const colorMap = {
-        'Pectoraux': chartColors.primary,
-        'Dos': chartColors.secondary,
-        'Épaules': chartColors.warning,
-        'Biceps': chartColors.success,
-        'Triceps': chartColors.danger,
-        'Jambes': '#ec4899',
-        'Abdominaux': '#14b8a6'
+        'Pectoraux': '#3b82f6',    // Bleu vif
+        'Dos': '#8b5cf6',          // Violet
+        'Épaules': '#f59e0b',      // Orange
+        'Biceps': '#10b981',       // Vert émeraude
+        'Triceps': '#ef4444',      // Rouge
+        'Jambes': '#ec4899',       // Rose
+        'Abdominaux': '#06b6d4',   // Cyan
+        'Mollets': '#6366f1',      // Indigo
+        'Avant-bras': '#84cc16',   // Vert lime
+        'Fessiers': '#a855f7'      // Purple
     };
     
     const color = colorMap[muscle] || chartColors.gray;
     
     if (opacity < 1) {
-        // Convertir hex en rgba
         const hex = color.replace('#', '');
         const r = parseInt(hex.substring(0, 2), 16);
         const g = parseInt(hex.substring(2, 4), 16);
