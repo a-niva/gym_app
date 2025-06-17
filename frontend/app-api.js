@@ -411,31 +411,6 @@ async function createRestPeriod(restData) {
     }
 }
 
-// ===== DEVELOPMENT API =====
-async function checkDevMode() {
-    try {
-        const response = await fetch('/api/dev/status');
-        if (response.ok) {
-            const status = await response.json();
-            return status.dev_mode;
-        }
-    } catch (error) {
-        // Si l'endpoint n'existe pas, on est probablement en production
-        return false;
-    }
-}
-
-async function initDevMode() {
-    try {
-        const response = await fetch('/api/dev/init', { method: 'POST' });
-        if (response.ok) {
-            return await response.json();
-        }
-    } catch (error) {
-        console.error('Erreur init mode dev:', error);
-    }
-    return null;
-}
 
 // Export pour les autres modules
 export {
@@ -456,7 +431,5 @@ export {
     getMuscleDistribution,
     createSet,
     updateSetRestTime,
-    createRestPeriod,
-    checkDevMode,
-    initDevMode
+    createRestPeriod
 };

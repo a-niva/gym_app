@@ -55,9 +55,6 @@ let timerInterval = null;
 let audioContext = null;
 let isSilentMode = false;
 
-// Configuration du mode développement
-let isDevMode = false;
-const DEV_USER_ID = 999;
 
 // ===== ACCESSEURS SIMPLES =====
 // Pas de classes complexes, juste des fonctions directes
@@ -166,9 +163,7 @@ export {
     currentRestTime,
     timerInterval,
     audioContext,
-    isSilentMode,
-    isDevMode,
-    DEV_USER_ID
+    isSilentMode
 };
 
 // Réinitialisation de l'état pour logout ou nouveau profil
@@ -265,10 +260,6 @@ export function setAudioContext(context) {
 
 export function setIsSilentMode(value) {
     isSilentMode = value;
-}
-
-export function setIsDevMode(value) {
-    isDevMode = value;
 }
 
 export function setLastSyncTime(time) {

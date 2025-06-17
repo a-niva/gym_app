@@ -48,10 +48,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Gym Coach API", lifespan=lifespan)
 app.include_router(ml_router)
 
-# Configuration du mode développement
-DEV_MODE = os.getenv("DEV_MODE", "false").lower() == "true"
-DEV_USER_ID = 999  # ID fixe pour l'utilisateur de développement
-
 # CORS for local network access
 app.add_middleware(
     CORSMiddleware,
@@ -80,108 +76,6 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@app.post("/api/dev/init")
-async def init_dev_mode(db: Session = Depends(get_db)):
-    """Initialise le mode développement avec un utilisateur de test persistant"""
-    # Vérifier si on est en développement local
-    if not (DEV_MODE or os.getenv("RENDER", None) is None):
-        raise HTTPException(status_code=403, detail="Dev mode not enabled")
-    
-    # Chercher ou créer l'utilisateur dev
-    dev_user = db.query(User).filter(User.id == DEV_USER_ID).first()
-    
-    if not dev_user:
-        # Créer l'utilisateur avec un ID fixe
-        dev_user = User(
-            id=DEV_USER_ID,
-            name="Dev User",
-            birth_date=datetime(1990, 1, 1),
-            height=175,
-            weight=75,
-            experience_level="intermediate",
-            goals=["strength", "hypertrophy"],
-            equipment_config={
-                "barres": {
-                    "olympique": {"available": True, "count": 1, "weight": 20},
-                    "courte": {"available": True, "count": 1, "weight": 2.5},
-                    "ez": {"available": False, "count": 0, "weight": 10}
-                },
-                "disques": {
-                    "available": True,
-                    "weights": {"20": 4, "10": 4, "5": 4, "2.5": 4, "1.25": 4}
-                },
-                "dumbbells": {
-                    "available": True,
-                    "weights": [5, 10, 15, 20, 25, 30]
-                },
-                "banc": {
-                    "available": True,
-                    "inclinable_haut": True,
-                    "inclinable_bas": True
-                }
-            }
-        )
-        db.add(dev_user)
-        db.commit()
-        db.refresh(dev_user)
-    
-    # Générer un historique minimal si nécessaire
-    existing_workouts = db.query(Workout).filter(Workout.user_id == DEV_USER_ID).count()
-    
-    if existing_workouts < 3:
-        # Récupérer quelques exercices pour l'historique
-        exercises = db.query(Exercise).filter(
-            Exercise.body_part.in_(["Pectoraux", "Dos", "Jambes"])
-        ).limit(6).all()
-        
-        if exercises:
-            for days_ago in [7, 4, 2]:
-                workout = Workout(
-                    user_id=DEV_USER_ID,
-                    type="free_time",
-                    status="completed",
-                    created_at=datetime.utcnow() - timedelta(days=days_ago),
-                    completed_at=datetime.utcnow() - timedelta(days=days_ago, hours=1)
-                )
-                db.add(workout)
-                db.commit()
-                
-                # Ajouter 2-3 exercices par workout
-                for i, exercise in enumerate(exercises[:3]):
-                    for set_num in range(1, 4):
-                        base_weight = 40 + (i * 10)
-                        weight_progression = base_weight + (7 - days_ago) * 2.5
-                        
-                        set_record = Set(
-                            workout_id=workout.id,
-                            exercise_id=exercise.id,
-                            set_number=set_num,
-                            target_reps=10,
-                            actual_reps=10 - (set_num - 1),
-                            weight=weight_progression,
-                            rest_time=90,
-                            fatigue_level=4 + set_num,
-                            perceived_exertion=5 + (set_num - 1),
-                            skipped=False,
-                            completed_at=workout.created_at + timedelta(minutes=5*set_num)
-                        )
-                        db.add(set_record)
-                
-                db.commit()
-    
-    return {
-        "user_id": DEV_USER_ID,
-        "message": "Dev mode initialized",
-        "workouts_count": existing_workouts
-    }
-
-@app.get("/api/dev/status")
-async def get_dev_status():
-    """Vérifie si le mode développement est actif"""
-    return {
-        "dev_mode": DEV_MODE or os.getenv("RENDER", None) is None,
-        "dev_user_id": DEV_USER_ID
-    }
 
 # Exercise endpoints
 @app.get("/api/exercises/", response_model=List[ExerciseResponse])

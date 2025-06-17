@@ -498,6 +498,15 @@ select.form-input {
     align-items: center;      /* Centre horizontalement */
 }
 
+/* Reset spécifique pour la page welcome */
+body:has(.view#welcome.active) .container {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
 /* Supprimer le margin-top: auto qui pousse tout en bas */
 .profiles-section {
     margin-top: 3rem;  /* Espace normal, pas auto */
