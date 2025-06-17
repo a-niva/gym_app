@@ -48,7 +48,6 @@ function getColorForMuscle(muscle, opacity = 1) {
     return color;
 }
 
-
 // Fonction pour créer des gradients
 function createGradient(ctx, color, opacity = 0.3) {
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -331,10 +330,10 @@ async function updateVolumeChart() {
                     label: 'Volume (kg)',
                     data: Object.values(data.volumes || {}),
                     backgroundColor: Object.keys(data.volumes || {}).map(muscle => 
-                        getMuscleColor(muscle, 0.7)
+                        getColorForMuscle(muscle, 0.7)
                     ),
                     borderColor: Object.keys(data.volumes || {}).map(muscle => 
-                        getMuscleColor(muscle)
+                        getColorForMuscle(muscle)
                     ),
                     borderWidth: 2
                 }]
@@ -429,7 +428,7 @@ function createBodyPartSunburst(data, container) {
     
     const paths = g.append('path')
         .attr('d', arc)
-        .style('fill', d => getMuscleColor(d.data.name))
+        .style('fill', d => getColorForMuscle(d.data.name))
         .style('stroke', '#1e293b')
         .style('stroke-width', 2)
         .attr('opacity', 0);
