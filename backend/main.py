@@ -404,41 +404,82 @@ def get_active_workout(user_id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/users/{user_id}/program/next-weight/{exercise_id}")
 def get_next_weight(user_id: int, exercise_id: int, db: Session = Depends(get_db)):
-    """Endpoint optimisé pour Render Free - calcul rapide sans ML lourd"""
+    """Endpoint optimisé pour suggestions de poids simples"""
     
-    # Récupérer les 3 dernières séries
-    recent_sets = db.query(Set).join(Workout).filter(
-        Workout.user_id == user_id,
-        Set.exercise_id == exercise_id,
-        Set.skipped == False
-    ).order_by(Set.completed_at.desc()).limit(3).all()
-    
-    if not recent_sets:
-        # Poids par défaut selon le type d'exercice
+    try:
+        # Vérifier que l'utilisateur existe
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"weight": 20}
+        
+        # Vérifier que l'exercice existe
         exercise = db.query(Exercise).filter(Exercise.id == exercise_id).first()
-        default_weights = {
-            "Pectoraux": 40,
-            "Dos": 50,
-            "Jambes": 60,
-            "Épaules": 20,
-            "Biceps": 15,
-            "Triceps": 20
-        }
-        return {"weight": default_weights.get(exercise.body_part, 20) if exercise else 20}
-    
-    # Calcul simple de progression
-    last_set = recent_sets[0]
-    
-    # Si la dernière série était facile, augmenter
-    if last_set.fatigue_level <= 4 and last_set.actual_reps >= last_set.target_reps:
-        suggested = last_set.weight * 1.025
-    # Si c'était dur, maintenir ou réduire
-    elif last_set.fatigue_level >= 8 or last_set.actual_reps < last_set.target_reps * 0.8:
-        suggested = last_set.weight * 0.95
-    else:
-        suggested = last_set.weight
-    
-    return {"weight": round(suggested, 2.5)}
+        if not exercise:
+            return {"weight": 20}
+        
+        # Récupérer les dernières séries - SANS JOINTURE
+        recent_sets = db.query(Set).filter(
+            Set.exercise_id == exercise_id,
+            Set.skipped == False
+        ).order_by(Set.completed_at.desc()).limit(10).all()
+        
+        # Filtrer pour cet utilisateur
+        user_sets = []
+        for set_obj in recent_sets:
+            workout = db.query(Workout).filter(
+                Workout.id == set_obj.workout_id,
+                Workout.user_id == user_id
+            ).first()
+            if workout:
+                user_sets.append(set_obj)
+            if len(user_sets) >= 3:
+                break
+        
+        if not user_sets:
+            # Poids par défaut selon le type d'exercice
+            default_weights = {
+                "Pectoraux": 40,
+                "Dos": 50,
+                "Jambes": 60,
+                "Épaules": 20,
+                "Biceps": 15,
+                "Triceps": 20,
+                "Abdominaux": 0  # Souvent au poids du corps
+            }
+            
+            base_weight = default_weights.get(exercise.body_part, 20)
+            
+            # Ajuster selon le niveau d'expérience
+            experience_multipliers = {
+                "beginner": 0.6,
+                "intermediate": 0.8,
+                "advanced": 1.0,
+                "expert": 1.2
+            }
+            multiplier = experience_multipliers.get(user.experience_level, 0.8)
+            
+            return {"weight": round(base_weight * multiplier / 2.5) * 2.5}
+        
+        # Calcul simple de progression basé sur la dernière série
+        last_set = user_sets[0]
+        
+        # Si la dernière série était facile, augmenter légèrement
+        if last_set.fatigue_level <= 4 and last_set.actual_reps >= last_set.target_reps:
+            suggested = last_set.weight + 2.5
+        # Si c'était dur, maintenir ou réduire
+        elif last_set.fatigue_level >= 8 or last_set.actual_reps < last_set.target_reps * 0.8:
+            suggested = max(0, last_set.weight - 2.5)
+        else:
+            suggested = last_set.weight
+        
+        # Arrondir à 2.5kg près
+        return {"weight": round(suggested / 2.5) * 2.5}
+        
+    except Exception as e:
+        print(f"Erreur dans get_next_weight: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {"weight": 20}  # Valeur par défaut en cas d'erreur
 
 @app.post("/api/workouts/{workout_id}/fatigue-check")
 def check_workout_fatigue(workout_id: int, db: Session = Depends(get_db)):
