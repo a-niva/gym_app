@@ -574,5 +574,264 @@ def get_workout_sets(workout_id: int, db: Session = Depends(get_db)):
     sets = db.query(Set).filter(Set.workout_id == workout_id).all()
     return sets
 
+# Analytics endpoints for stats page
+@app.get("/api/users/{user_id}/muscle-progression")
+def get_muscle_progression(user_id: int, period: str = "month", db: Session = Depends(get_db)):
+    """Progression de charge par groupe musculaire"""
+    from datetime import datetime, timedelta
+    
+    # Définir la période
+    end_date = datetime.utcnow()
+    if period == "week":
+        start_date = end_date - timedelta(days=7)
+    elif period == "month":
+        start_date = end_date - timedelta(days=30)
+    else:  # year
+        start_date = end_date - timedelta(days=365)
+    
+    # Récupérer tous les sets de la période
+    sets = db.query(Set).join(Workout).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed",
+        Set.completed_at >= start_date,
+        Set.completed_at <= end_date,
+        Set.skipped == False
+    ).all()
+    
+    if not sets:
+        return {"dates": [], "muscle_groups": {}}
+    
+    # Grouper par date et muscle
+    muscle_data = {}
+    dates_set = set()
+    
+    for set_item in sets:
+        exercise = db.query(Exercise).filter(Exercise.id == set_item.exercise_id).first()
+        if not exercise:
+            continue
+            
+        muscle = exercise.body_part
+        date_str = set_item.completed_at.strftime("%Y-%m-%d")
+        dates_set.add(date_str)
+        
+        if muscle not in muscle_data:
+            muscle_data[muscle] = {}
+        
+        if date_str not in muscle_data[muscle]:
+            muscle_data[muscle][date_str] = []
+        
+        muscle_data[muscle][date_str].append(set_item.weight)
+    
+    # Calculer la charge max par jour et muscle
+    dates = sorted(list(dates_set))
+    muscle_groups = {}
+    
+    for muscle, date_weights in muscle_data.items():
+        muscle_groups[muscle] = []
+        for date in dates:
+            if date in date_weights:
+                muscle_groups[muscle].append(max(date_weights[date]))
+            else:
+                muscle_groups[muscle].append(None)
+    
+    return {"dates": dates, "muscle_groups": muscle_groups}
+
+@app.get("/api/users/{user_id}/muscle-recovery")
+def get_muscle_recovery(user_id: int, db: Session = Depends(get_db)):
+    """Dashboard de récupération musculaire"""
+    from datetime import datetime, timedelta
+    
+    # Récupérer le dernier workout par groupe musculaire
+    last_workouts = {}
+    
+    # Récupérer tous les sets des 30 derniers jours
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    
+    sets = db.query(Set).join(Workout).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed",
+        Workout.completed_at >= thirty_days_ago,
+        Set.skipped == False
+    ).order_by(Set.completed_at.desc()).all()
+    
+    for set_item in sets:
+        exercise = db.query(Exercise).filter(Exercise.id == set_item.exercise_id).first()
+        if exercise:
+            muscle = exercise.body_part
+            if muscle not in last_workouts:
+                last_workouts[muscle] = set_item.completed_at
+    
+    # Calculer le temps de récupération
+    recovery_data = []
+    now = datetime.utcnow()
+    
+    all_muscles = ["Pectoraux", "Dos", "Épaules", "Biceps", "Triceps", "Jambes", "Abdominaux"]
+    
+    for muscle in all_muscles:
+        if muscle in last_workouts:
+            hours_since = (now - last_workouts[muscle]).total_seconds() / 3600
+            recovery_data.append({
+                "muscle": muscle,
+                "hours_since_last": round(hours_since, 1),
+                "status": "ready" if hours_since > 48 else "recovering" if hours_since > 24 else "fatigued"
+            })
+        else:
+            recovery_data.append({
+                "muscle": muscle,
+                "hours_since_last": 999,
+                "status": "ready"
+            })
+    
+    return {"muscles": recovery_data}
+
+@app.get("/api/users/{user_id}/equipment-usage")
+def get_equipment_usage(user_id: int, period: str = "month", db: Session = Depends(get_db)):
+    """Utilisation d'équipement en format sunburst"""
+    from datetime import datetime, timedelta
+    
+    # Définir la période
+    end_date = datetime.utcnow()
+    if period == "week":
+        start_date = end_date - timedelta(days=7)
+    elif period == "month":
+        start_date = end_date - timedelta(days=30)
+    else:  # year
+        start_date = end_date - timedelta(days=365)
+    
+    # Récupérer tous les sets de la période
+    sets = db.query(Set).join(Workout).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed",
+        Set.completed_at >= start_date,
+        Set.completed_at <= end_date,
+        Set.skipped == False
+    ).all()
+    
+    # Structure pour sunburst
+    equipment_data = {}
+    
+    for set_item in sets:
+        exercise = db.query(Exercise).filter(Exercise.id == set_item.exercise_id).first()
+        if not exercise:
+            continue
+        
+        # Calculer le volume
+        volume = set_item.weight * set_item.actual_reps
+        
+        # Organiser par équipement
+        for equip in exercise.equipment:
+            if equip not in equipment_data:
+                equipment_data[equip] = {}
+            
+            if exercise.name_fr not in equipment_data[equip]:
+                equipment_data[equip][exercise.name_fr] = 0
+            
+            equipment_data[equip][exercise.name_fr] += volume
+    
+    # Convertir en format sunburst
+    sunburst_data = {
+        "name": "Total",
+        "children": []
+    }
+    
+    for equip, exercises in equipment_data.items():
+        equip_node = {
+            "name": equip,
+            "children": []
+        }
+        for exercise, volume in exercises.items():
+            equip_node["children"].append({
+                "name": exercise,
+                "value": round(volume)
+            })
+        sunburst_data["children"].append(equip_node)
+    
+    return sunburst_data
+
+@app.get("/api/users/{user_id}/muscle-performance-prediction")
+def get_muscle_performance_prediction(user_id: int, db: Session = Depends(get_db)):
+    """Prédiction de performance par groupe musculaire"""
+    from datetime import datetime, timedelta
+    
+    predictions = {}
+    
+    # Pour chaque groupe musculaire
+    muscles = ["Pectoraux", "Dos", "Épaules", "Biceps", "Triceps", "Jambes"]
+    
+    for muscle in muscles:
+        # Récupérer l'historique des 30 derniers jours
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        
+        sets = db.query(Set).join(Workout).join(Exercise).filter(
+            Workout.user_id == user_id,
+            Workout.status == "completed",
+            Exercise.body_part == muscle,
+            Set.completed_at >= thirty_days_ago,
+            Set.skipped == False
+        ).order_by(Set.completed_at).all()
+        
+        if len(sets) < 3:
+            predictions[muscle] = {
+                "current_max": 0,
+                "predicted_max": 0,
+                "confidence": 0,
+                "trend": "stable"
+            }
+            continue
+        
+        # Extraire les charges max par séance
+        workout_maxes = {}
+        for set_item in sets:
+            workout_id = set_item.workout_id
+            if workout_id not in workout_maxes:
+                workout_maxes[workout_id] = 0
+            workout_maxes[workout_id] = max(workout_maxes[workout_id], set_item.weight)
+        
+        weights = list(workout_maxes.values())
+        
+        if weights:
+            current_max = max(weights)
+            
+            # Calcul simple de tendance
+            if len(weights) >= 3:
+                recent_avg = sum(weights[-3:]) / 3
+                older_avg = sum(weights[:3]) / 3 if len(weights) > 3 else weights[0]
+                
+                trend_percent = ((recent_avg - older_avg) / older_avg) * 100 if older_avg > 0 else 0
+                
+                # Prédiction simple basée sur la tendance
+                if trend_percent > 5:
+                    predicted_max = current_max * 1.05
+                    trend = "improving"
+                elif trend_percent < -5:
+                    predicted_max = current_max * 0.98
+                    trend = "declining"
+                else:
+                    predicted_max = current_max * 1.02
+                    trend = "stable"
+                
+                confidence = min(90, 50 + len(weights) * 5)
+            else:
+                predicted_max = current_max
+                trend = "stable"
+                confidence = 30
+            
+            predictions[muscle] = {
+                "current_max": round(current_max, 1),
+                "predicted_max": round(predicted_max, 1),
+                "confidence": confidence,
+                "trend": trend
+            }
+        else:
+            predictions[muscle] = {
+                "current_max": 0,
+                "predicted_max": 0,
+                "confidence": 0,
+                "trend": "stable"
+            }
+    
+    return {"predictions": predictions}
+
+
 # Static files
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

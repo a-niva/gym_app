@@ -37,6 +37,13 @@ function showView(viewName) {
             showStep(currentStep);
         }
     }
+    
+    // Charger les graphiques stats quand on arrive sur la vue
+    if (viewName === 'stats' && window.initializeStatsPage) {
+        setTimeout(() => {
+            window.initializeStatsPage();
+        }, 100);
+    }
 }
 
 function showStep(step) {
