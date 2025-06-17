@@ -494,12 +494,11 @@ select.form-input {
     left: 0;
     right: 0;
     bottom: 0;
-    display: flex !important;
+    display: none;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    padding: 0;
-    margin: 0;
+    background: linear-gradient(135deg, var(--dark) 0%, var(--dark-lighter) 50%, #334155 100%);
+    z-index: 2000;
 }
 
 .view#welcome.active {
@@ -508,15 +507,15 @@ select.form-input {
 
 .welcome-container {
     max-width: 500px;
-    width: 100%;
+    width: 90%;
     text-align: center;
     padding: 2rem;
+    animation: slideIn 0.5s ease;
 }
 
-/* Reset du container principal quand welcome est actif */
-.view#welcome .container {
-    padding: 0;
-    display: contents; /* Permet au contenu de s'échapper du container */
+.welcome-container h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
 }
 
 .profiles-section {
@@ -528,36 +527,37 @@ select.form-input {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .profile-card {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius);
-    padding: 1.5rem;
-    text-align: left;
+    padding: 1rem 1.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
 
 .profile-card:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: var(--primary);
-    transform: translateY(-2px);
+    transform: translateX(5px);
 }
 
-.profile-info h4 {
-    margin: 0 0 0.5rem;
-    color: white;
-}
-
-.profile-info p {
+.profile-card .profile-info h4 {
     margin: 0;
-    color: var(--gray);
+    font-size: 1.1rem;
+}
+
+.profile-card .profile-info p {
+    margin: 0.25rem 0 0;
     font-size: 0.875rem;
+    color: var(--gray);
 }
 
 /* ===== AJOUTS CSS POUR L'ÉQUIPEMENT (votre code existant) ===== */
