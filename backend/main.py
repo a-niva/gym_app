@@ -14,7 +14,7 @@ import os
 from backend.database import engine, get_db, SessionLocal
 from backend.models import Base, User, Exercise, Workout, Set
 from backend.routes import router as ml_router
-from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse
+from backend.schemas import UserCreate, UserResponse, UserUpdate, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -372,15 +372,15 @@ def get_workout_status(workout_id: int, db: Session = Depends(get_db)):
     }
 
 @app.patch("/api/sets/{set_id}/rest-time")
-def update_set_rest_time(set_id: int, rest_time: int, db: Session = Depends(get_db)):
+def update_set_rest_time(set_id: int, rest_update: SetRestTimeUpdate, db: Session = Depends(get_db)):
     """Update rest time for a completed set"""
     set_obj = db.query(Set).filter(Set.id == set_id).first()
     if not set_obj:
         raise HTTPException(status_code=404, detail="Set not found")
     
-    set_obj.rest_time = rest_time
+    set_obj.rest_time = rest_update.rest_time
     db.commit()
-    return {"updated": True, "set_id": set_id, "rest_time": rest_time}
+    return {"updated": True, "set_id": set_id, "rest_time": rest_update.rest_time}
 
 @app.get("/api/users/{user_id}/active-workout")
 def get_active_workout(user_id: int, db: Session = Depends(get_db)):

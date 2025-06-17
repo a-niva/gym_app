@@ -139,6 +139,9 @@ class SetCreate(BaseModel):
     is_time_based: Optional[bool] = False
     body_weight: Optional[float] = None
 
+class SetRestTimeUpdate(BaseModel):
+    rest_time: int
+
 class SetResponse(BaseModel):
     id: int
     workout_id: int

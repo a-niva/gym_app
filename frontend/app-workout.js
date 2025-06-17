@@ -20,7 +20,8 @@ import {
     setLastExerciseEndTime,
     interExerciseRestTime,
     setInterExerciseRestTime,
-    clearSessionHistory
+    clearSessionHistory,
+    currentSetNumber
 } from './app-state.js';
 
 import { showView, showProfileForm } from './app-navigation.js';
@@ -36,6 +37,8 @@ import {
     createRestPeriod,
     createSet
 } from './app-api.js';
+
+import { finishExercise } from './app-exercises.js';
 
 import { SYNC_INTERVAL } from './app-config.js';
 
@@ -291,29 +294,28 @@ function cleanupWorkout() {
 // ===== GESTION DES ACTIONS FATIGUE =====
 function reduceSetsRemaining() {
     // Réduire le nombre de séries restantes
-    if (window.currentSetNumber) {
+    if (currentSetNumber > 0) {
         showToast('Programme adapté - Réduction des séries', 'info');
         dismissFatigueModal();
-        if (window.finishExercise) {
-            window.finishExercise(); // Terminer l'exercice actuel
-        }
+        finishExercise(); // Terminer l'exercice actuel
     }
 }
 
 function switchToLighterExercise() {
     // Proposer un exercice plus léger
-    showToast('Changement vers un exercice plus léger', 'info');
     dismissFatigueModal();
-    if (window.showExerciseSelector) {
-        window.showExerciseSelector();
+    
+    // Terminer l'exercice actuel
+    if (currentSetNumber > 1) {
+        finishExercise();
     }
+    
+    showToast('Sélectionnez un exercice plus adapté', 'info');
 }
 
 function dismissFatigueModal() {
-    const modal = document.querySelector('.fatigue-modal');
-    if (modal) {
-        modal.remove();
-    }
+    const modals = document.querySelectorAll('.fatigue-modal');
+    modals.forEach(modal => modal.remove());
 }
 
 // ===== SYNCHRONISATION DES DONNÉES EN ATTENTE =====
