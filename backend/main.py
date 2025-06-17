@@ -690,6 +690,39 @@ def get_muscle_recovery(user_id: int, db: Session = Depends(get_db)):
     
     return {"muscles": recovery_data}
 
+@app.get("/api/users/{user_id}/muscle-volume")
+def get_muscle_volume(user_id: int, period: str = "month", db: Session = Depends(get_db)):
+    """Volume total par groupe musculaire"""
+    from datetime import datetime, timedelta
+    
+    # Définir la période
+    end_date = datetime.utcnow()
+    if period == "week":
+        start_date = end_date - timedelta(days=7)
+    elif period == "month":
+        start_date = end_date - timedelta(days=30)
+    else:  # year
+        start_date = end_date - timedelta(days=365)
+    
+    # Récupérer tous les sets de la période
+    sets = db.query(Set).join(Workout).join(Exercise).filter(
+        Workout.user_id == user_id,
+        Workout.status == "completed",
+        Set.completed_at >= start_date,
+        Set.completed_at <= end_date,
+        Set.skipped == False
+    ).all()
+    
+    muscle_volumes = {}
+    for set_item in sets:
+        exercise = db.query(Exercise).filter(Exercise.id == set_item.exercise_id).first()
+        if exercise:
+            volume = set_item.weight * set_item.actual_reps
+            muscle = exercise.body_part
+            muscle_volumes[muscle] = muscle_volumes.get(muscle, 0) + volume
+    
+    return {"volumes": muscle_volumes}
+
 @app.get("/api/users/{user_id}/equipment-usage")
 def get_equipment_usage(user_id: int, period: str = "month", db: Session = Depends(get_db)):
     """Utilisation d'équipement en format sunburst"""
