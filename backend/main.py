@@ -14,7 +14,7 @@ import os
 from backend.database import engine, get_db, SessionLocal
 from backend.models import Base, User, Exercise, Workout, Set
 from backend.routes import router as ml_router
-from backend.schemas import UserCreate, UserResponse, UserUpdate, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate
+from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate
 
 # Create tables
 Base.metadata.create_all(bind=engine)
