@@ -19,6 +19,7 @@ from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, 
 # Create tables
 Base.metadata.create_all(bind=engine)
 
+
 # Lifespan event handler
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,6 +57,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
 
 # User endpoints
 @app.post("/api/users/", response_model=UserResponse)
