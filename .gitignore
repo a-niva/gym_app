@@ -18,3 +18,4 @@ htmlcov/
 consolidator.ipynb
 consolidated_content.txt
 bdd_shower.ipynb
+enrich_with_ollama_fixed.py
