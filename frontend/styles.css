@@ -2295,9 +2295,96 @@ select.form-input {
     min-height: 100vh;
 }
 
-/* Mobile first - réutilise les paddings existants */
-@media (max-width: 768px) {
+/* Ajustement de la grille pour mieux utiliser l'espace */
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Petites tablettes - 2 colonnes */
+@media (min-width: 768px) {
+    .stats-container {
+        padding: 80px 1.5rem 100px;
+    }
+    
+    .charts-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.75rem;
+    }
+}
+
+/* Desktop moyen - 2-3 colonnes */
+@media (min-width: 1024px) {
+    .charts-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+    
+    /* Graphique de prédiction prend 3 colonnes */
+    .chart-card-wide {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Grand desktop - optimisation de l'espace */
+@media (min-width: 1400px) {
+    .stats-container {
+        max-width: 1600px;
+        padding: 80px 3rem 100px;
+    }
+    
+    .charts-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2.5rem;
+    }
+    
+    /* Répartition optimale */
+    .chart-card:nth-child(1),
+    .chart-card:nth-child(2) {
+        grid-column: span 1;
+    }
+    
+    .chart-card:nth-child(3) {
+        grid-column: span 1;
+    }
+    
+    .chart-card:nth-child(4) {
+        grid-column: span 2;
+    }
+    
+    .chart-card-wide {
+        grid-column: span 1;
+    }
+}
+
+/* Très grands écrans */
+@media (min-width: 1800px) {
+    .stats-container {
+        max-width: 1800px;
+    }
+    
+    .charts-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .chart-card-wide {
+        grid-column: span 2;
+    }
+}
+
+/* Mobile - ajustements fins */
+@media (max-width: 767px) {
     .stats-container {
         padding: 70px 1rem 90px;
+    }
+    
+    .chart-wrapper {
+        height: 250px;
+    }
+    
+    .chart-card {
+        padding: 1rem;
     }
 }

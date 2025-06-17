@@ -277,102 +277,102 @@
 
 
 
-        <!-- Statistiques détaillées -->
-                <div class="view" id="stats">
-                    <div class="stats-container">
-                        <h1>Statistiques détaillées</h1>
-                        <button class="btn-secondary" onclick="showView('dashboard')">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                            </svg>
-                            Retour
-                        </button>
-                    </div>
-                    
-                    <div id="chartsContainer" class="charts-container">
-                        <!-- 1. Progression par groupe musculaire -->
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Progression par groupe musculaire</h3>
-                                <div class="chart-controls">
-                                    <select id="muscleProgressionPeriod" class="chart-select" onchange="updateMuscleProgression()">
-                                        <option value="week">Semaine</option>
-                                        <option value="month" selected>Mois</option>
-                                        <option value="year">Année</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="chart-wrapper">
-                                <canvas id="muscleProgressionChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- 2. Dashboard de récupération musculaire -->
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>État de récupération musculaire</h3>
-                                <button class="btn-icon" onclick="refreshMuscleRecovery()">
-                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="chart-wrapper">
-                                <canvas id="muscleRecoveryChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- 3. Volume progressif (tonnage) -->
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Volume d'entraînement progressif</h3>
-                                <div class="chart-controls">
-                                    <select id="volumePeriod" class="chart-select" onchange="updateVolumeChart()">
-                                        <option value="week">Semaine</option>
-                                        <option value="month" selected>Mois</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="chart-wrapper">
-                                <canvas id="muscleVolumeChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- 4. Sunburst utilisation équipement -->
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Utilisation de l'équipement</h3>
-                                <div class="chart-controls">
-                                    <select id="equipmentPeriod" class="chart-select" onchange="updateEquipmentUsage()">
-                                        <option value="week">Semaine</option>
-                                        <option value="month" selected>Mois</option>
-                                        <option value="year">Année</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="chart-wrapper" id="equipmentSunburst">
-                                <!-- D3.js sunburst sera injecté ici -->
-                            </div>
-                        </div>
-
-                        <!-- 5. Prédiction de performance -->
-                        <div class="chart-card chart-card-wide">
-                            <div class="chart-header">
-                                <h3>Prédiction de performance par muscle</h3>
-                                <button class="btn-icon" onclick="updatePerformancePrediction()">
-                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="chart-wrapper">
-                                <canvas id="performancePredictionChart"></canvas>
-                            </div>
-                        </div>
+<!-- Statistiques détaillées -->
+<div class="view" id="stats">
+    <div class="stats-container">
+        <div class="stats-header">
+            <h1>Statistiques détaillées</h1>
+            <button class="btn-secondary" onclick="showView('dashboard')">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Retour
+            </button>
+        </div>
+        
+        <div id="chartsContainer" class="charts-container">
+            <!-- 1. Progression par groupe musculaire -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Progression par groupe musculaire</h3>
+                    <div class="chart-controls">
+                        <select id="muscleProgressionPeriod" class="chart-select" onchange="updateMuscleProgression()">
+                            <option value="week">Semaine</option>
+                            <option value="month" selected>Mois</option>
+                            <option value="year">Année</option>
+                        </select>
                     </div>
                 </div>
+                <div class="chart-wrapper">
+                    <canvas id="muscleProgressionChart"></canvas>
+                </div>
+            </div>
 
+            <!-- 2. État de récupération musculaire -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>État de récupération musculaire</h3>
+                    <button class="btn-icon" onclick="refreshMuscleRecovery()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="muscleRecoveryChart"></canvas>
+                </div>
+            </div>
 
+            <!-- 3. Volume progressif (tonnage) -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Volume d'entraînement progressif</h3>
+                    <div class="chart-controls">
+                        <select id="volumePeriod" class="chart-select" onchange="updateVolumeChart()">
+                            <option value="week">Semaine</option>
+                            <option value="month" selected>Mois</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="muscleVolumeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 4. Sunburst utilisation équipement -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Utilisation de l'équipement</h3>
+                    <div class="chart-controls">
+                        <select id="equipmentPeriod" class="chart-select" onchange="updateEquipmentUsage()">
+                            <option value="week">Semaine</option>
+                            <option value="month" selected>Mois</option>
+                            <option value="year">Année</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-wrapper" id="equipmentSunburst">
+                    <!-- D3.js sunburst sera injecté ici -->
+                </div>
+            </div>
+
+            <!-- 5. Prédiction de performance -->
+            <div class="chart-card chart-card-wide">
+                <div class="chart-header">
+                    <h3>Prédiction de performance par muscle</h3>
+                    <button class="btn-icon" onclick="updatePerformancePrediction()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="performancePredictionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
         <!-- Profil -->
         <div class="view" id="profile">
