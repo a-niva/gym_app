@@ -344,16 +344,16 @@
             <!-- 4. Sunburst utilisation équipement -->
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3>Utilisation de l'équipement</h3>
+                    <h3>Répartition par partie du corps</h3>
                     <div class="chart-controls">
-                        <select id="equipmentPeriod" class="chart-select" onchange="updateEquipmentUsage()">
+                        <select id="bodyPartPeriod" class="chart-select" onchange="updateBodyPartDistribution()">
                             <option value="week">Semaine</option>
                             <option value="month" selected>Mois</option>
                             <option value="year">Année</option>
                         </select>
                     </div>
                 </div>
-                <div class="chart-wrapper" id="equipmentSunburst">
+                <div class="chart-wrapper" id="bodyPartSunburst">
                     <!-- D3.js sunburst sera injecté ici -->
                 </div>
             </div>

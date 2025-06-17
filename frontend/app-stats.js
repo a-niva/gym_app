@@ -277,40 +277,101 @@ async function refreshMuscleRecovery() {
     }
 }
 
-// ===== 3. VOLUME PROGRESSIF (réutilise l'existant) =====
+// ===== 3. VOLUME PROGRESSIF =====
 async function updateVolumeChart() {
-    // Utilise la fonction existante du module app-charts.js
-    if (window.loadMuscleVolumeChart) {
-        await window.loadMuscleVolumeChart();
+    const period = document.getElementById('volumePeriod')?.value || 'month';
+    
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/muscle-volume?period=${period}`);
+        const data = await response.json();
+        
+        const ctx = document.getElementById('muscleVolumeChart');
+        if (!ctx) return;
+        
+        // Détruire l'ancien graphique
+        if (statsCharts['muscleVolume']) {
+            statsCharts['muscleVolume'].destroy();
+        }
+        
+        // Créer le nouveau graphique
+        statsCharts['muscleVolume'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data.volumes || {}),
+                datasets: [{
+                    label: 'Volume (kg)',
+                    data: Object.values(data.volumes || {}),
+                    backgroundColor: Object.keys(data.volumes || {}).map(muscle => 
+                        getMuscleColor(muscle, 0.7)
+                    ),
+                    borderColor: Object.keys(data.volumes || {}).map(muscle => 
+                        getMuscleColor(muscle)
+                    ),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                ...chartDefaults,
+                plugins: {
+                    ...chartDefaults.plugins,
+                    title: {
+                        display: true,
+                        text: `Volume total par muscle (${period === 'week' ? 'Semaine' : 'Mois'})`,
+                        color: '#f3f4f6',
+                        font: { size: 14, weight: '600' }
+                    }
+                },
+                scales: {
+                    ...chartDefaults.scales,
+                    y: {
+                        ...chartDefaults.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Volume (kg)',
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Erreur chargement volume:', error);
     }
 }
 
 // ===== 4. SUNBURST UTILISATION ÉQUIPEMENT =====
-async function updateEquipmentUsage() {
-    const period = document.getElementById('equipmentPeriod').value;
+// ===== 4. SUNBURST PARTIES DU CORPS =====
+async function updateBodyPartDistribution() {
+    const period = document.getElementById('bodyPartPeriod').value;
     
     try {
-        const response = await fetch(`/api/users/${currentUser.id}/equipment-usage?period=${period}`);
+        const response = await fetch(`/api/users/${currentUser.id}/muscle-volume?period=${period}`);
         const data = await response.json();
         
-        // Nettoyer le conteneur
-        const container = document.getElementById('equipmentSunburst');
-        container.innerHTML = '';
+        // Transformer les données pour le sunburst
+        const sunburstData = {
+            name: "Total",
+            children: Object.entries(data.volumes || {}).map(([muscle, volume]) => ({
+                name: muscle,
+                value: volume
+            }))
+        };
         
-        // Créer le sunburst avec D3.js
-        createSunburst(data, container);
+        // Nettoyer et créer le sunburst
+        const container = document.getElementById('bodyPartSunburst');
+        container.innerHTML = '';
+        createBodyPartSunburst(sunburstData, container);
         
     } catch (error) {
-        console.error('Erreur chargement utilisation équipement:', error);
+        console.error('Erreur chargement distribution:', error);
     }
 }
 
-function createSunburst(data, container) {
+function createBodyPartSunburst(data, container) {
     const width = container.offsetWidth;
     const height = 400;
     const radius = Math.min(width, height) / 2;
     
-    // Créer le SVG
     const svg = d3.select(container)
         .append('svg')
         .attr('width', width)
@@ -318,84 +379,81 @@ function createSunburst(data, container) {
         .append('g')
         .attr('transform', `translate(${width/2},${height/2})`);
     
-    // Créer la partition
     const partition = d3.partition()
         .size([2 * Math.PI, radius]);
     
-    // Créer la hiérarchie
     const root = d3.hierarchy(data)
         .sum(d => d.value)
         .sort((a, b) => b.value - a.value);
     
     partition(root);
     
-    // Créer l'arc
     const arc = d3.arc()
         .startAngle(d => d.x0)
         .endAngle(d => d.x1)
-        .innerRadius(d => d.y0)
-        .outerRadius(d => d.y1);
+        .innerRadius(d => d.y0 * 0.7)
+        .outerRadius(d => d.y1 - 1);
     
-    // Échelle de couleurs
-    const color = d3.scaleOrdinal()
-        .domain(['root', 'Barres', 'Haltères', 'Machines', 'Poids libre', 'Cardio', 'Autres'])
-        .range(['#1e293b', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#6b7280']);
-
-    // Créer les éléments g pour chaque segment
     const g = svg.selectAll('g')
-        .data(root.descendants())
+        .data(root.descendants().filter(d => d.depth))
         .enter().append('g');
     
-    // Ajouter les paths
     const paths = g.append('path')
         .attr('d', arc)
-        .style('fill', d => color(d.data.name))
+        .style('fill', d => getMuscleColor(d.data.name))
         .style('stroke', '#1e293b')
         .style('stroke-width', 2)
         .attr('opacity', 0);
     
-    // Animation d'entrée
+    // Animation
     paths.transition()
         .duration(750)
-        .attr('opacity', 1)
-        .attrTween('d', function(d) {
-            const interpolate = d3.interpolate({x0: 0, x1: 0, y0: 0, y1: 0}, d);
-            return function(t) {
-                return arc(interpolate(t));
-            };
-        });
-
-    // Effet de survol
-    paths
-        .on('mouseover', function(event, d) {
-            // Tooltip
-            const percentage = ((d.x1 - d.x0) * 100 / (2 * Math.PI)).toFixed(1);
-            const tooltip = d3.select('body').append('div')
-                .attr('class', 'sunburst-tooltip')
-                .style('opacity', 0);
-            
-            tooltip.transition()
-                .duration(200)
-                .style('opacity', .9);
-            
-            tooltip.html(`${d.data.name}: ${percentage}%`)
-                .style('left', (event.pageX + 10) + 'px')
-                .style('top', (event.pageY - 28) + 'px');
-            
-            d3.select(this)
-                .transition()
-                .duration(200)
-                .attr('opacity', 0.8);
+        .attr('opacity', 1);
+    
+    // Labels
+    g.append('text')
+        .attr('transform', d => {
+            const [x, y] = arc.centroid(d);
+            return `translate(${x},${y})`;
         })
-        .on('mouseout', function(event, d) {
-            d3.selectAll('.sunburst-tooltip').remove();
-            
-            d3.select(this)
-                .transition()
-                .duration(200)
-                .attr('opacity', 1);
-        });
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .style('font-size', '12px')
+        .style('font-weight', '600')
+        .text(d => d.data.value > 0 ? d.data.name : '');
+    
+    // Tooltip
+    paths.on('mouseover', function(event, d) {
+        const percentage = ((d.value / root.value) * 100).toFixed(1);
+        
+        const tooltip = d3.select('body').append('div')
+            .attr('class', 'sunburst-tooltip')
+            .style('opacity', 0);
+        
+        tooltip.transition()
+            .duration(200)
+            .style('opacity', .9);
+        
+        tooltip.html(`${d.data.name}: ${percentage}% (${Math.round(d.value)}kg)`)
+            .style('left', (event.pageX + 10) + 'px')
+            .style('top', (event.pageY - 28) + 'px');
+        
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .attr('opacity', 0.8);
+    })
+    .on('mouseout', function() {
+        d3.selectAll('.sunburst-tooltip').remove();
+        
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .attr('opacity', 1);
+    });
 }
+
+
 
 // ===== 5. PRÉDICTION DE PERFORMANCE =====
 async function updatePerformancePrediction() {
@@ -500,11 +558,10 @@ function getColorForMuscle(muscle, opacity = 1) {
 async function initializeStatsPage() {
     if (!currentUser) return;
     
-    // Charger tous les graphiques
     await updateMuscleProgression();
     await refreshMuscleRecovery();
     await updateVolumeChart();
-    await updateEquipmentUsage();
+    await updateBodyPartDistribution(); // Changé ici
     await updatePerformancePrediction();
 }
 
@@ -512,7 +569,7 @@ async function initializeStatsPage() {
 window.updateMuscleProgression = updateMuscleProgression;
 window.refreshMuscleRecovery = refreshMuscleRecovery;
 window.updateVolumeChart = updateVolumeChart;
-window.updateEquipmentUsage = updateEquipmentUsage;
+window.updateBodyPartDistribution = updateBodyPartDistribution;
 window.updatePerformancePrediction = updatePerformancePrediction;
 window.initializeStatsPage = initializeStatsPage;
 
