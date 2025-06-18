@@ -145,8 +145,9 @@ class FitnessMLEngine:
             available_weights = sorted(user.equipment_config["dumbbells"]["weights"])
             
             # Trouver le poids le plus proche
-            closest_weight = min(available_weights, key=lambda x: abs(x - target_weight))
-            return closest_weight * 2  # Multiplié par 2 pour la paire
+            if available_weights:
+                closest_weight = min(available_weights, key=lambda x: abs(x - target_weight))
+                return closest_weight * 2  # Multiplié par 2 pour la paire
         
         return round(base_weight * experience_mult * goal_mult, 2.5)
     
@@ -218,8 +219,9 @@ class FitnessMLEngine:
                 "dumbbells" in exercise.equipment):
                 target_per_dumbbell = next_weight / 2
                 available = sorted(user.equipment_config["dumbbells"]["weights"])
-                closest = min(available, key=lambda x: abs(x - target_per_dumbbell))
-                next_weight = closest * 2
+                if available:
+                    closest = min(available, key=lambda x: abs(x - target_per_dumbbell))
+                    next_weight = closest * 2
             else:
                 # Arrondir à 2.5kg près
                 next_weight = round(next_weight / 2.5) * 2.5
@@ -252,7 +254,10 @@ class FitnessMLEngine:
         Ajuste la séance en cours selon la performance actuelle
         """
         # Analyser la performance de la série actuelle
-        performance_ratio = current_set.actual_reps / current_set.target_reps
+        if current_set.target_reps > 0:
+            performance_ratio = current_set.actual_reps / current_set.target_reps
+        else:
+            performance_ratio = 0
         
         recommendations = []
         adjustments = {}
@@ -306,26 +311,34 @@ class FitnessMLEngine:
         - Les principes de périodisation
         """
         program = []
+        # Valider la configuration
+        if not user.equipment_config:
+            # Programme minimal au poids du corps
+            return [{
+                "week": 1,
+                "day": 1,
+                "muscle_group": "Full body",
+                "exercises": []
+            }]
         
         # Récupérer les exercices disponibles selon l'équipement
-        # D'abord, extraire l'équipement disponible depuis equipment_config
+        # Extraire l'équipement disponible depuis equipment_config
         available_equipment = []
         if user.equipment_config:
             config = user.equipment_config
-            
             # Barres
             for barre_type, barre_config in config.get("barres", {}).items():
                 if barre_config.get("available", False):
-                    # Mapper les types de barres aux noms d'équipement dans Exercise
                     if barre_type == "olympique" or barre_type == "courte":
                         available_equipment.append("barbell_standard")
                     elif barre_type == "ez":
                         available_equipment.append("barbell_ez")
-            
             # Haltères
             if config.get("dumbbells", {}).get("available", False):
                 available_equipment.append("dumbbells")
-            
+            # Poids du corps toujours disponible
+            available_equipment.append("bodyweight")
+            # Autres équipements...
             # Banc
             if config.get("banc", {}).get("available", False):
                 available_equipment.append("bench_plat")
@@ -333,28 +346,24 @@ class FitnessMLEngine:
                     available_equipment.append("bench_inclinable")
                 if config["banc"].get("inclinable_bas", False):
                     available_equipment.append("bench_declinable")
-            
+
             # Élastiques
             if config.get("elastiques", {}).get("available", False):
                 available_equipment.append("elastiques")
-            
+
             # Autres équipements
             autres = config.get("autres", {})
             if autres.get("kettlebell", {}).get("available", False):
                 available_equipment.append("kettlebell")
             if autres.get("barre_traction", {}).get("available", False):
                 available_equipment.append("barre_traction")
-            
-            # Poids du corps toujours disponible
-            available_equipment.append("bodyweight")
 
-        # Récupérer TOUS les exercices puis filtrer manuellement
+        # Récupérer TOUS les exercices et filtrer manuellement
         all_exercises = self.db.query(Exercise).all()
         available_exercises = []
-
         for exercise in all_exercises:
             exercise_equipment = exercise.equipment or []
-            # Vérifier si TOUS les équipements requis sont disponibles
+            # Vérifier si l'équipement requis est disponible
             if all(eq in available_equipment for eq in exercise_equipment):
                 available_exercises.append(exercise)
         
