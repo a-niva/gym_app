@@ -247,9 +247,9 @@
                     <h3>🏃 Séance libre</h3>
                     <p>Entraînement sans programme</p>
                 </div>
-                <div class="action-card" onclick="startWorkout('program')">
+                <div class="action-card" onclick="showProgramGenerator()">
                     <h3>📋 Programme</h3>
-                    <p>Suivre votre programme</p>
+                    <p>Générer un programme</p>
                 </div>
             </div>
             
@@ -274,7 +274,18 @@
                 <!-- Interface générée dynamiquement -->
             </div>
         </div>
-
+        <!-- Générateur de programmes -->
+        <div class="view" id="program-generator">
+            <div class="program-header">
+                <button class="btn-icon" onclick="showView('dashboard')" style="margin-bottom: 1rem;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Retour
+                </button>
+            </div>
+            <div id="mainContent"></div>
+        </div>
 
 
 
