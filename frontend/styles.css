@@ -2312,3 +2312,87 @@ select.form-input {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* ===== CARTES DE PRÉDICTION ===== */
+.prediction-card {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+}
+
+.prediction-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.warning-card {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1));
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.prediction-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.trend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.trend-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(4px);
+}
+
+.muscle-name {
+    font-weight: 500;
+    color: var(--light);
+}
+
+.trend-indicator {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Animation pour les indicateurs de tendance */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.trend-item {
+    animation: slideInRight 0.5s ease forwards;
+}
+
+.trend-item:nth-child(1) { animation-delay: 0.1s; }
+.trend-item:nth-child(2) { animation-delay: 0.2s; }
+.trend-item:nth-child(3) { animation-delay: 0.3s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .prediction-grid {
+        gap: 0.5rem;
+    }
+    
+    .trend-item {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+}

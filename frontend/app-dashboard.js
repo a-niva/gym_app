@@ -5,6 +5,7 @@
 import { currentUser } from './app-state.js';
 import { getUserStats } from './app-api.js';
 import { loadWorkoutHistory } from './app-history.js';
+import { showToast } from './app-ui.js';
 
 // ===== CHARGEMENT DU DASHBOARD =====
 async function loadDashboard() {
@@ -15,6 +16,17 @@ async function loadDashboard() {
     
     // Charger les statistiques
     await loadUserStats();
+    
+    // AJOUTER ICI : Charger les prédictions ML
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/muscle-performance-prediction`);
+        if (response.ok) {
+            const predictions = await response.json();
+            addPredictionCards(predictions);
+        }
+    } catch (error) {
+        console.error('Erreur chargement prédictions:', error);
+    }
     
     // Charger l'historique avec un délai pour s'assurer que la séance est bien terminée
     setTimeout(() => {
@@ -92,6 +104,67 @@ function displayStats(stats) {
     }
 }
 
+// ===== AFFICHAGE DES CARTES DE PRÉDICTION =====
+function addPredictionCards(predictions) {
+    const container = document.querySelector('.dashboard-grid');
+    if (!container || !predictions.predictions) return;
+    
+    // Créer une carte pour les tendances musculaires
+    const trendCard = document.createElement('div');
+    trendCard.className = 'stat-card prediction-card';
+    trendCard.innerHTML = `
+        <h3 style="color: var(--primary); margin-bottom: 1rem;">
+            📈 Tendances sur 30 jours
+        </h3>
+        <div class="prediction-grid">
+            ${Object.entries(predictions.predictions)
+                .filter(([muscle, data]) => data.trend === 'improving')
+                .slice(0, 3)
+                .map(([muscle, data]) => `
+                    <div class="trend-item">
+                        <span class="muscle-name">${muscle}</span>
+                        <span class="trend-indicator" style="color: #22c55e;">
+                            ↗ +${((data.predicted_max - data.current_max) / data.current_max * 100).toFixed(0)}%
+                        </span>
+                    </div>
+                `).join('')}
+        </div>
+    `;
+    
+    // Ajouter la carte seulement s'il y a des tendances positives
+    const improvingMuscles = Object.entries(predictions.predictions)
+        .filter(([muscle, data]) => data.trend === 'improving');
+    
+    if (improvingMuscles.length > 0) {
+        container.appendChild(trendCard);
+    }
+    
+    // Créer une carte pour les muscles à surveiller
+    const declineMuscles = Object.entries(predictions.predictions)
+        .filter(([muscle, data]) => data.trend === 'declining');
+    
+    if (declineMuscles.length > 0) {
+        const warningCard = document.createElement('div');
+        warningCard.className = 'stat-card warning-card';
+        warningCard.innerHTML = `
+            <h3 style="color: var(--warning); margin-bottom: 1rem;">
+                ⚠️ À surveiller
+            </h3>
+            <div class="prediction-grid">
+                ${declineMuscles.map(([muscle, data]) => `
+                    <div class="trend-item">
+                        <span class="muscle-name">${muscle}</span>
+                        <span class="trend-indicator" style="color: #ef4444;">
+                            ↘ ${((data.predicted_max - data.current_max) / data.current_max * 100).toFixed(0)}%
+                        </span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(warningCard);
+    }
+}
+
 function logout() {
     localStorage.clear();
     setCurrentUser(null);
@@ -157,5 +230,6 @@ export {
     refreshDashboard,
     updateWelcomeMessage,
     loadUserStats,
-    displayStats
+    displayStats,
+    addPredictionCards
 };
