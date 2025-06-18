@@ -911,8 +911,6 @@ select.form-input {
     font-size: 20px;
     font-weight: 700;
     margin-bottom: 8px;
-    background: linear-gradient(135deg, #fff, #cbd5e1);
-    -webkit-text-fill-color: transparent;
 }
 
 .weight-input {

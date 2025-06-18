@@ -101,6 +101,39 @@ class FitnessMLEngine:
             # Estimation initiale basée sur le niveau et le type d'exercice
             return self._estimate_initial_weight(user, exercise)
     
+    def predict_next_session_performance(
+        self,
+        user: User,
+        exercise: Exercise,
+        target_sets: int,
+        target_reps: int
+    ) -> Dict:
+        """
+        Prédit la performance pour la prochaine session
+        """
+        # Récupérer l'historique récent
+        history = self.db.query(Set).join(Workout).filter(
+            Workout.user_id == user.id,
+            Set.exercise_id == exercise.id,
+            Set.skipped == False
+        ).order_by(Set.completed_at.desc()).limit(5).all()
+        
+        if history:
+            # Utiliser le dernier poids comme base
+            predicted_weight = history[0].weight
+            
+            # Ajuster selon la performance récente
+            if history[0].actual_reps >= history[0].target_reps:
+                predicted_weight *= 1.025  # Augmentation de 2.5%
+        else:
+            # Pas d'historique, utiliser le calcul de départ
+            predicted_weight = self.calculate_starting_weight(user, exercise)
+        
+        return {
+            "predicted_weight": round(predicted_weight, 2),
+            "confidence": "high" if len(history) >= 3 else "low"
+        }
+
     def _estimate_initial_weight(self, user: User, exercise: Exercise) -> float:
         """
         Estime le poids initial pour un nouvel exercice
@@ -314,6 +347,11 @@ class FitnessMLEngine:
         - Les principes de périodisation
         """
         program = []
+    
+        # Vérifier que l'utilisateur a des objectifs
+        if not user.goals:
+            user.goals = ["hypertrophy"]  # Objectif par défaut
+
         # Valider la configuration
         if not user.equipment_config:
             # Programme minimal au poids du corps
@@ -321,7 +359,14 @@ class FitnessMLEngine:
                 "week": 1,
                 "day": 1,
                 "muscle_group": "Full body",
-                "exercises": []
+                "exercises": [{
+                    "exercise_id": 0,
+                    "exercise_name": "Configuration d'équipement requise",
+                    "sets": 0,
+                    "target_reps": 0,
+                    "predicted_weight": 0,
+                    "rest_time": 0
+                }]
             }]
         
         # Récupérer les exercices disponibles selon l'équipement
@@ -414,29 +459,34 @@ class FitnessMLEngine:
                 )
                 
                 for exercise in selected_exercises:
-                    # Obtenir les recommandations pour cet exercice
-                    sets_reps = self._get_sets_reps_for_level(
-                        exercise, 
-                        user.experience_level,
-                        user.goals
-                    )
-                    
-                    # Prédire le poids
-                    prediction = self.predict_next_session_performance(
-                        user, 
-                        exercise,
-                        sets_reps["sets"],
-                        sets_reps["reps"]
-                    )
-                    
-                    workout["exercises"].append({
-                        "exercise_id": exercise.id,
-                        "exercise_name": exercise.name_fr,
-                        "sets": int(sets_reps["sets"] * week_intensity),
-                        "target_reps": sets_reps["reps"],
-                        "predicted_weight": prediction["predicted_weight"],
-                        "rest_time": 90 if user.goals and "strength" in user.goals else 60
-                    })
+                    try:
+                        # Obtenir les recommandations pour cet exercice
+                        sets_reps = self._get_sets_reps_for_level(
+                            exercise, 
+                            user.experience_level,
+                            user.goals
+                        )
+                        
+                        # Prédire le poids
+                        prediction = self.predict_next_session_performance(
+                            user, 
+                            exercise,
+                            sets_reps["sets"],
+                            sets_reps["reps"]
+                        )
+                        
+                        workout["exercises"].append({
+                            "exercise_id": exercise.id,
+                            "exercise_name": exercise.name_fr,
+                            "sets": int(sets_reps["sets"] * week_intensity),
+                            "target_reps": sets_reps["reps"],
+                            "predicted_weight": prediction["predicted_weight"],
+                            "rest_time": 90 if user.goals and "strength" in user.goals else 60
+                        })
+                    except Exception as e:
+                        # Log l'erreur mais continue avec les autres exercices
+                        print(f"Erreur avec l'exercice {exercise.name_fr}: {str(e)}")
+                        continue
                 
                 week_program.append(workout)
             
@@ -494,7 +544,7 @@ class FitnessMLEngine:
                         selected.append(ex)
         
         return selected
-    
+        
     def _get_sets_reps_for_level(
         self,
         exercise: Exercise,
@@ -504,6 +554,10 @@ class FitnessMLEngine:
         """
         Obtient les sets/reps recommandés
         """
+        # Vérifier que sets_reps existe
+        if not exercise.sets_reps:
+            return {"sets": 3, "reps": 10}  # Valeurs par défaut
+        
         # Trouver la configuration pour ce niveau
         sets_reps_config = None
         for config in exercise.sets_reps:
