@@ -65,19 +65,23 @@ async function showSetInput() {
     // Calculer les poids disponibles pour cet exercice
     let availableWeights = calculateAvailableWeights(currentExercise);
     
-    // Déterminer le poids à utiliser
+    // Toujours obtenir la suggestion ML (indépendamment du toggle)
+    let mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
+    if (!mlSuggestion && mlSuggestion !== 0) {
+        mlSuggestion = calculateSuggestedWeight(currentExercise);
+    }
+    
+    // Stocker la suggestion ML dans une variable globale pour référence
+    window.currentMLSuggestion = mlSuggestion;
+    
+    // Déterminer le poids à afficher dans l'input
     let defaultWeight = 0;
     
-    if (isAutoWeightEnabled) {
-        // Si auto-ajustement activé, obtenir la suggestion ML
-        let suggestedWeight = await getSuggestedWeight(currentUser.id, currentExercise.id);
-        // Fallback sur le calcul local si l'API ne répond pas
-        if (!suggestedWeight && suggestedWeight !== 0) {
-            suggestedWeight = calculateSuggestedWeight(currentExercise);
-        }
-        defaultWeight = suggestedWeight || 0;
+    if (isAutoWeightEnabled && mlSuggestion) {
+        // Si auto-ajustement activé, utiliser la suggestion ML
+        defaultWeight = mlSuggestion;
     } else {
-        // Si auto-ajustement désactivé, utiliser le dernier poids ou un poids par défaut
+        // Si auto-ajustement désactivé, utiliser le dernier poids
         const previousSetHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
         const lastSetForExercise = previousSetHistory
             .filter(h => h.exerciseId === currentExercise.id)
@@ -87,10 +91,9 @@ async function showSetInput() {
         if (lastSetForExercise) {
             defaultWeight = lastSetForExercise.weight;
         } else if (availableWeights.length > 0) {
-            // Prendre un poids au milieu de la gamme disponible
             defaultWeight = availableWeights[Math.floor(availableWeights.length / 2)];
         } else {
-            defaultWeight = 20; // Valeur par défaut
+            defaultWeight = 20;
         }
     }
     
@@ -134,18 +137,18 @@ async function showSetInput() {
                                 `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
                                 'Aucun poids configuré'}
                         </div>
-                        <div class="weight-suggestion-line">
-                            <div id="weightSuggestion" class="suggestion-hint">
-                                ${defaultWeight ? `💡 ${defaultWeight}kg` : ''}
+                            <div class="weight-suggestion-line">
+                                <div id="weightSuggestion" class="suggestion-hint">
+                                    ${mlSuggestion ? `💡 Suggestion ML : ${mlSuggestion}kg${mlSuggestion !== defaultWeight ? ` (${mlSuggestion > defaultWeight ? '+' : ''}${(mlSuggestion - defaultWeight).toFixed(1)}kg)` : ''}` : ''}
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="autoWeightToggle" 
+                                        ${isAutoWeightEnabled ? 'checked' : ''} 
+                                        onchange="toggleAutoWeight(this.checked)">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">Auto</span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="autoWeightToggle" 
-                                    ${isAutoWeightEnabled ? 'checked' : ''} 
-                                    onchange="toggleAutoWeight(this.checked)">
-                                <span class="toggle-slider"></span>
-                                <span class="toggle-label">Auto</span>
-                            </label>
-                        </div>
                     </div>
                 ` : '<input type="hidden" id="setWeight" value="0">'}
                 
@@ -251,78 +254,39 @@ async function showSetInput() {
 
 // ===== CHARGEMENT DES SUGGESTIONS DE POIDS =====
 async function loadWeightSuggestion() {
-    // Si l'ajustement auto est désactivé, ne rien faire
-    if (!isAutoWeightEnabled) {
-        return;
-    }
-    
-    const previousSetHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
-    const lastSetForExercise = previousSetHistory
-        .filter(h => h.exerciseId === currentExercise.id)
-        .flatMap(h => h.sets || [])
-        .slice(-1)[0];
-        
-    // Toujours essayer d'obtenir la suggestion ML d'abord
-    const mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
-    
-    if (mlSuggestion) {
-        const validated = validateWeight(currentExercise, mlSuggestion);
-        document.getElementById('setWeight').value = validated;
-        
-        // Mettre à jour le texte de suggestion avec comparaison
-        const suggestionDiv = document.getElementById('weightSuggestion');
-        if (suggestionDiv) {
-            if (lastSetForExercise && lastSetForExercise.weight !== validated) {
-                const diff = validated - lastSetForExercise.weight;
-                const sign = diff > 0 ? '+' : '';
-                suggestionDiv.innerHTML = `💡 Suggestion ML : ${validated}kg (${sign}${diff}kg)`;
-            } else {
-                suggestionDiv.innerHTML = `💡 Suggestion ML : ${validated}kg`;
-            }
-        }
-    } else if (lastSetForExercise) {
-        // Fallback sur la dernière série
-        const suggestedWeight = calculateSuggestedWeight(currentExercise, lastSetForExercise);
-        const validated = validateWeight(currentExercise, suggestedWeight);
-        document.getElementById('setWeight').value = validated;
-    }
+    // Cette fonction ne fait plus rien si appelée directement
+    // Les suggestions sont maintenant gérées dans showSetInput()
+    return;
 }
 
 // ===== MISE À JOUR VISUELLE DES SUGGESTIONS =====
 async function updateWeightSuggestionVisual() {
-    if (!isAutoWeightEnabled) {
-        // Obtenir la suggestion ML même si le toggle est désactivé
-        const mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
-        const currentWeight = parseFloat(document.getElementById('setWeight').value);
-        
-        const decreaseBtn = document.getElementById('weightDecreaseBtn');
-        const increaseBtn = document.getElementById('weightIncreaseBtn');
-        
-        // Retirer les classes existantes
-        decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
-        increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
-        
-        if (mlSuggestion && mlSuggestion !== currentWeight) {
-            if (mlSuggestion < currentWeight) {
-                // Suggérer une diminution
-                decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
-            } else if (mlSuggestion > currentWeight) {
-                // Suggérer une augmentation
-                increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
-            }
-            
-            // Mettre à jour le texte de suggestion
-            const suggestionDiv = document.getElementById('weightSuggestion');
-            if (suggestionDiv) {
-                const diff = mlSuggestion - currentWeight;
-                const sign = diff > 0 ? '+' : '';
-                suggestionDiv.innerHTML = `💡 ${mlSuggestion}kg (${sign}${diff.toFixed(1)}kg)`;
-            }
+    const mlSuggestion = window.currentMLSuggestion;
+    const currentWeight = parseFloat(document.getElementById('setWeight').value);
+    
+    const decreaseBtn = document.getElementById('weightDecreaseBtn');
+    const increaseBtn = document.getElementById('weightIncreaseBtn');
+    
+    // Retirer les classes existantes
+    decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
+    increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
+    
+    if (!isAutoWeightEnabled && mlSuggestion && mlSuggestion !== currentWeight) {
+        if (mlSuggestion < currentWeight) {
+            // Suggérer une diminution
+            decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
+        } else if (mlSuggestion > currentWeight) {
+            // Suggérer une augmentation
+            increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
         }
-    } else {
-        // Si auto-ajustement activé, retirer les indications visuelles
-        document.getElementById('weightDecreaseBtn').classList.remove('suggest-decrease', 'suggest-pulse');
-        document.getElementById('weightIncreaseBtn').classList.remove('suggest-increase', 'suggest-pulse');
+    }
+    
+    // Mettre à jour le texte de suggestion
+    const suggestionDiv = document.getElementById('weightSuggestion');
+    if (suggestionDiv && mlSuggestion) {
+        const diff = mlSuggestion - currentWeight;
+        const sign = diff > 0 ? '+' : '';
+        suggestionDiv.innerHTML = `💡 Suggestion ML : ${mlSuggestion}kg${diff !== 0 ? ` (${sign}${diff.toFixed(1)}kg)` : ''}`;
     }
 }
 
@@ -660,21 +624,20 @@ async function skipSet() {
 function toggleAutoWeight(enabled) {
     setIsAutoWeightEnabled(enabled);
     
-    // Si on désactive, ne pas changer le poids actuel
     if (!enabled) {
         showToast('Ajustement automatique désactivé', 'info');
         // Mettre à jour les indications visuelles
         updateWeightSuggestionVisual();
-        return;
+    } else {
+        // Si on réactive, appliquer la suggestion ML
+        showToast('Ajustement automatique activé', 'info');
+        const mlSuggestion = window.currentMLSuggestion;
+        if (mlSuggestion) {
+            document.getElementById('setWeight').value = mlSuggestion;
+        }
+        // Mettre à jour l'affichage
+        updateWeightSuggestionVisual();
     }
-    
-    // Si on réactive, recalculer la suggestion et l'appliquer
-    showToast('Ajustement automatique activé', 'info');
-    loadWeightSuggestion();
-    
-    // Retirer les indications visuelles
-    document.getElementById('weightDecreaseBtn').classList.remove('suggest-decrease', 'suggest-pulse');
-    document.getElementById('weightIncreaseBtn').classList.remove('suggest-increase', 'suggest-pulse');
 }
 
 window.toggleAutoWeight = toggleAutoWeight;

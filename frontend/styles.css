@@ -2450,9 +2450,10 @@ select.form-input {
     align-items: center;
     justify-content: space-between;
     margin-top: 0.5rem;
-    padding: 0.5rem;
+    padding: 0.5rem 0.75rem;
     background: rgba(255, 255, 255, 0.03);
     border-radius: var(--radius-sm);
+    min-height: 36px; /* Hauteur minimale pour alignement */
 }
 
 .suggestion-hint {
@@ -2461,6 +2462,7 @@ select.form-input {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    flex: 1; /* Prend l'espace disponible */
 }
 
 /* Toggle Switch Moderne */
