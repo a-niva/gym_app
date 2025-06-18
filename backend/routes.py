@@ -6,17 +6,22 @@ from backend.database import get_db
 from backend.models import User, Exercise, Workout, Set
 from backend.schemas import UserCreate, WorkoutCreate, SetCreate
 from backend.ml_engine import FitnessMLEngine
+from backend.schemas import UserCreate, WorkoutCreate, SetCreate, ProgramGenerationRequest
 
 router = APIRouter()
 
 @router.post("/api/users/{user_id}/program")
-async def generate_program(user_id: int, weeks: int = 4, db: Session = Depends(get_db)):
+async def generate_program(
+    user_id: int, 
+    request: ProgramGenerationRequest,
+    db: Session = Depends(get_db)
+):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     ml_engine = FitnessMLEngine(db)
-    program = ml_engine.generate_adaptive_program(user, weeks)
+    program = ml_engine.generate_adaptive_program(user, request.weeks)
     
     return {"program": program}
 

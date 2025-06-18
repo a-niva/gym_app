@@ -173,3 +173,6 @@ class WorkoutResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class ProgramGenerationRequest(BaseModel):
+    weeks: int = 4
+    frequency: Optional[int] = 3  # Le frontend envoie aussi frequency
