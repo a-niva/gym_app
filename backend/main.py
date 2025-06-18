@@ -12,9 +12,9 @@ import json
 import os
 
 from backend.database import engine, get_db, SessionLocal
-from backend.models import Base, User, Exercise, Workout, Set
+from backend.models import Base, User, Exercise, Workout, Set, Program, ProgramDay, ProgramExercise
 from backend.routes import router as ml_router, router
-from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate
+from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate, ProgramCreate, ProgramResponse
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -345,6 +345,78 @@ def abandon_workout(workout_id: int, db: Session = Depends(get_db)):
     
     return {"status": "abandoned"}
 
+# Program endpoints
+@app.post("/api/programs/", response_model=ProgramResponse)
+def create_program(program: ProgramCreate, db: Session = Depends(get_db)):
+    # Créer le programme principal
+    db_program = Program(
+        user_id=program.user_id,
+        name=program.name,
+        duration_weeks=program.duration_weeks,
+        frequency=program.frequency
+    )
+    db.add(db_program)
+    db.flush()  # Pour obtenir l'ID
+    
+    # Créer les jours et exercices
+    for day_data in program.program_days:
+        db_day = ProgramDay(
+            program_id=db_program.id,
+            week_number=day_data.week_number,
+            day_number=day_data.day_number,
+            muscle_group=day_data.muscle_group
+        )
+        db.add(db_day)
+        db.flush()
+        
+        for ex_data in day_data.exercises:
+            db_exercise = ProgramExercise(
+                program_day_id=db_day.id,
+                exercise_id=ex_data.exercise_id,
+                sets=ex_data.sets,
+                target_reps=ex_data.target_reps,
+                rest_time=ex_data.rest_time,
+                order_index=ex_data.order_index,
+                predicted_weight=ex_data.predicted_weight
+            )
+            db.add(db_exercise)
+    
+    db.commit()
+    db.refresh(db_program)
+    return db_program
+
+@app.get("/api/users/{user_id}/programs", response_model=List[ProgramResponse])
+def get_user_programs(user_id: int, db: Session = Depends(get_db)):
+    programs = db.query(Program).filter(
+        Program.user_id == user_id
+    ).order_by(Program.created_at.desc()).all()
+    return programs
+
+@app.get("/api/programs/{program_id}", response_model=ProgramResponse)
+def get_program(program_id: int, db: Session = Depends(get_db)):
+    program = db.query(Program).filter(Program.id == program_id).first()
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+    return program
+
+@app.put("/api/programs/{program_id}/activate")
+def activate_program(program_id: int, db: Session = Depends(get_db)):
+    program = db.query(Program).filter(Program.id == program_id).first()
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+    
+    # Désactiver tous les autres programmes de l'utilisateur
+    db.query(Program).filter(
+        Program.user_id == program.user_id,
+        Program.id != program_id
+    ).update({"is_active": False})
+    
+    # Activer ce programme
+    program.is_active = True
+    db.commit()
+    
+    return {"message": "Program activated"}
+
 @app.get("/api/workouts/{workout_id}/status")
 def get_workout_status(workout_id: int, db: Session = Depends(get_db)):
     workout = db.query(Workout).filter(Workout.id == workout_id).first()
@@ -597,6 +669,8 @@ def get_user_stats(user_id: int, db: Session = Depends(get_db)):
         "week_streak": 0,  # À implémenter selon votre logique
         "last_workout": last_workout_date
     }
+
+
 
 # Set endpoints
 @app.post("/api/sets/")

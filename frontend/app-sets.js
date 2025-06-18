@@ -21,7 +21,10 @@ import {
     setLastSetEndTime,
     isInRestPeriod,
     setIsInRestPeriod,
-    isSilentMode
+    isSilentMode,
+    isAutoWeightEnabled,
+    setIsAutoWeightEnabled,
+    isWeightPossible
 } from './app-state.js';
 
 import { showToast } from './app-ui.js';
@@ -110,6 +113,14 @@ async function showSetInput() {
                     </div>
                         <div id="weightSuggestion" class="suggestion-hint">
                             ${suggestedWeight ? `💡 Suggestion ML : ${suggestedWeight}kg` : ''}
+                        </div>
+                        <div class="auto-weight-toggle" style="margin-top: 0.5rem;">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="autoWeightToggle" 
+                                    ${isAutoWeightEnabled ? 'checked' : ''} 
+                                    onchange="toggleAutoWeight(this.checked)">
+                                <span>Ajustement automatique du poids</span>
+                            </label>
                         </div>
                 </div>
                 ` : '<input type="hidden" id="setWeight" value="0">'}
@@ -212,6 +223,11 @@ async function showSetInput() {
 
 // ===== CHARGEMENT DES SUGGESTIONS DE POIDS =====
 async function loadWeightSuggestion() {
+    // Si l'ajustement auto est désactivé, ne rien faire
+    if (!isAutoWeightEnabled) {
+        return;
+    }
+    
     const previousSetHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
     const lastSetForExercise = previousSetHistory
         .filter(h => h.exerciseId === currentExercise.id)
@@ -231,15 +247,16 @@ async function loadWeightSuggestion() {
             if (lastSetForExercise && lastSetForExercise.weight !== validated) {
                 const diff = validated - lastSetForExercise.weight;
                 const sign = diff > 0 ? '+' : '';
-                suggestionDiv.innerHTML = `💡 Suggestion ML : ${validated}kg (${sign}${diff}kg vs dernière série)`;
+                suggestionDiv.innerHTML = `💡 Suggestion ML : ${validated}kg (${sign}${diff}kg)`;
             } else {
                 suggestionDiv.innerHTML = `💡 Suggestion ML : ${validated}kg`;
             }
         }
-    } else if (lastSetForExercise && currentSetNumber > 1) {
-        // Fallback sur le calcul local
-        let adjustedWeight = calculateSuggestedWeight(currentExercise, lastSetForExercise);
-        document.getElementById('setWeight').value = adjustedWeight;
+    } else if (lastSetForExercise) {
+        // Fallback sur la dernière série
+        const suggestedWeight = calculateSuggestedWeight(currentExercise, lastSetForExercise);
+        const validated = validateWeight(currentExercise, suggestedWeight);
+        document.getElementById('setWeight').value = validated;
     }
 }
 
@@ -330,11 +347,31 @@ function adjustReps(delta) {
     if (newValue > 0) input.value = newValue;
 }
 
+// ===== VALIDATION DU POIDS SAISI =====
 function validateWeightInput() {
-    const input = document.getElementById('setWeight');
-    const weight = parseFloat(input.value) || 0;
-    const validated = validateWeight(currentExercise, weight);
-    input.value = validated;
+    const weightInput = document.getElementById('setWeight');
+    const currentWeight = parseFloat(weightInput.value);
+    
+    if (isNaN(currentWeight)) return;
+    
+    const validated = validateWeight(currentExercise, currentWeight);
+    
+    if (validated !== currentWeight) {
+        weightInput.value = validated;
+        
+        // Message explicatif si le poids n'est pas possible
+        if (!isWeightPossible(currentExercise, currentWeight)) {
+            const availableWeights = calculateAvailableWeights(currentExercise);
+            const nearbyWeights = availableWeights
+                .filter(w => Math.abs(w - currentWeight) <= 10)
+                .slice(0, 5);
+            
+            showToast(
+                `Poids ${currentWeight}kg impossible. Alternatives : ${nearbyWeights.join(', ')}kg`, 
+                'warning'
+            );
+        }
+    }
 }
 
 // ===== HELPERS POUR LA GESTION DES SETS =====
@@ -552,6 +589,23 @@ async function skipSet() {
         showSetInput();
     }
 }
+
+// ===== TOGGLE AUTO POIDS =====
+function toggleAutoWeight(enabled) {
+    setIsAutoWeightEnabled(enabled);
+    
+    // Si on désactive, ne pas changer le poids actuel
+    if (!enabled) {
+        showToast('Ajustement automatique désactivé', 'info');
+        return;
+    }
+    
+    // Si on réactive, recalculer la suggestion
+    showToast('Ajustement automatique activé', 'info');
+    loadWeightSuggestion();
+}
+
+window.toggleAutoWeight = toggleAutoWeight;
 
 // ===== HISTORIQUE LOCAL =====
 function addSetToHistory(setData) {

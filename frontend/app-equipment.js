@@ -124,13 +124,92 @@ function validateWeight(exercise, weight) {
     
     if (availableWeights.length > 0 && !availableWeights.includes(weight)) {
         // Trouver le poids disponible le plus proche
-        const closest = availableWeights.reduce((prev, curr) => 
-            Math.abs(curr - weight) < Math.abs(prev - weight) ? curr : prev
-        );
+        const closest = getClosestPossibleWeight(exercise, weight);
+        
+        // Vérifier si c'est vraiment réalisable
+        if (!isWeightPossible(exercise, closest)) {
+            showToast(`⚠️ Poids ${weight}kg impossible avec votre équipement. Suggestion : ${closest}kg`, 'warning');
+        }
+        
         return closest;
     }
     
     return weight;
+}
+
+// ===== OBTENIR LE POIDS POSSIBLE LE PLUS PROCHE =====
+export function getClosestPossibleWeight(exercise, targetWeight) {
+    const availableWeights = calculateAvailableWeights(exercise);
+    
+    if (availableWeights.length === 0) {
+        return targetWeight; // Pas de validation si pas de config
+    }
+    
+    // Trouver le poids le plus proche
+    return availableWeights.reduce((prev, curr) => 
+        Math.abs(curr - targetWeight) < Math.abs(prev - targetWeight) ? curr : prev
+    );
+}
+
+// ===== VÉRIFIER SI UN POIDS EST RÉALISABLE =====
+export function isWeightPossible(exercise, weight, config) {
+    const equipmentConfig = config || currentUser?.equipment_config;
+    if (!equipmentConfig) return true; // Pas de validation sans config
+    
+    // Pour barres + disques
+    if (exercise.equipment.some(eq => eq.includes('barbell'))) {
+        // Vérifier qu'on a une barre
+        const hasBarbell = Object.values(equipmentConfig.barres || {})
+            .some(b => b.available && b.count > 0);
+        
+        if (!hasBarbell) return false;
+        
+        // Calculer si on peut atteindre ce poids avec les disques disponibles
+        const barWeight = getBarWeight(exercise, equipmentConfig);
+        const targetPlateWeight = weight - barWeight;
+        
+        if (targetPlateWeight < 0) return false; // Poids demandé < poids de la barre
+        if (targetPlateWeight === 0) return true; // Juste la barre
+        
+        // Vérifier si on peut faire cette combinaison avec les disques
+        return canMakePlateWeight(targetPlateWeight / 2, equipmentConfig.disques?.weights || {});
+    }
+    
+    // Pour haltères et kettlebells, vérifier directement
+    const availableWeights = calculateAvailableWeights(exercise);
+    return availableWeights.includes(weight);
+}
+
+// ===== FONCTIONS HELPER PRIVÉES =====
+function getBarWeight(exercise, config) {
+    if (exercise.equipment.includes('barbell_standard')) {
+        if (config.barres?.olympique?.available) return 20;
+        if (config.barres?.courte?.available) return 2.5;
+    } else if (exercise.equipment.includes('barbell_ez')) {
+        if (config.barres?.ez?.available) return 10;
+    }
+    return 0;
+}
+
+function canMakePlateWeight(targetPerSide, availablePlates) {
+    // Algorithme simple : essayer de faire le poids avec les disques disponibles
+    const plates = Object.entries(availablePlates)
+        .filter(([w, count]) => count > 0)
+        .map(([w, count]) => ({weight: parseFloat(w), count: parseInt(count)}))
+        .sort((a, b) => b.weight - a.weight);
+    
+    let remaining = targetPerSide;
+    
+    for (const plate of plates) {
+        const needed = Math.floor(remaining / plate.weight);
+        const canUse = Math.min(needed, Math.floor(plate.count / 2)); // /2 car on met des deux côtés
+        
+        remaining -= canUse * plate.weight;
+        
+        if (remaining < 0.1) return true; // Tolérance pour les arrondis
+    }
+    
+    return remaining < 0.1;
 }
 
 // ===== FILTRAGE DES EXERCICES PAR ÉQUIPEMENT =====

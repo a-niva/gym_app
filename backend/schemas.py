@@ -176,3 +176,60 @@ class WorkoutResponse(BaseModel):
 class ProgramGenerationRequest(BaseModel):
     weeks: int = 4
     frequency: Optional[int] = 3  # Le frontend envoie aussi frequency
+
+# SCHEMAS PROGRAMMES
+class ProgramExerciseBase(BaseModel):
+    exercise_id: int
+    sets: int
+    target_reps: int
+    rest_time: int
+    order_index: int
+    predicted_weight: Optional[float] = None
+
+class ProgramDayBase(BaseModel):
+    week_number: int
+    day_number: int
+    muscle_group: str
+    exercises: List[ProgramExerciseBase]
+
+class ProgramCreate(BaseModel):
+    name: str
+    duration_weeks: int
+    frequency: int
+    program_days: List[ProgramDayBase]
+
+class ProgramExerciseResponse(BaseModel):
+    id: int
+    exercise_id: int
+    exercise: ExerciseResponse
+    sets: int
+    target_reps: int
+    rest_time: int
+    order_index: int
+    predicted_weight: Optional[float]
+    
+    class Config:
+        from_attributes = True
+
+class ProgramDayResponse(BaseModel):
+    id: int
+    week_number: int
+    day_number: int
+    muscle_group: str
+    exercises: List[ProgramExerciseResponse]
+    
+    class Config:
+        from_attributes = True
+
+class ProgramResponse(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    duration_weeks: int
+    frequency: int
+    created_at: datetime
+    is_active: bool
+    program_days: List[ProgramDayResponse]
+    
+    class Config:
+        from_attributes = True

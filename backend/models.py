@@ -22,6 +22,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     workouts = relationship("Workout", back_populates="user")
+    programs = relationship("Program", back_populates="user")
 
 class Exercise(Base):
     __tablename__ = "exercises"
@@ -74,3 +75,44 @@ class Set(Base):
     skipped = Column(Boolean, default=False)
     
     workout = relationship("Workout", back_populates="sets")
+
+class Program(Base):
+    __tablename__ = "programs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    name = Column(String, nullable=False)
+    duration_weeks = Column(Integer, nullable=False)
+    frequency = Column(Integer, nullable=False)  # jours par semaine
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+    
+    user = relationship("User", back_populates="programs")
+    program_days = relationship("ProgramDay", back_populates="program", cascade="all, delete-orphan")
+
+class ProgramDay(Base):
+    __tablename__ = "program_days"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    program_id = Column(Integer, ForeignKey("programs.id"))
+    week_number = Column(Integer, nullable=False)
+    day_number = Column(Integer, nullable=False)
+    muscle_group = Column(String, nullable=False)
+    
+    program = relationship("Program", back_populates="program_days")
+    exercises = relationship("ProgramExercise", back_populates="program_day", cascade="all, delete-orphan")
+
+class ProgramExercise(Base):
+    __tablename__ = "program_exercises"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    program_day_id = Column(Integer, ForeignKey("program_days.id"))
+    exercise_id = Column(Integer, ForeignKey("exercises.id"))
+    sets = Column(Integer, nullable=False)
+    target_reps = Column(Integer, nullable=False)
+    rest_time = Column(Integer, nullable=False)
+    order_index = Column(Integer, nullable=False)
+    predicted_weight = Column(Float, nullable=True)
+    
+    program_day = relationship("ProgramDay", back_populates="exercises")
+    exercise = relationship("Exercise")

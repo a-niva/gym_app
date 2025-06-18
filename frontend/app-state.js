@@ -54,7 +54,9 @@ let currentRestTime = 0;
 let timerInterval = null;
 let audioContext = null;
 let isSilentMode = false;
-
+let currentProgram = null;
+let userPrograms = [];
+let isAutoWeightEnabled = localStorage.getItem('isAutoWeightEnabled') !== 'false'; // true par défaut
 
 // ===== ACCESSEURS SIMPLES =====
 // Pas de classes complexes, juste des fonctions directes
@@ -163,7 +165,10 @@ export {
     currentRestTime,
     timerInterval,
     audioContext,
-    isSilentMode
+    isSilentMode,
+    currentProgram,
+    userPrograms,
+    isAutoWeightEnabled
 };
 
 // Réinitialisation de l'état pour logout ou nouveau profil
@@ -268,6 +273,31 @@ export function setLastSyncTime(time) {
 
 export function setCurrentTargetReps(reps) {
     currentTargetReps = reps;
+}
+
+export function getCurrentProgram() {
+    return currentProgram;
+}
+
+export function setCurrentProgram(program) {
+    currentProgram = program;
+}
+
+export function getUserPrograms() {
+    return userPrograms;
+}
+
+export function setUserPrograms(programs) {
+    userPrograms = programs;
+}
+
+export function getIsAutoWeightEnabled() {
+    return isAutoWeightEnabled;
+}
+
+export function setIsAutoWeightEnabled(enabled) {
+    isAutoWeightEnabled = enabled;
+    localStorage.setItem('isAutoWeightEnabled', enabled);
 }
 
 // Export de getters pour les variables globales nécessaires

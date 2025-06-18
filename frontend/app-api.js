@@ -2,7 +2,7 @@
 // Ce fichier centralise tous les appels API avec gestion d'erreurs
 // Pas de complexité inutile, juste des fonctions async/await simples
 
-import { setAllExercises } from './app-state.js';
+import { setAllExercises, setUserPrograms } from './app-state.js';
 import { showToast } from './app-ui.js';
 
 // Configuration de base pour les requêtes
@@ -317,6 +317,58 @@ async function abandonWorkoutAPI(workoutId) {
         });
     } catch (error) {
         console.error('Erreur abandon workout:', error);
+    }
+}
+
+// ===== PROGRAMMES =====
+export async function saveProgram(programData) {
+    try {
+        const response = await fetch('/api/programs/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(programData)
+        });
+        
+        if (!response.ok) throw new Error('Erreur sauvegarde programme');
+        
+        const result = await response.json();
+        showToast('Programme sauvegardé !', 'success');
+        return result;
+    } catch (error) {
+        console.error('Erreur sauvegarde programme:', error);
+        showToast('Erreur lors de la sauvegarde du programme', 'error');
+        return null;
+    }
+}
+
+export async function loadUserPrograms(userId) {
+    try {
+        const response = await fetch(`/api/users/${userId}/programs`);
+        if (!response.ok) throw new Error('Erreur chargement programmes');
+        
+        const programs = await response.json();
+        setUserPrograms(programs);
+        return programs;
+    } catch (error) {
+        console.error('Erreur chargement programmes:', error);
+        return [];
+    }
+}
+
+export async function activateProgram(programId) {
+    try {
+        const response = await fetch(`/api/programs/${programId}/activate`, {
+            method: 'PUT'
+        });
+        
+        if (!response.ok) throw new Error('Erreur activation programme');
+        
+        showToast('Programme activé !', 'success');
+        return true;
+    } catch (error) {
+        console.error('Erreur activation programme:', error);
+        showToast('Erreur lors de l\'activation du programme', 'error');
+        return false;
     }
 }
 

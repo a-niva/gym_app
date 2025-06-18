@@ -28,8 +28,61 @@ async def generate_program(
     except Exception as e:
         logger.error(f"Program generation failed for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Program generation failed")
-    
-    return {"program": program}
+        
+    # Transformer le format pour la sauvegarde
+    program_data = ProgramCreate(
+        name=f"Programme {request.weeks} semaines - {request.frequency}j/sem",
+        duration_weeks=request.weeks,
+        frequency=request.frequency,
+        program_days=[]
+    )
+
+    # Transformer le format du programme généré
+    for item in program:
+        # Trouver ou créer le ProgramDay
+        day_exists = False
+        for day in program_data.program_days:
+            if day.week_number == item["week"] and day.day_number == item["day"]:
+                day_exists = True
+                # Ajouter l'exercice à ce jour
+                for i, ex in enumerate(item["exercises"]):
+                    day.exercises.append(ProgramExerciseBase(
+                        exercise_id=ex["exercise_id"],
+                        sets=ex["sets"],
+                        target_reps=ex["target_reps"],
+                        rest_time=ex["rest_time"],
+                        order_index=i,
+                        predicted_weight=ex["predicted_weight"]
+                    ))
+                break
+        
+        if not day_exists:
+            # Créer un nouveau jour avec ses exercices
+            exercises = []
+            for i, ex in enumerate(item["exercises"]):
+                exercises.append(ProgramExerciseBase(
+                    exercise_id=ex["exercise_id"],
+                    sets=ex["sets"],
+                    target_reps=ex["target_reps"],
+                    rest_time=ex["rest_time"],
+                    order_index=i,
+                    predicted_weight=ex["predicted_weight"]
+                ))
+            
+            program_data.program_days.append(ProgramDayBase(
+                week_number=item["week"],
+                day_number=item["day"],
+                muscle_group=item["muscle_group"],
+                exercises=exercises
+            ))
+
+    # Sauvegarder en base
+    saved_program = create_program(program_data, db)
+
+    return {
+        "program": program,
+        "saved_program_id": saved_program.id
+    }
 
 @router.get("/api/users/{user_id}/injury-risk")
 async def check_injury_risk(user_id: int, db: Session = Depends(get_db)):

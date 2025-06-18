@@ -1,6 +1,7 @@
-import { currentUser } from './app-state.js';
+import { currentUser, setCurrentProgram } from './app-state.js';
 import { showToast } from './app-ui.js';
 import { showView } from './app-navigation.js';
+import { activateProgram, loadUserPrograms } from './app-api.js';
 
 // ===== AFFICHAGE DE L'INTERFACE DE GÉNÉRATION =====
 function showProgramGenerator() {
@@ -57,65 +58,55 @@ function showProgramGenerator() {
 async function generateProgram(event) {
     event.preventDefault();
     
-    if (!currentUser) {
-        showToast('Veuillez vous connecter', 'error');
-        return;
-    }
+    const formData = new FormData(event.target);
+    const weeks = parseInt(formData.get('weeks'));
+    const frequency = parseInt(formData.get('frequency'));
     
-    const form = event.target;
-    const weeks = parseInt(form.weeks.value);
-    
-    // Afficher un loader
     const resultDiv = document.getElementById('programResult');
     resultDiv.innerHTML = `
-        <div style="text-align: center; padding: 2rem;">
-            <div class="spinner"></div>
-            <p style="color: var(--gray-light);">Génération en cours...</p>
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Génération du programme en cours...</p>
         </div>
     `;
     
     try {
         const response = await fetch(`/api/users/${currentUser.id}/program`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({
-                weeks: weeks,
-                frequency: parseInt(form.frequency.value)
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ weeks, frequency })
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            displayProgram(data.program);
-            showToast('Programme généré avec succès !', 'success');
-        } else {
-            // Vérifier si la réponse est du JSON avant de la parser
-            const contentType = response.headers.get("content-type");
-            let errorDetail = 'Erreur lors de la génération';
-            
-            if (contentType && contentType.includes("application/json")) {
-                try {
-                    const error = await response.json();
-                    errorDetail = error.detail || errorDetail;
-                } catch {
-                    console.error('Réponse non-JSON reçue');
-                }
-            } else {
-                // Si ce n'est pas du JSON, lire comme texte
-                const textError = await response.text();
-                console.error('Erreur serveur (non-JSON):', textError);
-            }
-            
-            throw new Error(errorDetail);
+        if (!response.ok) {
+            throw new Error('Erreur lors de la génération');
         }
+        
+        const data = await response.json();
+        const program = data.program;
+        const savedProgramId = data.saved_program_id;
+        
+        // Afficher le programme
+        displayProgram(program);
+        
+        // Ajouter un bouton pour activer le programme
+        if (savedProgramId) {
+            resultDiv.innerHTML += `
+                <div style="margin-top: 2rem; text-align: center;">
+                    <button class="btn btn-primary" onclick="activateProgramAndStart(${savedProgramId})">
+                        🚀 Commencer ce programme
+                    </button>
+                </div>
+            `;
+        }
+        
+        showToast('Programme généré et sauvegardé !', 'success');
+        
     } catch (error) {
-        console.error('Program generation failed:', error);
-        showToast(error.message || 'Unable to generate program', 'error');
+        console.error('Erreur:', error);
         resultDiv.innerHTML = `
             <div class="error-message">
-                <p>Failed to generate program. Please check:</p>
+                <p>❌ Erreur lors de la génération du programme</p>
+                <p>Please check:</p>
                 <ul>
                     <li>Your equipment configuration is complete</li>
                     <li>Your profile has valid goals selected</li>
@@ -205,6 +196,24 @@ function toggleWeek(week) {
         toggle.textContent = '▶';
     }
 }
+
+// ===== ACTIVATION ET DÉMARRAGE DU PROGRAMME =====
+async function activateProgramAndStart(programId) {
+    const success = await activateProgram(programId);
+    if (success) {
+        // Charger le programme actif
+        const programs = await loadUserPrograms(currentUser.id);
+        const activeProgram = programs.find(p => p.id === programId);
+        if (activeProgram) {
+            setCurrentProgram(activeProgram);
+        }
+        
+        // Retourner au dashboard
+        showView('dashboard');
+    }
+}
+
+window.activateProgramAndStart = activateProgramAndStart;
 
 // ===== SAUVEGARDE DU PROGRAMME =====
 function saveProgram() {
