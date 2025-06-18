@@ -38,7 +38,9 @@ class FitnessMLEngine:
             "strength": {"sets": 0.8, "reps": 0.7, "weight": 1.2},
             "hypertrophy": {"sets": 1.0, "reps": 1.0, "weight": 1.0},
             "endurance": {"sets": 1.2, "reps": 1.3, "weight": 0.8},
-            "weight_loss": {"sets": 1.1, "reps": 1.2, "weight": 0.85}
+            "weight_loss": {"sets": 1.1, "reps": 1.2, "weight": 0.85},
+            "cardio": {"sets": 1.3, "reps": 1.4, "weight": 0.7},
+            "flexibility": {"sets": 0.9, "reps": 1.5, "weight": 0.6}
         }
 
     def _mean(self, values):

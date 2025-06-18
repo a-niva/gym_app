@@ -71,10 +71,12 @@ export const COLOR_NAMES = {
 // Noms des objectifs
 export const GOAL_NAMES = {
     'strength': '💪 Force',
-    'hypertrophy': '📏 Volume musculaire',
+    'hypertrophy': '🦾 Masse musculaire',
     'endurance': '🏃 Endurance',
     'weight_loss': '⚖️ Perte de poids',
-    'general_fitness': '❤️ Forme générale'
+    'general_fitness': '❤️ Forme générale',
+    'cardio': '🏃 Cardio',
+    'flexibility': '🤸 Souplesse'
 };
 
 // Poids communs pour les haltères
