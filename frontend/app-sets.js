@@ -33,7 +33,8 @@ import {
     validateWeight,
     getExerciseType,
     calculateSuggestedWeight,
-    formatWeightDisplay
+    formatWeightDisplay,
+    isWeightPossible
 } from './app-equipment.js';
 import {
     createSet,
