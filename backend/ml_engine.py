@@ -435,6 +435,8 @@ class FitnessMLEngine:
         
         # Générer les séances pour chaque semaine
         for week in range(duration_weeks):
+            # Ajouter un offset pour la rotation
+            exercise_rotation_offset = week % 2  # Alterne entre 2 sélections # 0 ou 1
             week_intensity = 0.85 + (week * 0.05)  # Progression linéaire
             
             if week == duration_weeks - 1:
@@ -455,7 +457,8 @@ class FitnessMLEngine:
                 selected_exercises = self._select_exercises_for_day(
                     body_parts, 
                     muscle_group, 
-                    user.experience_level
+                    user.experience_level,
+                    exercise_rotation_offset
                 )
                 
                 for exercise in selected_exercises:
@@ -495,10 +498,11 @@ class FitnessMLEngine:
         return program
     
     def _select_exercises_for_day(
-        self, 
+        self,
         body_parts: Dict,
         muscle_group: str,
-        experience_level: str
+        experience_level: str,
+        exercise_rotation_offset: int = 0
     ) -> List[Exercise]:
         """
         Sélectionne les exercices pour une journée
@@ -529,21 +533,49 @@ class FitnessMLEngine:
         }
         
         max_exercises = exercise_counts.get(experience_level, 4)
+        exercises_per_part = max(2, max_exercises // len(target_parts))
         
-        for part in target_parts:
+        # Pour chaque partie musculaire
+        for i, part in enumerate(target_parts):
             if part in body_parts:
-                # Priorité aux exercices composés
-                exercises = sorted(
-                    body_parts[part], 
-                    key=lambda x: 0 if x.level == "basic" else 1
-                )
+                part_exercises = body_parts[part]
                 
-                # Ajouter 1-2 exercices par partie
-                for ex in exercises[:2]:
-                    if len(selected) < max_exercises:
-                        selected.append(ex)
+                # Appliquer la rotation
+                if exercise_rotation_offset > 0 and len(part_exercises) > 3:
+                    part_exercises = part_exercises[exercise_rotation_offset:] + part_exercises[:exercise_rotation_offset]
+                
+                # Séparer par niveau
+                compound = [ex for ex in part_exercises if ex.level in ["basic", "advanced"]]
+                isolation = [ex for ex in part_exercises if ex.level in ["isolation", "finition"]]
+                
+                # Sélection selon le type de muscle
+                if part in ["Pectoraux", "Dos", "Quadriceps"]:
+                    # Gros muscles : privilégier les composés
+                    if compound:
+                        selected.extend(compound[:min(2, exercises_per_part)])
+                    if isolation and len(selected) < max_exercises:
+                        remaining = max_exercises - len(selected)
+                        selected.extend(isolation[:min(remaining, exercises_per_part-1)])
+                else:
+                    # Petits muscles : mélanger
+                    mixed = compound + isolation
+                    count = min(exercises_per_part, len(mixed))
+                    if i == 0:  # Premier muscle = plus d'exercices
+                        count = min(count + 1, len(mixed))
+                    selected.extend(mixed[:count])
+                
+                if len(selected) >= max_exercises:
+                    break
         
-        return selected
+        # Assurer un minimum de 3 exercices
+        if len(selected) < 3:
+            all_available = []
+            for exercises_list in body_parts.values():
+                all_available.extend(exercises_list)
+            remaining = [ex for ex in all_available if ex not in selected]
+            selected.extend(remaining[:3 - len(selected)])
+        
+        return selected[:max_exercises]  # Ne jamais dépasser le max
         
     def _get_sets_reps_for_level(
         self,
