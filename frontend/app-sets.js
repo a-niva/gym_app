@@ -23,8 +23,7 @@ import {
     setIsInRestPeriod,
     isSilentMode,
     isAutoWeightEnabled,
-    setIsAutoWeightEnabled,
-    isWeightPossible
+    setIsAutoWeightEnabled
 } from './app-state.js';
 
 import { showToast } from './app-ui.js';
@@ -34,7 +33,8 @@ import {
     validateWeight,
     getExerciseType,
     calculateSuggestedWeight,
-    formatWeightDisplay
+    formatWeightDisplay,
+    isWeightPossible
 } from './app-equipment.js';
 import {
     createSet,
