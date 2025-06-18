@@ -64,11 +64,34 @@ async function showSetInput() {
     
     // Calculer les poids disponibles pour cet exercice
     let availableWeights = calculateAvailableWeights(currentExercise);
-    // Obtenir le poids suggéré depuis l'API ML
-    let suggestedWeight = await getSuggestedWeight(currentUser.id, currentExercise.id);
-    // Fallback sur le calcul local si l'API ne répond pas
-    if (!suggestedWeight && suggestedWeight !== 0) {
-        suggestedWeight = calculateSuggestedWeight(currentExercise);
+    
+    // Déterminer le poids à utiliser
+    let defaultWeight = 0;
+    
+    if (isAutoWeightEnabled) {
+        // Si auto-ajustement activé, obtenir la suggestion ML
+        let suggestedWeight = await getSuggestedWeight(currentUser.id, currentExercise.id);
+        // Fallback sur le calcul local si l'API ne répond pas
+        if (!suggestedWeight && suggestedWeight !== 0) {
+            suggestedWeight = calculateSuggestedWeight(currentExercise);
+        }
+        defaultWeight = suggestedWeight || 0;
+    } else {
+        // Si auto-ajustement désactivé, utiliser le dernier poids ou un poids par défaut
+        const previousSetHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+        const lastSetForExercise = previousSetHistory
+            .filter(h => h.exerciseId === currentExercise.id)
+            .flatMap(h => h.sets || [])
+            .slice(-1)[0];
+        
+        if (lastSetForExercise) {
+            defaultWeight = lastSetForExercise.weight;
+        } else if (availableWeights.length > 0) {
+            // Prendre un poids au milieu de la gamme disponible
+            defaultWeight = availableWeights[Math.floor(availableWeights.length / 2)];
+        } else {
+            defaultWeight = 20; // Valeur par défaut
+        }
     }
     
     // Adapter les labels selon le type d'exercice
@@ -93,36 +116,37 @@ async function showSetInput() {
             
             <div class="set-input-grid-vertical">
                 ${!isTimeBased ? `
-                <div class="input-group">
-                    <label>${weightLabel}</label>
-                    <div class="weight-selector">
-                        <button onclick="adjustWeightToNext(-1)" class="btn-adjust">-</button>
-                        <input type="number" id="setWeight" value="${suggestedWeight}" 
-                               min="${availableWeights[0] || 0}" 
-                               max="${availableWeights[availableWeights.length - 1] || 999}"
-                               step="any" class="weight-display"
-                               onchange="validateWeight()">
-                        <button onclick="adjustWeightToNext(1)" class="btn-adjust">+</button>
-                    </div>
-                    <div class="weight-info">
-                        ${isBodyweight ? 
-                            `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
-                            availableWeights.length > 0 ? 
-                            `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
-                            'Aucun poids configuré'}
-                    </div>
-                        <div id="weightSuggestion" class="suggestion-hint">
-                            ${suggestedWeight ? `💡 Suggestion ML : ${suggestedWeight}kg` : ''}
+                    <div class="input-group">
+                        <label>${weightLabel}</label>
+                        <div class="weight-selector">
+                            <button onclick="adjustWeightToNext(-1)" class="btn-adjust" id="weightDecreaseBtn">-</button>
+                            <input type="number" id="setWeight" value="${defaultWeight}" 
+                                min="${availableWeights[0] || 0}" 
+                                max="${availableWeights[availableWeights.length - 1] || 999}"
+                                step="any" class="weight-display"
+                                onchange="validateWeight()">
+                            <button onclick="adjustWeightToNext(1)" class="btn-adjust" id="weightIncreaseBtn">+</button>
                         </div>
-                        <div class="auto-weight-toggle" style="margin-top: 0.5rem;">
-                            <label class="toggle-label">
+                        <div class="weight-info">
+                            ${isBodyweight ? 
+                                `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
+                                availableWeights.length > 0 ? 
+                                `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
+                                'Aucun poids configuré'}
+                        </div>
+                        <div class="weight-suggestion-line">
+                            <div id="weightSuggestion" class="suggestion-hint">
+                                ${defaultWeight ? `💡 ${defaultWeight}kg` : ''}
+                            </div>
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="autoWeightToggle" 
                                     ${isAutoWeightEnabled ? 'checked' : ''} 
                                     onchange="toggleAutoWeight(this.checked)">
-                                <span>Ajustement automatique du poids</span>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Auto</span>
                             </label>
                         </div>
-                </div>
+                    </div>
                 ` : '<input type="hidden" id="setWeight" value="0">'}
                 
                 <div class="input-group">
@@ -219,6 +243,10 @@ async function showSetInput() {
     } else {
         window.addEventListener('resize', handleViewportChange);
     }
+    // Mettre à jour les suggestions visuelles après un court délai
+    setTimeout(() => {
+        updateWeightSuggestionVisual();
+    }, 500);
 }
 
 // ===== CHARGEMENT DES SUGGESTIONS DE POIDS =====
@@ -257,6 +285,44 @@ async function loadWeightSuggestion() {
         const suggestedWeight = calculateSuggestedWeight(currentExercise, lastSetForExercise);
         const validated = validateWeight(currentExercise, suggestedWeight);
         document.getElementById('setWeight').value = validated;
+    }
+}
+
+// ===== MISE À JOUR VISUELLE DES SUGGESTIONS =====
+async function updateWeightSuggestionVisual() {
+    if (!isAutoWeightEnabled) {
+        // Obtenir la suggestion ML même si le toggle est désactivé
+        const mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
+        const currentWeight = parseFloat(document.getElementById('setWeight').value);
+        
+        const decreaseBtn = document.getElementById('weightDecreaseBtn');
+        const increaseBtn = document.getElementById('weightIncreaseBtn');
+        
+        // Retirer les classes existantes
+        decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
+        increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
+        
+        if (mlSuggestion && mlSuggestion !== currentWeight) {
+            if (mlSuggestion < currentWeight) {
+                // Suggérer une diminution
+                decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
+            } else if (mlSuggestion > currentWeight) {
+                // Suggérer une augmentation
+                increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
+            }
+            
+            // Mettre à jour le texte de suggestion
+            const suggestionDiv = document.getElementById('weightSuggestion');
+            if (suggestionDiv) {
+                const diff = mlSuggestion - currentWeight;
+                const sign = diff > 0 ? '+' : '';
+                suggestionDiv.innerHTML = `💡 ${mlSuggestion}kg (${sign}${diff.toFixed(1)}kg)`;
+            }
+        }
+    } else {
+        // Si auto-ajustement activé, retirer les indications visuelles
+        document.getElementById('weightDecreaseBtn').classList.remove('suggest-decrease', 'suggest-pulse');
+        document.getElementById('weightIncreaseBtn').classList.remove('suggest-increase', 'suggest-pulse');
     }
 }
 
@@ -597,12 +663,18 @@ function toggleAutoWeight(enabled) {
     // Si on désactive, ne pas changer le poids actuel
     if (!enabled) {
         showToast('Ajustement automatique désactivé', 'info');
+        // Mettre à jour les indications visuelles
+        updateWeightSuggestionVisual();
         return;
     }
     
-    // Si on réactive, recalculer la suggestion
+    // Si on réactive, recalculer la suggestion et l'appliquer
     showToast('Ajustement automatique activé', 'info');
     loadWeightSuggestion();
+    
+    // Retirer les indications visuelles
+    document.getElementById('weightDecreaseBtn').classList.remove('suggest-decrease', 'suggest-pulse');
+    document.getElementById('weightIncreaseBtn').classList.remove('suggest-increase', 'suggest-pulse');
 }
 
 window.toggleAutoWeight = toggleAutoWeight;
