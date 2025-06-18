@@ -301,7 +301,8 @@ class FitnessMLEngine:
     def generate_adaptive_program(
         self,
         user: User,
-        duration_weeks: int = 4
+        duration_weeks: int = 4,
+        frequency: int = 3  # NOUVEAU PARAMÈTRE
     ) -> List[Dict]:
         """
         Génère un programme adaptatif basé sur:
@@ -373,16 +374,16 @@ class FitnessMLEngine:
             if ex.body_part not in body_parts:
                 body_parts[ex.body_part] = []
             body_parts[ex.body_part].append(ex)
-        
-        # Créer une rotation selon les objectifs
-        if "strength" in user.goals:
-            # Programme force: moins de volume, plus d'intensité
+
+        # Créer une rotation selon la fréquence demandée
+        if frequency == 3:
+            split = ["Pectoraux/Triceps", "Dos/Biceps", "Jambes"]
+        elif frequency == 4:
             split = ["Pectoraux/Triceps", "Dos/Biceps", "Jambes", "Épaules/Abdos"]
-        elif "hypertrophy" in user.goals:
-            # Programme hypertrophie: volume modéré
+        elif frequency == 5:
             split = ["Pectoraux", "Dos", "Jambes", "Épaules", "Bras"]
         else:
-            # Programme général
+            # Par défaut 3 jours
             split = ["Haut du corps", "Bas du corps", "Full body"]
         
         # Générer les séances pour chaque semaine

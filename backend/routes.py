@@ -20,7 +20,7 @@ async def generate_program(
         raise HTTPException(status_code=404, detail="User not found")
     
     ml_engine = FitnessMLEngine(db)
-    program = ml_engine.generate_adaptive_program(user, request.weeks)
+    program = ml_engine.generate_adaptive_program(user, request.weeks, request.frequency)
     
     return {"program": program}
 
