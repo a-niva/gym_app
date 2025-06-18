@@ -76,8 +76,15 @@ async function generateProgram(event) {
     `;
     
     try {
-        const response = await fetch(`/api/users/${currentUser.id}/program?weeks=${weeks}`, {
-            method: 'POST'
+        const response = await fetch(`/api/users/${currentUser.id}/program`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({
+                weeks: weeks,
+                frequency: parseInt(form.frequency.value)
+            })
         });
         
         if (response.ok) {
@@ -85,7 +92,9 @@ async function generateProgram(event) {
             displayProgram(data.program);
             showToast('Programme généré avec succès !', 'success');
         } else {
-            throw new Error('Erreur lors de la génération');
+            const error = await response.json();
+            console.error('Erreur API:', error);
+            throw new Error(error.detail || 'Erreur lors de la génération');
         }
     } catch (error) {
         console.error('Erreur génération programme:', error);

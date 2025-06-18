@@ -9,14 +9,20 @@ from backend.ml_engine import FitnessMLEngine
 
 router = APIRouter()
 
+from pydantic import BaseModel
+
+class ProgramRequest(BaseModel):
+    weeks: int = 4
+    frequency: int = 3
+
 @router.post("/api/users/{user_id}/program")
-async def generate_program(user_id: int, weeks: int = 4, db: Session = Depends(get_db)):
+async def generate_program(user_id: int, request: ProgramRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     ml_engine = FitnessMLEngine(db)
-    program = ml_engine.generate_adaptive_program(user, weeks)
+    program = ml_engine.generate_adaptive_program(user, request.weeks)
     
     return {"program": program}
 
