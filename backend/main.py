@@ -1054,4 +1054,12 @@ def get_muscle_performance_prediction(user_id: int, db: Session = Depends(get_db
 
 
 # Static files
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+#app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# Static files - Ajuster le chemin selon l'environnement
+import os
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+else:
+    # Fallback si on est dans une structure différente
+    app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
