@@ -16,8 +16,9 @@ from backend.models import Base, User, Exercise, Workout, Set
 from backend.routes import router as ml_router, router
 from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate
 # Create tables
+# TEMPORAIRE : Supprimer et recréer toutes les tables
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
-
 
 # Lifespan event handler
 @asynccontextmanager
