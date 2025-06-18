@@ -323,7 +323,7 @@ async function abandonWorkoutAPI(workoutId) {
 // ===== PROGRAMMES =====
 export async function saveProgram(programData) {
     try {
-        const response = await fetch('/api/programs/', {
+        const response = await fetch(`/api/programs/?user_id=${currentUser.id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(programData)

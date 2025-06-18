@@ -347,10 +347,10 @@ def abandon_workout(workout_id: int, db: Session = Depends(get_db)):
 
 # Program endpoints
 @app.post("/api/programs/", response_model=ProgramResponse)
-def create_program(program: ProgramCreate, db: Session = Depends(get_db)):
+def create_program(program: ProgramCreate, user_id: int, db: Session = Depends(get_db)):
     # Créer le programme principal
     db_program = Program(
-        user_id=program.user_id,
+        user_id=user_id,  # Utiliser le user_id passé en paramètre
         name=program.name,
         duration_weeks=program.duration_weeks,
         frequency=program.frequency

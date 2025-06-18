@@ -83,38 +83,80 @@ async function generateProgram(event) {
         
         const data = await response.json();
         const program = data.program;
-        const savedProgramId = data.saved_program_id;
         
         // Afficher le programme
         displayProgram(program);
         
-        // Ajouter un bouton pour activer le programme
-        if (savedProgramId) {
+        // Transformer et sauvegarder le programme
+        const programToSave = transformProgramForSaving(program, weeks, frequency);
+        const savedProgram = await saveProgram(programToSave);
+        
+        if (savedProgram) {
             resultDiv.innerHTML += `
                 <div style="margin-top: 2rem; text-align: center;">
-                    <button class="btn btn-primary" onclick="activateProgramAndStart(${savedProgramId})">
+                    <button class="btn btn-primary" onclick="activateProgramAndStart(${savedProgram.id})">
                         🚀 Commencer ce programme
                     </button>
                 </div>
             `;
         }
         
-        showToast('Programme généré et sauvegardé !', 'success');
+        showToast('Programme généré avec succès !', 'success');
         
     } catch (error) {
         console.error('Erreur:', error);
         resultDiv.innerHTML = `
             <div class="error-message">
                 <p>❌ Erreur lors de la génération du programme</p>
-                <p>Please check:</p>
+                <p>Veuillez vérifier :</p>
                 <ul>
-                    <li>Your equipment configuration is complete</li>
-                    <li>Your profile has valid goals selected</li>
-                    <li>You're connected to the server</li>
+                    <li>Votre configuration d'équipement est complète</li>
+                    <li>Vous avez sélectionné des objectifs valides</li>
+                    <li>Vous êtes connecté au serveur</li>
                 </ul>
             </div>
         `;
     }
+}
+
+// ===== TRANSFORMATION DU PROGRAMME POUR SAUVEGARDE =====
+function transformProgramForSaving(program, weeks, frequency) {
+    const programData = {
+        name: `Programme ${weeks} semaines - ${frequency}j/sem`,
+        duration_weeks: weeks,
+        frequency: frequency,
+        program_days: []
+    };
+    
+    // Grouper par semaine et jour
+    const groupedDays = {};
+    
+    program.forEach(item => {
+        const key = `${item.week}-${item.day}`;
+        if (!groupedDays[key]) {
+            groupedDays[key] = {
+                week_number: item.week,
+                day_number: item.day,
+                muscle_group: item.muscle_group,
+                exercises: []
+            };
+        }
+        
+        item.exercises.forEach((ex, index) => {
+            groupedDays[key].exercises.push({
+                exercise_id: ex.exercise_id,
+                sets: ex.sets,
+                target_reps: ex.target_reps,
+                rest_time: ex.rest_time,
+                order_index: index,
+                predicted_weight: ex.predicted_weight
+            });
+        });
+    });
+    
+    programData.program_days = Object.values(groupedDays);
+    
+    return programData;
 }
 
 // ===== AFFICHAGE DU PROGRAMME GÉNÉRÉ =====
