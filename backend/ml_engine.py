@@ -140,9 +140,9 @@ class FitnessMLEngine:
             goal_mult = goal_mult ** (1/len(user.goals))  # Moyenne géométrique
         
         # Si haltères, ajuster au poids disponible le plus proche
-        if "dumbbells" in exercise.equipment and user.equipment_config and user.equipment_config.get("dumbbells"):
-            target_weight = base_weight * experience_mult * goal_mult / 2  # Divisé par 2 pour un haltère
-            available_weights = sorted([float(w) for w in user.equipment_config.get("dumbbells", {}).keys()])
+        if "dumbbells" in exercise.equipment and user.equipment_config and user.equipment_config.get("dumbbells", {}).get("weights"):
+            target_weight = base_weight * experience_mult * goal_mult / 2
+            available_weights = sorted(user.equipment_config["dumbbells"]["weights"])
             
             # Trouver le poids le plus proche
             closest_weight = min(available_weights, key=lambda x: abs(x - target_weight))
@@ -213,9 +213,11 @@ class FitnessMLEngine:
                 recommendation = "Maintenir le poids actuel et viser l'amélioration technique."
             
             # Arrondir au poids disponible le plus proche
-            if user.dumbbell_weights and "dumbbells" in exercise.equipment:
+            if (user.equipment_config and 
+                user.equipment_config.get("dumbbells", {}).get("weights") and 
+                "dumbbells" in exercise.equipment):
                 target_per_dumbbell = next_weight / 2
-                available = sorted(user.dumbbell_weights)
+                available = sorted(user.equipment_config["dumbbells"]["weights"])
                 closest = min(available, key=lambda x: abs(x - target_per_dumbbell))
                 next_weight = closest * 2
             else:
@@ -306,9 +308,55 @@ class FitnessMLEngine:
         program = []
         
         # Récupérer les exercices disponibles selon l'équipement
-        available_exercises = self.db.query(Exercise).filter(
-            Exercise.equipment.op('&&')(user.available_equipment)
-        ).all()
+        # D'abord, extraire l'équipement disponible depuis equipment_config
+        available_equipment = []
+        if user.equipment_config:
+            config = user.equipment_config
+            
+            # Barres
+            for barre_type, barre_config in config.get("barres", {}).items():
+                if barre_config.get("available", False):
+                    # Mapper les types de barres aux noms d'équipement dans Exercise
+                    if barre_type == "olympique" or barre_type == "courte":
+                        available_equipment.append("barbell_standard")
+                    elif barre_type == "ez":
+                        available_equipment.append("barbell_ez")
+            
+            # Haltères
+            if config.get("dumbbells", {}).get("available", False):
+                available_equipment.append("dumbbells")
+            
+            # Banc
+            if config.get("banc", {}).get("available", False):
+                available_equipment.append("bench_plat")
+                if config["banc"].get("inclinable_haut", False):
+                    available_equipment.append("bench_inclinable")
+                if config["banc"].get("inclinable_bas", False):
+                    available_equipment.append("bench_declinable")
+            
+            # Élastiques
+            if config.get("elastiques", {}).get("available", False):
+                available_equipment.append("elastiques")
+            
+            # Autres équipements
+            autres = config.get("autres", {})
+            if autres.get("kettlebell", {}).get("available", False):
+                available_equipment.append("kettlebell")
+            if autres.get("barre_traction", {}).get("available", False):
+                available_equipment.append("barre_traction")
+            
+            # Poids du corps toujours disponible
+            available_equipment.append("bodyweight")
+
+        # Récupérer TOUS les exercices puis filtrer manuellement
+        all_exercises = self.db.query(Exercise).all()
+        available_exercises = []
+
+        for exercise in all_exercises:
+            exercise_equipment = exercise.equipment or []
+            # Vérifier si TOUS les équipements requis sont disponibles
+            if all(eq in available_equipment for eq in exercise_equipment):
+                available_exercises.append(exercise)
         
         # Grouper par partie du corps
         body_parts = {}
