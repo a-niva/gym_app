@@ -1,4 +1,3 @@
-// ===== GÉNÉRATEUR DE PROGRAMMES =====
 import { currentUser } from './app-state.js';
 import { showToast } from './app-ui.js';
 import { showView } from './app-navigation.js';
@@ -92,13 +91,28 @@ async function generateProgram(event) {
             displayProgram(data.program);
             showToast('Programme généré avec succès !', 'success');
         } else {
-            const error = await response.json();
-            console.error('Erreur API:', error);
-            throw new Error(error.detail || 'Erreur lors de la génération');
+            // Vérifier si la réponse est du JSON avant de la parser
+            const contentType = response.headers.get("content-type");
+            let errorDetail = 'Erreur lors de la génération';
+            
+            if (contentType && contentType.includes("application/json")) {
+                try {
+                    const error = await response.json();
+                    errorDetail = error.detail || errorDetail;
+                } catch {
+                    console.error('Réponse non-JSON reçue');
+                }
+            } else {
+                // Si ce n'est pas du JSON, lire comme texte
+                const textError = await response.text();
+                console.error('Erreur serveur (non-JSON):', textError);
+            }
+            
+            throw new Error(errorDetail);
         }
     } catch (error) {
         console.error('Erreur génération programme:', error);
-        showToast('Erreur lors de la génération du programme', 'error');
+        showToast(error.message, 'error');
         resultDiv.innerHTML = '';
     }
 }

@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from typing import List
 from backend.database import get_db
 from backend.models import User, Exercise, Workout, Set
-from backend.schemas import UserCreate, WorkoutCreate, SetCreate
 from backend.ml_engine import FitnessMLEngine
 from backend.schemas import UserCreate, WorkoutCreate, SetCreate, ProgramGenerationRequest
 
