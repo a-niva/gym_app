@@ -29,13 +29,17 @@ class Exercise(Base):
     id = Column(Integer, primary_key=True, index=True)
     name_fr = Column(String, nullable=False)
     name_eng = Column(String, nullable=False)
-    equipment = Column(JSON)  # Nouveau format: ["barbell_standard", "dumbbells"]
+    equipment = Column(JSON)  # ["barbell_standard", "dumbbells"]
     level = Column(String)
     body_part = Column(String)
     sets_reps = Column(JSON)
-    
-    # NOUVEAU: Spécifications détaillées
     equipment_specs = Column(JSON)  # {"barbell_count": 1, "dumbbell_count": 2}
+    progression_metadata = Column(JSON)  # Métadonnées de progression
+    muscle_groups = Column(JSON)  # Groupes musculaires primaires/secondaires
+    fatigue_profile = Column(JSON)  # Profil de fatigue
+    recovery_hours = Column(Integer)  # Heures de récupération
+    injury_risk_zones = Column(JSON)  # Zones à risque de blessure
+    can_superset_with = Column(JSON)  # Exercices compatibles en superset
 
 class Workout(Base):
     __tablename__ = "workouts"
