@@ -433,7 +433,7 @@ class FitnessMLEngine:
                         "sets": int(sets_reps["sets"] * week_intensity),
                         "target_reps": sets_reps["reps"],
                         "predicted_weight": prediction["predicted_weight"],
-                        "rest_time": 90 if "strength" in user.goals else 60
+                        "rest_time": 90 if user.goals and "strength" in user.goals else 60
                     })
                 
                 week_program.append(workout)
@@ -461,7 +461,8 @@ class FitnessMLEngine:
             "Épaules/Abdos": ["Épaules", "Abdominaux"],
             "Haut du corps": ["Pectoraux", "Dos", "Épaules"],
             "Bas du corps": ["Quadriceps", "Ischio-jambiers", "Mollets"],
-            "Full body": ["Pectoraux", "Dos", "Jambes", "Épaules"]
+            "Full body": ["Pectoraux", "Dos", "Jambes", "Épaules"],
+            "Bras": ["Biceps", "Triceps"],
         }
         
         target_parts = muscle_mapping.get(muscle_group, [muscle_group])
@@ -523,10 +524,11 @@ class FitnessMLEngine:
         sets = sets_reps_config["sets"]
         reps = sets_reps_config["reps"]
         
-        for goal in goals:
-            if goal in self.GOAL_ADJUSTMENTS:
-                sets = int(sets * self.GOAL_ADJUSTMENTS[goal]["sets"])
-                reps = int(reps * self.GOAL_ADJUSTMENTS[goal]["reps"])
+        if goals:
+            for goal in goals:
+                if goal in self.GOAL_ADJUSTMENTS:
+                  sets = int(sets * self.GOAL_ADJUSTMENTS[goal]["sets"])
+                  reps = int(reps * self.GOAL_ADJUSTMENTS[goal]["reps"])
         
         return {"sets": sets, "reps": reps}
     
