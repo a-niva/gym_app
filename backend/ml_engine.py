@@ -302,7 +302,7 @@ class FitnessMLEngine:
         self,
         user: User,
         duration_weeks: int = 4,
-        frequency: int = 3  # NOUVEAU PARAMÈTRE
+        frequency: int = 3  # Add this parameter
     ) -> List[Dict]:
         """
         Génère un programme adaptatif basé sur:
@@ -375,7 +375,7 @@ class FitnessMLEngine:
                 body_parts[ex.body_part] = []
             body_parts[ex.body_part].append(ex)
 
-        # Créer une rotation selon la fréquence demandée
+        # Create rotation based on requested frequency
         if frequency == 3:
             split = ["Pectoraux/Triceps", "Dos/Biceps", "Jambes"]
         elif frequency == 4:
@@ -383,7 +383,7 @@ class FitnessMLEngine:
         elif frequency == 5:
             split = ["Pectoraux", "Dos", "Jambes", "Épaules", "Bras"]
         else:
-            # Par défaut 3 jours
+            # Fallback for unexpected values
             split = ["Haut du corps", "Bas du corps", "Full body"]
         
         # Générer les séances pour chaque semaine

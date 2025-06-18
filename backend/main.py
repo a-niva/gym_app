@@ -13,9 +13,8 @@ import os
 
 from backend.database import engine, get_db, SessionLocal
 from backend.models import Base, User, Exercise, Workout, Set
-from backend.routes import router as ml_router
+from backend.routes import router as ml_router, router
 from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate
-
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -48,6 +47,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Gym Coach API", lifespan=lifespan)
 app.include_router(ml_router)
+app.include_router(router)
 
 # CORS for local network access
 app.add_middleware(

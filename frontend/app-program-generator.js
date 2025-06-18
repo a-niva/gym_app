@@ -111,9 +111,18 @@ async function generateProgram(event) {
             throw new Error(errorDetail);
         }
     } catch (error) {
-        console.error('Erreur génération programme:', error);
-        showToast(error.message, 'error');
-        resultDiv.innerHTML = '';
+        console.error('Program generation failed:', error);
+        showToast(error.message || 'Unable to generate program', 'error');
+        resultDiv.innerHTML = `
+            <div class="error-message">
+                <p>Failed to generate program. Please check:</p>
+                <ul>
+                    <li>Your equipment configuration is complete</li>
+                    <li>Your profile has valid goals selected</li>
+                    <li>You're connected to the server</li>
+                </ul>
+            </div>
+        `;
     }
 }
 
