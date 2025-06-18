@@ -108,9 +108,9 @@ async function showSetInput() {
                             `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
                             'Aucun poids configuré'}
                     </div>
-                    <div id="weightSuggestion" class="suggestion-hint">
-                        ${suggestedWeight ? '💡 Poids suggéré par l\'IA' : ''}
-                    </div>
+                        <div id="weightSuggestion" class="suggestion-hint">
+                            ${suggestedWeight ? `💡 Suggestion ML : ${suggestedWeight}kg` : ''}
+                        </div>
                 </div>
                 ` : '<input type="hidden" id="setWeight" value="0">'}
                 
@@ -218,15 +218,28 @@ async function loadWeightSuggestion() {
         .flatMap(h => h.sets || [])
         .slice(-1)[0];
         
-    if (lastSetForExercise && currentSetNumber > 1) {
+    // Toujours essayer d'obtenir la suggestion ML d'abord
+    const mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
+    
+    if (mlSuggestion) {
+        const validated = validateWeight(currentExercise, mlSuggestion);
+        document.getElementById('setWeight').value = validated;
+        
+        // Mettre à jour le texte de suggestion avec comparaison
+        const suggestionDiv = document.getElementById('weightSuggestion');
+        if (suggestionDiv) {
+            if (lastSetForExercise && lastSetForExercise.weight !== validated) {
+                const diff = validated - lastSetForExercise.weight;
+                const sign = diff > 0 ? '+' : '';
+                suggestionDiv.innerHTML = `💡 Suggestion ML : ${validated}kg (${sign}${diff}kg vs dernière série)`;
+            } else {
+                suggestionDiv.innerHTML = `💡 Suggestion ML : ${validated}kg`;
+            }
+        }
+    } else if (lastSetForExercise && currentSetNumber > 1) {
+        // Fallback sur le calcul local
         let adjustedWeight = calculateSuggestedWeight(currentExercise, lastSetForExercise);
         document.getElementById('setWeight').value = adjustedWeight;
-    } else if (currentSetNumber === 1) {
-        const weight = await getSuggestedWeight(currentUser.id, currentExercise.id);
-        if (weight) {
-            const validated = validateWeight(currentExercise, weight);
-            document.getElementById('setWeight').value = validated;
-        }
     }
 }
 

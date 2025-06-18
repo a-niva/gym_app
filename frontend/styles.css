@@ -2173,6 +2173,7 @@ select.form-input {
     color: var(--primary);
     margin-top: 4px;
     font-style: italic;
+    opacity: 0.9;
 }
 
 /* ===== MODAL DE FATIGUE ===== */
