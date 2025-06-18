@@ -23,8 +23,7 @@ import {
     setIsInRestPeriod,
     isSilentMode,
     isAutoWeightEnabled,
-    setIsAutoWeightEnabled,
-    isWeightPossible
+    setIsAutoWeightEnabled
 } from './app-state.js';
 
 import { showToast } from './app-ui.js';
