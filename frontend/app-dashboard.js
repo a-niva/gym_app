@@ -2,37 +2,443 @@
 // Ce fichier gère l'affichage du tableau de bord et des statistiques
 // Il coordonne le chargement des données et leur affichage
 
-import { currentUser } from './app-state.js';
-import { getUserStats } from './app-api.js';
 import { loadWorkoutHistory } from './app-history.js';
-import { showToast } from './app-ui.js';
+import { showToast, showLoadingOverlay, hideLoadingOverlay } from './app-ui.js';
+import { 
+    getUserStats,
+    getUserCommitment, 
+    getTrajectoryAnalysis, 
+    getAdaptiveTargets,
+    generateAdaptiveWorkout,
+    completeAdaptiveWorkout
+} from './app-api.js';
+import { 
+    currentUser,
+    userCommitment, 
+    adaptiveTargets, 
+    trajectoryAnalysis,
+    currentAdaptiveWorkout,
+    setCurrentWorkout
+} from './app-state.js';
+
 
 // ===== CHARGEMENT DU DASHBOARD =====
 async function loadDashboard() {
     if (!currentUser) return;
     
-    // Message de bienvenue
-    updateWelcomeMessage();
-    
-    // Charger les statistiques
-    await loadUserStats();
-    
-    // AJOUTER ICI : Charger les prédictions ML
-    try {
-        const response = await fetch(`/api/users/${currentUser.id}/muscle-performance-prediction`);
-        if (response.ok) {
-            const predictions = await response.json();
-            addPredictionCards(predictions);
+    const dashboardContent = document.getElementById('dashboard-content');
+    if (!dashboardContent) {
+        // Créer le conteneur s'il n'existe pas
+        const dashboardView = document.getElementById('dashboard');
+        if (dashboardView) {
+            const contentDiv = document.createElement('div');
+            contentDiv.id = 'dashboard-content';
+            dashboardView.appendChild(contentDiv);
         }
-    } catch (error) {
-        console.error('Erreur chargement prédictions:', error);
     }
     
-    // Charger l'historique avec un délai pour s'assurer que la séance est bien terminée
-    setTimeout(() => {
-        loadWorkoutHistory();
-    }, 1000);
+    try {
+        // Charger les données adaptatives
+        const [commitment, trajectory, targets] = await Promise.all([
+            getUserCommitment(currentUser.id),
+            getTrajectoryAnalysis(currentUser.id),
+            getAdaptiveTargets(currentUser.id)
+        ]);
+        
+        const container = document.getElementById('dashboard-content') || document.getElementById('dashboard');
+        
+        // Vue par défaut si pas d'engagement
+        if (!commitment || !trajectory || trajectory.status === "no_commitment") {
+            container.innerHTML = `
+                <div class="empty-state" style="text-align: center; padding: 3rem;">
+                    <h2>Bienvenue ${currentUser.name} ! 👋</h2>
+                    <p style="color: var(--gray); margin: 1rem 0;">Définissez vos objectifs pour un suivi personnalisé</p>
+                    <button class="btn" onclick="showCommitmentModal()">
+                        Définir mes objectifs
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        // Dashboard avec analyse de trajectoire
+        container.innerHTML = `
+            <div class="dashboard-header" style="margin-bottom: 2rem;">
+                <h1>Bonjour ${currentUser.name} ! 💪</h1>
+                <p class="dashboard-date" style="color: var(--gray);">${new Date().toLocaleDateString('fr-FR', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })}</p>
+            </div>
+            
+            <!-- Widget Trajectoire -->
+            <div class="trajectory-widget ${trajectory.on_track ? 'on-track' : 'off-track'}">
+                <div class="trajectory-header">
+                    <h3>${trajectory.on_track ? '✅ Sur la bonne voie !' : '⚠️ Ajustons le rythme'}</h3>
+                    <span class="trajectory-badge">
+                        ${trajectory.sessions_this_week}/${trajectory.sessions_target} séances
+                    </span>
+                </div>
+                
+                <div class="trajectory-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Régularité (30j)</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${trajectory.consistency_score * 100}%"></div>
+                        </div>
+                        <span class="stat-value">${Math.round(trajectory.consistency_score * 100)}%</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Adhérence au volume</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${trajectory.volume_adherence * 100}%"></div>
+                        </div>
+                        <span class="stat-value">${Math.round(trajectory.volume_adherence * 100)}%</span>
+                    </div>
+                </div>
+                
+                <!-- Insights personnalisés -->
+                ${trajectory.insights && trajectory.insights.length > 0 ? `
+                    <div class="insights-section">
+                        ${trajectory.insights.map(insight => `
+                            <div class="insight-item">${insight}</div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+            
+            <!-- Actions rapides -->
+            <div class="quick-actions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                <button class="action-card" onclick="generateQuickWorkout()" style="background: var(--surface); border: none; border-radius: 12px; padding: 1.5rem; cursor: pointer; text-align: left;">
+                    <div class="action-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+                    <div class="action-content">
+                        <h4 style="margin: 0 0 0.25rem 0;">Séance adaptative</h4>
+                        <p style="margin: 0; color: var(--gray); font-size: 0.875rem;">Générée selon votre état</p>
+                    </div>
+                </button>
+                
+                <button class="action-card" onclick="showView('program-generator')" style="background: var(--surface); border: none; border-radius: 12px; padding: 1.5rem; cursor: pointer; text-align: left;">
+                    <div class="action-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+                    <div class="action-content">
+                        <h4 style="margin: 0 0 0.25rem 0;">Programme complet</h4>
+                        <p style="margin: 0; color: var(--gray); font-size: 0.875rem;">Planifiez vos semaines</p>
+                    </div>
+                </button>
+                
+                <button class="action-card" onclick="showView('stats')" style="background: var(--surface); border: none; border-radius: 12px; padding: 1.5rem; cursor: pointer; text-align: left;">
+                    <div class="action-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                    <div class="action-content">
+                        <h4 style="margin: 0 0 0.25rem 0;">Statistiques</h4>
+                        <p style="margin: 0; color: var(--gray); font-size: 0.875rem;">Analysez votre progression</p>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- État des muscles -->
+            <div class="muscle-status-widget">
+                <h3>État de récupération musculaire</h3>
+                <div class="muscle-grid">
+                    ${await renderMuscleStatus(targets)}
+                </div>
+            </div>
+        `;
+        
+        // Ajouter le reste du dashboard existant
+        await loadUserStats();
+        
+        // Charger les prédictions ML existantes
+        try {
+            const response = await fetch(`/api/users/${currentUser.id}/muscle-performance-prediction`);
+            if (response.ok) {
+                const predictions = await response.json();
+                addPredictionCards(predictions);
+            }
+        } catch (error) {
+            console.error('Erreur chargement prédictions:', error);
+        }
+        
+        // Charger l'historique
+        setTimeout(() => {
+            loadWorkoutHistory();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        // Fallback vers l'ancien dashboard
+        updateWelcomeMessage();
+        await loadUserStats();
+        setTimeout(() => {
+            loadWorkoutHistory();
+        }, 1000);
+    }
 }
+
+// ========== NOUVELLES FONCTIONS DASHBOARD ADAPTATIF ==========
+
+// Modal pour définir les objectifs
+function showCommitmentModal() {
+    // Rediriger vers l'onboarding à l'étape commitment
+    showView('onboarding');
+    // Aller directement à l'étape commitment
+    setTimeout(() => {
+        const commitmentStep = document.getElementById('step-commitment');
+        if (commitmentStep) {
+            document.querySelectorAll('.onboarding-step').forEach(step => {
+                step.style.display = 'none';
+            });
+            commitmentStep.style.display = 'block';
+        }
+    }, 100);
+}
+
+// Fonction pour afficher l'état des muscles
+async function renderMuscleStatus(targets) {
+    if (!targets || targets.length === 0) return '<p style="color: var(--gray);">Aucune donnée disponible</p>';
+    
+    const muscleEmojis = {
+        chest: '🎯',
+        back: '🔙',
+        shoulders: '💪',
+        legs: '🦵',
+        arms: '💪',
+        core: '🎯'
+    };
+    
+    const muscleNames = {
+        chest: 'Pectoraux',
+        back: 'Dos',
+        shoulders: 'Épaules',
+        legs: 'Jambes',
+        arms: 'Bras',
+        core: 'Abdos'
+    };
+    
+    return targets.map(target => {
+        const readiness = calculateReadiness(target);
+        const statusClass = readiness > 0.7 ? 'ready' : readiness > 0.4 ? 'moderate' : 'tired';
+        const volumePercent = target.target_volume > 0 
+            ? Math.round((target.current_volume / target.target_volume) * 100)
+            : 0;
+        
+        return `
+            <div class="muscle-item ${statusClass}">
+                <div class="muscle-header">
+                    <span class="muscle-emoji">${muscleEmojis[target.muscle_group] || '💪'}</span>
+                    <span class="muscle-name">${muscleNames[target.muscle_group] || target.muscle_group}</span>
+                </div>
+                <div class="muscle-stats">
+                    <div class="mini-progress">
+                        <div class="mini-progress-fill" style="width: ${volumePercent}%"></div>
+                    </div>
+                    <span class="volume-text">${volumePercent}% du volume</span>
+                </div>
+                ${target.last_trained ? `
+                    <span class="last-trained">
+                        ${getTimeSinceText(target.last_trained)}
+                    </span>
+                ` : '<span class="last-trained">Jamais entraîné</span>'}
+            </div>
+        `;
+    }).join('');
+}
+
+// Fonction pour calculer la disponibilité d'un muscle
+function calculateReadiness(target) {
+    if (!target.last_trained) return 1.0;
+    
+    const hoursSince = (new Date() - new Date(target.last_trained)) / (1000 * 60 * 60);
+    let readiness = Math.min(1.0, hoursSince / 48); // 48h pour récupération complète
+    
+    // Ajuster selon la dette de récupération
+    if (target.recovery_debt > 0) {
+        readiness *= Math.max(0.5, 1 - (target.recovery_debt / 10));
+    }
+    
+    return readiness;
+}
+
+// Fonction pour formater le temps écoulé
+function getTimeSinceText(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const hours = Math.floor((now - date) / (1000 * 60 * 60));
+    
+    if (hours < 1) return "À l'instant";
+    if (hours < 24) return `Il y a ${hours}h`;
+    if (hours < 48) return "Hier";
+    if (hours < 168) return `Il y a ${Math.floor(hours / 24)}j`;
+    return `Il y a ${Math.floor(hours / 168)} sem`;
+}
+
+// Fonction pour générer une séance rapide
+async function generateQuickWorkout() {
+    try {
+        showLoadingOverlay('Génération de votre séance adaptative...');
+        
+        // Demander le temps disponible
+        const timeAvailable = await showTimeSelectionModal();
+        if (!timeAvailable) {
+            hideLoadingOverlay();
+            return;
+        }
+        
+        const workout = await generateAdaptiveWorkout(currentUser.id, timeAvailable);
+        
+        hideLoadingOverlay();
+        
+        // Afficher la séance générée
+        showAdaptiveWorkoutModal(workout);
+        
+    } catch (error) {
+        hideLoadingOverlay();
+        showToast('Erreur lors de la génération de la séance', 'error');
+    }
+}
+
+// Modal pour sélectionner le temps disponible
+async function showTimeSelectionModal() {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <h3>Temps disponible aujourd'hui ?</h3>
+                <div class="time-options">
+                    <button class="time-option" data-time="30">
+                        <span class="time-value">30</span>
+                        <span class="time-label">minutes</span>
+                    </button>
+                    <button class="time-option" data-time="45">
+                        <span class="time-value">45</span>
+                        <span class="time-label">minutes</span>
+                    </button>
+                    <button class="time-option" data-time="60">
+                        <span class="time-value">60</span>
+                        <span class="time-label">minutes</span>
+                    </button>
+                    <button class="time-option" data-time="90">
+                        <span class="time-value">90</span>
+                        <span class="time-label">minutes</span>
+                    </button>
+                </div>
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                    Annuler
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Event listeners
+        modal.querySelectorAll('.time-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const time = parseInt(btn.dataset.time);
+                modal.remove();
+                resolve(time);
+            });
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                resolve(null);
+            }
+        });
+    });
+}
+
+// Modal pour afficher la séance adaptative
+function showAdaptiveWorkoutModal(workout) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <h3>Votre séance adaptative 🎯</h3>
+            <p class="workout-duration">Durée estimée : ${Math.round(workout.estimated_duration)} minutes</p>
+            
+            <div class="workout-muscles">
+                <strong>Muscles ciblés :</strong> ${workout.muscles.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(', ')}
+            </div>
+            
+            <div class="exercises-list">
+                ${workout.exercises.map((ex, idx) => `
+                    <div class="exercise-item">
+                        <span class="exercise-number">${idx + 1}</span>
+                        <div class="exercise-details">
+                            <h4>${ex.exercise.name_fr}</h4>
+                            <div class="exercise-specs">
+                                <span>${ex.sets} séries</span>
+                                <span>${ex.target_reps} reps</span>
+                                <span>${ex.rest_time}s repos</span>
+                                ${ex.predicted_weight ? `<span>${ex.predicted_weight}kg</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                    Modifier
+                </button>
+                <button class="btn" onclick="startAdaptiveWorkout()">
+                    Commencer la séance
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Fonction pour démarrer la séance adaptative
+async function startAdaptiveWorkout() {
+    if (!currentAdaptiveWorkout) return;
+    
+    // Créer la séance
+    const workoutData = {
+        user_id: currentUser.id,
+        type: "adaptive"
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/workouts/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(workoutData)
+        });
+        
+        const workout = await response.json();
+        setCurrentWorkout(workout);
+        
+        // Préparer les exercices pour la vue workout
+        state.selectedExercises = currentAdaptiveWorkout.exercises.map(ex => ex.exercise);
+        state.currentExerciseIndex = 0;
+        
+        // Fermer le modal et afficher la vue workout
+        document.querySelector('.modal-overlay')?.remove();
+        showView('workout');
+        
+    } catch (error) {
+        console.error('Error starting workout:', error);
+        showToast('Erreur lors du démarrage de la séance', 'error');
+    }
+}
+
+// Ajouter les exports pour les nouvelles fonctions
+window.showCommitmentModal = showCommitmentModal;
+window.generateQuickWorkout = generateQuickWorkout;
+window.startAdaptiveWorkout = startAdaptiveWorkout;
+
 
 // ===== MISE À JOUR DU MESSAGE DE BIENVENUE =====
 function updateWelcomeMessage() {

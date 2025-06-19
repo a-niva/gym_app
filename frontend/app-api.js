@@ -679,3 +679,12 @@ export {
     createRestPeriod,
     getWorkoutAdjustments
 };
+
+// Export des nouvelles fonctions du système adaptatif
+window.saveUserCommitment = saveUserCommitment;
+window.getUserCommitment = getUserCommitment;
+window.getAdaptiveTargets = getAdaptiveTargets;
+window.getTrajectoryAnalysis = getTrajectoryAnalysis;
+window.generateAdaptiveWorkout = generateAdaptiveWorkout;
+window.completeAdaptiveWorkout = completeAdaptiveWorkout;
+window.skipSession = skipSession;

@@ -57,7 +57,11 @@ let isSilentMode = false;
 let currentProgram = null;
 let userPrograms = [];
 let isAutoWeightEnabled = localStorage.getItem('isAutoWeightEnabled') !== 'false'; // true par défaut
-
+// Variables pour le système adaptatif (Phase 2.2)
+let userCommitment = null;
+let adaptiveTargets = [];
+let trajectoryAnalysis = null;
+let currentAdaptiveWorkout = null;
 
 // État des suggestions ML
 export let lastCompletedSetId = parseInt(localStorage.getItem('lastCompletedSetId')) || null;

@@ -2739,3 +2739,241 @@ select.form-input {
         font-size: 32px;
     }
 }
+
+/* ===== STYLES DASHBOARD ADAPTATIF ===== */
+.trajectory-widget {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.trajectory-widget.on-track {
+    border-color: #10b981;
+}
+
+.trajectory-widget.off-track {
+    border-color: #f59e0b;
+}
+
+.trajectory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.trajectory-badge {
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.trajectory-stats {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    display: grid;
+    grid-template-columns: 150px 1fr auto;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--gray);
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--background);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.5s ease;
+}
+
+.insights-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.insight-item {
+    padding: 0.75rem;
+    background: var(--background);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.muscle-status-widget {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.muscle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.muscle-item {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.muscle-item.ready {
+    border-color: #10b981;
+}
+
+.muscle-item.moderate {
+    border-color: #f59e0b;
+}
+
+.muscle-item.tired {
+    border-color: #ef4444;
+    opacity: 0.8;
+}
+
+.muscle-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.muscle-emoji {
+    font-size: 1.5rem;
+}
+
+.muscle-name {
+    font-weight: 600;
+}
+
+.mini-progress {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.mini-progress-fill {
+    height: 100%;
+    background: var(--primary);
+}
+
+.volume-text {
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+.last-trained {
+    font-size: 0.75rem;
+    color: var(--gray);
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.time-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.time-option {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.time-option:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.time-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.time-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin-top: 0.25rem;
+}
+
+.action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.exercises-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.exercise-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 8px;
+    align-items: center;
+}
+
+.exercise-number {
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.exercise-specs {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--gray);
+}
+
+.exercise-specs span {
+    padding: 0.25rem 0.75rem;
+    background: var(--surface);
+    border-radius: 12px;
+}
