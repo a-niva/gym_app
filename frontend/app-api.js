@@ -223,7 +223,7 @@ async function getSuggestedWeight(userId, exerciseId) {
 async function getWorkoutAdjustments(workoutId, setId, remainingSets) {
     try {
         const response = await apiCall(
-            `/api/workouts/${workoutId}/sets/${setId}/adjust`, 
+            `/workouts/${workoutId}/sets/${setId}/adjust`,  // Sans le /api/ car apiCall l'ajoute déjà
             {
                 method: 'POST',
                 body: JSON.stringify({ remaining_sets: remainingSets })
