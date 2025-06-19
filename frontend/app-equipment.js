@@ -55,11 +55,24 @@ function calculateAvailableWeights(exercise) {
         
         if (barWeight > 0) {
             weights.add(barWeight);
-            
+
             // Calculer uniquement les poids VRAIMENT possibles avec les disques disponibles
-            if (config.disques?.weights) {
+            if (config.disques?.weights && Object.keys(config.disques.weights).length > 0) {
                 const possibleWeights = calculateAllPossibleBarWeights(barWeight, config.disques.weights);
-                possibleWeights.forEach(w => weights.add(w));
+                
+                // Si on a plus de 3 options, exclure la barre seule pour éviter les sauts bizarres
+                if (possibleWeights.length > 3) {
+                    possibleWeights.forEach(w => {
+                        if (w !== barWeight || possibleWeights.length === 1) {
+                            weights.add(w);
+                        }
+                    });
+                } else {
+                    possibleWeights.forEach(w => weights.add(w));
+                }
+            } else {
+                // Pas de disques, seulement la barre
+                weights.add(barWeight);
             }
         }
     }
