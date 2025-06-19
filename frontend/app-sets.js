@@ -516,7 +516,6 @@ function adjustWeightToNext(direction) {
     input.value = newWeight;
     // Mettre à jour la visualisation
     updateBarbellVisualization();
-}nput.value = newWeight;
 }
 
 function adjustReps(delta) {
