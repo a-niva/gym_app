@@ -228,14 +228,36 @@ async function getWorkoutAdjustments(workoutId, setId, remainingSets) {
     });
     
     try {
-        const response = await apiCall(
-            `/workouts/${workoutId}/sets/${setId}/adjust`,
-            {
-                method: 'POST',
-                body: JSON.stringify({ remaining_sets: remainingSets })
+        // Vérifier d'abord que le set appartient bien à ce workout
+        const response = await fetch(`/api/workouts/${workoutId}/sets/${setId}/adjust`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                remaining_sets: remainingSets 
+            })
+        });
+        
+        if (!response.ok) {
+            // Log plus détaillé de l'erreur
+            const errorText = await response.text();
+            console.error('Erreur adjust workout:', {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorText
+            });
+            
+            // Si c'est une 422, c'est que le set n'appartient pas à ce workout
+            if (response.status === 422) {
+                // Nettoyer l'ID invalide
+                localStorage.removeItem('lastCompletedSetId');
             }
-        );
-        return response;
+            
+            return null;
+        }
+        
+        return await response.json();
     } catch (error) {
         console.warn('Ajustements ML non disponibles:', error);
         return null;
