@@ -50,9 +50,63 @@ async function showSetInput() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
     
+    // DEBUG - Ajouter ces lignes
+    console.log('=== DEBUG showSetInput ===');
+    console.log('currentSetNumber:', currentSetNumber);
+    console.log('currentWorkout:', currentWorkout);
+    console.log('lastCompletedSetId from localStorage:', localStorage.getItem('lastCompletedSetId'));
+    console.log('currentExercise:', currentExercise);
+    
+    
     const existingHistory = document.getElementById('previousSets');
     const savedHistory = existingHistory ? existingHistory.innerHTML : '';
-    
+    const lastCompletedSetId = localStorage.getItem('lastCompletedSetId');
+    console.log('DEBUG - lastCompletedSetId récupéré:', lastCompletedSetId);
+
+
+    // Récupérer aussi les suggestions de répétitions si on a déjà fait des séries
+    let mlRepsSuggestion = null;
+    let adjustmentsError = null;
+
+    if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId) {
+        try {
+            const remainingSets = (currentExercise.sets_reps?.[0]?.sets || 3) - currentSetNumber + 1;
+            
+            console.log('DEBUG - Appel getWorkoutAdjustments avec:', {
+                workoutId: currentWorkout.id,
+                setId: lastCompletedSetId,
+                remainingSets: remainingSets
+            });
+            
+            const adjustments = await getWorkoutAdjustments(
+                currentWorkout.id,
+                lastCompletedSetId,
+                remainingSets
+            );
+            
+            console.log('DEBUG - Réponse adjustments:', adjustments);
+            
+            if (adjustments && adjustments.suggested_reps) {
+                mlRepsSuggestion = {
+                    optimal: adjustments.suggested_reps,
+                    min: adjustments.rep_range?.min || adjustments.suggested_reps - 2,
+                    max: adjustments.rep_range?.max || adjustments.suggested_reps + 2,
+                    confidence: adjustments.rep_confidence || 0.5
+                };
+            }
+            
+            // Mettre à jour la suggestion de poids si disponible
+            if (adjustments && adjustments.next_set_weight) {
+                mlSuggestion = adjustments.next_set_weight;
+                console.log('DEBUG - Nouvelle suggestion de poids depuis adjustments:', mlSuggestion);
+            }
+        } catch (error) {
+            adjustmentsError = error;
+            console.error('DEBUG - Erreur getWorkoutAdjustments:', error);
+            // NE PAS faire échouer toute la fonction, continuer avec les valeurs par défaut
+        }
+    }
+
     setSetStartTime(new Date());
     setLastSetEndTime(null);
     
@@ -76,25 +130,6 @@ async function showSetInput() {
     // Si pas de suggestion ML, utiliser le calcul local
     if (!mlSuggestion && mlSuggestion !== 0) {
         mlSuggestion = calculateSuggestedWeight(currentExercise);
-    }
-    // Récupérer aussi les suggestions de répétitions si on a déjà fait des séries
-    let mlRepsSuggestion = null;
-    if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId) {
-        const remainingSets = (currentExercise.sets_reps?.[0]?.sets || 3) - currentSetNumber + 1;
-        const adjustments = await getWorkoutAdjustments(
-            currentWorkout.id,
-            lastCompletedSetId,
-            remainingSets
-        );
-        
-        if (adjustments && adjustments.suggested_reps) {
-            mlRepsSuggestion = {
-                optimal: adjustments.suggested_reps,
-                min: adjustments.rep_range?.min || adjustments.suggested_reps - 2,
-                max: adjustments.rep_range?.max || adjustments.suggested_reps + 2,
-                confidence: adjustments.rep_confidence || 0.5
-            };
-        }
     }
 
     // Stocker globalement pour référence
@@ -146,7 +181,7 @@ async function showSetInput() {
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
             
             <div class="set-input-grid-vertical">
-                ${!isTimeBased ? `
+                ${!(isTimeBased && isBodyweight) ? `
                     <div class="input-group">
                         <label>${weightLabel}</label>
                         <input type="hidden" id="setWeight" value="${defaultWeight}">
@@ -779,6 +814,7 @@ async function completeSet() {
         
         if (result) {
             // Stocker l'ID pour mise à jour ultérieure du temps de repos
+            console.log('DEBUG - Stockage lastCompletedSetId:', result.id);
             localStorage.setItem('lastCompletedSetId', result.id);
             window.lastCompletedSetId = result.id;  // Pour usage immédiat
             

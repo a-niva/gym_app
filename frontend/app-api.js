@@ -221,9 +221,15 @@ async function getSuggestedWeight(userId, exerciseId) {
 
 // Récupérer les suggestions d'ajustement ML (poids + reps)
 async function getWorkoutAdjustments(workoutId, setId, remainingSets) {
+    console.log('getWorkoutAdjustments appelé avec:', {
+        workoutId,
+        setId,
+        remainingSets
+    });
+    
     try {
         const response = await apiCall(
-            `/workouts/${workoutId}/sets/${setId}/adjust`,  // Sans le /api/ car apiCall l'ajoute déjà
+            `/workouts/${workoutId}/sets/${setId}/adjust`,
             {
                 method: 'POST',
                 body: JSON.stringify({ remaining_sets: remainingSets })
@@ -231,9 +237,8 @@ async function getWorkoutAdjustments(workoutId, setId, remainingSets) {
         );
         return response;
     } catch (error) {
-        // Ne pas faire crasher l'application si l'ajustement ML échoue
         console.warn('Ajustements ML non disponibles:', error);
-        return null; // Retourner null au lieu de propager l'erreur
+        return null;
     }
 }
 
