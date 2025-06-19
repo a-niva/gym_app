@@ -2590,24 +2590,26 @@ select.form-input {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    padding: 0;
+    padding: 20px;
     margin: 12px 0;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
     transition: all 0.3s ease;
 }
 
-.barbell-card-integrated:hover {
-    background: rgba(255, 255, 255, 0.10);
-    border-color: rgba(255, 255, 255, 0.15);
+.weight-control-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 16px;
 }
 
 .weight-btn {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    width: 44px;
+    height: 44px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -2617,124 +2619,123 @@ select.form-input {
 }
 
 .weight-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
     color: white;
 }
 
-.weight-btn.decrease {
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.weight-btn.increase {
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Animation de suggestion */
+/* Animation de suggestion - plus visible */
 .weight-btn.suggest-decrease {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
     color: #ef4444 !important;
 }
 
 .weight-btn.suggest-increase {
+    background: rgba(34, 197, 94, 0.2) !important;
+    border-color: rgba(34, 197, 94, 0.5) !important;
     color: #22c55e !important;
 }
 
 .weight-btn.suggest-pulse {
-    animation: subtlePulse 2s ease-in-out infinite;
+    animation: pulseSuggest 2s ease-in-out infinite;
 }
 
-@keyframes subtlePulse {
-    0%, 100% { opacity: 0.7; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.1); }
-}
-
-.barbell-content {
-    flex: 1;
-    padding: 16px 20px;
-    text-align: center;
+@keyframes pulseSuggest {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 0 currentColor;
+    }
+    50% { 
+        transform: scale(1.05);
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+    }
 }
 
 .barbell-total-integrated {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 700;
     color: white;
-    margin-bottom: 12px;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 }
 
 .weight-unit {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 400;
     opacity: 0.7;
     margin-left: 4px;
 }
 
-.barbell-plates-row {
+.barbell-plates-visualization {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    margin: 12px 0;
-    flex-wrap: wrap;
+    gap: 3px;
+    margin: 16px 0;
+    overflow-x: auto;
+    padding: 8px 0;
 }
 
 .plate-integrated {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 12px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
     font-weight: 600;
-    color: white;
-    min-width: 40px;
-    text-align: center;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
 }
 
+/* Coloration subtile des disques */
 .plate-integrated[data-weight="20"],
 .plate-integrated[data-weight="25"] {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.4);
 }
 
 .plate-integrated[data-weight="10"],
 .plate-integrated[data-weight="15"] {
-    background: rgba(34, 197, 94, 0.2);
-    border-color: rgba(34, 197, 94, 0.3);
+    border-color: rgba(34, 197, 94, 0.4);
 }
 
 .plate-integrated[data-weight="5"],
 .plate-integrated[data-weight="2.5"] {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.4);
 }
 
 .bar-integrated {
-    background: rgba(255, 255, 255, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 20px;
-    padding: 6px 16px;
-    font-size: 11px;
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        rgba(255, 255, 255, 0.1) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 10px;
     font-weight: 500;
-    color: white;
-    margin: 0 8px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 6px;
 }
 
 .barbell-detail {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
     margin-top: 8px;
 }
 
-/* Mobile responsive */
+/* Mobile : permettre le scroll horizontal si nécessaire */
 @media (max-width: 480px) {
-    .weight-btn {
-        padding: 16px;
+    .barbell-plates-visualization {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .weight-control-row {
+        gap: 16px;
     }
     
     .barbell-total-integrated {
-        font-size: 28px;
-    }
-    
-    .barbell-content {
-        padding: 12px 16px;
+        font-size: 32px;
     }
 }
