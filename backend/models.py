@@ -23,6 +23,8 @@ class User(Base):
     
     workouts = relationship("Workout", back_populates="user")
     programs = relationship("Program", back_populates="user")
+    commitment = relationship("UserCommitment", back_populates="user", uselist=False)
+    adaptive_targets = relationship("AdaptiveTargets", back_populates="user")
 
 class Exercise(Base):
     __tablename__ = "exercises"
@@ -116,3 +118,32 @@ class ProgramExercise(Base):
     
     program_day = relationship("ProgramDay", back_populates="exercises")
     exercise = relationship("Exercise")
+
+class UserCommitment(Base):
+    """L'engagement initial de l'utilisateur"""
+    __tablename__ = "user_commitments"
+    
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    sessions_per_week = Column(Integer, nullable=False)
+    focus_muscles = Column(JSON)  # {"chest": "priority", "legs": "maintain"}
+    time_per_session = Column(Integer)  # Minutes moyennes souhaitées
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = relationship("User", back_populates="commitment")
+
+class AdaptiveTargets(Base):
+    """Objectifs glissants auto-ajustés sur fenêtre de 7 jours"""
+    __tablename__ = "adaptive_targets"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    muscle_group = Column(String, nullable=False)
+    target_volume = Column(Float)  # Volume optimal calculé
+    current_volume = Column(Float, default=0)  # Volume réalisé (fenêtre 7j)
+    recovery_debt = Column(Float, default=0)  # Fatigue accumulée
+    last_trained = Column(DateTime, nullable=True)
+    adaptation_rate = Column(Float, default=1.0)  # Vitesse d'adaptation
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = relationship("User", back_populates="adaptive_targets")

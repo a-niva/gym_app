@@ -233,3 +233,41 @@ class ProgramResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+# SCHEMAS ENGAGEMENT ADAPTATIF
+class UserCommitmentCreate(BaseModel):
+    sessions_per_week: int
+    focus_muscles: Dict[str, str]
+    time_per_session: int
+
+class UserCommitmentResponse(BaseModel):
+    user_id: int
+    sessions_per_week: int
+    focus_muscles: Dict[str, str]
+    time_per_session: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class AdaptiveTargetsResponse(BaseModel):
+    id: int
+    muscle_group: str
+    target_volume: float
+    current_volume: float
+    recovery_debt: float
+    last_trained: Optional[datetime]
+    adaptation_rate: float
+    
+    class Config:
+        from_attributes = True
+
+class TrajectoryAnalysis(BaseModel):
+    on_track: bool
+    sessions_this_week: int
+    sessions_target: int
+    volume_adherence: float
+    consistency_score: float
+    muscle_balance: Dict[str, float]
+    insights: List[str]

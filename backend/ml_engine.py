@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from backend.models import User, Exercise, Workout, Set
 import json
+from sqlalchemy import func
+from typing import Any
 
 class FitnessMLEngine:
     """
@@ -852,3 +854,558 @@ class FitnessMLEngine:
             "recommendations": recommendations,
             "recovery_days_recommended": 2 if risk_level == "high" else 1
         }
+    
+
+# ========== NOUVEAUX MODULES PHASE 2.2 ==========
+
+class RecoveryTracker:
+    """Module 1 : Gestion de la récupération"""
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def get_muscle_readiness(self, muscle: str, user: User) -> float:
+        """Score 0-1 basé sur fatigue, dernière séance, sommeil"""
+        from backend.models import AdaptiveTargets
+        
+        # Récupérer la target adaptive pour ce muscle
+        target = self.db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user.id,
+            AdaptiveTargets.muscle_group == muscle
+        ).first()
+        
+        if not target or not target.last_trained:
+            return 1.0  # Muscle frais
+        
+        hours_since = (datetime.utcnow() - target.last_trained).total_seconds() / 3600
+        
+        # Récupération basée sur le temps (48-72h optimal)
+        if hours_since < 24:
+            recovery = 0.3
+        elif hours_since < 48:
+            recovery = 0.7
+        elif hours_since < 72:
+            recovery = 0.9
+        else:
+            recovery = 1.0
+        
+        # Ajuster selon la dette de récupération
+        if target.recovery_debt > 0:
+            recovery *= (1 - min(0.5, target.recovery_debt / 10))
+        
+        return max(0.2, recovery)  # Minimum 20%
+
+class VolumeOptimizer:
+    """Module 2 : Optimisation du volume"""
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def calculate_optimal_volume(self, user: User, muscle: str) -> int:
+        """Calcul du volume optimal basé sur historique et objectifs"""
+        from backend.models import UserCommitment
+        
+        # Récupérer l'engagement utilisateur
+        commitment = self.db.query(UserCommitment).filter(
+            UserCommitment.user_id == user.id
+        ).first()
+        
+        # Volume de base selon objectif principal
+        primary_goal = user.goals[0] if user.goals else "hypertrophy"
+        base_volumes = {
+            "strength": 10,
+            "hypertrophy": 16,
+            "endurance": 20,
+            "weight_loss": 14,
+            "cardio": 12,
+            "flexibility": 8
+        }
+        base_volume = base_volumes.get(primary_goal, 16)
+        
+        # Ajuster selon l'expérience
+        exp_multipliers = {
+            "beginner": 0.7,
+            "intermediate": 1.0,
+            "advanced": 1.2,
+            "elite": 1.4,
+            "extreme": 1.5
+        }
+        exp_mult = exp_multipliers.get(user.experience_level, 1.0)
+        
+        # Ajuster selon le focus musculaire
+        if commitment and muscle in commitment.focus_muscles:
+            if commitment.focus_muscles[muscle] == "priority":
+                exp_mult *= 1.3
+            elif commitment.focus_muscles[muscle] == "maintain":
+                exp_mult *= 0.7
+        
+        return int(base_volume * exp_mult)
+    
+    def get_volume_deficit(self, user: User) -> Dict[str, float]:
+        """Retourne les muscles en retard sur leur volume cible"""
+        from backend.models import AdaptiveTargets
+        
+        targets = self.db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user.id
+        ).all()
+        
+        deficits = {}
+        for target in targets:
+            if target.target_volume > 0:
+                deficit = (target.target_volume - target.current_volume) / target.target_volume
+                if deficit > 0.2:  # Plus de 20% de retard
+                    deficits[target.muscle_group] = deficit
+        
+        return dict(sorted(deficits.items(), key=lambda x: x[1], reverse=True))
+
+class SessionBuilder:
+    """Module 3 : Construction de séance pure"""
+    def __init__(self, db: Session):
+        self.db = db
+        self.ml_engine = FitnessMLEngine(db)  # Réutiliser l'existant
+    
+    def build_session(self, muscles: List[str], time_budget: int, 
+                     user: User, constraints: Dict = None) -> List[Dict]:
+        """Construction d'une séance optimisée"""
+        session = []
+        time_used = 0
+        constraints = constraints or {}
+        
+        for muscle in muscles[:3]:  # Max 3 groupes musculaires par séance
+            # Récupérer exercices disponibles
+            exercises = self.db.query(Exercise).filter(
+                Exercise.body_part == muscle
+            ).all()
+            
+            # Filtrer par équipement disponible
+            available_exercises = []
+            for ex in exercises:
+                if self._check_equipment_availability(ex, user):
+                    available_exercises.append(ex)
+            
+            if not available_exercises:
+                continue
+            
+            # Sélectionner 1-2 exercices par muscle
+            selected_exercises = self._select_best_exercises(
+                available_exercises, user, muscle, max_exercises=2
+            )
+            
+            for selected in selected_exercises:
+                # Utiliser la logique existante pour sets/reps
+                sets = 3 if user.experience_level in ["beginner", "intermediate"] else 4
+                
+                # Adapter les reps selon l'objectif
+                if "strength" in user.goals:
+                    reps = 5
+                elif "endurance" in user.goals:
+                    reps = 15
+                else:
+                    reps = 10
+                
+                # Temps de repos selon objectif
+                if "strength" in user.goals:
+                    rest = 180
+                elif "endurance" in user.goals:
+                    rest = 60
+                else:
+                    rest = 120
+                
+                # Calculer le poids suggéré via ML existant
+                weight = self.ml_engine.calculate_weight_for_exercise(
+                    user, selected, reps
+                )
+                
+                exercise_time = sets * (30 + rest)  # 30s par série + repos
+                
+                if time_used + exercise_time <= time_budget:
+                    session.append({
+                        "exercise_id": selected.id,
+                        "exercise": selected,
+                        "sets": sets,
+                        "target_reps": reps,
+                        "rest_time": rest,
+                        "predicted_weight": weight
+                    })
+                    time_used += exercise_time
+        
+        return session
+    
+    def _check_equipment_availability(self, exercise: Exercise, user: User) -> bool:
+        """Vérifie si l'équipement nécessaire est disponible"""
+        if not exercise.equipment:
+            return True
+        
+        user_equipment = set()
+        if user.equipment_config:
+            if "available_equipment" in user.equipment_config:
+                for cat in user.equipment_config["available_equipment"].values():
+                    user_equipment.update(cat)
+            elif "equipment" in user.equipment_config:
+                # Ancien format
+                user_equipment = set(user.equipment_config["equipment"])
+        
+        return any(eq in user_equipment for eq in exercise.equipment)
+    
+    def _select_best_exercises(self, exercises: List[Exercise], 
+                             user: User, muscle: str, max_exercises: int = 2) -> List[Exercise]:
+        """Sélectionne les meilleurs exercices selon plusieurs critères"""
+        # Prioriser par niveau d'expérience
+        suitable_exercises = [
+            ex for ex in exercises 
+            if self._is_suitable_level(ex.level, user.experience_level)
+        ]
+        
+        if not suitable_exercises:
+            suitable_exercises = exercises
+        
+        # Pour l'instant, prendre les premiers
+        # TODO: Améliorer avec historique, variété, préférences
+        return suitable_exercises[:max_exercises]
+    
+    def _is_suitable_level(self, exercise_level: str, user_level: str) -> bool:
+        """Vérifie si l'exercice convient au niveau de l'utilisateur"""
+        level_hierarchy = {
+            "beginner": 1,
+            "intermediate": 2,
+            "advanced": 3,
+            "elite": 4,
+            "extreme": 5
+        }
+        
+        ex_level = level_hierarchy.get(exercise_level, 2)
+        user_level_num = level_hierarchy.get(user_level, 2)
+        
+        # Accepter jusqu'à 1 niveau au-dessus
+        return ex_level <= user_level_num + 1
+
+class ProgressionAnalyzer:
+    """Module 4 : Analyse de trajectoire"""
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def get_trajectory_status(self, user: User) -> Dict:
+        """Analyse complète de la progression vers les objectifs"""
+        from backend.models import UserCommitment, AdaptiveTargets
+        
+        commitment = self.db.query(UserCommitment).filter(
+            UserCommitment.user_id == user.id
+        ).first()
+        
+        if not commitment:
+            return {
+                "status": "no_commitment",
+                "message": "Définissez vos objectifs pour un suivi personnalisé"
+            }
+        
+        # Calculer les métriques sur 7 jours glissants
+        sessions_last_7d = self.db.query(Workout).filter(
+            Workout.user_id == user.id,
+            Workout.created_at > datetime.utcnow() - timedelta(days=7),
+            Workout.status == "completed"
+        ).count()
+        
+        # Volume par muscle
+        volume_by_muscle = self._calculate_volume_by_muscle(user, days=7)
+        
+        # Score de consistance (30 jours)
+        consistency = self._calculate_consistency_score(user, days=30)
+        
+        # Adhérence au volume
+        volume_adherence = self._calculate_volume_adherence(user)
+        
+        # Analyse de l'équilibre musculaire
+        muscle_balance = self._analyze_muscle_balance(volume_by_muscle)
+        
+        # Insights personnalisés
+        insights = self._generate_insights(
+            user, volume_by_muscle, sessions_last_7d, commitment, consistency
+        )
+        
+        return {
+            "on_track": sessions_last_7d >= commitment.sessions_per_week * 0.7,
+            "sessions_this_week": sessions_last_7d,
+            "sessions_target": commitment.sessions_per_week,
+            "volume_adherence": volume_adherence,
+            "consistency_score": consistency,
+            "muscle_balance": muscle_balance,
+            "insights": insights
+        }
+    
+    def _calculate_volume_by_muscle(self, user: User, days: int) -> Dict[str, int]:
+        """Calcule le volume total par muscle sur X jours"""
+        from sqlalchemy import and_
+        
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Requête pour obtenir le volume
+        results = self.db.query(
+            Exercise.body_part,
+            func.sum(Set.actual_reps * Set.sets).label('volume')
+        ).join(
+            Set, Set.exercise_id == Exercise.id
+        ).join(
+            Workout, Workout.id == Set.workout_id
+        ).filter(
+            and_(
+                Workout.user_id == user.id,
+                Workout.created_at > cutoff_date,
+                Workout.status == "completed"
+            )
+        ).group_by(Exercise.body_part).all()
+        
+        return {muscle: int(volume or 0) for muscle, volume in results}
+    
+    def _calculate_consistency_score(self, user: User, days: int) -> float:
+        """Score de régularité sur X jours"""
+        from backend.models import UserCommitment
+        
+        commitment = self.db.query(UserCommitment).filter(
+            UserCommitment.user_id == user.id
+        ).first()
+        
+        if not commitment:
+            return 0.5
+        
+        # Compter les séances complétées
+        workouts_count = self.db.query(Workout).filter(
+            Workout.user_id == user.id,
+            Workout.created_at > datetime.utcnow() - timedelta(days=days),
+            Workout.status == "completed"
+        ).count()
+        
+        # Calculer l'attendu
+        expected = (days / 7) * commitment.sessions_per_week
+        
+        return min(1.0, workouts_count / expected) if expected > 0 else 0
+    
+    def _calculate_volume_adherence(self, user: User) -> float:
+        """Calcule l'adhérence au volume cible"""
+        from backend.models import AdaptiveTargets
+        
+        targets = self.db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user.id
+        ).all()
+        
+        if not targets:
+            return 1.0
+        
+        adherences = []
+        for target in targets:
+            if target.target_volume > 0:
+                adherence = min(1.0, target.current_volume / target.target_volume)
+                adherences.append(adherence)
+        
+        return sum(adherences) / len(adherences) if adherences else 1.0
+    
+    def _analyze_muscle_balance(self, volume_by_muscle: Dict[str, int]) -> Dict[str, float]:
+        """Analyse l'équilibre entre les groupes musculaires"""
+        if not volume_by_muscle:
+            return {}
+        
+        total_volume = sum(volume_by_muscle.values())
+        if total_volume == 0:
+            return {}
+        
+        # Calculer les pourcentages
+        balance = {}
+        for muscle, volume in volume_by_muscle.items():
+            balance[muscle] = round(volume / total_volume * 100, 1)
+        
+        return balance
+    
+    def _generate_insights(self, user: User, volume_by_muscle: Dict, 
+                          sessions_count: int, commitment: Any, 
+                          consistency: float) -> List[str]:
+        """Génère des insights personnalisés"""
+        insights = []
+        
+        # Insight sur la régularité
+        if sessions_count == 0:
+            insights.append("💪 C'est le moment de reprendre ! Une petite séance aujourd'hui ?")
+        elif sessions_count < commitment.sessions_per_week * 0.7:
+            insights.append(f"⚠️ {sessions_count}/{commitment.sessions_per_week} séances cette semaine. Essayons d'en faire une de plus !")
+        elif sessions_count >= commitment.sessions_per_week:
+            insights.append(f"🔥 Objectif atteint : {sessions_count} séances ! Excellent travail !")
+        
+        # Insight sur la consistance
+        if consistency > 0.8:
+            insights.append("🎯 Régularité exemplaire sur 30 jours !")
+        elif consistency < 0.5:
+            insights.append("📈 La régularité est la clé : essayons de maintenir le rythme")
+        
+        # Insight sur l'équilibre musculaire
+        if volume_by_muscle:
+            max_muscle = max(volume_by_muscle.items(), key=lambda x: x[1])
+            min_muscle = min(volume_by_muscle.items(), key=lambda x: x[1])
+            
+            if max_muscle[1] > min_muscle[1] * 3:
+                insights.append(f"⚖️ {min_muscle[0].capitalize()} négligé : seulement {min_muscle[1]} séries cette semaine")
+        
+        # Insight sur les muscles prioritaires
+        if commitment.focus_muscles:
+            for muscle, priority in commitment.focus_muscles.items():
+                if priority == "priority" and muscle in volume_by_muscle:
+                    if volume_by_muscle[muscle] < 10:
+                        insights.append(f"🎯 {muscle.capitalize()} est prioritaire mais peu travaillé cette semaine")
+        
+        return insights[:3]  # Max 3 insights
+
+# ========== ADAPTATEUR TEMPS RÉEL ==========
+
+class RealTimeAdapter:
+    """Gestion de l'adaptation en temps réel"""
+    def __init__(self, db: Session):
+        self.db = db
+        self.recovery_tracker = RecoveryTracker(db)
+        self.volume_optimizer = VolumeOptimizer(db)
+        self.progression_analyzer = ProgressionAnalyzer(db)
+    
+    def handle_session_completed(self, workout: Workout):
+        """Appelé après chaque séance pour adapter les targets"""
+        from backend.models import AdaptiveTargets
+        
+        # Mettre à jour les volumes réalisés
+        self._update_current_volumes(workout)
+        
+        # Détecter les patterns de fatigue
+        if self._detect_overtraining(workout.user):
+            self._force_deload_period(workout.user)
+        
+        # Ajuster les targets adaptatifs
+        self._recalibrate_targets(workout.user)
+    
+    def handle_session_skipped(self, user: User, reason: str = None):
+        """Gestion intelligente des séances ratées"""
+        from backend.models import UserCommitment, AdaptiveTargets
+        
+        # Pas de culpabilisation, juste adaptation
+        commitment = self.db.query(UserCommitment).filter(
+            UserCommitment.user_id == user.id
+        ).first()
+        
+        if commitment:
+            # Réduire temporairement les attentes
+            targets = self.db.query(AdaptiveTargets).filter(
+                AdaptiveTargets.user_id == user.id
+            ).all()
+            
+            for target in targets:
+                target.target_volume *= 0.9  # Réduire de 10%
+            
+            self.db.commit()
+    
+    def get_smart_reminder(self, user: User) -> str:
+        """Génère un rappel contextuel intelligent"""
+        from backend.models import UserCommitment
+        
+        # Analyser le contexte
+        trajectory = self.progression_analyzer.get_trajectory_status(user)
+        
+        if trajectory["sessions_this_week"] == 0:
+            return "💪 Pas grave pour les séances ratées. 30 min aujourd'hui ?"
+        elif trajectory["sessions_this_week"] >= 5:
+            return "🔥 5 séances d'affilée ! Repos mérité ou on continue ?"
+        elif trajectory["consistency_score"] > 0.8:
+            return "🎯 Tu es sur une excellente lancée ! Prêt pour la suite ?"
+        else:
+            return "💪 C'est le moment parfait pour une séance !"
+    
+    def _update_current_volumes(self, workout: Workout):
+        """Met à jour les volumes réalisés dans les targets adaptatifs"""
+        from backend.models import AdaptiveTargets
+        
+        # Calculer le volume par muscle pour cette séance
+        volume_by_muscle = {}
+        for set_item in workout.sets:
+            exercise = self.db.query(Exercise).filter(
+                Exercise.id == set_item.exercise_id
+            ).first()
+            
+            if exercise:
+                muscle = exercise.body_part
+                volume = set_item.actual_reps
+                
+                if muscle in volume_by_muscle:
+                    volume_by_muscle[muscle] += volume
+                else:
+                    volume_by_muscle[muscle] = volume
+        
+        # Mettre à jour les targets
+        for muscle, volume in volume_by_muscle.items():
+            target = self.db.query(AdaptiveTargets).filter(
+                AdaptiveTargets.user_id == workout.user_id,
+                AdaptiveTargets.muscle_group == muscle
+            ).first()
+            
+            if target:
+                # Recalculer sur fenêtre de 7 jours
+                target.current_volume = self._calculate_7day_volume(workout.user_id, muscle)
+                target.last_trained = workout.completed_at or datetime.utcnow()
+                
+                # Mettre à jour la dette de récupération
+                avg_fatigue = sum(s.fatigue_level for s in workout.sets) / len(workout.sets)
+                target.recovery_debt = max(0, target.recovery_debt + (avg_fatigue - 2.5) * 0.5)
+        
+        self.db.commit()
+    
+    def _calculate_7day_volume(self, user_id: int, muscle: str) -> float:
+        """Calcule le volume sur 7 jours glissants"""
+        cutoff = datetime.utcnow() - timedelta(days=7)
+        
+        result = self.db.query(func.sum(Set.actual_reps)).join(
+            Workout
+        ).join(
+            Exercise
+        ).filter(
+            Workout.user_id == user_id,
+            Exercise.body_part == muscle,
+            Workout.created_at > cutoff,
+            Workout.status == "completed"
+        ).scalar()
+        
+        return float(result or 0)
+    
+    def _detect_overtraining(self, user: User) -> bool:
+        """Détecte les signes de surentraînement"""
+        # Moyenne de fatigue sur 7 jours
+        avg_fatigue = self.db.query(func.avg(Set.fatigue_level)).join(
+            Workout
+        ).filter(
+            Workout.user_id == user.id,
+            Workout.created_at > datetime.utcnow() - timedelta(days=7)
+        ).scalar()
+        
+        return avg_fatigue and avg_fatigue > 4.0
+    
+    def _force_deload_period(self, user: User):
+        """Force une période de décharge"""
+        from backend.models import AdaptiveTargets
+        
+        targets = self.db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user.id
+        ).all()
+        
+        for target in targets:
+            target.target_volume *= 0.6  # Réduire de 40%
+            target.recovery_debt = 0  # Reset la dette
+        
+        self.db.commit()
+    
+    def _recalibrate_targets(self, user: User):
+        """Recalibre les objectifs adaptatifs"""
+        from backend.models import AdaptiveTargets
+        
+        targets = self.db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user.id
+        ).all()
+        
+        for target in targets:
+            # Si le volume actuel dépasse la cible, augmenter la cible
+            if target.current_volume > target.target_volume * 1.1:
+                target.target_volume = target.current_volume
+                target.adaptation_rate = min(1.5, target.adaptation_rate * 1.1)
+            # Si très en dessous, ajuster la cible
+            elif target.current_volume < target.target_volume * 0.5:
+                target.target_volume *= 0.85
+                target.adaptation_rate = max(0.5, target.adaptation_rate * 0.9)
+        
+        self.db.commit()

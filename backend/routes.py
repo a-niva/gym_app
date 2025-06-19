@@ -6,83 +6,12 @@ from backend.database import get_db
 from backend.models import User, Exercise, Workout, Set
 from backend.ml_engine import FitnessMLEngine
 from backend.schemas import UserCreate, WorkoutCreate, SetCreate, ProgramGenerationRequest, ProgramCreate, ProgramDayBase, ProgramExerciseBase
+from backend.schemas import UserCommitmentCreate, UserCommitmentResponse, AdaptiveTargetsResponse, TrajectoryAnalysis
+from backend.models import UserCommitment, AdaptiveTargets
+from backend.ml_engine import RecoveryTracker, VolumeOptimizer, SessionBuilder, ProgressionAnalyzer, RealTimeAdapter
 import logging
+import datetime
 router = APIRouter()
-
-#@router.post("/api/users/{user_id}/program")
-#async def generate_program(
- #   user_id: int, 
- #   request: ProgramGenerationRequest,
- #   db: Session = Depends(get_db)
-#:
- #   user = db.query(User).filter(User.id == user_id).first()
- #   if not user:
- #       raise HTTPException(status_code=404, detail="User not found")
- #   
- #   ml_engine = FitnessMLEngine(db)
-
- #   logger = logging.getLogger(__name__)
-
- #   try:
- #       program = ml_engine.generate_adaptive_program(user, request.weeks, request.frequency)
- #   except Exception as e:
- #       logger.error(f"Program generation failed for user {user_id}: {str(e)}")
- #       raise HTTPException(status_code=500, detail="Program generation failed")
- #       
- #   # Transformer le format pour la sauvegarde
- #   program_data = ProgramCreate(
- #       name=f"Programme {request.weeks} semaines - {request.frequency}j/sem",
- #       duration_weeks=request.weeks,
- #       frequency=request.frequency,
- #       program_days=[]
- #   )
-
- #   # Transformer le format du programme généré
- #   for item in program:
- #       # Trouver ou créer le ProgramDay
- #       day_exists = False
- #       for day in program_data.program_days:
- #           if day.week_number == item["week"] and day.day_number == item["day"]:
- #               day_exists = True
- #               # Ajouter l'exercice à ce jour
- #               for i, ex in enumerate(item["exercises"]):
- #                   day.exercises.append(ProgramExerciseBase(
- #                       exercise_id=ex["exercise_id"],
- #                       sets=ex["sets"],
- #                       target_reps=ex["target_reps"],
- #                       rest_time=ex["rest_time"],
- #                       order_index=i,
- #                       predicted_weight=ex["predicted_weight"]
- #                   ))
- #               break
- #       
- #       if not day_exists:
- #           # Créer un nouveau jour avec ses exercices
- #           exercises = []
- #           for i, ex in enumerate(item["exercises"]):
- #               exercises.append(ProgramExerciseBase(
- #                   exercise_id=ex["exercise_id"],
- #                   sets=ex["sets"],
- #                   target_reps=ex["target_reps"],
- #                   rest_time=ex["rest_time"],
- #                   order_index=i,
- #                   predicted_weight=ex["predicted_weight"]
- #               ))
- #           
- #           program_data.program_days.append(ProgramDayBase(
- #               week_number=item["week"],
- #               day_number=item["day"],
- #               muscle_group=item["muscle_group"],
- #               exercises=exercises
- #           ))
-
- #   # Sauvegarder en base
- #   saved_program = create_program(program_data, db)
-
- #   return {
- #       "program": program,
- #       "saved_program_id": saved_program.id
- #   }
 
 @router.post("/api/users/{user_id}/program")
 async def generate_program(
@@ -140,3 +69,188 @@ async def adjust_workout(
     )
     
     return adjustments
+
+# ========== ENDPOINTS SYSTÈME ADAPTATIF ==========
+
+@router.post("/api/users/{user_id}/commitment")
+async def create_user_commitment(
+    user_id: int,
+    commitment: UserCommitmentCreate,
+    db: Session = Depends(get_db)
+):
+    """Créer ou mettre à jour l'engagement utilisateur"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Vérifier si un engagement existe déjà
+    existing = db.query(UserCommitment).filter(
+        UserCommitment.user_id == user_id
+    ).first()
+    
+    if existing:
+        # Mettre à jour
+        for key, value in commitment.dict().items():
+            setattr(existing, key, value)
+        existing.updated_at = datetime.utcnow()
+    else:
+        # Créer nouveau
+        new_commitment = UserCommitment(
+            user_id=user_id,
+            **commitment.dict()
+        )
+        db.add(new_commitment)
+    
+    db.commit()
+    
+    # Initialiser les targets adaptatifs
+    volume_optimizer = VolumeOptimizer(db)
+    muscles = ["chest", "back", "shoulders", "legs", "arms", "core"]
+    
+    for muscle in muscles:
+        # Vérifier si existe déjà
+        target = db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user_id,
+            AdaptiveTargets.muscle_group == muscle
+        ).first()
+        
+        if not target:
+            target = AdaptiveTargets(
+                user_id=user_id,
+                muscle_group=muscle,
+                target_volume=volume_optimizer.calculate_optimal_volume(user, muscle),
+                current_volume=0,
+                recovery_debt=0,
+                adaptation_rate=1.0
+            )
+            db.add(target)
+    
+    db.commit()
+    
+    return {"message": "Commitment created/updated successfully"}
+
+@router.get("/api/users/{user_id}/commitment", response_model=UserCommitmentResponse)
+async def get_user_commitment(user_id: int, db: Session = Depends(get_db)):
+    """Récupérer l'engagement utilisateur"""
+    commitment = db.query(UserCommitment).filter(
+        UserCommitment.user_id == user_id
+    ).first()
+    
+    if not commitment:
+        raise HTTPException(status_code=404, detail="No commitment found")
+    
+    return commitment
+
+@router.get("/api/users/{user_id}/adaptive-targets", response_model=List[AdaptiveTargetsResponse])
+async def get_adaptive_targets(user_id: int, db: Session = Depends(get_db)):
+    """Récupérer les objectifs adaptatifs"""
+    targets = db.query(AdaptiveTargets).filter(
+        AdaptiveTargets.user_id == user_id
+    ).all()
+    
+    return targets
+
+@router.get("/api/users/{user_id}/trajectory", response_model=TrajectoryAnalysis)
+async def get_trajectory_analysis(user_id: int, db: Session = Depends(get_db)):
+    """Analyser la trajectoire de progression"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    analyzer = ProgressionAnalyzer(db)
+    analysis = analyzer.get_trajectory_status(user)
+    
+    return analysis
+
+@router.post("/api/users/{user_id}/generate-adaptive-workout")
+async def generate_adaptive_workout(
+    user_id: int,
+    time_available: int = 60,  # Minutes disponibles
+    db: Session = Depends(get_db)
+):
+    """Générer une séance adaptative basée sur l'état actuel"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Analyser l'état actuel
+    recovery_tracker = RecoveryTracker(db)
+    volume_optimizer = VolumeOptimizer(db)
+    session_builder = SessionBuilder(db)
+    
+    # Déterminer quels muscles entraîner
+    muscle_readiness = {}
+    volume_deficits = volume_optimizer.get_volume_deficit(user)
+    
+    for muscle in ["chest", "back", "shoulders", "legs", "arms", "core"]:
+        readiness = recovery_tracker.get_muscle_readiness(muscle, user)
+        deficit = volume_deficits.get(muscle, 0)
+        
+        # Score combiné (récupération + besoin de volume)
+        priority_score = readiness * 0.4 + deficit * 0.6
+        muscle_readiness[muscle] = priority_score
+    
+    # Sélectionner les 2-3 meilleurs muscles
+    sorted_muscles = sorted(muscle_readiness.items(), key=lambda x: x[1], reverse=True)
+    selected_muscles = [m[0] for m in sorted_muscles[:3] if m[1] > 0.3]
+    
+    if not selected_muscles:
+        # Fallback : prendre les plus reposés
+        selected_muscles = [m[0] for m in sorted_muscles[:2]]
+    
+    # Construire la séance
+    workout = session_builder.build_session(
+        muscles=selected_muscles,
+        time_budget=time_available * 60,  # Convertir en secondes
+        user=user
+    )
+    
+    return {
+        "muscles": selected_muscles,
+        "exercises": workout,
+        "estimated_duration": sum(ex["sets"] * (30 + ex["rest_time"]) for ex in workout) / 60,
+        "readiness_scores": {m: round(s, 2) for m, s in muscle_readiness.items()}
+    }
+
+@router.post("/api/workouts/{workout_id}/complete-adaptive")
+async def complete_adaptive_workout(
+    workout_id: int,
+    db: Session = Depends(get_db)
+):
+    """Marquer une séance comme terminée et adapter les objectifs"""
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    
+    # Marquer comme complété
+    workout.status = "completed"
+    workout.completed_at = datetime.utcnow()
+    db.commit()
+    
+    # Adapter en temps réel
+    adapter = RealTimeAdapter(db)
+    adapter.handle_session_completed(workout)
+    
+    return {"message": "Workout completed and targets adapted"}
+
+@router.post("/api/users/{user_id}/skip-session")
+async def skip_session(
+    user_id: int,
+    reason: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Gérer une séance ratée intelligemment"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    adapter = RealTimeAdapter(db)
+    adapter.handle_session_skipped(user, reason)
+    
+    # Générer un message encourageant
+    reminder = adapter.get_smart_reminder(user)
+    
+    return {
+        "message": "Session skipped handled",
+        "reminder": reminder
+    }

@@ -504,6 +504,158 @@ async function createRestPeriod(restData) {
     }
 }
 
+// ========== API SYSTÈME ADAPTATIF ==========
+
+async function saveUserCommitment(userId, commitment) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/commitment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(commitment)
+        });
+        
+        if (!response.ok) throw new Error('Failed to save commitment');
+        
+        const data = await response.json();
+        state.userCommitment = commitment;
+        return data;
+    } catch (error) {
+        console.error('Error saving commitment:', error);
+        showToast('Erreur lors de la sauvegarde des objectifs', 'error');
+        throw error;
+    }
+}
+
+async function getUserCommitment(userId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/commitment`);
+        
+        if (response.status === 404) {
+            return null;
+        }
+        
+        if (!response.ok) throw new Error('Failed to get commitment');
+        
+        const data = await response.json();
+        state.userCommitment = data;
+        return data;
+    } catch (error) {
+        console.error('Error getting commitment:', error);
+        return null;
+    }
+}
+
+async function getAdaptiveTargets(userId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/adaptive-targets`);
+        
+        if (!response.ok) throw new Error('Failed to get adaptive targets');
+        
+        const data = await response.json();
+        state.adaptiveTargets = data;
+        return data;
+    } catch (error) {
+        console.error('Error getting adaptive targets:', error);
+        return [];
+    }
+}
+
+async function getTrajectoryAnalysis(userId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/trajectory`);
+        
+        if (!response.ok) throw new Error('Failed to get trajectory');
+        
+        const data = await response.json();
+        state.trajectoryAnalysis = data;
+        return data;
+    } catch (error) {
+        console.error('Error getting trajectory:', error);
+        return null;
+    }
+}
+
+async function generateAdaptiveWorkout(userId, timeAvailable = 60) {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/users/${userId}/generate-adaptive-workout?time_available=${timeAvailable}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }
+        );
+        
+        if (!response.ok) throw new Error('Failed to generate adaptive workout');
+        
+        const data = await response.json();
+        state.currentAdaptiveWorkout = data;
+        return data;
+    } catch (error) {
+        console.error('Error generating adaptive workout:', error);
+        showToast('Erreur lors de la génération de la séance', 'error');
+        throw error;
+    }
+}
+
+async function completeAdaptiveWorkout(workoutId) {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/workouts/${workoutId}/complete-adaptive`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }
+        );
+        
+        if (!response.ok) throw new Error('Failed to complete adaptive workout');
+        
+        const data = await response.json();
+        
+        // Rafraîchir les données
+        await getTrajectoryAnalysis(state.currentUser.id);
+        await getAdaptiveTargets(state.currentUser.id);
+        
+        return data;
+    } catch (error) {
+        console.error('Error completing adaptive workout:', error);
+        throw error;
+    }
+}
+
+async function skipSession(userId, reason = null) {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/users/${userId}/skip-session`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ reason })
+            }
+        );
+        
+        if (!response.ok) throw new Error('Failed to skip session');
+        
+        const data = await response.json();
+        
+        // Afficher le rappel intelligent
+        if (data.reminder) {
+            showToast(data.reminder, 'info');
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('Error skipping session:', error);
+        throw error;
+    }
+}
 
 // Export pour les autres modules
 export {
