@@ -1,7 +1,7 @@
 # ===== backend/routes.py =====
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from backend.database import get_db
 from backend.models import User, Exercise, Workout, Set
 from backend.ml_engine import FitnessMLEngine
@@ -11,6 +11,7 @@ from backend.models import UserCommitment, AdaptiveTargets
 from backend.ml_engine import RecoveryTracker, VolumeOptimizer, SessionBuilder, ProgressionAnalyzer, RealTimeAdapter
 import logging
 import datetime
+
 router = APIRouter()
 
 @router.post("/api/users/{user_id}/program")
