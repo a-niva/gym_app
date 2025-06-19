@@ -308,25 +308,33 @@ async function saveCommitment() {
     }
 }
 
-// Modifier la fonction nextStep pour inclure l'étape commitment
-const originalNextStep = window.nextStep;
-window.nextStep = function() {
-    const currentStepEl = document.querySelector('.onboarding-step:not([style*="display: none"])');
+// Sauvegarder la fonction originale sous un autre nom
+const navigationNextStep = window.nextStep;
+
+// Créer une nouvelle fonction qui gère la logique spéciale
+function enhancedNextStep() {
+    const currentStepEl = document.querySelector('.onboarding-step.active');
     if (currentStepEl && currentStepEl.id === 'step2') {
-        // Après les objectifs, montrer l'engagement
-        currentStepEl.style.display = 'none';
+        // Après les objectifs, montrer l'engagement si nécessaire
         const commitmentStep = document.getElementById('step-commitment');
-        if (commitmentStep) {
-            commitmentStep.style.display = 'block';
+        if (commitmentStep && !userCommitment) {
+            currentStepEl.classList.remove('active');
+            commitmentStep.classList.add('active');
             return;
         }
     }
     
-    // Sinon, comportement normal
-    if (originalNextStep) {
-        originalNextStep();
+    // Sinon, utiliser la navigation normale
+    if (navigationNextStep) {
+        navigationNextStep();
     }
-};
+}
+
+// Remplacer nextStep après un délai pour s'assurer que tout est chargé
+setTimeout(() => {
+    window.nextStep = enhancedNextStep;
+}, 100);
+
 
 // Initialiser l'étape d'engagement au chargement
 document.addEventListener('DOMContentLoaded', createCommitmentStep);

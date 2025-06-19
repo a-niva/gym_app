@@ -29,6 +29,30 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+// ===== OVERLAY DE CHARGEMENT =====
+function showLoadingOverlay(message = 'Chargement...') {
+    // Supprimer tout overlay existant
+    hideLoadingOverlay();
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'loadingOverlay';
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = `
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>${message}</p>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
 // ===== MODAL DE FATIGUE =====
 function showFatigueModal(fatigue) {
     const modal = document.createElement('div');
@@ -88,6 +112,8 @@ window.getColorHex = getColorHex;
 // Export pour les autres modules
 export { 
     showToast,
+    showLoadingOverlay,
+    hideLoadingOverlay,
     toggleSilentMode,
     getEquipmentIcon,
     getEquipmentName,
