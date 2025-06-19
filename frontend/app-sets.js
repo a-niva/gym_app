@@ -29,7 +29,6 @@ import {
 import { showToast } from './app-ui.js';
 import {
     calculateAvailableWeights,
-    adjustWeightToNext as adjustToNextWeight,
     validateWeight,
     getExerciseType,
     calculateSuggestedWeight,
@@ -516,32 +515,22 @@ function adjustWeightToNext(direction) {
     const input = document.getElementById('setWeight');
     const currentWeight = parseFloat(input.value) || 0;
     
-    // Obtenir uniquement les poids possibles
+    // Obtenir TOUS les poids possibles (y compris la barre seule)
     const availableWeights = calculateAvailableWeights(currentExercise);
     
     if (availableWeights.length === 0) {
         return;
     }
     
-    // Filtrer pour exclure le poids de la barre seule SI on n'est pas déjà dessus
-    // et qu'il y a d'autres options
-    const barWeight = getBarWeightForExercise(currentExercise);
-    let weightsToUse = availableWeights;
+    // Trouver l'index actuel
+    let currentIndex = availableWeights.findIndex(w => Math.abs(w - currentWeight) < 0.1);
     
-    if (currentWeight > barWeight && availableWeights.length > 1) {
-        // Si on est au-dessus du poids de la barre et qu'il y a d'autres options,
-        // exclure temporairement le poids de la barre pour éviter d'y retomber
-        weightsToUse = availableWeights.filter(w => w !== barWeight);
-    }
-    
-    // Trouver l'index actuel dans la liste filtrée
-    let currentIndex = weightsToUse.findIndex(w => Math.abs(w - currentWeight) < 0.1);
     if (currentIndex === -1) {
-        // Trouver le plus proche
+        // Si le poids actuel n'est pas dans la liste, trouver le plus proche
         currentIndex = 0;
-        let minDiff = Math.abs(weightsToUse[0] - currentWeight);
-        for (let i = 1; i < weightsToUse.length; i++) {
-            const diff = Math.abs(weightsToUse[i] - currentWeight);
+        let minDiff = Math.abs(availableWeights[0] - currentWeight);
+        for (let i = 1; i < availableWeights.length; i++) {
+            const diff = Math.abs(availableWeights[i] - currentWeight);
             if (diff < minDiff) {
                 minDiff = diff;
                 currentIndex = i;
@@ -549,14 +538,28 @@ function adjustWeightToNext(direction) {
         }
     }
     
-    // Calculer le nouvel index
-    let newIndex = currentIndex + direction;
+    // Calculer le nouvel index souhaité
+    const newIndex = currentIndex + direction;
     
-    // Si on sort des limites et qu'on descend, permettre d'aller au poids de la barre
-    if (newIndex < 0 && direction < 0 && weightsToUse !== availableWeights) {
-        input.value = barWeight;
-    } else if (newIndex >= 0 && newIndex < weightsToUse.length) {
-        input.value = weightsToUse[newIndex];
+    // Logique spéciale pour éviter la barre seule sauf si nécessaire
+    const barWeight = getBarWeightForExercise(currentExercise);
+    
+    if (newIndex >= 0 && newIndex < availableWeights.length) {
+        const newWeight = availableWeights[newIndex];
+        
+        // Si on tombe sur la barre seule ET qu'il y a d'autres options
+        if (newWeight === barWeight && availableWeights.length > 2) {
+            // Sauter la barre seule dans la direction du mouvement
+            const skipIndex = newIndex + direction;
+            if (skipIndex >= 0 && skipIndex < availableWeights.length) {
+                input.value = availableWeights[skipIndex];
+            } else {
+                // Si on ne peut pas sauter, rester où on est
+                return;
+            }
+        } else {
+            input.value = newWeight;
+        }
     }
     
     // Mettre à jour les visualisations

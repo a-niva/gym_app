@@ -95,36 +95,6 @@ function calculateAvailableWeights(exercise) {
         .sort((a, b) => a - b);
 }
 
-// ===== AJUSTEMENT AU POIDS DISPONIBLE LE PLUS PROCHE =====
-function adjustWeightToNext(exercise, currentWeight, direction) {
-    const availableWeights = calculateAvailableWeights(exercise);
-    
-    if (availableWeights.length === 0) {
-        // Comportement par défaut si pas de poids configurés
-        const newValue = currentWeight + (direction * 2.5);
-        return newValue >= 0 ? newValue : 0;
-    }
-    
-    // Trouver le poids disponible le plus proche
-    let targetIndex = 0;
-    for (let i = 0; i < availableWeights.length; i++) {
-        if (availableWeights[i] >= currentWeight) {
-            targetIndex = i;
-            break;
-        }
-        targetIndex = i;
-    }
-    
-    // Ajuster selon la direction
-    if (direction > 0 && targetIndex < availableWeights.length - 1) {
-        targetIndex++;
-    } else if (direction < 0 && targetIndex > 0) {
-        targetIndex--;
-    }
-    
-    return availableWeights[targetIndex];
-}
-
 // ===== VALIDATION DU POIDS =====
 function validateWeight(exercise, weight) {
     const availableWeights = calculateAvailableWeights(exercise);
@@ -464,7 +434,6 @@ function formatWeightDisplay(weight, exercise) {
 // Export pour les autres modules
 export {
     calculateAvailableWeights,
-    adjustWeightToNext,
     validateWeight,
     filterExercisesByEquipment,
     getExerciseType,
