@@ -219,6 +219,26 @@ async function getSuggestedWeight(userId, exerciseId) {
     return null;
 }
 
+// Récupérer les suggestions d'ajustement ML (poids + reps)
+async function getWorkoutAdjustments(workoutId, setId, remainingSets) {
+    try {
+        const response = await apiCall(
+            `/workouts/${workoutId}/sets/${setId}/adjust`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ remaining_sets: remainingSets })
+            }
+        );
+        
+        if (response && response.adjustments) {
+            return response.adjustments;
+        }
+    } catch (error) {
+        console.error('Erreur récupération ajustements ML:', error);
+    }
+    return null;
+}
+
 // ===== WORKOUTS API =====
 async function createWorkout(userId, type) {
     try {
@@ -483,5 +503,6 @@ export {
     getMuscleDistribution,
     createSet,
     updateSetRestTime,
-    createRestPeriod
+    createRestPeriod,
+    getWorkoutAdjustments
 };

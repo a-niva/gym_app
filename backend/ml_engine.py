@@ -43,6 +43,15 @@ class FitnessMLEngine:
             "flexibility": {"sets": 0.9, "reps": 1.5, "weight": 0.6}
         }
 
+        # Facteurs d'ajustement des répétitions selon la fatigue
+        self.REPS_FATIGUE_ADJUSTMENTS = {
+            1: 1.0,    # Pas fatigué - maintenir les reps
+            2: 1.0,    # Légèrement fatigué - maintenir
+            3: 0.95,   # Modérément fatigué - réduire légèrement
+            4: 0.85,   # Très fatigué - réduire significativement
+            5: 0.75    # Épuisé - réduire fortement
+        }
+
     def _mean(self, values):
         """Calcule la moyenne d'une liste de valeurs"""
         return sum(values) / len(values) if values else 0
@@ -296,6 +305,38 @@ class FitnessMLEngine:
         
         recommendations = []
         adjustments = {}
+
+        # Calculer l'ajustement des répétitions
+        recent_sets = self.db.query(Set).join(Workout).filter(
+            Workout.user_id == user.id,
+            Set.exercise_id == current_set.exercise_id,
+            Set.skipped == False
+        ).order_by(Set.completed_at.desc()).limit(5).all()
+
+        rep_suggestion = self.calculate_optimal_rep_range(
+            user=user,
+            exercise=self.db.query(Exercise).filter(
+                Exercise.id == current_set.exercise_id
+            ).first(),
+            current_fatigue=current_set.fatigue_level / 2,  # Normaliser sur 5
+            recent_performance=recent_sets,
+            remaining_sets=remaining_sets
+        )
+
+        adjustments["suggested_reps"] = rep_suggestion["optimal_reps"]
+        adjustments["rep_range"] = {
+            "min": rep_suggestion["min_reps"],
+            "max": rep_suggestion["max_reps"]
+        }
+        adjustments["rep_confidence"] = rep_suggestion["confidence"]
+
+        # Ajouter une recommandation si les reps suggérées diffèrent significativement
+        if current_set.target_reps > 0:
+            rep_diff_ratio = rep_suggestion["optimal_reps"] / current_set.target_reps
+            if rep_diff_ratio < 0.8:
+                recommendations.append(f"Réduire à {rep_suggestion['optimal_reps']} reps pour maintenir la qualité")
+            elif rep_diff_ratio > 1.2:
+                recommendations.append(f"Augmenter à {rep_suggestion['optimal_reps']} reps si possible")
         
         if performance_ratio < 0.7:
             # Performance très en dessous
@@ -332,6 +373,107 @@ class FitnessMLEngine:
             "adjustments": adjustments,
             "recommendations": recommendations
         }
+    
+    def calculate_optimal_rep_range(
+        self,
+        user: User,
+        exercise: Exercise,
+        current_fatigue: float,
+        recent_performance: List[Set],
+        remaining_sets: int
+    ) -> Dict:
+        """
+        Calcule la fourchette de répétitions optimale selon:
+        - Les objectifs de l'utilisateur
+        - Le niveau de fatigue actuel
+        - L'historique récent de performance
+        - Le nombre de séries restantes
+        """
+        # Récupérer les reps de base depuis l'exercice
+        base_reps = 10  # Valeur par défaut
+        if exercise.sets_reps:
+            for config in exercise.sets_reps:
+                if config.get("level") == user.experience_level:
+                    base_reps = config.get("reps", 10)
+                    break
+        
+        # Ajuster selon les objectifs
+        goal_multiplier = 1.0
+        if user.goals:
+            for goal in user.goals:
+                if goal in self.GOAL_ADJUSTMENTS:
+                    goal_multiplier *= self.GOAL_ADJUSTMENTS[goal]["reps"]
+            goal_multiplier = goal_multiplier ** (1/len(user.goals))
+        
+        # Ajuster selon la fatigue
+        fatigue_multiplier = self.REPS_FATIGUE_ADJUSTMENTS.get(
+            int(current_fatigue), 0.9
+        )
+        
+        # Analyser la tendance de performance
+        if recent_performance and len(recent_performance) >= 2:
+            # Calculer le ratio de réussite moyen
+            success_ratios = []
+            for perf in recent_performance[-3:]:
+                if perf.target_reps > 0:
+                    ratio = perf.actual_reps / perf.target_reps
+                    success_ratios.append(ratio)
+            
+            if success_ratios:
+                avg_success = sum(success_ratios) / len(success_ratios)
+                
+                # Ajuster selon la performance
+                if avg_success > 1.15:  # Dépassement constant
+                    performance_adjustment = 1.1
+                elif avg_success < 0.85:  # Sous-performance
+                    performance_adjustment = 0.9
+                else:
+                    performance_adjustment = 1.0
+            else:
+                performance_adjustment = 1.0
+        else:
+            performance_adjustment = 1.0
+        
+        # Calculer les reps optimales
+        optimal_reps = int(base_reps * goal_multiplier * fatigue_multiplier * performance_adjustment)
+        
+        # Définir la fourchette (±10-20%)
+        min_reps = max(1, int(optimal_reps * 0.8))
+        max_reps = int(optimal_reps * 1.2)
+        
+        # Ajustement spécial pour les dernières séries
+        if remaining_sets <= 1 and current_fatigue >= 4:
+            # Permettre de réduire plus sur la dernière série si très fatigué
+            min_reps = max(1, int(min_reps * 0.8))
+        
+        return {
+            "optimal_reps": optimal_reps,
+            "min_reps": min_reps,
+            "max_reps": max_reps,
+            "confidence": 0.8 if len(recent_performance) >= 3 else 0.5,
+            "adjustment_reason": self._get_adjustment_reason(
+                goal_multiplier, fatigue_multiplier, performance_adjustment
+            )
+        }
+
+    def _get_adjustment_reason(self, goal_mult, fatigue_mult, perf_mult):
+        """Explique la raison de l'ajustement des reps"""
+        reasons = []
+        
+        if goal_mult < 0.9:
+            reasons.append("Objectif force: moins de reps")
+        elif goal_mult > 1.1:
+            reasons.append("Objectif endurance: plus de reps")
+            
+        if fatigue_mult < 0.9:
+            reasons.append("Fatigue élevée détectée")
+            
+        if perf_mult > 1.05:
+            reasons.append("Performance excellente récente")
+        elif perf_mult < 0.95:
+            reasons.append("Ajustement pour maintenir la qualité")
+        
+        return " - ".join(reasons) if reasons else "Répétitions standards"
     
     def generate_adaptive_program(
         self,

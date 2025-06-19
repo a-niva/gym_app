@@ -39,7 +39,8 @@ import {
     createSet,
     updateSetRestTime,
     checkFatigue,
-    getSuggestedWeight
+    getSuggestedWeight,
+    getWorkoutAdjustments
 } from './app-api.js';
 import { TIME_BASED_KEYWORDS } from './app-config.js';
 import { addToSessionHistory } from './app-history.js';
@@ -69,7 +70,28 @@ async function showSetInput() {
     if (!mlSuggestion && mlSuggestion !== 0) {
         mlSuggestion = calculateSuggestedWeight(currentExercise);
     }
-    
+    // Récupérer aussi les suggestions de répétitions si on a déjà fait des séries
+    let mlRepsSuggestion = null;
+    if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId) {
+        const remainingSets = (currentExercise.sets_reps?.[0]?.sets || 3) - currentSetNumber + 1;
+        const adjustments = await getWorkoutAdjustments(
+            currentWorkout.id,
+            lastCompletedSetId,
+            remainingSets
+        );
+        
+        if (adjustments && adjustments.suggested_reps) {
+            mlRepsSuggestion = {
+                optimal: adjustments.suggested_reps,
+                min: adjustments.rep_range?.min || adjustments.suggested_reps - 2,
+                max: adjustments.rep_range?.max || adjustments.suggested_reps + 2,
+                confidence: adjustments.rep_confidence || 0.5
+            };
+        }
+    }
+
+    // Stocker globalement pour référence
+    window.currentMLRepsSuggestion = mlRepsSuggestion;
     // Stocker la suggestion ML dans une variable globale pour référence
     window.currentMLSuggestion = mlSuggestion;
     
@@ -148,11 +170,21 @@ async function showSetInput() {
                 <div class="input-group">
                     <label>${repsLabel}</label>
                     <div class="reps-selector">
-                        <button onclick="adjustReps(${isTimeBased ? -5 : -1})" class="btn-adjust">-</button>
-                        <input type="number" id="setReps" value="${defaultReps}" 
-                               min="1" max="${isTimeBased ? 300 : 50}" class="reps-display">
-                        <button onclick="adjustReps(${isTimeBased ? 5 : 1})" class="btn-adjust">+</button>
+                        <button onclick="adjustReps(${isTimeBased ? -5 : -1})" 
+                                class="btn-adjust ${mlRepsSuggestion && mlRepsSuggestion.optimal < defaultReps ? 'suggest-decrease' : ''}"
+                                id="repsDecreaseBtn">-</button>
+                        <input type="number" id="setReps" value="${mlRepsSuggestion ? mlRepsSuggestion.optimal : defaultReps}" 
+                            min="1" max="${isTimeBased ? 300 : 50}" class="reps-display">
+                        <button onclick="adjustReps(${isTimeBased ? 5 : 1})" 
+                                class="btn-adjust ${mlRepsSuggestion && mlRepsSuggestion.optimal > defaultReps ? 'suggest-increase' : ''}"
+                                id="repsIncreaseBtn">+</button>
                     </div>
+                    ${mlRepsSuggestion ? `
+                        <div class="suggestion-info" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--primary);">
+                            💡 ML suggère : ${mlRepsSuggestion.optimal} reps 
+                            ${mlRepsSuggestion.confidence > 0.7 ? '(haute confiance)' : ''}
+                        </div>
+                    ` : ''}
                 </div>
                 
                 <div class="selector-group">
@@ -733,6 +765,7 @@ async function completeSet() {
         if (result) {
             // Stocker l'ID pour mise à jour ultérieure du temps de repos
             localStorage.setItem('lastCompletedSetId', result.id);
+            window.lastCompletedSetId = result.id;  // Pour usage immédiat
             
             // Supprimer cette série des données en attente si elle y était
             const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');

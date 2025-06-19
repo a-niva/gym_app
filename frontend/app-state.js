@@ -58,6 +58,15 @@ let currentProgram = null;
 let userPrograms = [];
 let isAutoWeightEnabled = localStorage.getItem('isAutoWeightEnabled') !== 'false'; // true par défaut
 
+
+// État des suggestions ML
+export let lastCompletedSetId = parseInt(localStorage.getItem('lastCompletedSetId')) || null;
+
+export function setLastCompletedSetId(id) {
+    lastCompletedSetId = id;
+    localStorage.setItem('lastCompletedSetId', id);
+}
+
 // ===== ACCESSEURS SIMPLES =====
 // Pas de classes complexes, juste des fonctions directes
 
