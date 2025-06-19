@@ -133,7 +133,7 @@ async function showSetInput() {
                             <div class="weight-info">
                                 ${isBodyweight ? 
                                     `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
-                                    exercise.equipment.some(eq => eq.includes('barbell')) ?
+                                    currentExercise.equipment.some(eq => eq.includes('barbell')) ?
                                     `<div id="barbell-visualization" class="barbell-viz"></div>` :
                                     availableWeights.length > 0 ? 
                                     `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
