@@ -318,6 +318,40 @@ export function setIsAutoWeightEnabled(enabled) {
     localStorage.setItem('isAutoWeightEnabled', enabled);
 }
 
+// Ajoutez ces fonctions après setIsAutoWeightEnabled :
+
+export function getUserCommitment() {
+    return userCommitment;
+}
+
+export function setUserCommitment(commitment) {
+    userCommitment = commitment;
+}
+
+export function getAdaptiveTargets() {
+    return adaptiveTargets;
+}
+
+export function setAdaptiveTargets(targets) {
+    adaptiveTargets = targets;
+}
+
+export function getTrajectoryAnalysis() {
+    return trajectoryAnalysis;
+}
+
+export function setTrajectoryAnalysis(analysis) {
+    trajectoryAnalysis = analysis;
+}
+
+export function getCurrentAdaptiveWorkout() {
+    return currentAdaptiveWorkout;
+}
+
+export function setCurrentAdaptiveWorkout(workout) {
+    currentAdaptiveWorkout = workout;
+}
+
 // Export de getters pour les variables globales nécessaires
 Object.defineProperty(window, 'currentWorkout', {
     get: function() { return currentWorkout; }

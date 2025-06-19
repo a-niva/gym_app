@@ -18,6 +18,23 @@ import './app-sets.js';         // Sets (dépend de state, ui, equipment et api)
 import './app-program-generator.js';  // Générateur de programmes
 import './app-onboarding.js';   // Onboarding (dépend de tous les modules précédents)
 
+// Attacher les event listeners après le chargement complet
+document.addEventListener('DOMContentLoaded', () => {
+    // S'assurer que toutes les fonctions sont disponibles globalement
+    if (!window.nextStep && typeof nextStep !== 'undefined') {
+        window.nextStep = nextStep;
+    }
+    if (!window.prevStep && typeof prevStep !== 'undefined') {
+        window.prevStep = prevStep;
+    }
+    if (!window.toggleGoal && typeof toggleGoal !== 'undefined') {
+        window.toggleGoal = toggleGoal;
+    }
+    if (!window.toggleEquipment && typeof toggleEquipment !== 'undefined') {
+        window.toggleEquipment = toggleEquipment;
+    }
+});
+
 // Import des fonctions nécessaires à l'initialisation
 import { loadExercises, loadUserFromAPI } from './app-api.js';
 import { 
@@ -29,6 +46,8 @@ import {
 import { showView, showMainInterface, updateProgressBar } from './app-navigation.js';
 import { checkActiveWorkout } from './app-workout.js';
 import { showToast } from './app-ui.js';
+
+
 
 // ===== FONCTION D'INITIALISATION PRINCIPALE =====
 async function initializeApp() {
