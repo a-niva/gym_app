@@ -228,19 +228,16 @@ async function getWorkoutAdjustments(workoutId, setId, remainingSets) {
     });
     
     try {
-        // Vérifier d'abord que le set appartient bien à ce workout
-        const response = await fetch(`/api/workouts/${workoutId}/sets/${setId}/adjust`, {
+        // Le backend attend remaining_sets comme paramètre de query
+        const response = await fetch(`/api/workouts/${workoutId}/sets/${setId}/adjust?remaining_sets=${remainingSets}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                remaining_sets: remainingSets 
-            })
+            }
+            // Pas de body, remaining_sets est dans l'URL
         });
         
         if (!response.ok) {
-            // Log plus détaillé de l'erreur
             const errorText = await response.text();
             console.error('Erreur adjust workout:', {
                 status: response.status,
@@ -248,9 +245,8 @@ async function getWorkoutAdjustments(workoutId, setId, remainingSets) {
                 error: errorText
             });
             
-            // Si c'est une 422, c'est que le set n'appartient pas à ce workout
+            // Si c'est une 422, nettoyer l'ID invalide
             if (response.status === 422) {
-                // Nettoyer l'ID invalide
                 localStorage.removeItem('lastCompletedSetId');
             }
             
