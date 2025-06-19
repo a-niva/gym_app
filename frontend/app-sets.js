@@ -74,42 +74,66 @@ async function showSetInput() {
     const lastExerciseInHistory = sessionHistory[sessionHistory.length - 1];
     const isSameExercise = lastExerciseInHistory?.exerciseId === currentExercise.id;
 
-    if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId && isSameExercise) {
-        try {
-            const remainingSets = (currentExercise.sets_reps?.[0]?.sets || 3) - currentSetNumber + 1;
+    // Récupérer les suggestions ML uniquement si on a une série valide pour cet exercice
+    if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId) {
+        // Vérifier que la dernière série appartient bien à cet exercice ET ce workout
+        const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+        const currentExerciseHistory = sessionHistory.find(h => h.exerciseId === currentExercise.id);
+        
+        // Si on a bien des séries pour CET exercice dans CE workout
+        if (currentExerciseHistory && currentExerciseHistory.sets && currentExerciseHistory.sets.length > 0) {
+            const lastSet = currentExerciseHistory.sets[currentExerciseHistory.sets.length - 1];
             
-            console.log('DEBUG - Appel getWorkoutAdjustments avec:', {
-                workoutId: currentWorkout.id,
-                setId: lastCompletedSetId,
-                remainingSets: remainingSets
-            });
-            
-            const adjustments = await getWorkoutAdjustments(
-                currentWorkout.id,
-                lastCompletedSetId,
-                remainingSets
-            );
-            
-            console.log('DEBUG - Réponse adjustments:', adjustments);
-            
-            if (adjustments && adjustments.suggested_reps) {
-                mlRepsSuggestion = {
-                    optimal: adjustments.suggested_reps,
-                    min: adjustments.rep_range?.min || adjustments.suggested_reps - 2,
-                    max: adjustments.rep_range?.max || adjustments.suggested_reps + 2,
-                    confidence: adjustments.rep_confidence || 0.5
-                };
+            // Vérifier que le lastCompletedSetId correspond au workout actuel
+            if (lastSet.workout_id === currentWorkout.id) {
+                try {
+                    const remainingSets = (currentExercise.sets_reps?.[0]?.sets || 3) - currentSetNumber + 1;
+                    
+                    console.log('DEBUG - Appel getWorkoutAdjustments avec:', {
+                        workoutId: currentWorkout.id,
+                        setId: lastCompletedSetId,
+                        remainingSets: remainingSets,
+                        exerciseId: currentExercise.id
+                    });
+                    
+                    const adjustments = await getWorkoutAdjustments(
+                        currentWorkout.id,
+                        lastCompletedSetId,
+                        remainingSets
+                    );
+                    
+                    console.log('DEBUG - Réponse adjustments:', adjustments);
+                    
+                    if (adjustments && adjustments.adjustments) {
+                        if (adjustments.adjustments.suggested_reps) {
+                            mlRepsSuggestion = {
+                                optimal: adjustments.adjustments.suggested_reps,
+                                min: adjustments.adjustments.rep_range?.min || adjustments.adjustments.suggested_reps - 2,
+                                max: adjustments.adjustments.rep_range?.max || adjustments.adjustments.suggested_reps + 2,
+                                confidence: adjustments.adjustments.rep_confidence || 0.5
+                            };
+                        }
+                        
+                        // Mettre à jour la suggestion de poids si disponible
+                        if (adjustments.adjustments.weight_multiplier && mlSuggestion) {
+                            mlSuggestion = Math.round(mlSuggestion * adjustments.adjustments.weight_multiplier);
+                            console.log('DEBUG - Nouvelle suggestion de poids ajustée:', mlSuggestion);
+                        }
+                    }
+                } catch (error) {
+                    console.error('DEBUG - Erreur getWorkoutAdjustments:', error);
+                    // Nettoyer si l'ID est invalide
+                    localStorage.removeItem('lastCompletedSetId');
+                }
+            } else {
+                // L'ID ne correspond pas au workout actuel, le nettoyer
+                console.log('DEBUG - lastCompletedSetId ne correspond pas au workout actuel, nettoyage');
+                localStorage.removeItem('lastCompletedSetId');
             }
-            
-            // Mettre à jour la suggestion de poids si disponible
-            if (adjustments && adjustments.next_set_weight) {
-                mlSuggestion = adjustments.next_set_weight;
-                console.log('DEBUG - Nouvelle suggestion de poids depuis adjustments:', mlSuggestion);
-            }
-        } catch (error) {
-            adjustmentsError = error;
-            console.error('DEBUG - Erreur getWorkoutAdjustments:', error);
-            // NE PAS faire échouer toute la fonction, continuer avec les valeurs par défaut
+        } else {
+            // Pas d'historique pour cet exercice, nettoyer l'ID
+            console.log('DEBUG - Pas d\'historique pour cet exercice, nettoyage lastCompletedSetId');
+            localStorage.removeItem('lastCompletedSetId');
         }
     }
 
