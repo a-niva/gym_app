@@ -66,7 +66,14 @@ async function showSetInput() {
     let availableWeights = calculateAvailableWeights(currentExercise);
     
     // Toujours obtenir la suggestion ML (indépendamment du toggle)
-    let mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
+    let mlSuggestion = null;
+    try {
+        mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
+    } catch (error) {
+        console.warn('Impossible de récupérer la suggestion ML:', error);
+    }
+
+    // Si pas de suggestion ML, utiliser le calcul local
     if (!mlSuggestion && mlSuggestion !== 0) {
         mlSuggestion = calculateSuggestedWeight(currentExercise);
     }
@@ -289,7 +296,15 @@ function updateBarbellVisualization() {
     if (!container) return;
     
     const weightInput = document.getElementById('setWeight');
+    if (!weightInput) return; // Vérifier que l'input existe
+    
     const totalWeight = parseFloat(weightInput.value) || 0;
+    
+    // Si pas de poids valide, ne pas afficher d'erreur
+    if (totalWeight === 0 && !currentExercise.equipment.includes('bodyweight')) {
+        container.innerHTML = '<div class="barbell-info">Sélectionnez un poids</div>';
+        return;
+    }
     
     // Déterminer le poids de la barre
     const barWeight = getBarWeightForExercise(currentExercise);

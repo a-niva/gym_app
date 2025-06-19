@@ -223,20 +223,18 @@ async function getSuggestedWeight(userId, exerciseId) {
 async function getWorkoutAdjustments(workoutId, setId, remainingSets) {
     try {
         const response = await apiCall(
-            `/workouts/${workoutId}/sets/${setId}/adjust`,
+            `/api/workouts/${workoutId}/sets/${setId}/adjust`, 
             {
                 method: 'POST',
                 body: JSON.stringify({ remaining_sets: remainingSets })
             }
         );
-        
-        if (response && response.adjustments) {
-            return response.adjustments;
-        }
+        return response;
     } catch (error) {
-        console.error('Erreur récupération ajustements ML:', error);
+        // Ne pas faire crasher l'application si l'ajustement ML échoue
+        console.warn('Ajustements ML non disponibles:', error);
+        return null; // Retourner null au lieu de propager l'erreur
     }
-    return null;
 }
 
 // ===== WORKOUTS API =====
