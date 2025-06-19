@@ -514,6 +514,9 @@ function adjustWeightToNext(direction) {
     const currentWeight = parseFloat(input.value) || 0;
     const newWeight = adjustToNextWeight(currentExercise, currentWeight, direction);
     input.value = newWeight;
+    // Mettre à jour la visualisation
+    updateBarbellVisualization();
+}nput.value = newWeight;
 }
 
 function adjustReps(delta) {
@@ -779,6 +782,8 @@ function toggleAutoWeight(enabled) {
         const mlSuggestion = window.currentMLSuggestion;
         if (mlSuggestion) {
             document.getElementById('setWeight').value = mlSuggestion;
+            // Mettre à jour la visualisation de la barre
+            updateBarbellVisualization();
         }
         // Mettre à jour l'affichage
         updateWeightSuggestionVisual();
