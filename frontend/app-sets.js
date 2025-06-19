@@ -547,7 +547,7 @@ function adjustWeightToNext(direction) {
     const input = document.getElementById('setWeight');
     const currentWeight = parseFloat(input.value) || 0;
     
-    // Obtenir les poids disponibles (déjà filtrés par calculateAvailableWeights)
+    // Utiliser la fonction d'app-equipment qui calcule TOUS les poids possibles
     const availableWeights = calculateAvailableWeights(currentExercise);
     
     if (availableWeights.length === 0) {
@@ -569,7 +569,7 @@ function adjustWeightToNext(direction) {
         }
     }
     
-    // Naviguer simplement dans la liste
+    // Naviguer dans la liste
     const newIndex = currentIndex + direction;
     
     if (newIndex >= 0 && newIndex < availableWeights.length) {

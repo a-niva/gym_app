@@ -210,67 +210,61 @@ function getBarWeight(exercise, config) {
 
 // ===== CALCUL INTELLIGENT DES POIDS POSSIBLES =====
 function calculateAllPossibleBarWeights(barWeight, availablePlates) {
-    // Convertir les disques en tableau utilisable
-    const platesList = [];
-    const plateTypes = new Set();
+    // Si pas de disques, retourner seulement la barre
+    if (!availablePlates || Object.keys(availablePlates).length === 0) {
+        return [barWeight];
+    }
     
+    // Créer un inventaire des disques disponibles par côté
+    const platesInventory = [];
     Object.entries(availablePlates).forEach(([weight, count]) => {
         const w = parseFloat(weight);
         const c = parseInt(count);
         if (c > 0) {
-            plateTypes.add(w);
-            const pairs = Math.floor(c / 2);
-            for (let i = 0; i < pairs; i++) {
-                platesList.push(w);
+            // Nombre de disques disponibles par côté
+            const perSide = Math.floor(c / 2);
+            if (perSide > 0) {
+                platesInventory.push({ weight: w, count: perSide });
             }
         }
     });
     
-    // Si pas de disques du tout, retourner seulement la barre
-    if (platesList.length === 0) {
+    if (platesInventory.length === 0) {
         return [barWeight];
     }
     
-    // Calculer toutes les combinaisons possibles
-    const possibleWeightsPerSide = new Set();
-    const maxWeightPerSide = 150;
+    // Utiliser un Set pour éviter les doublons
+    const possibleWeightsPerSide = new Set([0]); // Commencer avec 0 (juste la barre)
     
-    // Ne PAS commencer avec 0 (barre seule) par défaut
-    // Commencer avec les poids de base de chaque type de disque
-    for (const plateWeight of plateTypes) {
-        possibleWeightsPerSide.add(plateWeight);
-    }
-    
-    // Calculer les combinaisons
-    const allWeights = [...possibleWeightsPerSide];
-    for (const existingWeight of allWeights) {
-        for (const plate of platesList) {
-            const newWeight = existingWeight + plate;
-            if (newWeight <= maxWeightPerSide && !possibleWeightsPerSide.has(newWeight)) {
-                possibleWeightsPerSide.add(newWeight);
+    // Pour chaque type de disque
+    for (const plate of platesInventory) {
+        const currentWeights = Array.from(possibleWeightsPerSide);
+        
+        // Pour chaque poids existant
+        for (const baseWeight of currentWeights) {
+            // Essayer d'ajouter 1, 2, 3... disques de ce type
+            for (let i = 1; i <= plate.count; i++) {
+                const newWeight = baseWeight + (plate.weight * i);
+                
+                // Limite raisonnable
+                if (newWeight <= 200) {
+                    possibleWeightsPerSide.add(newWeight);
+                }
             }
         }
     }
     
-    // Convertir en poids total (barre + 2x le poids par côté)
-    let result = Array.from(possibleWeightsPerSide)
+    // Convertir en poids total et trier
+    const allWeights = Array.from(possibleWeightsPerSide)
         .map(perSide => barWeight + (perSide * 2))
         .sort((a, b) => a - b);
     
-    // N'inclure la barre seule QUE si :
-    // - C'est la seule option
-    // - OU il y a très peu d'options (< 5)
-    // - OU c'est une barre légère (courte 2.5kg)
-    const shouldIncludeBarOnly = 
-        result.length === 0 || 
-        result.length < 5 || 
-        barWeight <= 3;
-    
-    if (shouldIncludeBarOnly && !result.includes(barWeight)) {
-        result.unshift(barWeight);
+    // Filtrer la barre seule si on a beaucoup d'autres options
+    if (allWeights.length > 10 && barWeight >= 10) {
+        return allWeights.filter(w => w !== barWeight);
     }
     
-    return result;
+    return allWeights;
 }
 
 // ===== VÉRIFICATION OPTIMALE SI UN POIDS EST POSSIBLE =====
