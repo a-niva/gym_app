@@ -16,6 +16,7 @@ import {
 } from './app-state.js';
 
 import { 
+    nextStep as navigationNextStep,
     nextStepSimple as navigateNext,
     prevStep as navigatePrev,
     updateProgressBar,
@@ -391,48 +392,22 @@ function validatePersonalInfo() {
     return true;
 }
 
-// ===== NAVIGATION PERSONNALISÉE AVEC VALIDATION =====
+// Définir notre propre version de nextStep qui utilise celle de navigation
 function nextStep() {
-    // Validation selon l'étape actuelle
-    if (currentStep === 1) {
-        if (!validatePersonalInfo()) {
+    const currentStepEl = document.querySelector('.onboarding-step.active');
+    if (currentStepEl && currentStepEl.id === 'step2') {
+        // Logique spéciale pour l'engagement
+        const commitmentStep = document.getElementById('step-commitment');
+        if (commitmentStep && !window.userCommitment) {
+            currentStepEl.classList.remove('active');
+            commitmentStep.classList.add('active');
+            updateProgressBar();
             return;
         }
-    } else if (currentStep === 2) {
-        if (selectedGoals.length === 0) {
-            showToast('Veuillez sélectionner au moins un objectif', 'error');
-            return;
-        }
-    } else if (currentStep === 3) {
-        if (selectedEquipment.length === 0) {
-            showToast('Veuillez sélectionner au moins un équipement', 'error');
-            return;
-        }
-        
-        // Vérifier si l'équipement nécessite une configuration
-        const needsConfig = selectedEquipment.some(eq => 
-            ['dumbbells', 'barbell', 'resistance_bands', 'kettlebell'].includes(eq)
-        );
-        
-        if (!needsConfig) {
-            // Passer directement à l'étape 5 (récapitulatif)
-            navigateNext(); // Aller à l'étape 4
-            generateDetailedEquipmentConfig(); // Générer config vide
-            updateProfileSummary();
-            navigateNext(); // Aller à l'étape 5
-            return;
-        } else {
-            generateDetailedEquipmentConfig();
-        }
-    } else if (currentStep === 4) {
-        if (!validateDetailedConfig()) {
-            return;
-        }
-        updateProfileSummary();
     }
     
-    // Navigation normale
-    navigateNext();
+    // Utiliser la fonction importée
+    navigationNextStep();
 }
 
 function prevStep() {
@@ -1106,8 +1081,8 @@ function logout() {
 // Export toutes les fonctions utilisées dans le HTML
 window.toggleGoal = toggleGoal;
 window.toggleEquipment = toggleEquipment;
-window.nextStep = nextStep;
-window.prevStep = prevStep;
+window.nextStep = nextStep;  // Utilise notre version locale
+window.prevStep = prevStep;  // Utilise notre version locale
 window.saveUser = saveUserProfile;
 window.updateBarbell = updateBarbell;
 window.updateDisqueWeight = updateDisqueWeight;
