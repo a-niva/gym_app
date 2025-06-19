@@ -389,7 +389,6 @@ function validatePersonalInfo() {
 
 // Définir notre propre version de nextStep
 function nextStep() {
-function nextStep() {
     const currentStepEl = document.querySelector('.onboarding-step.active');
     
     // Vérifier si on doit montrer l'étape d'engagement
