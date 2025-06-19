@@ -132,6 +132,8 @@ function selectExercise(exerciseId) {
     if (!exercise) return;
     
     setCurrentExercise(exercise);
+    // Nettoyer l'ID de la dernière série complétée (nouveau exercice)
+    localStorage.removeItem('lastCompletedSetId');
     
     // Ajouter le changement d'exercice à l'historique
     addToSessionHistory('exercise_change', {
@@ -161,6 +163,8 @@ function selectExercise(exerciseId) {
 
 // ===== FIN D'UN EXERCICE =====
 function finishExercise() {
+    // Nettoyer l'ID de la dernière série (exercice terminé)
+    localStorage.removeItem('lastCompletedSetId');
     // Capturer le temps de fin de l'exercice
     setLastExerciseEndTime(new Date());
     

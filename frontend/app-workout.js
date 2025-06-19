@@ -66,7 +66,10 @@ async function startWorkout(type) {
     
     if (workout) {
         setCurrentWorkout(workout);
-        
+        // Nettoyer les données de la séance précédente
+        localStorage.removeItem('lastCompletedSetId');
+        localStorage.removeItem('currentWorkoutHistory');
+                
         // Sauvegarder en localStorage pour récupération
         localStorage.setItem('currentWorkout', JSON.stringify({
             id: workout.id,

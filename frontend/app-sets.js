@@ -69,7 +69,12 @@ async function showSetInput() {
     let mlRepsSuggestion = null;
     let adjustmentsError = null;
 
-    if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId) {
+    // Vérifier aussi que le lastCompletedSetId correspond bien à cet exercice
+    const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+    const lastExerciseInHistory = sessionHistory[sessionHistory.length - 1];
+    const isSameExercise = lastExerciseInHistory?.exerciseId === currentExercise.id;
+
+    if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId && isSameExercise) {
         try {
             const remainingSets = (currentExercise.sets_reps?.[0]?.sets || 3) - currentSetNumber + 1;
             
