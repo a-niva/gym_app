@@ -25,7 +25,7 @@ import {
 } from './app-navigation.js';
 
 import { showToast, getEquipmentIcon, getEquipmentName } from './app-ui.js';
-import { saveUser } from './app-api.js';
+import { saveUser, saveUserCommitment } from './app-api.js';
 import { 
     GOAL_NAMES,
     COMMON_DUMBBELL_WEIGHTS,
@@ -298,7 +298,7 @@ async function saveCommitment() {
     };
     
     try {
-        await saveUserCommitment(state.currentUser.id, commitment);
+        await saveUserCommitment(currentUser.id, commitment);
         showToast('Engagement enregistré avec succès !', 'success');
         
         // Passer à l'étape suivante
@@ -1110,6 +1110,7 @@ window.removeBand = removeBand;
 window.toggleBenchFeature = toggleBenchFeature;
 window.showConfigPanel = showConfigPanel;
 window.logout = logout;
+window.saveCommitment = saveCommitment;
 
 // Export pour les autres modules
 export {

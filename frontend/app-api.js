@@ -2,7 +2,14 @@
 // Ce fichier centralise tous les appels API avec gestion d'erreurs
 // Pas de complexité inutile, juste des fonctions async/await simples
 
-import { setAllExercises, setUserPrograms } from './app-state.js';
+import { 
+    setAllExercises, 
+    setUserPrograms,
+    setUserCommitment,
+    setAdaptiveTargets,
+    setTrajectoryAnalysis,
+    setCurrentAdaptiveWorkout
+} from './app-state.js';
 import { showToast } from './app-ui.js';
 
 // Configuration de base pour les requêtes
@@ -519,7 +526,6 @@ async function saveUserCommitment(userId, commitment) {
         if (!response.ok) throw new Error('Failed to save commitment');
         
         const data = await response.json();
-        state.userCommitment = commitment;
         return data;
     } catch (error) {
         console.error('Error saving commitment:', error);
@@ -539,7 +545,7 @@ async function getUserCommitment(userId) {
         if (!response.ok) throw new Error('Failed to get commitment');
         
         const data = await response.json();
-        state.userCommitment = data;
+        setUserCommitment(data);
         return data;
     } catch (error) {
         console.error('Error getting commitment:', error);
@@ -554,7 +560,7 @@ async function getAdaptiveTargets(userId) {
         if (!response.ok) throw new Error('Failed to get adaptive targets');
         
         const data = await response.json();
-        state.adaptiveTargets = data;
+        setAdaptiveTargets(data);
         return data;
     } catch (error) {
         console.error('Error getting adaptive targets:', error);
@@ -569,7 +575,7 @@ async function getTrajectoryAnalysis(userId) {
         if (!response.ok) throw new Error('Failed to get trajectory');
         
         const data = await response.json();
-        state.trajectoryAnalysis = data;
+        setTrajectoryAnalysis(data);
         return data;
     } catch (error) {
         console.error('Error getting trajectory:', error);
@@ -592,7 +598,7 @@ async function generateAdaptiveWorkout(userId, timeAvailable = 60) {
         if (!response.ok) throw new Error('Failed to generate adaptive workout');
         
         const data = await response.json();
-        state.currentAdaptiveWorkout = data;
+        setCurrentAdaptiveWorkout(data);
         return data;
     } catch (error) {
         console.error('Error generating adaptive workout:', error);
@@ -618,8 +624,8 @@ async function completeAdaptiveWorkout(workoutId) {
         const data = await response.json();
         
         // Rafraîchir les données
-        await getTrajectoryAnalysis(state.currentUser.id);
-        await getAdaptiveTargets(state.currentUser.id);
+        await getTrajectoryAnalysis(currentUser.id);
+        await getAdaptiveTargets(currentUser.id);
         
         return data;
     } catch (error) {
@@ -680,7 +686,7 @@ export {
     getWorkoutAdjustments
 };
 
-// Export des nouvelles fonctions du système adaptatif
+// Export des nouvelles fonctions du système adaptatif pour utilisation globale
 window.saveUserCommitment = saveUserCommitment;
 window.getUserCommitment = getUserCommitment;
 window.getAdaptiveTargets = getAdaptiveTargets;

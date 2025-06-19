@@ -221,6 +221,11 @@ export function resetState() {
     currentTargetReps = 10;
     lastExerciseEndTime = null;
     interExerciseRestTime = 0;
+
+    userCommitment = null;
+    adaptiveTargets = [];
+    trajectoryAnalysis = null;
+    currentAdaptiveWorkout = null;
 }
 
 // Setters pour les variables qui n'en ont pas encore

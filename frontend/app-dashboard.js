@@ -21,135 +21,145 @@ import {
     setCurrentWorkout
 } from './app-state.js';
 
+import { showView } from './app-navigation.js';
+
 
 // ===== CHARGEMENT DU DASHBOARD =====
 async function loadDashboard() {
     if (!currentUser) return;
     
-    const dashboardContent = document.getElementById('dashboard-content');
-    if (!dashboardContent) {
-        // Créer le conteneur s'il n'existe pas
-        const dashboardView = document.getElementById('dashboard');
-        if (dashboardView) {
-            const contentDiv = document.createElement('div');
-            contentDiv.id = 'dashboard-content';
-            dashboardView.appendChild(contentDiv);
-        }
-    }
-    
     try {
-        // Charger les données adaptatives
+        // Charger les données adaptatives en parallèle avec les stats existantes
         const [commitment, trajectory, targets] = await Promise.all([
             getUserCommitment(currentUser.id),
             getTrajectoryAnalysis(currentUser.id),
             getAdaptiveTargets(currentUser.id)
         ]);
         
-        const container = document.getElementById('dashboard-content') || document.getElementById('dashboard');
+        // Modifier le contenu du dashboard selon si l'utilisateur a des objectifs ou non
+        const dashboardView = document.getElementById('dashboard');
+        if (!dashboardView) return;
         
-        // Vue par défaut si pas d'engagement
+        // Si pas d'engagement, afficher l'ancien dashboard + bouton pour définir objectifs
         if (!commitment || !trajectory || trajectory.status === "no_commitment") {
-            container.innerHTML = `
-                <div class="empty-state" style="text-align: center; padding: 3rem;">
-                    <h2>Bienvenue ${currentUser.name} ! 👋</h2>
-                    <p style="color: var(--gray); margin: 1rem 0;">Définissez vos objectifs pour un suivi personnalisé</p>
-                    <button class="btn" onclick="showCommitmentModal()">
-                        Définir mes objectifs
-                    </button>
-                </div>
-            `;
-            return;
-        }
-        
-        // Dashboard avec analyse de trajectoire
-        container.innerHTML = `
-            <div class="dashboard-header" style="margin-bottom: 2rem;">
-                <h1>Bonjour ${currentUser.name} ! 💪</h1>
-                <p class="dashboard-date" style="color: var(--gray);">${new Date().toLocaleDateString('fr-FR', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                })}</p>
-            </div>
+            // Conserver l'ancien comportement
+            updateWelcomeMessage();
+            await loadUserStats();
             
-            <!-- Widget Trajectoire -->
-            <div class="trajectory-widget ${trajectory.on_track ? 'on-track' : 'off-track'}">
-                <div class="trajectory-header">
-                    <h3>${trajectory.on_track ? '✅ Sur la bonne voie !' : '⚠️ Ajustons le rythme'}</h3>
-                    <span class="trajectory-badge">
-                        ${trajectory.sessions_this_week}/${trajectory.sessions_target} séances
-                    </span>
+            // Ajouter un bouton pour définir les objectifs
+            const statsContainer = document.querySelector('.stats-grid');
+            if (statsContainer) {
+                const objectifsCard = document.createElement('div');
+                objectifsCard.className = 'stat-card';
+                objectifsCard.innerHTML = `
+                    <h3>🎯 Définir mes objectifs</h3>
+                    <p>Personnalisez votre entraînement</p>
+                    <button class="btn" onclick="showCommitmentModal()" style="margin-top: 1rem;">
+                        Commencer
+                    </button>
+                `;
+                statsContainer.insertBefore(objectifsCard, statsContainer.firstChild);
+            }
+        } else {
+            // Nouveau dashboard adaptatif
+            dashboardView.innerHTML = `
+                <div class="dashboard-header" style="margin-bottom: 2rem;">
+                    <h1>Bonjour ${currentUser.name} ! 💪</h1>
+                    <p style="color: var(--gray);">${new Date().toLocaleDateString('fr-FR', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    })}</p>
                 </div>
                 
-                <div class="trajectory-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Régularité (30j)</span>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${trajectory.consistency_score * 100}%"></div>
-                        </div>
-                        <span class="stat-value">${Math.round(trajectory.consistency_score * 100)}%</span>
+                <!-- Widget Trajectoire -->
+                <div class="trajectory-widget ${trajectory.on_track ? 'on-track' : 'off-track'}">
+                    <div class="trajectory-header">
+                        <h3>${trajectory.on_track ? '✅ Sur la bonne voie !' : '⚠️ Ajustons le rythme'}</h3>
+                        <span class="trajectory-badge">
+                            ${trajectory.sessions_this_week}/${trajectory.sessions_target} séances
+                        </span>
                     </div>
                     
-                    <div class="stat-item">
-                        <span class="stat-label">Adhérence au volume</span>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${trajectory.volume_adherence * 100}%"></div>
+                    <div class="trajectory-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Régularité (30j)</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${trajectory.consistency_score * 100}%"></div>
+                            </div>
+                            <span class="stat-value">${Math.round(trajectory.consistency_score * 100)}%</span>
                         </div>
-                        <span class="stat-value">${Math.round(trajectory.volume_adherence * 100)}%</span>
+                        
+                        <div class="stat-item">
+                            <span class="stat-label">Adhérence au volume</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${trajectory.volume_adherence * 100}%"></div>
+                            </div>
+                            <span class="stat-value">${Math.round(trajectory.volume_adherence * 100)}%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Insights personnalisés -->
+                    ${trajectory.insights && trajectory.insights.length > 0 ? `
+                        <div class="insights-section">
+                            ${trajectory.insights.map(insight => `
+                                <div class="insight-item">${insight}</div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Actions rapides -->
+                <div class="quick-actions">
+                    <button class="action-card" onclick="generateQuickWorkout()">
+                        <div class="action-icon">🎯</div>
+                        <div class="action-content">
+                            <h4>Séance adaptative</h4>
+                            <p>Générée selon votre état</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-card" onclick="showView('program-generator')">
+                        <div class="action-icon">📋</div>
+                        <div class="action-content">
+                            <h4>Programme complet</h4>
+                            <p>Planifiez vos semaines</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-card" onclick="showView('stats')">
+                        <div class="action-icon">📊</div>
+                        <div class="action-content">
+                            <h4>Statistiques</h4>
+                            <p>Analysez votre progression</p>
+                        </div>
+                    </button>
+                </div>
+                
+                <!-- État des muscles -->
+                <div class="muscle-status-widget">
+                    <h3>État de récupération musculaire</h3>
+                    <div class="muscle-grid">
+                        ${renderMuscleStatus(targets)}
                     </div>
                 </div>
                 
-                <!-- Insights personnalisés -->
-                ${trajectory.insights && trajectory.insights.length > 0 ? `
-                    <div class="insights-section">
-                        ${trajectory.insights.map(insight => `
-                            <div class="insight-item">${insight}</div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-            </div>
-            
-            <!-- Actions rapides -->
-            <div class="quick-actions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
-                <button class="action-card" onclick="generateQuickWorkout()" style="background: var(--surface); border: none; border-radius: 12px; padding: 1.5rem; cursor: pointer; text-align: left;">
-                    <div class="action-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
-                    <div class="action-content">
-                        <h4 style="margin: 0 0 0.25rem 0;">Séance adaptative</h4>
-                        <p style="margin: 0; color: var(--gray); font-size: 0.875rem;">Générée selon votre état</p>
-                    </div>
-                </button>
+                <!-- Stats classiques -->
+                <div class="stats-grid" id="statsGrid"></div>
                 
-                <button class="action-card" onclick="showView('program-generator')" style="background: var(--surface); border: none; border-radius: 12px; padding: 1.5rem; cursor: pointer; text-align: left;">
-                    <div class="action-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
-                    <div class="action-content">
-                        <h4 style="margin: 0 0 0.25rem 0;">Programme complet</h4>
-                        <p style="margin: 0; color: var(--gray); font-size: 0.875rem;">Planifiez vos semaines</p>
-                    </div>
-                </button>
-                
-                <button class="action-card" onclick="showView('stats')" style="background: var(--surface); border: none; border-radius: 12px; padding: 1.5rem; cursor: pointer; text-align: left;">
-                    <div class="action-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
-                    <div class="action-content">
-                        <h4 style="margin: 0 0 0.25rem 0;">Statistiques</h4>
-                        <p style="margin: 0; color: var(--gray); font-size: 0.875rem;">Analysez votre progression</p>
-                    </div>
-                </button>
-            </div>
-            
-            <!-- État des muscles -->
-            <div class="muscle-status-widget">
-                <h3>État de récupération musculaire</h3>
-                <div class="muscle-grid">
-                    ${await renderMuscleStatus(targets)}
+                <!-- Historique -->
+                <div class="workout-history" id="workoutHistory">
+                    <h3>Historique récent</h3>
+                    <div id="historyList"></div>
                 </div>
-            </div>
-        `;
+            `;
+            
+            // Charger les stats classiques dans la nouvelle structure
+            await loadUserStats();
+        }
         
-        // Ajouter le reste du dashboard existant
-        await loadUserStats();
-        
-        // Charger les prédictions ML existantes
+        // Charger les prédictions ML (existant)
         try {
             const response = await fetch(`/api/users/${currentUser.id}/muscle-performance-prediction`);
             if (response.ok) {
