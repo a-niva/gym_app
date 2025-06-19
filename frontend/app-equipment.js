@@ -212,11 +212,13 @@ function getBarWeight(exercise, config) {
 function calculateAllPossibleBarWeights(barWeight, availablePlates) {
     // Convertir les disques en tableau utilisable
     const platesList = [];
+    const plateTypes = new Set();
+    
     Object.entries(availablePlates).forEach(([weight, count]) => {
         const w = parseFloat(weight);
         const c = parseInt(count);
         if (c > 0) {
-            // On ne peut utiliser que des paires (chargement symétrique)
+            plateTypes.add(w);
             const pairs = Math.floor(c / 2);
             for (let i = 0; i < pairs; i++) {
                 platesList.push(w);
@@ -224,41 +226,51 @@ function calculateAllPossibleBarWeights(barWeight, availablePlates) {
         }
     });
     
+    // Si pas de disques du tout, retourner seulement la barre
     if (platesList.length === 0) {
-        return [barWeight]; // Seulement la barre
+        return [barWeight];
     }
     
-    // Utiliser un Set pour éviter les doublons
-    const possibleWeightsPerSide = new Set([0]);
-    
-    // Limite raisonnable pour éviter explosion combinatoire
+    // Calculer toutes les combinaisons possibles
+    const possibleWeightsPerSide = new Set();
     const maxWeightPerSide = 150;
     
-    // Programmation dynamique pour trouver toutes les sommes possibles
-    for (const plate of platesList) {
-        const newWeights = new Set();
-        
-        for (const existingWeight of possibleWeightsPerSide) {
+    // Ne PAS commencer avec 0 (barre seule) par défaut
+    // Commencer avec les poids de base de chaque type de disque
+    for (const plateWeight of plateTypes) {
+        possibleWeightsPerSide.add(plateWeight);
+    }
+    
+    // Calculer les combinaisons
+    const allWeights = [...possibleWeightsPerSide];
+    for (const existingWeight of allWeights) {
+        for (const plate of platesList) {
             const newWeight = existingWeight + plate;
-            if (newWeight <= maxWeightPerSide) {
-                newWeights.add(newWeight);
+            if (newWeight <= maxWeightPerSide && !possibleWeightsPerSide.has(newWeight)) {
+                possibleWeightsPerSide.add(newWeight);
             }
         }
-        
-        // Ajouter les nouveaux poids possibles
-        newWeights.forEach(w => possibleWeightsPerSide.add(w));
     }
     
     // Convertir en poids total (barre + 2x le poids par côté)
-    const result = Array.from(possibleWeightsPerSide)
+    let result = Array.from(possibleWeightsPerSide)
         .map(perSide => barWeight + (perSide * 2))
         .sort((a, b) => a - b);
     
-    // Ne retourner que les poids réellement possibles
-    return result.filter(weight => {
-        const plateWeight = (weight - barWeight) / 2;
-        return canMakePlateWeightOptimal(plateWeight, availablePlates);
-    });
+    // N'inclure la barre seule QUE si :
+    // - C'est la seule option
+    // - OU il y a très peu d'options (< 5)
+    // - OU c'est une barre légère (courte 2.5kg)
+    const shouldIncludeBarOnly = 
+        result.length === 0 || 
+        result.length < 5 || 
+        barWeight <= 3;
+    
+    if (shouldIncludeBarOnly && !result.includes(barWeight)) {
+        result.unshift(barWeight);
+    }
+    
+    return result;
 }
 
 // ===== VÉRIFICATION OPTIMALE SI UN POIDS EST POSSIBLE =====

@@ -515,7 +515,7 @@ function adjustWeightToNext(direction) {
     const input = document.getElementById('setWeight');
     const currentWeight = parseFloat(input.value) || 0;
     
-    // Obtenir TOUS les poids possibles (y compris la barre seule)
+    // Obtenir les poids disponibles (déjà filtrés par calculateAvailableWeights)
     const availableWeights = calculateAvailableWeights(currentExercise);
     
     if (availableWeights.length === 0) {
@@ -526,10 +526,9 @@ function adjustWeightToNext(direction) {
     let currentIndex = availableWeights.findIndex(w => Math.abs(w - currentWeight) < 0.1);
     
     if (currentIndex === -1) {
-        // Si le poids actuel n'est pas dans la liste, trouver le plus proche
-        currentIndex = 0;
-        let minDiff = Math.abs(availableWeights[0] - currentWeight);
-        for (let i = 1; i < availableWeights.length; i++) {
+        // Trouver le plus proche
+        let minDiff = Infinity;
+        for (let i = 0; i < availableWeights.length; i++) {
             const diff = Math.abs(availableWeights[i] - currentWeight);
             if (diff < minDiff) {
                 minDiff = diff;
@@ -538,33 +537,14 @@ function adjustWeightToNext(direction) {
         }
     }
     
-    // Calculer le nouvel index souhaité
+    // Naviguer simplement dans la liste
     const newIndex = currentIndex + direction;
     
-    // Logique spéciale pour éviter la barre seule sauf si nécessaire
-    const barWeight = getBarWeightForExercise(currentExercise);
-    
     if (newIndex >= 0 && newIndex < availableWeights.length) {
-        const newWeight = availableWeights[newIndex];
-        
-        // Si on tombe sur la barre seule ET qu'il y a d'autres options
-        if (newWeight === barWeight && availableWeights.length > 2) {
-            // Sauter la barre seule dans la direction du mouvement
-            const skipIndex = newIndex + direction;
-            if (skipIndex >= 0 && skipIndex < availableWeights.length) {
-                input.value = availableWeights[skipIndex];
-            } else {
-                // Si on ne peut pas sauter, rester où on est
-                return;
-            }
-        } else {
-            input.value = newWeight;
-        }
+        input.value = availableWeights[newIndex];
+        updateBarbellVisualization();
+        updateWeightSuggestionVisual();
     }
-    
-    // Mettre à jour les visualisations
-    updateBarbellVisualization();
-    updateWeightSuggestionVisual();
 }
 
 function adjustReps(delta) {
