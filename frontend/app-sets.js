@@ -352,8 +352,14 @@ function updateBarbellVisualization() {
     
     // Calculer la distribution optimale des disques
     const platesPerSide = calculateOptimalPlateDistribution(platesWeight / 2);
-    
-    // Créer la visualisation
+
+    // Si pas de disques configurés, afficher une interface simplifiée
+    if (!currentUser?.equipment_config?.disques?.weights || Object.keys(currentUser.equipment_config.disques.weights).length === 0) {
+        container.innerHTML = createSimplifiedWeightInterface(totalWeight);
+        return;
+    }
+
+    // Créer la visualisation normale
     container.innerHTML = createBarbellHTML(barWeight, platesPerSide);
 }
 
@@ -371,7 +377,10 @@ function getBarWeightForExercise(exercise) {
 }
 
 function calculateOptimalPlateDistribution(targetPerSide) {
-    if (!currentUser?.equipment_config?.disques?.weights) return [];
+    if (!currentUser?.equipment_config?.disques?.weights) {
+    console.warn('Aucune configuration de disques trouvée pour l\'utilisateur');
+    return [];
+    }
     
     const availablePlates = currentUser.equipment_config.disques.weights;
     const result = [];
@@ -459,6 +468,32 @@ function createBarbellHTML(barWeight, platesPerSide) {
     `;
     
     return html;
+}
+
+function createSimplifiedWeightInterface(totalWeight) {
+    return `
+        <div class="barbell-card-integrated">
+            <div class="weight-control-row">
+                <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeightToNext(-1)">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    </svg>
+                </button>
+                
+                <div class="barbell-total-integrated">${totalWeight}<span class="weight-unit">kg</span></div>
+                
+                <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeightToNext(1)">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="barbell-detail" style="color: var(--warning); margin-top: 10px;">
+                ⚠️ Configurez vos disques dans votre profil pour voir la répartition
+            </div>
+        </div>
+    `;
 }
 
 // Ajouter un listener pour mettre à jour la visualisation
