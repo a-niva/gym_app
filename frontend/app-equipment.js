@@ -56,16 +56,10 @@ function calculateAvailableWeights(exercise) {
         if (barWeight > 0) {
             weights.add(barWeight);
             
-            // Ajouter les combinaisons avec disques
+            // Calculer uniquement les poids VRAIMENT possibles avec les disques disponibles
             if (config.disques?.weights) {
-                const disqueWeights = Object.entries(config.disques.weights)
-                    .filter(([w, count]) => count > 0)
-                    .map(([w, count]) => ({weight: parseFloat(w), count: parseInt(count)}));
-                
-                // Générer quelques poids communs
-                for (let totalAdded = 0; totalAdded <= 100; totalAdded += 2.5) {
-                    weights.add(barWeight + totalAdded * 2); // *2 car on met des disques des deux côtés
-                }
+                const possibleWeights = calculateAllPossibleBarWeights(barWeight, config.disques.weights);
+                possibleWeights.forEach(w => weights.add(w));
             }
         }
     }
@@ -128,7 +122,17 @@ function validateWeight(exercise, weight) {
         
         // Vérifier si c'est vraiment réalisable
         if (!isWeightPossible(exercise, closest)) {
-            showToast(`⚠️ Poids ${weight}kg impossible avec votre équipement. Suggestion : ${closest}kg`, 'warning');
+            // Message plus informatif
+            const availableWeights = calculateAvailableWeights(exercise);
+            const nearbyOptions = availableWeights
+                .filter(w => Math.abs(w - weight) <= 10)
+                .slice(0, 3)
+                .join(', ');
+
+            showToast(
+                `⚠️ ${weight}kg impossible avec vos disques. Suggestion : ${closest}kg${nearbyOptions ? ` (autres options : ${nearbyOptions}kg)` : ''}`, 
+                'warning'
+            );
         }
         
         return closest;
@@ -142,13 +146,43 @@ export function getClosestPossibleWeight(exercise, targetWeight) {
     const availableWeights = calculateAvailableWeights(exercise);
     
     if (availableWeights.length === 0) {
-        return targetWeight; // Pas de validation si pas de config
+        return targetWeight;
     }
     
-    // Trouver le poids le plus proche
-    return availableWeights.reduce((prev, curr) => 
-        Math.abs(curr - targetWeight) < Math.abs(prev - targetWeight) ? curr : prev
-    );
+    // Si le poids exact existe, parfait
+    if (availableWeights.includes(targetWeight)) {
+        return targetWeight;
+    }
+    
+    // Trouver les options au-dessus et en-dessous
+    let bestLower = null;
+    let bestHigher = null;
+    
+    for (const weight of availableWeights) {
+        if (weight < targetWeight && (bestLower === null || weight > bestLower)) {
+            bestLower = weight;
+        } else if (weight > targetWeight && (bestHigher === null || weight < bestHigher)) {
+            bestHigher = weight;
+        }
+    }
+    
+    // Logique de sélection intelligente
+    if (bestLower !== null && bestHigher !== null) {
+        const lowerDiff = targetWeight - bestLower;
+        const higherDiff = bestHigher - targetWeight;
+        
+        // Préférer le poids inférieur sauf si :
+        // - La différence est > 5kg ET le poids supérieur est plus proche
+        // - Le poids inférieur est < 50% du poids cible
+        if (bestLower < targetWeight * 0.5) {
+            return bestHigher;
+        }
+        
+        return (lowerDiff <= 5 || lowerDiff <= higherDiff) ? bestLower : bestHigher;
+    }
+    
+    // Si on n'a qu'une option
+    return bestLower || bestHigher || availableWeights[0];
 }
 
 // ===== VÉRIFIER SI UN POIDS EST RÉALISABLE =====
@@ -172,7 +206,7 @@ export function isWeightPossible(exercise, weight, config) {
         if (targetPlateWeight === 0) return true; // Juste la barre
         
         // Vérifier si on peut faire cette combinaison avec les disques
-        return canMakePlateWeight(targetPlateWeight / 2, equipmentConfig.disques?.weights || {});
+        return canMakePlateWeightOptimal(targetPlateWeight / 2, equipmentConfig.disques?.weights || {});
     }
     
     // Pour haltères et kettlebells, vérifier directement
@@ -191,25 +225,89 @@ function getBarWeight(exercise, config) {
     return 0;
 }
 
-function canMakePlateWeight(targetPerSide, availablePlates) {
-    // Algorithme simple : essayer de faire le poids avec les disques disponibles
-    const plates = Object.entries(availablePlates)
-        .filter(([w, count]) => count > 0)
-        .map(([w, count]) => ({weight: parseFloat(w), count: parseInt(count)}))
-        .sort((a, b) => b.weight - a.weight);
+// ===== CALCUL INTELLIGENT DES POIDS POSSIBLES =====
+function calculateAllPossibleBarWeights(barWeight, availablePlates) {
+    // Convertir les disques en tableau utilisable
+    const platesList = [];
+    Object.entries(availablePlates).forEach(([weight, count]) => {
+        const w = parseFloat(weight);
+        const c = parseInt(count);
+        if (c > 0) {
+            // On ne peut utiliser que des paires (chargement symétrique)
+            const pairs = Math.floor(c / 2);
+            for (let i = 0; i < pairs; i++) {
+                platesList.push(w);
+            }
+        }
+    });
     
-    let remaining = targetPerSide;
-    
-    for (const plate of plates) {
-        const needed = Math.floor(remaining / plate.weight);
-        const canUse = Math.min(needed, Math.floor(plate.count / 2)); // /2 car on met des deux côtés
-        
-        remaining -= canUse * plate.weight;
-        
-        if (remaining < 0.1) return true; // Tolérance pour les arrondis
+    if (platesList.length === 0) {
+        return [barWeight]; // Seulement la barre
     }
     
-    return remaining < 0.1;
+    // Utiliser un Set pour éviter les doublons
+    const possibleWeightsPerSide = new Set([0]);
+    
+    // Limite raisonnable pour éviter explosion combinatoire
+    const maxWeightPerSide = 150;
+    
+    // Programmation dynamique pour trouver toutes les sommes possibles
+    for (const plate of platesList) {
+        const newWeights = new Set();
+        
+        for (const existingWeight of possibleWeightsPerSide) {
+            const newWeight = existingWeight + plate;
+            if (newWeight <= maxWeightPerSide) {
+                newWeights.add(newWeight);
+            }
+        }
+        
+        // Ajouter les nouveaux poids possibles
+        newWeights.forEach(w => possibleWeightsPerSide.add(w));
+    }
+    
+    // Convertir en poids total (barre + 2x le poids par côté)
+    const result = Array.from(possibleWeightsPerSide)
+        .map(perSide => barWeight + (perSide * 2))
+        .sort((a, b) => a - b);
+    
+    return result;
+}
+
+// ===== VÉRIFICATION OPTIMALE SI UN POIDS EST POSSIBLE =====
+function canMakePlateWeightOptimal(targetPerSide, availablePlates) {
+    // Si le poids cible est 0, c'est toujours possible
+    if (targetPerSide === 0) return true;
+    
+    // Créer liste des disques utilisables (par paires)
+    const usablePlates = [];
+    Object.entries(availablePlates).forEach(([weight, count]) => {
+        const w = parseFloat(weight);
+        const c = parseInt(count);
+        const pairs = Math.floor(c / 2);
+        for (let i = 0; i < pairs; i++) {
+            usablePlates.push(w);
+        }
+    });
+    
+    if (usablePlates.length === 0) return false;
+    
+    // Programmation dynamique : peut-on atteindre exactement targetPerSide ?
+    const dp = new Array(Math.floor(targetPerSide) + 1).fill(false);
+    dp[0] = true;
+    
+    for (const plate of usablePlates) {
+        // Parcourir en sens inverse pour ne pas réutiliser le même disque
+        for (let weight = targetPerSide; weight >= plate; weight--) {
+            if (dp[Math.floor(weight - plate)]) {
+                dp[Math.floor(weight)] = true;
+            }
+        }
+    }
+    
+    // Vérifier avec tolérance pour les arrondis
+    return dp[Math.floor(targetPerSide)] || 
+           (targetPerSide % 1 !== 0 && dp[Math.floor(targetPerSide + 0.5)]);
 }
 
 // ===== FILTRAGE DES EXERCICES PAR ÉQUIPEMENT =====
