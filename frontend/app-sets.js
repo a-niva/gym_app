@@ -46,33 +46,27 @@ import { TIME_BASED_KEYWORDS } from './app-config.js';
 import { addToSessionHistory } from './app-history.js';
 
 // ===== AFFICHAGE DE L'INTERFACE DE SAISIE =====
-// ===== AFFICHAGE DE L'INTERFACE DE SAISIE =====
 async function showSetInput() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
     
-    // DEBUG - Ajouter ces lignes
+    // DEBUG
     console.log('=== DEBUG showSetInput ===');
     console.log('currentSetNumber:', currentSetNumber);
     console.log('currentWorkout:', currentWorkout);
     console.log('lastCompletedSetId from localStorage:', localStorage.getItem('lastCompletedSetId'));
     console.log('currentExercise:', currentExercise);
     
-    
     const existingHistory = document.getElementById('previousSets');
     const savedHistory = existingHistory ? existingHistory.innerHTML : '';
     const lastCompletedSetId = localStorage.getItem('lastCompletedSetId');
     console.log('DEBUG - lastCompletedSetId récupéré:', lastCompletedSetId);
 
-
-    // Récupérer aussi les suggestions de répétitions si on a déjà fait des séries
+    // DÉCLARATION DE TOUTES LES VARIABLES ICI
     let mlRepsSuggestion = null;
+    let mlSuggestion = null;  // AJOUT : Déclarer mlSuggestion ICI
+    let adjustments = null;   // AJOUT : Déclarer adjustments ICI
     let adjustmentsError = null;
-
-    // Vérifier aussi que le lastCompletedSetId correspond bien à cet exercice
-    const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
-    const lastExerciseInHistory = sessionHistory[sessionHistory.length - 1];
-    const isSameExercise = lastExerciseInHistory?.exerciseId === currentExercise.id;
 
     // Récupérer les suggestions ML uniquement si on a une série valide pour cet exercice
     if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId) {
@@ -96,7 +90,7 @@ async function showSetInput() {
                         exerciseId: currentExercise.id
                     });
                     
-                    const adjustments = await getWorkoutAdjustments(
+                    adjustments = await getWorkoutAdjustments(  // MODIFICATION : Utiliser la variable déclarée
                         currentWorkout.id,
                         lastCompletedSetId,
                         remainingSets
@@ -114,29 +108,25 @@ async function showSetInput() {
                             };
                         }
                         
-                        // Mettre à jour la suggestion de poids si disponible
-                        if (adjustments.adjustments.weight_multiplier && mlSuggestion) {
-                            mlSuggestion = Math.round(mlSuggestion * adjustments.adjustments.weight_multiplier);
-                            console.log('DEBUG - Nouvelle suggestion de poids ajustée:', mlSuggestion);
+                        // AJOUT : Afficher les recommandations
+                        if (adjustments.recommendations && adjustments.recommendations.length > 0) {
+                            const firstRecommendation = adjustments.recommendations[0];
+                            showToast(`💡 ${firstRecommendation}`, 'info');
                         }
                     }
                 } catch (error) {
                     console.error('DEBUG - Erreur getWorkoutAdjustments:', error);
-                    // Nettoyer si l'ID est invalide
                     localStorage.removeItem('lastCompletedSetId');
                 }
             } else {
-                // L'ID ne correspond pas au workout actuel, le nettoyer
                 console.log('DEBUG - lastCompletedSetId ne correspond pas au workout actuel, nettoyage');
                 localStorage.removeItem('lastCompletedSetId');
             }
         } else {
-            // Pas d'historique pour cet exercice, nettoyer l'ID
             console.log('DEBUG - Pas d\'historique pour cet exercice, nettoyage lastCompletedSetId');
             localStorage.removeItem('lastCompletedSetId');
         }
     }
-
     
     setSetStartTime(new Date());
     setLastSetEndTime(null);
@@ -151,7 +141,6 @@ async function showSetInput() {
     let availableWeights = calculateAvailableWeights(currentExercise);
     
     // Toujours obtenir la suggestion ML (indépendamment du toggle)
-    let mlSuggestion = null;
     try {
         mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
     } catch (error) {
@@ -161,6 +150,12 @@ async function showSetInput() {
     // Si pas de suggestion ML, utiliser le calcul local
     if (!mlSuggestion && mlSuggestion !== 0) {
         mlSuggestion = calculateSuggestedWeight(currentExercise);
+    }
+    
+    // AJOUT : Appliquer le multiplicateur de poids APRÈS avoir obtenu mlSuggestion
+    if (adjustments && adjustments.adjustments && adjustments.adjustments.weight_multiplier && mlSuggestion) {
+        mlSuggestion = Math.round(mlSuggestion * adjustments.adjustments.weight_multiplier);
+        console.log('DEBUG - Nouvelle suggestion de poids ajustée:', mlSuggestion);
     }
 
     // CORRECTION : Vérifier que la suggestion ML n'est pas inférieure au poids de la barre
@@ -174,17 +169,15 @@ async function showSetInput() {
 
     // Stocker globalement pour référence
     window.currentMLRepsSuggestion = mlRepsSuggestion;
-    // Stocker la suggestion ML dans une variable globale pour référence
     window.currentMLSuggestion = mlSuggestion;
     
+    // Le reste de votre code reste identique...
     // Déterminer le poids à afficher dans l'input
     let defaultWeight = 0;
     
     if (isAutoWeightEnabled && mlSuggestion) {
-        // Si auto-ajustement activé, utiliser la suggestion ML
         defaultWeight = mlSuggestion;
     } else {
-        // Si auto-ajustement désactivé, utiliser le dernier poids
         const previousSetHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
         const lastSetForExercise = previousSetHistory
             .filter(h => h.exerciseId === currentExercise.id)
