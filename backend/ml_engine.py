@@ -159,7 +159,8 @@ class FitnessMLEngine:
             "Curl biceps": 0.15,
             "Extension triceps": 0.12,
             "Rowing": 0.5,
-            "Leg press": 1.5
+            "Leg press": 1.5,
+            "Curl poignet": 0.1,
         }
         
         # Chercher le ratio le plus proche
@@ -171,6 +172,18 @@ class FitnessMLEngine:
         
         # Calcul du poids de base
         base_weight = body_weight * ratio
+        # Vérifier le poids minimum de la barre pour les exercices avec barbell
+        if any('barbell' in eq for eq in exercise.equipment):
+            min_bar_weight = 20  # Barre olympique par défaut
+            if user.equipment_config and user.equipment_config.get('barres'):
+                if user.equipment_config['barres'].get('courte', {}).get('available'):
+                    min_bar_weight = 2.5
+                elif user.equipment_config['barres'].get('ez', {}).get('available'):
+                    min_bar_weight = 10
+            
+            # S'assurer que le poids suggéré n'est pas inférieur au poids de la barre
+            if base_weight < min_bar_weight:
+                base_weight = min_bar_weight
         
         # Ajuster selon l'expérience
         experience_mult = self.EXPERIENCE_MULTIPLIERS.get(user.experience_level, 0.85)

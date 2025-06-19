@@ -46,6 +46,7 @@ import { TIME_BASED_KEYWORDS } from './app-config.js';
 import { addToSessionHistory } from './app-history.js';
 
 // ===== AFFICHAGE DE L'INTERFACE DE SAISIE =====
+// ===== AFFICHAGE DE L'INTERFACE DE SAISIE =====
 async function showSetInput() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
@@ -107,6 +108,7 @@ async function showSetInput() {
         }
     }
 
+    
     setSetStartTime(new Date());
     setLastSetEndTime(null);
     
@@ -130,6 +132,15 @@ async function showSetInput() {
     // Si pas de suggestion ML, utiliser le calcul local
     if (!mlSuggestion && mlSuggestion !== 0) {
         mlSuggestion = calculateSuggestedWeight(currentExercise);
+    }
+
+    // CORRECTION : Vérifier que la suggestion ML n'est pas inférieure au poids de la barre
+    if (mlSuggestion && currentExercise.equipment.some(eq => eq.includes('barbell'))) {
+        const barWeight = getBarWeightForExercise(currentExercise);
+        if (mlSuggestion < barWeight) {
+            console.warn(`Suggestion ML (${mlSuggestion}kg) inférieure au poids de la barre (${barWeight}kg). Ajustement à ${barWeight}kg`);
+            mlSuggestion = barWeight;
+        }
     }
 
     // Stocker globalement pour référence
@@ -346,7 +357,8 @@ function updateBarbellVisualization() {
     const platesWeight = totalWeight - barWeight;
     
     if (platesWeight < 0) {
-        container.innerHTML = '<div class="barbell-error">Poids inférieur au poids de la barre</div>';
+        // Afficher l'interface quand même, mais avec juste la barre
+        container.innerHTML = createSimplifiedWeightInterface(barWeight);
         return;
     }
     
@@ -685,6 +697,14 @@ function validateWeightInput() {
         // Message explicatif si le poids n'est pas possible
         if (!isWeightPossible(currentExercise, currentWeight)) {
             const availableWeights = calculateAvailableWeights(currentExercise);
+            // Pour les exercices avec barbell, filtrer les poids inférieurs à la barre
+            if (currentExercise.equipment.some(eq => eq.includes('barbell'))) {
+                const barWeight = getBarWeightForExercise(currentExercise);
+                const filteredWeights = availableWeights.filter(w => w >= barWeight);
+                if (filteredWeights.length > 0) {
+                    availableWeights = filteredWeights;
+                }
+            }
             const nearbyWeights = availableWeights
                 .filter(w => Math.abs(w - currentWeight) <= 10)
                 .slice(0, 5);
