@@ -12,7 +12,8 @@ import {
     setSelectedEquipment,
     setEquipmentConfig,
     resetState,
-    currentUser
+    currentUser,
+    userCommitment
 } from './app-state.js';
 
 import { 
@@ -331,12 +332,6 @@ function enhancedNextStep() {
     }
 }
 
-// Remplacer nextStep après un délai pour s'assurer que tout est chargé
-setTimeout(() => {
-    window.nextStep = enhancedNextStep;
-}, 100);
-
-
 // Initialiser l'étape d'engagement au chargement
 document.addEventListener('DOMContentLoaded', createCommitmentStep);
 
@@ -392,13 +387,15 @@ function validatePersonalInfo() {
     return true;
 }
 
-// Définir notre propre version de nextStep qui utilise celle de navigation
+// Définir notre propre version de nextStep
+function nextStep() {
 function nextStep() {
     const currentStepEl = document.querySelector('.onboarding-step.active');
+    
+    // Vérifier si on doit montrer l'étape d'engagement
     if (currentStepEl && currentStepEl.id === 'step2') {
-        // Logique spéciale pour l'engagement
         const commitmentStep = document.getElementById('step-commitment');
-        if (commitmentStep && !window.userCommitment) {
+        if (commitmentStep && !userCommitment) {
             currentStepEl.classList.remove('active');
             commitmentStep.classList.add('active');
             updateProgressBar();
@@ -406,10 +403,23 @@ function nextStep() {
         }
     }
     
-    // Utiliser la fonction importée
+    // AJOUTER : Gérer le passage depuis l'étape commitment
+    if (currentStepEl && currentStepEl.id === 'step-commitment') {
+        currentStepEl.classList.remove('active');
+        // Passer à l'étape 3 (équipement)
+        const step3 = document.getElementById('step3');
+        if (step3) {
+            step3.classList.add('active');
+            updateProgressBar();
+            return;
+        }
+    }
+    
+    // Sinon, utiliser la navigation normale
     navigationNextStep();
 }
 
+// Définir prevStep
 function prevStep() {
     navigatePrev();
 }
