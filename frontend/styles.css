@@ -2584,109 +2584,222 @@ select.form-input {
     }
 }
 
-/* ===== VISUALISATION BARRE ===== */
-.barbell-viz {
-    margin-top: 8px;
+/* ===== DESIGN NEUMORPHIQUE POUR LA BARRE ===== */
+.barbell-neumorphic {
+    background: #F0F0F3;
+    border-radius: 24px;
+    padding: 20px;
+    margin: 12px 0;
+    box-shadow: 
+        9px 9px 16px #D1D1D4,
+        -9px -9px 16px #FFFFFF;
 }
 
-.barbell-container {
+.barbell-total-weight {
+    font-size: 48px;
+    font-weight: 700;
+    text-align: center;
+    color: #2C3E50;
+    margin-bottom: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+}
+
+.weight-unit {
+    font-size: 20px;
+    font-weight: 400;
+    color: #7F8C8D;
+    margin-left: 4px;
+}
+
+.barbell-plates-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 0;
-    gap: 2px;
+    gap: 8px;
+    margin: 20px 0;
     overflow-x: auto;
-    min-height: 60px;
+    padding: 10px 0;
 }
 
-.barbell-side {
+.plates-side {
     display: flex;
+    gap: 6px;
     align-items: center;
-    gap: 2px;
 }
 
-.barbell-side.left {
+.plates-side.left {
     flex-direction: row-reverse;
 }
 
-.plate {
-    height: 40px;
-    border-radius: 4px;
+.plate-neu {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: #F0F0F3;
+    box-shadow: 
+        inset 3px 3px 6px #D1D1D4,
+        inset -3px -3px 6px #FFFFFF;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(0, 0, 0, 0.2);
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.plate-weight {
-    font-size: 10px;
-    font-weight: bold;
-    color: #000;
-    text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
-}
-
-.barbell-bar {
+.plate-neu[data-weight="20"],
+.plate-neu[data-weight="25"] {
     width: 60px;
-    height: 20px;
-    background: linear-gradient(to bottom, #e5e7eb, #9ca3af);
-    border-radius: 10px;
+    height: 60px;
+}
+
+.plate-neu[data-weight="10"],
+.plate-neu[data-weight="15"] {
+    width: 55px;
+    height: 55px;
+}
+
+.plate-neu[data-weight="2.5"],
+.plate-neu[data-weight="5"] {
+    width: 45px;
+    height: 45px;
+}
+
+.plate-neu[data-weight="1"],
+.plate-neu[data-weight="1.25"] {
+    width: 40px;
+    height: 40px;
+}
+
+.plate-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #34495E;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+}
+
+.barbell-center-neu {
+    width: 80px;
+    height: 30px;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #F8F8FB, #E8E8EB);
+    box-shadow: 
+        4px 4px 8px #D1D1D4,
+        -4px -4px 8px #FFFFFF;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #6b7280;
-    margin: 0 4px;
+    margin: 0 12px;
 }
 
-.bar-weight {
+.bar-weight-label {
     font-size: 11px;
-    font-weight: bold;
-    color: #374151;
+    font-weight: 500;
+    color: #7F8C8D;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
 }
 
-.barbell-summary {
+.barbell-formula {
     text-align: center;
-    font-size: 12px;
-    color: var(--gray);
-    margin-top: 4px;
+    font-size: 13px;
+    color: #95A5A6;
+    margin-top: 16px;
+    font-family: 'SF Mono', Monaco, monospace;
 }
 
-.barbell-error {
+.barbell-neumorphic-error {
     text-align: center;
-    color: var(--danger);
-    font-size: 12px;
-    padding: 8px;
+    color: #E74C3C;
+    padding: 20px;
+    font-size: 14px;
+    background: #F0F0F3;
+    border-radius: 16px;
+    box-shadow: 
+        inset 2px 2px 4px #D1D1D4,
+        inset -2px -2px 4px #FFFFFF;
 }
 
-/* Animation lors du changement */
-.barbell-container .plate {
-    animation: plateSlide 0.3s ease-out;
+/* Animation d'apparition */
+.plate-neu {
+    animation: plateAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes plateSlide {
-    from {
-        transform: translateX(-10px);
+@keyframes plateAppear {
+    0% {
+        transform: scale(0);
         opacity: 0;
     }
-    to {
-        transform: translateX(0);
+    100% {
+        transform: scale(1);
         opacity: 1;
     }
 }
 
-/* Mobile : réduire la taille */
+/* Hover effect subtil */
+.plate-neu:hover {
+    box-shadow: 
+        inset 2px 2px 4px #D1D1D4,
+        inset -2px -2px 4px #FFFFFF;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .barbell-neumorphic {
+        background: #2C3E50;
+        box-shadow: 
+            9px 9px 16px #1F2B3A,
+            -9px -9px 16px #394B60;
+    }
+    
+    .plate-neu {
+        background: #2C3E50;
+        box-shadow: 
+            inset 3px 3px 6px #1F2B3A,
+            inset -3px -3px 6px #394B60;
+    }
+    
+    .barbell-total-weight,
+    .plate-value {
+        color: #ECF0F1;
+    }
+    
+    .weight-unit,
+    .bar-weight-label,
+    .barbell-formula {
+        color: #95A5A6;
+    }
+    
+    .barbell-center-neu {
+        background: linear-gradient(145deg, #34495E, #2C3E50);
+        box-shadow: 
+            4px 4px 8px #1F2B3A,
+            -4px -4px 8px #394B60;
+    }
+}
+
+/* Mobile responsive */
 @media (max-width: 480px) {
-    .plate {
-        height: 32px;
+    .barbell-neumorphic {
+        padding: 16px;
+        border-radius: 20px;
     }
     
-    .plate-weight {
-        font-size: 9px;
+    .barbell-total-weight {
+        font-size: 36px;
     }
     
-    .barbell-bar {
-        width: 50px;
-        height: 16px;
+    .plate-neu {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .plate-neu[data-weight="20"],
+    .plate-neu[data-weight="25"] {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .barbell-center-neu {
+        width: 60px;
+        height: 24px;
     }
 }

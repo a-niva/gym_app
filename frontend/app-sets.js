@@ -329,70 +329,59 @@ function calculateOptimalPlateDistribution(targetPerSide) {
 }
 
 function createBarbellHTML(barWeight, platesPerSide) {
-    // Couleurs pour les disques selon leur poids (standard olympique)
-    const plateColors = {
-        50: '#e11d48',    // Rouge
-        40: '#e11d48',    // Rouge
-        30: '#e11d48',    // Rouge
-        25: '#e11d48',    // Rouge
-        20: '#3b82f6',    // Bleu
-        15: '#eab308',    // Jaune
-        10: '#22c55e',    // Vert
-        5: '#ffffff',     // Blanc
-        2.5: '#e11d48',   // Rouge
-        2: '#3b82f6',     // Bleu
-        1.25: '#eab308',  // Jaune
-        1: '#22c55e',     // Vert
-        0.5: '#ffffff'    // Blanc
-    };
+    if (platesPerSide.length === 0 || platesPerSide[0].error) {
+        return '<div class="barbell-neumorphic-error">Configuration impossible</div>';
+    }
     
-    // Créer le HTML
-    let html = '<div class="barbell-container">';
+    // Calculer le poids total
+    const totalPlatesWeight = platesPerSide.reduce((sum, p) => sum + (p.weight * p.count * 2), 0);
+    const totalWeight = barWeight + totalPlatesWeight;
     
-    // Côté gauche
-    html += '<div class="barbell-side left">';
+    // Créer le HTML neumorphique
+    let html = `
+        <div class="barbell-neumorphic">
+            <div class="barbell-total-weight">${totalWeight}<span class="weight-unit">kg</span></div>
+            
+            <div class="barbell-plates-container">
+                <div class="plates-side left">
+    `;
+    
+    // Disques côté gauche
     platesPerSide.forEach(plate => {
-        if (!plate.error) {
-            for (let i = 0; i < plate.count; i++) {
-                const color = plateColors[plate.weight] || '#6b7280';
-                const width = Math.max(15, Math.min(40, plate.weight * 1.5));
-                html += `<div class="plate" style="background-color: ${color}; width: ${width}px;">
-                    <span class="plate-weight">${plate.weight}</span>
-                </div>`;
-            }
+        for (let i = 0; i < plate.count; i++) {
+            html += `<div class="plate-neu" data-weight="${plate.weight}">
+                <span class="plate-value">${plate.weight}</span>
+            </div>`;
         }
     });
-    html += '</div>';
     
     // Barre centrale
-    html += `<div class="barbell-bar">
-        <span class="bar-weight">${barWeight}kg</span>
-    </div>`;
+    html += `
+                </div>
+                <div class="barbell-center-neu">
+                    <div class="bar-weight-label">${barWeight}kg</div>
+                </div>
+                <div class="plates-side right">
+    `;
     
-    // Côté droit (miroir du gauche)
-    html += '<div class="barbell-side right">';
+    // Disques côté droit
     platesPerSide.forEach(plate => {
-        if (!plate.error) {
-            for (let i = 0; i < plate.count; i++) {
-                const color = plateColors[plate.weight] || '#6b7280';
-                const width = Math.max(15, Math.min(40, plate.weight * 1.5));
-                html += `<div class="plate" style="background-color: ${color}; width: ${width}px;">
-                    <span class="plate-weight">${plate.weight}</span>
-                </div>`;
-            }
+        for (let i = 0; i < plate.count; i++) {
+            html += `<div class="plate-neu" data-weight="${plate.weight}">
+                <span class="plate-value">${plate.weight}</span>
+            </div>`;
         }
     });
-    html += '</div>';
     
-    html += '</div>';
-    
-    // Résumé textuel
-    if (platesPerSide.length > 0 && !platesPerSide[0].error) {
-        const platesSummary = platesPerSide
-            .map(p => `${p.count}×${p.weight}kg`)
-            .join(' + ');
-        html += `<div class="barbell-summary">Par côté : ${platesSummary}</div>`;
-    }
+    html += `
+                </div>
+            </div>
+            
+            <div class="barbell-formula">
+                ${barWeight}kg + ${platesPerSide.map(p => `${p.count}×${p.weight}`).join(' + ')} × 2
+            </div>
+        </div>
+    `;
     
     return html;
 }
