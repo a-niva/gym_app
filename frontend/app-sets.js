@@ -121,15 +121,7 @@ async function showSetInput() {
                 ${!isTimeBased ? `
                     <div class="input-group">
                         <label>${weightLabel}</label>
-                        <div class="weight-selector">
-                            <button onclick="adjustWeightToNext(-1)" class="btn-adjust" id="weightDecreaseBtn">-</button>
-                            <input type="number" id="setWeight" value="${defaultWeight}" 
-                                min="${availableWeights[0] || 0}" 
-                                max="${availableWeights[availableWeights.length - 1] || 999}"
-                                step="any" class="weight-display"
-                                onchange="validateWeight()">
-                            <button onclick="adjustWeightToNext(1)" class="btn-adjust" id="weightIncreaseBtn">+</button>
-                        </div>
+                        <input type="hidden" id="setWeight" value="${defaultWeight}">
                             <div class="weight-info">
                                 ${isBodyweight ? 
                                     `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
@@ -329,57 +321,55 @@ function calculateOptimalPlateDistribution(targetPerSide) {
 }
 
 function createBarbellHTML(barWeight, platesPerSide) {
-    if (platesPerSide.length === 0 || platesPerSide[0].error) {
-        return '<div class="barbell-neumorphic-error">Configuration impossible</div>';
-    }
-    
     // Calculer le poids total
     const totalPlatesWeight = platesPerSide.reduce((sum, p) => sum + (p.weight * p.count * 2), 0);
     const totalWeight = barWeight + totalPlatesWeight;
     
-    // Créer le HTML neumorphique
+    // Créer le HTML avec design intégré au thème bleu
     let html = `
-        <div class="barbell-neumorphic">
-            <div class="barbell-total-weight">${totalWeight}<span class="weight-unit">kg</span></div>
+        <div class="barbell-card-integrated">
+            <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeightToNext(-1)">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                </svg>
+            </button>
             
-            <div class="barbell-plates-container">
-                <div class="plates-side left">
+            <div class="barbell-content">
+                <div class="barbell-total-integrated">${totalWeight}<span class="weight-unit">kg</span></div>
+                
+                <div class="barbell-plates-row">
     `;
     
     // Disques côté gauche
-    platesPerSide.forEach(plate => {
+    platesPerSide.slice().reverse().forEach(plate => {
         for (let i = 0; i < plate.count; i++) {
-            html += `<div class="plate-neu" data-weight="${plate.weight}">
-                <span class="plate-value">${plate.weight}</span>
-            </div>`;
+            html += `<div class="plate-integrated" data-weight="${plate.weight}">${plate.weight}</div>`;
         }
     });
     
     // Barre centrale
-    html += `
-                </div>
-                <div class="barbell-center-neu">
-                    <div class="bar-weight-label">${barWeight}kg</div>
-                </div>
-                <div class="plates-side right">
-    `;
+    html += `<div class="bar-integrated">${barWeight}</div>`;
     
     // Disques côté droit
     platesPerSide.forEach(plate => {
         for (let i = 0; i < plate.count; i++) {
-            html += `<div class="plate-neu" data-weight="${plate.weight}">
-                <span class="plate-value">${plate.weight}</span>
-            </div>`;
+            html += `<div class="plate-integrated" data-weight="${plate.weight}">${plate.weight}</div>`;
         }
     });
     
     html += `
                 </div>
+                
+                <div class="barbell-detail">
+                    ${platesPerSide.map(p => `${p.count}×${p.weight}kg`).join(' + ')} par côté
+                </div>
             </div>
             
-            <div class="barbell-formula">
-                ${barWeight}kg + ${platesPerSide.map(p => `${p.count}×${p.weight}`).join(' + ')} × 2
-            </div>
+            <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeightToNext(1)">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+            </button>
         </div>
     `;
     
@@ -413,15 +403,19 @@ async function updateWeightSuggestionVisual() {
     const increaseBtn = document.getElementById('weightIncreaseBtn');
     
     // Retirer les classes existantes
-    decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
-    increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
+    if (decreaseBtn) {
+        decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
+    }
+    if (increaseBtn) {
+        increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
+    }
     
-    if (!isAutoWeightEnabled && mlSuggestion && mlSuggestion !== currentWeight) {
-        if (mlSuggestion < currentWeight) {
-            // Suggérer une diminution
+    if (!isAutoWeightEnabled && mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1) {
+        if (mlSuggestion < currentWeight && decreaseBtn) {
+            // Le poids suggéré est INFÉRIEUR, donc suggérer une DIMINUTION
             decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
-        } else if (mlSuggestion > currentWeight) {
-            // Suggérer une augmentation
+        } else if (mlSuggestion > currentWeight && increaseBtn) {
+            // Le poids suggéré est SUPÉRIEUR, donc suggérer une AUGMENTATION
             increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
         }
     }
@@ -431,7 +425,7 @@ async function updateWeightSuggestionVisual() {
     if (suggestionDiv && mlSuggestion) {
         const diff = mlSuggestion - currentWeight;
         const sign = diff > 0 ? '+' : '';
-        suggestionDiv.innerHTML = `💡 Suggestion ML : ${mlSuggestion}kg${diff !== 0 ? ` (${sign}${diff.toFixed(1)}kg)` : ''}`;
+        suggestionDiv.innerHTML = `💡 Suggestion ML : ${mlSuggestion}kg${Math.abs(diff) > 0.1 ? ` (${sign}${diff.toFixed(1)}kg)` : ''}`;
     }
 }
 
@@ -512,10 +506,39 @@ function selectEffort(value) {
 function adjustWeightToNext(direction) {
     const input = document.getElementById('setWeight');
     const currentWeight = parseFloat(input.value) || 0;
-    const newWeight = adjustToNextWeight(currentExercise, currentWeight, direction);
-    input.value = newWeight;
-    // Mettre à jour la visualisation
-    updateBarbellVisualization();
+    
+    // Obtenir uniquement les poids possibles
+    const availableWeights = calculateAvailableWeights(currentExercise);
+    
+    if (availableWeights.length === 0) {
+        return; // Pas de poids disponibles
+    }
+    
+    // Trouver l'index actuel
+    let currentIndex = availableWeights.findIndex(w => Math.abs(w - currentWeight) < 0.1);
+    if (currentIndex === -1) {
+        // Si le poids actuel n'est pas dans la liste, trouver le plus proche
+        currentIndex = 0;
+        let minDiff = Math.abs(availableWeights[0] - currentWeight);
+        for (let i = 1; i < availableWeights.length; i++) {
+            const diff = Math.abs(availableWeights[i] - currentWeight);
+            if (diff < minDiff) {
+                minDiff = diff;
+                currentIndex = i;
+            }
+        }
+    }
+    
+    // Calculer le nouvel index
+    const newIndex = currentIndex + direction;
+    
+    // Vérifier les limites
+    if (newIndex >= 0 && newIndex < availableWeights.length) {
+        input.value = availableWeights[newIndex];
+        // Mettre à jour la visualisation
+        updateBarbellVisualization();
+        updateWeightSuggestionVisual();
+    }
 }
 
 function adjustReps(delta) {

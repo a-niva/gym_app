@@ -271,7 +271,11 @@ function calculateAllPossibleBarWeights(barWeight, availablePlates) {
         .map(perSide => barWeight + (perSide * 2))
         .sort((a, b) => a - b);
     
-    return result;
+    // Ne retourner que les poids réellement possibles
+    return result.filter(weight => {
+        const plateWeight = (weight - barWeight) / 2;
+        return canMakePlateWeightOptimal(plateWeight, availablePlates);
+    });
 }
 
 // ===== VÉRIFICATION OPTIMALE SI UN POIDS EST POSSIBLE =====
