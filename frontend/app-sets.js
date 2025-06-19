@@ -130,13 +130,15 @@ async function showSetInput() {
                                 onchange="validateWeight()">
                             <button onclick="adjustWeightToNext(1)" class="btn-adjust" id="weightIncreaseBtn">+</button>
                         </div>
-                        <div class="weight-info">
-                            ${isBodyweight ? 
-                                `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
-                                availableWeights.length > 0 ? 
-                                `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
-                                'Aucun poids configuré'}
-                        </div>
+                            <div class="weight-info">
+                                ${isBodyweight ? 
+                                    `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
+                                    exercise.equipment.some(eq => eq.includes('barbell')) ?
+                                    `<div id="barbell-visualization" class="barbell-viz"></div>` :
+                                    availableWeights.length > 0 ? 
+                                    `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
+                                    'Aucun poids configuré'}
+                            </div>
                             <div class="weight-suggestion-line">
                                 <div id="weightSuggestion" class="suggestion-hint">
                                     ${mlSuggestion ? `💡 Suggestion ML : ${mlSuggestion}kg${mlSuggestion !== defaultWeight ? ` (${mlSuggestion > defaultWeight ? '+' : ''}${(mlSuggestion - defaultWeight).toFixed(1)}kg)` : ''}` : ''}
@@ -250,6 +252,160 @@ async function showSetInput() {
     setTimeout(() => {
         updateWeightSuggestionVisual();
     }, 500);
+    
+    attachWeightChangeListeners();
+}
+
+// ===== VISUALISATION DE LA BARRE =====
+function updateBarbellVisualization() {
+    const container = document.getElementById('barbell-visualization');
+    if (!container) return;
+    
+    const weightInput = document.getElementById('setWeight');
+    const totalWeight = parseFloat(weightInput.value) || 0;
+    
+    // Déterminer le poids de la barre
+    const barWeight = getBarWeightForExercise(currentExercise);
+    const platesWeight = totalWeight - barWeight;
+    
+    if (platesWeight < 0) {
+        container.innerHTML = '<div class="barbell-error">Poids inférieur au poids de la barre</div>';
+        return;
+    }
+    
+    // Calculer la distribution optimale des disques
+    const platesPerSide = calculateOptimalPlateDistribution(platesWeight / 2);
+    
+    // Créer la visualisation
+    container.innerHTML = createBarbellHTML(barWeight, platesPerSide);
+}
+
+function getBarWeightForExercise(exercise) {
+    if (!currentUser?.equipment_config) return 20;
+    const config = currentUser.equipment_config;
+    
+    if (exercise.equipment.includes('barbell_standard')) {
+        if (config.barres?.olympique?.available) return 20;
+        if (config.barres?.courte?.available) return 2.5;
+    } else if (exercise.equipment.includes('barbell_ez')) {
+        if (config.barres?.ez?.available) return 10;
+    }
+    return 20;
+}
+
+function calculateOptimalPlateDistribution(targetPerSide) {
+    if (!currentUser?.equipment_config?.disques?.weights) return [];
+    
+    const availablePlates = currentUser.equipment_config.disques.weights;
+    const result = [];
+    let remaining = targetPerSide;
+    
+    // Trier les disques par poids décroissant
+    const sortedPlates = Object.entries(availablePlates)
+        .filter(([w, count]) => count > 0)
+        .map(([w, count]) => ({weight: parseFloat(w), count: Math.floor(count / 2)}))
+        .sort((a, b) => b.weight - a.weight);
+    
+    // Algorithme glouton optimisé
+    for (const plate of sortedPlates) {
+        while (remaining >= plate.weight && plate.count > 0) {
+            const used = result.find(p => p.weight === plate.weight);
+            if (used) {
+                used.count++;
+            } else {
+                result.push({weight: plate.weight, count: 1});
+            }
+            remaining -= plate.weight;
+            plate.count--;
+        }
+    }
+    
+    // Si on n'a pas pu faire le poids exact, retourner la meilleure approximation
+    if (remaining > 0.1) {
+        return [{weight: 0, count: 0, error: true}];
+    }
+    
+    return result;
+}
+
+function createBarbellHTML(barWeight, platesPerSide) {
+    // Couleurs pour les disques selon leur poids (standard olympique)
+    const plateColors = {
+        50: '#e11d48',    // Rouge
+        40: '#e11d48',    // Rouge
+        30: '#e11d48',    // Rouge
+        25: '#e11d48',    // Rouge
+        20: '#3b82f6',    // Bleu
+        15: '#eab308',    // Jaune
+        10: '#22c55e',    // Vert
+        5: '#ffffff',     // Blanc
+        2.5: '#e11d48',   // Rouge
+        2: '#3b82f6',     // Bleu
+        1.25: '#eab308',  // Jaune
+        1: '#22c55e',     // Vert
+        0.5: '#ffffff'    // Blanc
+    };
+    
+    // Créer le HTML
+    let html = '<div class="barbell-container">';
+    
+    // Côté gauche
+    html += '<div class="barbell-side left">';
+    platesPerSide.forEach(plate => {
+        if (!plate.error) {
+            for (let i = 0; i < plate.count; i++) {
+                const color = plateColors[plate.weight] || '#6b7280';
+                const width = Math.max(15, Math.min(40, plate.weight * 1.5));
+                html += `<div class="plate" style="background-color: ${color}; width: ${width}px;">
+                    <span class="plate-weight">${plate.weight}</span>
+                </div>`;
+            }
+        }
+    });
+    html += '</div>';
+    
+    // Barre centrale
+    html += `<div class="barbell-bar">
+        <span class="bar-weight">${barWeight}kg</span>
+    </div>`;
+    
+    // Côté droit (miroir du gauche)
+    html += '<div class="barbell-side right">';
+    platesPerSide.forEach(plate => {
+        if (!plate.error) {
+            for (let i = 0; i < plate.count; i++) {
+                const color = plateColors[plate.weight] || '#6b7280';
+                const width = Math.max(15, Math.min(40, plate.weight * 1.5));
+                html += `<div class="plate" style="background-color: ${color}; width: ${width}px;">
+                    <span class="plate-weight">${plate.weight}</span>
+                </div>`;
+            }
+        }
+    });
+    html += '</div>';
+    
+    html += '</div>';
+    
+    // Résumé textuel
+    if (platesPerSide.length > 0 && !platesPerSide[0].error) {
+        const platesSummary = platesPerSide
+            .map(p => `${p.count}×${p.weight}kg`)
+            .join(' + ');
+        html += `<div class="barbell-summary">Par côté : ${platesSummary}</div>`;
+    }
+    
+    return html;
+}
+
+// Ajouter un listener pour mettre à jour la visualisation
+function attachWeightChangeListeners() {
+    const weightInput = document.getElementById('setWeight');
+    if (weightInput) {
+        // Mettre à jour à chaque changement
+        weightInput.addEventListener('input', updateBarbellVisualization);
+        // Mise à jour initiale
+        updateBarbellVisualization();
+    }
 }
 
 // ===== CHARGEMENT DES SUGGESTIONS DE POIDS =====

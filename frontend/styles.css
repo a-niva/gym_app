@@ -2583,3 +2583,110 @@ select.form-input {
         transform: translateX(18px);
     }
 }
+
+/* ===== VISUALISATION BARRE ===== */
+.barbell-viz {
+    margin-top: 8px;
+}
+
+.barbell-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0;
+    gap: 2px;
+    overflow-x: auto;
+    min-height: 60px;
+}
+
+.barbell-side {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.barbell-side.left {
+    flex-direction: row-reverse;
+}
+
+.plate {
+    height: 40px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.plate-weight {
+    font-size: 10px;
+    font-weight: bold;
+    color: #000;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+.barbell-bar {
+    width: 60px;
+    height: 20px;
+    background: linear-gradient(to bottom, #e5e7eb, #9ca3af);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #6b7280;
+    margin: 0 4px;
+}
+
+.bar-weight {
+    font-size: 11px;
+    font-weight: bold;
+    color: #374151;
+}
+
+.barbell-summary {
+    text-align: center;
+    font-size: 12px;
+    color: var(--gray);
+    margin-top: 4px;
+}
+
+.barbell-error {
+    text-align: center;
+    color: var(--danger);
+    font-size: 12px;
+    padding: 8px;
+}
+
+/* Animation lors du changement */
+.barbell-container .plate {
+    animation: plateSlide 0.3s ease-out;
+}
+
+@keyframes plateSlide {
+    from {
+        transform: translateX(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile : réduire la taille */
+@media (max-width: 480px) {
+    .plate {
+        height: 32px;
+    }
+    
+    .plate-weight {
+        font-size: 9px;
+    }
+    
+    .barbell-bar {
+        width: 50px;
+        height: 16px;
+    }
+}
