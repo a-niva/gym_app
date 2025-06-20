@@ -683,7 +683,14 @@ export {
     createSet,
     updateSetRestTime,
     createRestPeriod,
-    getWorkoutAdjustments
+    getWorkoutAdjustments,
+    getUserCommitment,
+    getAdaptiveTargets,
+    getTrajectoryAnalysis,
+    generateAdaptiveWorkout,
+    completeAdaptiveWorkout,
+    saveUserCommitment,
+    skipSession
 };
 
 // Export des nouvelles fonctions du système adaptatif pour utilisation globale
