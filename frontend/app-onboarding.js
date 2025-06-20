@@ -411,13 +411,53 @@ function nextStep() {
         }
     }
     
+    // NOUVEAU : Gérer le passage depuis l'étape 3 (équipement)
+    if (currentStepEl && currentStepEl.id === 'step3') {
+        // Vérifier si l'équipement sélectionné nécessite une configuration détaillée
+        const needsDetailedConfig = selectedEquipment.some(eq => 
+            ['dumbbells', 'barbell', 'resistance_bands', 'kettlebell'].includes(eq)
+        );
+        
+        if (needsDetailedConfig) {
+            // Afficher l'étape 4 et générer la configuration
+            currentStepEl.classList.remove('active');
+            const step4 = document.getElementById('step4');
+            if (step4) {
+                step4.classList.add('active');
+                generateDetailedEquipmentConfig();
+                updateProgressBar();
+                return;
+            }
+        } else {
+            // Passer directement à l'étape 5 (récapitulatif)
+            currentStepEl.classList.remove('active');
+            const step5 = document.getElementById('step5');
+            if (step5) {
+                step5.classList.add('active');
+                updateProfileSummary();
+                updateProgressBar();
+                return;
+            }
+        }
+    }
+    
+    // NOUVEAU : Gérer le passage depuis l'étape 4
+    if (currentStepEl && currentStepEl.id === 'step4') {
+        if (validateDetailedConfig()) {
+            currentStepEl.classList.remove('active');
+            const step5 = document.getElementById('step5');
+            if (step5) {
+                step5.classList.add('active');
+                updateProfileSummary();
+                updateProgressBar();
+                return;
+            }
+        }
+        return; // Ne pas continuer si la validation échoue
+    }
+    
     // Sinon, utiliser la navigation normale
     navigationNextStep();
-}
-
-// Définir prevStep
-function prevStep() {
-    navigatePrev();
 }
 
 // ===== CONFIGURATION DÉTAILLÉE DE L'ÉQUIPEMENT =====
@@ -450,15 +490,12 @@ function generateDetailedEquipmentConfig() {
         equipmentConfig.banc.available = true;
         updateEquipmentStatus('bench');
     }
+    
     // Afficher les panneaux de configuration pour chaque équipement sélectionné
     selectedEquipment.forEach(eq => {
-        if (eq !== 'pull_up_bar') { // Déjà configuré automatiquement
+        if (eq === 'dumbbells' || eq === 'barbell' || eq === 'resistance_bands' || eq === 'kettlebell') {
             showConfigPanel(eq);
         }
-    });
-    // Auto-ouvrir les panels pour l'équipement sélectionné
-    selectedEquipment.forEach(eq => {
-        showConfigPanel(eq);
     });
 }
 
