@@ -1,7 +1,7 @@
 // ===== MODULE PROFIL =====
 import { currentUser } from './app-state.js';
 import { showToast } from './app-ui.js';
-import { showWelcomeScreen } from './app-init.js';
+// Ne pas importer showWelcomeScreen - elle est déjà globale
 
 // ===== AFFICHAGE DES INFORMATIONS DU PROFIL =====
 function loadProfileInfo() {
@@ -85,8 +85,13 @@ async function deleteProfile() {
             
             showToast('Profil supprimé', 'success');
             
-            // Retourner à l'écran d'accueil
-            showWelcomeScreen();
+            // Retourner à l'écran d'accueil - showWelcomeScreen est globale
+            if (window.showWelcomeScreen) {
+                window.showWelcomeScreen();
+            } else {
+                // Fallback : recharger la page
+                window.location.reload();
+            }
         } else {
             showToast('Erreur lors de la suppression', 'error');
         }
