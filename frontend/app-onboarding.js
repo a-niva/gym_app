@@ -33,7 +33,9 @@ import {
     COMMON_DUMBBELL_WEIGHTS,
     COMMON_PLATE_WEIGHTS,
     COMMON_KETTLEBELL_WEIGHTS,
-    getColorName
+    getColorName,
+    getEquipmentName,
+    getEquipmentIcon
 } from './app-config.js';
 
 // ===== GESTION DES OBJECTIFS =====
@@ -450,7 +452,12 @@ function generateDetailedEquipmentConfig() {
         equipmentConfig.banc.available = true;
         updateEquipmentStatus('bench');
     }
-    
+    // Afficher les panneaux de configuration pour chaque équipement sélectionné
+    selectedEquipment.forEach(eq => {
+        if (eq !== 'pull_up_bar') { // Déjà configuré automatiquement
+            showConfigPanel(eq);
+        }
+    });
     // Auto-ouvrir les panels pour l'équipement sélectionné
     selectedEquipment.forEach(eq => {
         showConfigPanel(eq);
