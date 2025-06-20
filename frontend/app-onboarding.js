@@ -33,9 +33,7 @@ import {
     COMMON_DUMBBELL_WEIGHTS,
     COMMON_PLATE_WEIGHTS,
     COMMON_KETTLEBELL_WEIGHTS,
-    getColorName,
-    getEquipmentName,
-    getEquipmentIcon
+    getColorName
 } from './app-config.js';
 
 // ===== GESTION DES OBJECTIFS =====
