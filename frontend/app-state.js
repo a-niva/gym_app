@@ -181,7 +181,8 @@ export {
     isSilentMode,
     currentProgram,
     userPrograms,
-    isAutoWeightEnabled
+    isAutoWeightEnabled,
+    currentAdaptiveWorkout
 };
 
 // Réinitialisation de l'état pour logout ou nouveau profil
