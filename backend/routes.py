@@ -9,8 +9,10 @@ from backend.schemas import UserCreate, WorkoutCreate, SetCreate, ProgramGenerat
 from backend.schemas import UserCommitmentCreate, UserCommitmentResponse, AdaptiveTargetsResponse, TrajectoryAnalysis
 from backend.models import UserCommitment, AdaptiveTargets
 from backend.ml_engine import RecoveryTracker, VolumeOptimizer, SessionBuilder, ProgressionAnalyzer, RealTimeAdapter
-import logging
 import datetime
+import logging
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter()
 
@@ -255,3 +257,19 @@ async def skip_session(
         "message": "Session skipped handled",
         "reminder": reminder
     }
+
+@router.get("/api/programs/{program_id}/adjustments")
+async def get_program_adjustments(
+    program_id: int,
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """Obtenir les suggestions d'ajustement pour un programme"""
+    ml_engine = FitnessMLEngine(db)
+    
+    try:
+        suggestions = ml_engine.suggest_program_adjustments(user_id, program_id)
+        return suggestions
+    except Exception as e:
+        logger.error(f"Error getting adjustments: {str(e)}")
+        raise HTTPException(status_code=500, detail="Analysis failed")

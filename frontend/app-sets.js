@@ -569,6 +569,19 @@ async function updateWeightSuggestionVisual() {
         increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
     }
     
+    // NOUVEAU : Gérer l'aspect visuel du texte de suggestion
+    const suggestionDiv = document.getElementById('weightSuggestion');
+    if (suggestionDiv) {
+        if (!isAutoWeightEnabled) {
+            suggestionDiv.style.opacity = '0.5';
+            suggestionDiv.style.textDecoration = 'line-through';
+        } else {
+            suggestionDiv.style.opacity = '1';
+            suggestionDiv.style.textDecoration = 'none';
+        }
+    }
+    
+    // Animation des boutons seulement si auto désactivé
     if (!isAutoWeightEnabled && mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1) {
         if (mlSuggestion < currentWeight && decreaseBtn) {
             // Le poids suggéré est INFÉRIEUR, donc suggérer une DIMINUTION
@@ -580,11 +593,36 @@ async function updateWeightSuggestionVisual() {
     }
     
     // Mettre à jour le texte de suggestion
-    const suggestionDiv = document.getElementById('weightSuggestion');
     if (suggestionDiv && mlSuggestion) {
         const diff = mlSuggestion - currentWeight;
         const sign = diff > 0 ? '+' : '';
         suggestionDiv.innerHTML = `💡 Suggestion ML : ${mlSuggestion}kg${Math.abs(diff) > 0.1 ? ` (${sign}${diff.toFixed(1)}kg)` : ''}`;
+    }
+}
+
+// ===== MISE À JOUR VISUELLE DE LA SUGGESTION =====
+function updateWeightSuggestionVisual() {
+    const suggestionEl = document.getElementById('weightSuggestion');
+    const weightInput = document.getElementById('setWeight');
+    
+    if (!suggestionEl || !weightInput) return;
+    
+    if (!isAutoWeightEnabled) {
+        // Mode manuel : griser la suggestion
+        suggestionEl.classList.add('disabled');
+        suggestionEl.style.opacity = '0.5';
+        suggestionEl.style.textDecoration = 'line-through';
+    } else {
+        // Mode auto : suggestion active
+        suggestionEl.classList.remove('disabled');
+        suggestionEl.style.opacity = '1';
+        suggestionEl.style.textDecoration = 'none';
+        
+        // Appliquer la suggestion ML si elle existe
+        if (window.currentMLSuggestion) {
+            weightInput.value = window.currentMLSuggestion;
+            updateBarbellVisualization();
+        }
     }
 }
 
@@ -963,19 +1001,15 @@ function toggleAutoWeight(enabled) {
     
     if (!enabled) {
         showToast('Ajustement automatique désactivé', 'info');
-        // Mettre à jour les indications visuelles
-        updateWeightSuggestionVisual();
+        updateWeightSuggestionVisual();  // REMPLACER le commentaire
     } else {
-        // Si on réactive, appliquer la suggestion ML
         showToast('Ajustement automatique activé', 'info');
         const mlSuggestion = window.currentMLSuggestion;
         if (mlSuggestion) {
             document.getElementById('setWeight').value = mlSuggestion;
-            // Mettre à jour la visualisation de la barre
             updateBarbellVisualization();
         }
-        // Mettre à jour l'affichage
-        updateWeightSuggestionVisual();
+        updateWeightSuggestionVisual();  // AJOUTER ICI AUSSI
     }
 }
 

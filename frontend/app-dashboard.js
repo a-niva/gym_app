@@ -22,7 +22,7 @@ import {
 } from './app-state.js';
 
 import { showView } from './app-navigation.js';
-
+import { showProgramGenerator } from './app-program-generator.js';
 
 // ===== CHARGEMENT DU DASHBOARD =====
 async function loadDashboard() {
@@ -579,6 +579,88 @@ function addPredictionCards(predictions) {
         `;
         container.appendChild(warningCard);
     }
+
+    // Carte suggestions d'adaptation du programme
+    if (currentProgram) {
+        (async () => {
+            try {
+                const response = await fetch(
+                    `/api/programs/${currentProgram.id}/adjustments?user_id=${currentUser.id}`
+                );
+                
+                if (response.ok) {
+                    const suggestions = await response.json();
+                    
+                    if (suggestions.status === 'ready') {
+                        const adaptCard = document.createElement('div');
+                        adaptCard.className = 'stat-card adaptation-card';
+                        
+                        let suggestionsHTML = '<h3 style="color: var(--primary); margin-bottom: 1rem;">🔧 Adaptation du programme</h3>';
+                        
+                        // Recommandations globales
+                        if (suggestions.global_recommendations && suggestions.global_recommendations.length > 0) {
+                            suggestionsHTML += '<div class="alert" style="background: rgba(255,193,7,0.1); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">';
+                            suggestions.global_recommendations.forEach(rec => {
+                                suggestionsHTML += `
+                                    <p style="margin: 0.5rem 0;"><strong>${rec.action}</strong></p>
+                                    <small style="color: var(--gray-light);">${rec.reason}</small>
+                                `;
+                            });
+                            suggestionsHTML += '</div>';
+                        }
+                        
+                        // Suggestions par muscle (max 3)
+                        const muscleEntries = Object.entries(suggestions.muscle_specific || {}).slice(0, 3);
+                        if (muscleEntries.length > 0) {
+                            suggestionsHTML += '<div class="muscle-suggestions">';
+                            muscleEntries.forEach(([muscle, recs]) => {
+                                suggestionsHTML += `<h5 style="color: var(--gray-light); text-transform: uppercase; font-size: 0.85rem;">${muscle}</h5>`;
+                                recs.forEach(rec => {
+                                    const iconMap = {
+                                        'increase_volume': '📈',
+                                        'change_exercises': '🔄',
+                                        'reduce_volume': '📉'
+                                    };
+                                    suggestionsHTML += `
+                                        <p style="margin: 0.5rem 0;">
+                                            ${iconMap[rec.type] || '•'} ${rec.action}
+                                        </p>
+                                    `;
+                                });
+                            });
+                            suggestionsHTML += '</div>';
+                        }
+                        
+                        // Changements d'exercices suggérés
+                        if (suggestions.exercises_to_change && suggestions.exercises_to_change.length > 0) {
+                            suggestionsHTML += '<div style="margin-top: 1rem;">';
+                            suggestionsHTML += '<h5 style="color: var(--gray-light); font-size: 0.85rem;">EXERCICES À VARIER</h5>';
+                            suggestions.exercises_to_change.slice(0, 2).forEach(change => {
+                                suggestionsHTML += `
+                                    <p style="margin: 0.5rem 0; font-size: 0.9rem;">
+                                        • ${change.current[0]} → ${change.alternatives[0]}
+                                    </p>
+                                `;
+                            });
+                            suggestionsHTML += '</div>';
+                        }
+                        
+                        // Bouton d'action
+                        suggestionsHTML += `
+                            <button class="btn btn-primary" onclick="showProgramAdjustments()" style="margin-top: 1.5rem; width: 100%;">
+                                🔧 Voir toutes les suggestions
+                            </button>
+                        `;
+                        
+                        adaptCard.innerHTML = suggestionsHTML;
+                        container.appendChild(adaptCard);
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur chargement suggestions adaptation:', error);
+            }
+        })();
+    }
 }
 
 function logout() {
@@ -633,12 +715,21 @@ async function clearWorkoutHistory() {
     }
 }
 
-window.clearWorkoutHistory = clearWorkoutHistory;
+
+// ===== AFFICHER LES AJUSTEMENTS DE PROGRAMME =====
+async function showProgramAdjustments() {
+    // Pour l'instant, rediriger vers le générateur
+    // TODO: Créer une interface dédiée pour les ajustements
+    showProgramGenerator();
+    showToast('Analysez votre programme actuel depuis cette page', 'info');
+}
 
 // ===== EXPORT GLOBAL =====
+window.clearWorkoutHistory = clearWorkoutHistory;
 window.loadDashboard = loadDashboard;
 window.refreshDashboard = refreshDashboard;
 window.showDetailedStats = showDetailedStats;
+window.showProgramAdjustments = showProgramAdjustments;
 
 // Export pour les autres modules
 export {
