@@ -310,9 +310,6 @@ async function saveCommitment() {
     }
 }
 
-// Sauvegarder la fonction originale sous un autre nom
-const navigationNextStep = window.nextStep;
-
 // Créer une nouvelle fonction qui gère la logique spéciale
 function enhancedNextStep() {
     const currentStepEl = document.querySelector('.onboarding-step.active');
