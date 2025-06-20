@@ -185,8 +185,7 @@ export {
     currentAdaptiveWorkout,
     userCommitment,
     adaptiveTargets,
-    trajectoryAnalysis,
-    lastCompletedSetId
+    trajectoryAnalysis
 };
 
 // Réinitialisation de l'état pour logout ou nouveau profil
