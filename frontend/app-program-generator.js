@@ -257,12 +257,6 @@ async function activateProgramAndStart(programId) {
 
 window.activateProgramAndStart = activateProgramAndStart;
 
-// ===== SAUVEGARDE DU PROGRAMME =====
-function saveProgram() {
-    // TODO: Implémenter la sauvegarde
-    showToast('Fonctionnalité de sauvegarde à venir', 'info');
-}
-
 // ===== EXPORTS GLOBAUX =====
 window.showProgramGenerator = showProgramGenerator;
 window.generateProgram = generateProgram;

@@ -182,7 +182,11 @@ export {
     currentProgram,
     userPrograms,
     isAutoWeightEnabled,
-    currentAdaptiveWorkout
+    currentAdaptiveWorkout,
+    userCommitment,
+    adaptiveTargets,
+    trajectoryAnalysis,
+    lastCompletedSetId
 };
 
 // Réinitialisation de l'état pour logout ou nouveau profil
