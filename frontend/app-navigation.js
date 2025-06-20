@@ -55,6 +55,12 @@ function showView(viewName) {
             window.initializeStatsPage();
         }, 100);
     }
+
+    // Ajouter après l'affichage de la vue
+    if (viewName === 'profile' && currentUser) {
+        // Charger les informations du profil
+        loadProfileInfo();
+    }
 }
 
 function showStep(step) {

@@ -415,7 +415,7 @@ function nextStep() {
     if (currentStepEl && currentStepEl.id === 'step3') {
         // Vérifier si l'équipement sélectionné nécessite une configuration détaillée
         const needsDetailedConfig = selectedEquipment.some(eq => 
-            ['dumbbells', 'barbell', 'resistance_bands', 'kettlebell'].includes(eq)
+            ['dumbbells', 'barbell', 'resistance_bands', 'kettlebell', 'bench'].includes(eq)
         );
         
         if (needsDetailedConfig) {
@@ -486,14 +486,10 @@ function generateDetailedEquipmentConfig() {
         equipmentConfig.autres.barre_traction = true;
         updateEquipmentStatus('pull_up_bar');
     }
-    if (selectedEquipment.includes('bench')) {
-        equipmentConfig.banc.available = true;
-        updateEquipmentStatus('bench');
-    }
     
     // Afficher les panneaux de configuration pour chaque équipement sélectionné
     selectedEquipment.forEach(eq => {
-        if (eq === 'dumbbells' || eq === 'barbell' || eq === 'resistance_bands' || eq === 'kettlebell') {
+        if (eq === 'dumbbells' || eq === 'barbell' || eq === 'resistance_bands' || eq === 'kettlebell' || eq === 'bench') {
             showConfigPanel(eq);
         }
     });

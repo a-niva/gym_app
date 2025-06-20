@@ -1052,6 +1052,25 @@ def get_muscle_performance_prediction(user_id: int, db: Session = Depends(get_db
     
     return {"predictions": predictions}
 
+@app.delete("/api/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    """Supprimer complètement un utilisateur et toutes ses données"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    try:
+        # Les cascades devraient supprimer automatiquement les workouts et sets
+        # grâce aux relations définies dans les modèles
+        db.delete(user)
+        db.commit()
+        
+        return {"message": "User deleted successfully", "user_id": user_id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
 
 # Static files
 #app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

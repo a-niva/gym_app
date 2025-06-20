@@ -3003,3 +3003,21 @@ select.form-input {
     text-align: center;
     color: white;
 }
+
+/* Bouton danger plus rouge */
+.btn-danger[onclick*="deleteProfile"] {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+}
+
+.btn-danger[onclick*="deleteProfile"]:hover {
+    background: #b91c1c !important;
+    border-color: #b91c1c !important;
+    transform: translateY(-2px);
+}
+
+.profile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

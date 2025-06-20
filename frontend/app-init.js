@@ -17,7 +17,7 @@ import './app-exercises.js';    // Exercices (dépend de state et equipment)
 import './app-sets.js';         // Sets (dépend de state, ui, equipment et api)
 import './app-program-generator.js';  // Générateur de programmes
 import './app-onboarding.js';   // Onboarding (dépend de tous les modules précédents)
-
+import './app-profile.js';     // Profil
 
 // Import des fonctions nécessaires à l'initialisation
 import { loadExercises, loadUserFromAPI } from './app-api.js';
