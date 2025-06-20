@@ -600,32 +600,6 @@ async function updateWeightSuggestionVisual() {
     }
 }
 
-// ===== MISE À JOUR VISUELLE DE LA SUGGESTION =====
-function updateWeightSuggestionVisual() {
-    const suggestionEl = document.getElementById('weightSuggestion');
-    const weightInput = document.getElementById('setWeight');
-    
-    if (!suggestionEl || !weightInput) return;
-    
-    if (!isAutoWeightEnabled) {
-        // Mode manuel : griser la suggestion
-        suggestionEl.classList.add('disabled');
-        suggestionEl.style.opacity = '0.5';
-        suggestionEl.style.textDecoration = 'line-through';
-    } else {
-        // Mode auto : suggestion active
-        suggestionEl.classList.remove('disabled');
-        suggestionEl.style.opacity = '1';
-        suggestionEl.style.textDecoration = 'none';
-        
-        // Appliquer la suggestion ML si elle existe
-        if (window.currentMLSuggestion) {
-            weightInput.value = window.currentMLSuggestion;
-            updateBarbellVisualization();
-        }
-    }
-}
-
 // ===== GESTION DES TIMERS =====
 function startTimers() {
     // Nettoyer l'ancien timer avant d'en créer un nouveau

@@ -142,7 +142,7 @@ export function getSessionHistory() {
     return sessionHistory;
 }
 
-export function addToSessionHistory(entry) {
+export function addToStateHistory(entry) {
     sessionHistory.push(entry);
 }
 
