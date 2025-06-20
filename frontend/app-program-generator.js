@@ -1,7 +1,7 @@
 import { currentUser, setCurrentProgram } from './app-state.js';
 import { showToast } from './app-ui.js';
 import { showView } from './app-navigation.js';
-import { activateProgram, loadUserPrograms } from './app-api.js';
+import { activateProgram, loadUserPrograms, saveProgram } from './app-api.js';
 
 // ===== AFFICHAGE DE L'INTERFACE DE GÉNÉRATION =====
 function showProgramGenerator() {
@@ -52,6 +52,46 @@ function showProgramGenerator() {
     `;
     
     showView('program-generator');
+}
+
+// ===== TRANSFORMATION DU PROGRAMME POUR SAUVEGARDE =====
+function transformProgramForSaving(program, weeks, frequency) {
+    const programData = {
+        name: `Programme ${weeks} semaines - ${frequency}j/sem`,
+        duration_weeks: weeks,
+        frequency: frequency,
+        program_days: []
+    };
+    
+    // Grouper par semaine et jour
+    const groupedDays = {};
+    
+    program.forEach(item => {
+        const key = `${item.week}-${item.day}`;
+        if (!groupedDays[key]) {
+            groupedDays[key] = {
+                week_number: item.week,
+                day_number: item.day,
+                muscle_group: item.muscle_group,
+                exercises: []
+            };
+        }
+        
+        item.exercises.forEach((ex, index) => {
+            groupedDays[key].exercises.push({
+                exercise_id: ex.exercise_id,
+                sets: ex.sets,
+                target_reps: ex.target_reps,
+                rest_time: ex.rest_time,
+                order_index: index,
+                predicted_weight: ex.predicted_weight
+            });
+        });
+    });
+    
+    programData.program_days = Object.values(groupedDays);
+    
+    return programData;
 }
 
 // ===== GÉNÉRATION DU PROGRAMME =====
@@ -119,45 +159,7 @@ async function generateProgram(event) {
     }
 }
 
-// ===== TRANSFORMATION DU PROGRAMME POUR SAUVEGARDE =====
-function transformProgramForSaving(program, weeks, frequency) {
-    const programData = {
-        name: `Programme ${weeks} semaines - ${frequency}j/sem`,
-        duration_weeks: weeks,
-        frequency: frequency,
-        program_days: []
-    };
-    
-    // Grouper par semaine et jour
-    const groupedDays = {};
-    
-    program.forEach(item => {
-        const key = `${item.week}-${item.day}`;
-        if (!groupedDays[key]) {
-            groupedDays[key] = {
-                week_number: item.week,
-                day_number: item.day,
-                muscle_group: item.muscle_group,
-                exercises: []
-            };
-        }
-        
-        item.exercises.forEach((ex, index) => {
-            groupedDays[key].exercises.push({
-                exercise_id: ex.exercise_id,
-                sets: ex.sets,
-                target_reps: ex.target_reps,
-                rest_time: ex.rest_time,
-                order_index: index,
-                predicted_weight: ex.predicted_weight
-            });
-        });
-    });
-    
-    programData.program_days = Object.values(groupedDays);
-    
-    return programData;
-}
+
 
 // ===== AFFICHAGE DU PROGRAMME GÉNÉRÉ =====
 function displayProgram(program) {

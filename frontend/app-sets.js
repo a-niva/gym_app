@@ -45,6 +45,54 @@ import {
 import { TIME_BASED_KEYWORDS } from './app-config.js';
 import { addToSessionHistory } from './app-history.js';
 
+
+// ===== MISE À JOUR VISUELLE DES SUGGESTIONS =====
+async function updateWeightSuggestionVisual() {
+    const mlSuggestion = window.currentMLSuggestion;
+    const currentWeight = parseFloat(document.getElementById('setWeight').value);
+    
+    const decreaseBtn = document.getElementById('weightDecreaseBtn');
+    const increaseBtn = document.getElementById('weightIncreaseBtn');
+    
+    // Retirer les classes existantes
+    if (decreaseBtn) {
+        decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
+    }
+    if (increaseBtn) {
+        increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
+    }
+    
+    // NOUVEAU : Gérer l'aspect visuel du texte de suggestion
+    const suggestionDiv = document.getElementById('weightSuggestion');
+    if (suggestionDiv) {
+        if (!isAutoWeightEnabled) {
+            suggestionDiv.style.opacity = '0.5';
+            suggestionDiv.style.textDecoration = 'line-through';
+        } else {
+            suggestionDiv.style.opacity = '1';
+            suggestionDiv.style.textDecoration = 'none';
+        }
+    }
+    
+    // Animation des boutons seulement si auto désactivé
+    if (!isAutoWeightEnabled && mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1) {
+        if (mlSuggestion < currentWeight && decreaseBtn) {
+            // Le poids suggéré est INFÉRIEUR, donc suggérer une DIMINUTION
+            decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
+        } else if (mlSuggestion > currentWeight && increaseBtn) {
+            // Le poids suggéré est SUPÉRIEUR, donc suggérer une AUGMENTATION
+            increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
+        }
+    }
+    
+    // Mettre à jour le texte de suggestion
+    if (suggestionDiv && mlSuggestion) {
+        const diff = mlSuggestion - currentWeight;
+        const sign = diff > 0 ? '+' : '';
+        suggestionDiv.innerHTML = `💡 Suggestion ML : ${mlSuggestion}kg${Math.abs(diff) > 0.1 ? ` (${sign}${diff.toFixed(1)}kg)` : ''}`;
+    }
+}
+
 // ===== AFFICHAGE DE L'INTERFACE DE SAISIE =====
 async function showSetInput() {
     const container = document.getElementById('exerciseArea');
@@ -553,53 +601,6 @@ async function loadWeightSuggestion() {
     return;
 }
 
-// ===== MISE À JOUR VISUELLE DES SUGGESTIONS =====
-async function updateWeightSuggestionVisual() {
-    const mlSuggestion = window.currentMLSuggestion;
-    const currentWeight = parseFloat(document.getElementById('setWeight').value);
-    
-    const decreaseBtn = document.getElementById('weightDecreaseBtn');
-    const increaseBtn = document.getElementById('weightIncreaseBtn');
-    
-    // Retirer les classes existantes
-    if (decreaseBtn) {
-        decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
-    }
-    if (increaseBtn) {
-        increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
-    }
-    
-    // NOUVEAU : Gérer l'aspect visuel du texte de suggestion
-    const suggestionDiv = document.getElementById('weightSuggestion');
-    if (suggestionDiv) {
-        if (!isAutoWeightEnabled) {
-            suggestionDiv.style.opacity = '0.5';
-            suggestionDiv.style.textDecoration = 'line-through';
-        } else {
-            suggestionDiv.style.opacity = '1';
-            suggestionDiv.style.textDecoration = 'none';
-        }
-    }
-    
-    // Animation des boutons seulement si auto désactivé
-    if (!isAutoWeightEnabled && mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1) {
-        if (mlSuggestion < currentWeight && decreaseBtn) {
-            // Le poids suggéré est INFÉRIEUR, donc suggérer une DIMINUTION
-            decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
-        } else if (mlSuggestion > currentWeight && increaseBtn) {
-            // Le poids suggéré est SUPÉRIEUR, donc suggérer une AUGMENTATION
-            increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
-        }
-    }
-    
-    // Mettre à jour le texte de suggestion
-    if (suggestionDiv && mlSuggestion) {
-        const diff = mlSuggestion - currentWeight;
-        const sign = diff > 0 ? '+' : '';
-        suggestionDiv.innerHTML = `💡 Suggestion ML : ${mlSuggestion}kg${Math.abs(diff) > 0.1 ? ` (${sign}${diff.toFixed(1)}kg)` : ''}`;
-    }
-}
-
 // ===== GESTION DES TIMERS =====
 function startTimers() {
     // Nettoyer l'ancien timer avant d'en créer un nouveau
@@ -1031,7 +1032,7 @@ window.selectFatigue = selectFatigue;
 window.selectEffort = selectEffort;
 window.adjustWeightToNext = adjustWeightToNext;
 window.adjustReps = adjustReps;
-window.validateWeight = validateWeightInput;
+window.validateWeightInput = validateWeightInput;
 window.completeSet = completeSet;
 window.skipSet = skipSet;
 
