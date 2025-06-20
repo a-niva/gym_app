@@ -1,9 +1,8 @@
 # ===== backend/ml_engine.py =====
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, RecoveryMetrics, VolumeMetrics, ProgramExercise
-import json
+from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, ProgramExercise
 from sqlalchemy import func
 from typing import Any
 
