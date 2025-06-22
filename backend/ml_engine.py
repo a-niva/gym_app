@@ -544,7 +544,10 @@ class FitnessMLEngine:
                     available_equipment.append("dumbbells")
                 # Poids du corps toujours disponible
                 available_equipment.append("bodyweight")
-                
+                logger.info(f"=== DIAGNOSTIC ÉQUIPEMENT ===")
+                logger.info(f"Config utilisateur brute: {user.equipment_config}")
+                logger.info(f"Équipement mappé disponible: {available_equipment}")
+
                 # TEMPORAIRE - TEST SEULEMENT - À RETIRER APRÈS
                 logger.warning("TEST: Ajout forcé de tous les équipements")
                 available_equipment.extend(["pull_up_bar", "bodyweight_vest", "ankle_weights", "kettlebell"])
@@ -570,13 +573,44 @@ class FitnessMLEngine:
                     available_equipment.append("pull_up_bar")
 
             # Récupérer TOUS les exercices et filtrer manuellement
+            # Récupérer TOUS les exercices et filtrer manuellement
             all_exercises = self.db.query(Exercise).all()
+            logger.info(f"Nombre total d'exercices dans la DB: {len(all_exercises)}")
+
+            # Logger quelques exemples d'exercices
+            for ex in all_exercises[:3]:
+                logger.info(f"Exemple exercice: {ex.name_fr} - Équipement requis: {ex.equipment}")
+
             available_exercises = []
             for exercise in all_exercises:
                 exercise_equipment = exercise.equipment or []
+                # AJOUTER CE LOG
+                if exercise.body_part in ["Pectoraux", "Dos", "Quadriceps"]:  # Log seulement quelques muscles
+                    logger.debug(f"Test {exercise.name_fr}: requis={exercise_equipment}, dispo={available_equipment}")
+                
                 # Vérifier si l'équipement requis est disponible
                 if all(eq in available_equipment for eq in exercise_equipment):
                     available_exercises.append(exercise)
+                else:
+                    # AJOUTER CE LOG pour les exercices rejetés
+                    if exercise.body_part in ["Pectoraux", "Dos", "Quadriceps"]:
+                        missing = [eq for eq in exercise_equipment if eq not in available_equipment]
+                        logger.debug(f"  → Rejeté car manque: {missing}")
+                # Vérifier si l'équipement requis est disponible
+                if all(eq in available_equipment for eq in exercise_equipment):
+                    available_exercises.append(exercise)
+            # APRÈS LA BOUCLE, AJOUTER UN RÉSUMÉ
+            logger.info(f"=== RÉSULTAT FILTRAGE ===")
+            logger.info(f"Exercices disponibles après filtrage: {len(available_exercises)}")
+            if len(available_exercises) == 0:
+                logger.error("AUCUN EXERCICE DISPONIBLE! Vérifier le mapping d'équipement")
+                # Logger les 5 premiers équipements requis pour debug
+                sample_requirements = {}
+                for ex in all_exercises[:20]:
+                    eq_str = str(ex.equipment)
+                    sample_requirements[eq_str] = sample_requirements.get(eq_str, 0) + 1
+                logger.error(f"Échantillon des équipements requis: {sample_requirements}")
+
             # AJOUTER CES LIGNES DE DEBUG
             logger.info(f"Équipement disponible pour l'utilisateur {user.id}: {available_equipment}")
             logger.info(f"Nombre d'exercices disponibles après filtrage: {len(available_exercises)}")
