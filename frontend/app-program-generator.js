@@ -97,7 +97,31 @@ function transformProgramForSaving(program, weeks, frequency) {
 // ===== GÉNÉRATION DU PROGRAMME =====
 async function generateProgram(event) {
     event.preventDefault();
-    
+
+    // NOUVEAU : Vérifier d'abord si l'utilisateur a un commitment
+    try {
+        const commitmentCheck = await fetch(`/api/users/${currentUser.id}/commitment`);
+        if (!commitmentCheck.ok && commitmentCheck.status === 404) {
+            resultDiv.innerHTML = `
+                <div class="error-message">
+                    <p>⚠️ Configuration incomplète</p>
+                    <p>Pour générer un programme, vous devez d'abord :</p>
+                    <ul>
+                        <li>✅ Définir vos équipements disponibles</li>
+                        <li>✅ Choisir vos objectifs d'entraînement</li>
+                        <li>❌ Configurer vos préférences (engagement)</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="showCommitmentModal()">
+                        Définir mes préférences
+                    </button>
+                </div>
+            `;
+            return;
+        }
+    } catch (error) {
+        console.error('Erreur vérification commitment:', error);
+    }
+
     const formData = new FormData(event.target);
     const weeks = parseInt(formData.get('weeks'));
     const frequency = parseInt(formData.get('frequency'));
