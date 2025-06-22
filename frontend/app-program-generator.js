@@ -1,10 +1,11 @@
-import { currentUser, setCurrentProgram } from './app-state.js';
+import { currentUser, setCurrentProgram, setUserPrograms } from './app-state.js';
 import { showToast } from './app-ui.js';
 import { showView } from './app-navigation.js';
 import { activateProgram, loadUserPrograms, saveProgram, getUserCommitment, saveUserCommitment } from './app-api.js';
 
 // Variable pour stocker temporairement les paramètres du programme
 let pendingProgramParams = null;
+let currentGeneratedProgramId = null;
 
 // ===== AFFICHAGE DE L'INTERFACE DE GÉNÉRATION =====
 async function showProgramGenerator() {
@@ -494,11 +495,71 @@ async function generateProgram(event) {
         const savedProgram = await saveProgram(programToSave);
         
         if (savedProgram) {
+            currentGeneratedProgramId = savedProgram.id;
+            // Ajouter les boutons d'action stylés
             resultDiv.innerHTML += `
-                <div style="margin-top: 2rem; text-align: center;">
-                    <button class="btn btn-primary" onclick="activateProgramAndStart(${savedProgram.id})">
-                        🚀 Commencer ce programme
-                    </button>
+                <div style="
+                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                    border-radius: 20px;
+                    padding: 2.5rem;
+                    text-align: center;
+                    margin: 2rem 0;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                ">
+                    <h3 style="
+                        color: #10b981; 
+                        margin: 0 0 1rem 0;
+                        font-size: 1.8rem;
+                        font-weight: 700;
+                    ">🎯 Programme prêt !</h3>
+                    
+                    <p style="
+                        color: rgba(255, 255, 255, 0.9); 
+                        margin-bottom: 2rem;
+                        font-size: 1.1rem;
+                    ">
+                        Votre programme personnalisé est maintenant disponible
+                    </p>
+                    
+                    <div style="
+                        display: flex; 
+                        gap: 1.5rem; 
+                        justify-content: center; 
+                        flex-wrap: wrap;
+                    ">
+                        <button onclick="activateProgramAndStart(${savedProgram.id})" style="
+                            background: linear-gradient(135deg, #10b981, #059669);
+                            color: white;
+                            border: none;
+                            padding: 1rem 2.5rem;
+                            border-radius: 15px;
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+                        " onmouseover="this.style.transform='translateY(-2px)'" 
+                        onmouseout="this.style.transform='translateY(0)'">
+                            🚀 Commencer maintenant
+                        </button>
+                        
+                        <button onclick="saveForLater()" style="
+                            background: rgba(255, 255, 255, 0.1);
+                            color: white;
+                            border: 2px solid rgba(255, 255, 255, 0.2);
+                            padding: 1rem 2.5rem;
+                            border-radius: 15px;
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'" 
+                        onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
+                            💾 Sauvegarder pour plus tard
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -772,11 +833,7 @@ function displayProgram(program) {
                 Commencez dès maintenant ou sauvegardez pour plus tard
             </p>
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <button onclick="activateProgramAndStart()" class="button-primary" style="
-                    background: #22c55e;
-                    padding: 0.75rem 2rem;
-                    font-size: 1rem;
-                ">
+                <button onclick="activateProgramAndStart(${currentGeneratedProgramId})" class="button-primary">
                     🚀 Commencer ce programme
                 </button>
                 <button onclick="saveForLater()" class="button-secondary" style="
@@ -837,9 +894,21 @@ async function activateProgramAndStart(programId) {
     }
 }
 
-window.activateProgramAndStart = activateProgramAndStart;
+// ===== SAUVEGARDER POUR PLUS TARD =====
+async function saveForLater() {
+    if (!currentGeneratedProgramId) {
+        showToast('Aucun programme à sauvegarder', 'error');
+        return;
+    }
+    
+    showToast('Programme sauvegardé dans vos programmes !', 'success');
+    showView('dashboard');
+}
+
 
 // ===== EXPORTS GLOBAUX =====
+window.activateProgramAndStart = activateProgramAndStart;
+window.saveForLater = saveForLater;
 window.showProgramGenerator = showProgramGenerator;
 window.generateProgram = generateProgram;
 window.selectFrequency = selectFrequency;  
