@@ -1,9 +1,7 @@
-// frontend/app-program-generator.js - Version refonte complète
-
-import { currentUser, setCurrentProgram, getUserCommitment } from './app-state.js';
+import { currentUser, setCurrentProgram } from './app-state.js';
 import { showToast } from './app-ui.js';
 import { showView } from './app-navigation.js';
-import { activateProgram, loadUserPrograms, saveProgram, saveUserCommitment } from './app-api.js';
+import { activateProgram, loadUserPrograms, saveProgram } from './app-api.js';
 
 // Variable pour stocker temporairement les paramètres du programme
 let pendingProgramParams = null;
@@ -315,6 +313,48 @@ async function submitCommitment(event) {
     }
 }
 
+// ===== TRANSFORMATION DU PROGRAMME POUR SAUVEGARDE =====
+function transformProgramForSaving(program, weeks, frequency) {
+    const programData = {
+        name: `Programme ${weeks} semaines - ${frequency}j/sem`,
+        duration_weeks: weeks,
+        frequency: frequency,
+        program_days: []
+    };
+    
+    // Grouper par semaine et jour
+    const groupedDays = {};
+    
+    program.forEach(item => {
+        const key = `${item.week}-${item.day}`;
+        if (!groupedDays[key]) {
+            groupedDays[key] = {
+                week_number: item.week,
+                day_number: item.day,
+                muscle_group: item.muscle_group,
+                exercises: []
+            };
+        }
+        
+        item.exercises.forEach((ex, index) => {
+            groupedDays[key].exercises.push({
+                exercise_id: ex.exercise_id,
+                sets: ex.sets,
+                target_reps: ex.target_reps,
+                rest_time: ex.rest_time,
+                order_index: index,
+                predicted_weight: ex.predicted_weight
+            });
+        });
+    });
+    
+    programData.program_days = Object.values(groupedDays);
+    
+    return programData;
+}
+
+
+
 // ===== RÉINITIALISER L'ENGAGEMENT =====
 async function resetCommitment() {
     if (confirm('Voulez-vous modifier vos préférences d\'entraînement ?')) {
@@ -322,6 +362,7 @@ async function resetCommitment() {
         showCommitmentForm(container);
     }
 }
+
 
 // ===== GÉNÉRATION DU PROGRAMME =====
 async function generateProgram(event) {
@@ -386,16 +427,111 @@ async function generateProgram(event) {
     }
 }
 
-// [Le reste du code reste identique : displayProgram, transformProgramForSaving, etc.]
+
+
+// ===== AFFICHAGE DU PROGRAMME GÉNÉRÉ =====
+function displayProgram(program) {
+    const resultDiv = document.getElementById('programResult');
+    
+    // Grouper par semaine
+    const weeklyProgram = {};
+    program.forEach(workout => {
+        if (!weeklyProgram[workout.week]) {
+            weeklyProgram[workout.week] = [];
+        }
+        weeklyProgram[workout.week].push(workout);
+    });
+    
+    let html = '<h3>Votre programme personnalisé</h3>';
+    
+    Object.entries(weeklyProgram).forEach(([week, workouts]) => {
+        html += `
+            <div class="week-section">
+                <h4 onclick="toggleWeek(${week})" style="cursor: pointer;">
+                    <span class="week-toggle" id="toggle-week-${week}">▶</span>
+                    Semaine ${week}
+                </h4>
+                <div id="week-${week}" class="week-content" style="display: none;">
+        `;
+        
+        workouts.forEach(workout => {
+            html += `
+                <div class="workout-day">
+                    <h5>Jour ${workout.day} - ${workout.muscle_group}</h5>
+                    <ul class="exercise-list">
+            `;
+            
+            workout.exercises.forEach(ex => {
+                html += `
+                    <li>
+                        <strong>${ex.exercise_name}</strong><br>
+                        ${ex.sets} séries × ${ex.target_reps} reps<br>
+                        <span style="color: var(--gray-light);">
+                            Poids suggéré: ${ex.predicted_weight}kg | 
+                            Repos: ${ex.rest_time}s
+                        </span>
+                    </li>
+                `;
+            });
+            
+            html += `
+                    </ul>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+        <button class="btn btn-primary" onclick="saveProgram()" style="margin-top: 2rem;">
+            💾 Sauvegarder ce programme
+        </button>
+    `;
+    
+    resultDiv.innerHTML = html;
+}
+
+// ===== TOGGLE SEMAINE =====
+function toggleWeek(week) {
+    const content = document.getElementById(`week-${week}`);
+    const toggle = document.getElementById(`toggle-week-${week}`);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.textContent = '▼';
+    } else {
+        content.style.display = 'none';
+        toggle.textContent = '▶';
+    }
+}
+
+// ===== ACTIVATION ET DÉMARRAGE DU PROGRAMME =====
+async function activateProgramAndStart(programId) {
+    const success = await activateProgram(programId);
+    if (success) {
+        // Charger le programme actif
+        const programs = await loadUserPrograms(currentUser.id);
+        const activeProgram = programs.find(p => p.id === programId);
+        if (activeProgram) {
+            setCurrentProgram(activeProgram);
+        }
+        
+        // Retourner au dashboard
+        showView('dashboard');
+    }
+}
+
+window.activateProgramAndStart = activateProgramAndStart;
 
 // ===== EXPORTS GLOBAUX =====
 window.showProgramGenerator = showProgramGenerator;
 window.generateProgram = generateProgram;
-window.selectFrequency = selectFrequency;
-window.selectTime = selectTime;
-window.submitCommitment = submitCommitment;
-window.resetCommitment = resetCommitment;
 window.toggleWeek = toggleWeek;
-window.activateProgramAndStart = activateProgramAndStart;
+window.saveProgram = saveProgram;
 
+// Export pour les modules
 export { showProgramGenerator };
