@@ -9,7 +9,8 @@ import {
     getTrajectoryAnalysis, 
     getAdaptiveTargets,
     generateAdaptiveWorkout,
-    completeAdaptiveWorkout
+    completeAdaptiveWorkout,
+    getUserCommitment
 } from './app-api.js';
 import { 
     currentUser,
@@ -17,7 +18,8 @@ import {
     trajectoryAnalysis,
     currentAdaptiveWorkout,
     setCurrentWorkout,
-    getCurrentProgram
+    getCurrentProgram,
+    userCommitment
 } from './app-state.js';
 
 import { showView } from './app-navigation.js';

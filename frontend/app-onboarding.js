@@ -12,8 +12,7 @@ import {
     setSelectedEquipment,
     setEquipmentConfig,
     resetState,
-    currentUser,
-    userCommitment
+    currentUser    
 } from './app-state.js';
 
 import { 
@@ -131,20 +130,10 @@ function validatePersonalInfo() {
 
 // Définir notre propre version de nextStep
 function nextStep() {
+
     const currentStepEl = document.querySelector('.onboarding-step.active');
-    
-    // Vérifier si on doit montrer l'étape d'engagement
-    if (currentStepEl && currentStepEl.id === 'step2') {
-        const commitmentStep = document.getElementById('step-commitment');
-        if (commitmentStep && !userCommitment) {
-            currentStepEl.classList.remove('active');
-            commitmentStep.classList.add('active');
-            updateProgressBar();
-            return;
-        }
-    }
-        
-    // NOUVEAU : Gérer le passage depuis l'étape 3 (équipement)
+
+    // Gérer le passage depuis l'étape 3 (équipement)
     if (currentStepEl && currentStepEl.id === 'step3') {
         // Vérifier si l'équipement sélectionné nécessite une configuration détaillée
         const needsDetailedConfig = selectedEquipment.some(eq => 
