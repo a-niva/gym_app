@@ -1139,7 +1139,7 @@ class ProgressionAnalyzer:
         # Requête pour obtenir le volume
         results = self.db.query(
             Exercise.body_part,
-            func.sum(Set.actual_reps * Set.sets).label('volume')
+            func.sum(Set.actual_reps * Set.weight).label('volume')
         ).join(
             Set, Set.exercise_id == Exercise.id
         ).join(
