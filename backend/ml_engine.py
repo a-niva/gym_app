@@ -648,8 +648,9 @@ class FitnessMLEngine:
                         user.experience_level,
                         exercise_rotation_offset
                     )
-                    
+                                        
                     for exercise in selected_exercises:
+                        logger.info(f"Tentative d'ajout de l'exercice: {exercise.name_fr} (ID: {exercise.id})")
                         try:
                             # Obtenir les recommandations pour cet exercice
                             sets_reps = self._get_sets_reps_for_level(
@@ -675,7 +676,9 @@ class FitnessMLEngine:
                                 "rest_time": 90 if user.goals and "strength" in user.goals else 60
                             })
                         except Exception as e:
-                            logger.error(f"Erreur avec l'exercice {exercise.name_fr}: {str(e)}")
+                            # CHANGEZ print par logger.error pour voir dans les logs serveur
+                            logger.error(f"ERREUR CRITIQUE avec l'exercice {exercise.name_fr}: {str(e)}")
+                            logger.error(f"Traceback complet:", exc_info=True)
                             continue
                     
                     week_program.append(workout)
