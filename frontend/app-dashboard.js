@@ -36,7 +36,20 @@ async function loadDashboard() {
     
     try {
         // Vérifier d'abord si l'utilisateur a un programme actif
-        const hasActiveProgram = getCurrentProgram() !== null;
+        // Récupérer le programme actif depuis l'API
+        let hasActiveProgram = false;
+        let activeProgram = null;
+
+        try {
+            const programs = await loadUserPrograms(currentUser.id);
+            activeProgram = programs.find(p => p.is_active === true);
+            if (activeProgram) {
+                setCurrentProgram(activeProgram);
+                hasActiveProgram = true;
+            }
+        } catch (error) {
+            console.error('Erreur chargement programmes:', error);
+        }
         
         // Ensuite vérifier s'il a un engagement
         const commitment = await getUserCommitment(currentUser.id);
