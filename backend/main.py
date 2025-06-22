@@ -130,6 +130,10 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
                 available_equipment.append("barbell_standard")
             elif barre_type == "ez":
                 available_equipment.append("barbell_ez")
+            
+            # Équivalence barre courte = haltères
+            if barre_type == "courte" and barre_config.get("count", 0) >= 2:
+                available_equipment.append("dumbbells")
     
     # Haltères
     if config.get("dumbbells", {}).get("available", False):
@@ -173,7 +177,7 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
     for exercise in all_exercises:
         exercise_equipment = exercise.equipment or []
         # Vérifier si tous les équipements requis sont disponibles
-        if all(eq in available_equipment for eq in exercise_equipment):
+        if not exercise_equipment or any(eq in available_equipment for eq in exercise_equipment):
             compatible_exercises.append(exercise)
     
     return compatible_exercises

@@ -304,14 +304,26 @@ function canMakePlateWeightOptimal(targetPerSide, availablePlates) {
 }
 
 // ===== FILTRAGE DES EXERCICES PAR ÉQUIPEMENT =====
-function filterExercisesByEquipment(allExercises) {
-    if (!currentUser?.equipment_config) return [];
+export function filterExercisesByEquipment(exercises) {
+    const config = currentUser?.equipment_config;
+    if (!config) return exercises;
     
-    const config = currentUser.equipment_config;
-    
-    return allExercises.filter(exercise => {
-        // Vérifier chaque équipement requis
-        return exercise.equipment.every(eq => {
+    return exercises.filter(exercise => {
+        const required = exercise.equipment || [];
+        if (required.length === 0) return true; // Bodyweight
+        
+        // AJOUTER CE BLOC - Vérifier si on a des barres courtes qui peuvent remplacer les haltères
+        const hasShortBarbells = config.barres?.courte?.available && 
+                                config.barres?.courte?.count >= 2;
+        
+        // Vérifier si on a AU MOINS UN équipement requis (logique OR)
+        return required.some(eq => {
+            // Si l'exercice demande des haltères et qu'on a des barres courtes, c'est OK
+            if (eq === 'dumbbells' && hasShortBarbells) {
+                return true;
+            }
+            
+            // Sinon, vérifier normalement
             switch(eq) {
                 case 'bodyweight':
                     return true;

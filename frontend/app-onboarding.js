@@ -259,7 +259,10 @@ function createBarbellPanel() {
             </label>
             <label class="checkbox-label">
                 <input type="checkbox" onchange="updateBarbell('courte', this.checked)">
-                <span>Barre courte (2.5kg)</span>
+                <label>Barres courtes (paire, 2.5kg/unité)</label>
+                <small style="color: var(--gray); display: block; margin-top: -5px;">
+                    Peuvent remplacer les haltères
+                </small>
             </label>
         </div>
         

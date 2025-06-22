@@ -530,100 +530,81 @@ class FitnessMLEngine:
             
             # Récupérer les exercices disponibles selon l'équipement
             available_equipment = []
-            if user.equipment_config:
-                config = user.equipment_config
-                # Barres
-                for barre_type, barre_config in config.get("barres", {}).items():
-                    if barre_config.get("available", False):
-                        if barre_type == "olympique" or barre_type == "courte":
-                            available_equipment.append("barbell_standard")
-                        elif barre_type == "ez":
-                            available_equipment.append("barbell_ez")
-                # Haltères
-                if config.get("dumbbells", {}).get("available", False):
-                    available_equipment.append("dumbbells")
-                # Poids du corps toujours disponible
-                available_equipment.append("bodyweight")
-                logger.info(f"=== DIAGNOSTIC ÉQUIPEMENT ===")
-                logger.info(f"Config utilisateur brute: {user.equipment_config}")
-                logger.info(f"Équipement mappé disponible: {available_equipment}")
+            config = user.equipment_config
+            
+            # Barres
+            for barre_type, barre_config in config.get("barres", {}).items():
+                if barre_config.get("available", False):
+                    if barre_type in ["olympique", "courte"]:
+                        available_equipment.append("barbell_standard")
+                    elif barre_type == "ez":
+                        available_equipment.append("barbell_ez")
+                    
+                    # Équivalence barre courte = haltères (si paire)
+                    if barre_type == "courte" and barre_config.get("count", 0) >= 2:
+                        logger.info("Barres courtes en paire détectées - ajout équivalence dumbbells")
+                        available_equipment.append("dumbbells")
 
-                # TEMPORAIRE - TEST SEULEMENT - À RETIRER APRÈS
-                logger.warning("TEST: Ajout forcé de tous les équipements")
-                available_equipment.extend(["pull_up_bar", "bodyweight_vest", "ankle_weights", "kettlebell"])
+            # Haltères
+            if config.get("dumbbells", {}).get("available", False):
+                available_equipment.append("dumbbells")
+                
+            # Poids du corps toujours disponible
+            available_equipment.append("bodyweight")
+            
+            # Banc
+            if config.get("banc", {}).get("available", False):
+                available_equipment.append("bench_plat")
+                if config["banc"].get("inclinable_haut", False):
+                    available_equipment.append("bench_inclinable")
+                if config["banc"].get("inclinable_bas", False):
+                    available_equipment.append("bench_declinable")
 
-                # Autres équipements...
-                # Banc
-                if config.get("banc", {}).get("available", False):
-                    available_equipment.append("bench_plat")
-                    if config["banc"].get("inclinable_haut", False):
-                        available_equipment.append("bench_inclinable")
-                    if config["banc"].get("inclinable_bas", False):
-                        available_equipment.append("bench_declinable")
+            # Élastiques
+            if config.get("elastiques", {}).get("available", False):
+                available_equipment.append("elastiques")
 
-                # Élastiques
-                if config.get("elastiques", {}).get("available", False):
-                    available_equipment.append("elastiques")
+            # Autres équipements
+            autres = config.get("autres", {})
+            if autres.get("kettlebell", {}).get("available", False):
+                available_equipment.append("kettlebell")
+            if autres.get("barre_traction", {}).get("available", False):
+                available_equipment.append("pull_up_bar")  # Mapping correct
 
-                # Autres équipements
-                autres = config.get("autres", {})
-                if autres.get("kettlebell", {}).get("available", False):
-                    available_equipment.append("kettlebell")
-                if autres.get("barre_traction", {}).get("available", False):
-                    available_equipment.append("pull_up_bar")
+            logger.info(f"=== DIAGNOSTIC ÉQUIPEMENT ===")
+            logger.info(f"Config utilisateur brute: {user.equipment_config}")
+            logger.info(f"Équipement mappé disponible: {available_equipment}")
 
-            # Récupérer TOUS les exercices et filtrer manuellement
             # Récupérer TOUS les exercices et filtrer manuellement
             all_exercises = self.db.query(Exercise).all()
             logger.info(f"Nombre total d'exercices dans la DB: {len(all_exercises)}")
 
-            # Logger quelques exemples d'exercices
-            for ex in all_exercises[:3]:
-                logger.info(f"Exemple exercice: {ex.name_fr} - Équipement requis: {ex.equipment}")
-
+            # Filtrer les exercices
             available_exercises = []
             for exercise in all_exercises:
                 exercise_equipment = exercise.equipment or []
-                # AJOUTER CE LOG
-                if exercise.body_part in ["Pectoraux", "Dos", "Quadriceps"]:  # Log seulement quelques muscles
-                    logger.debug(f"Test {exercise.name_fr}: requis={exercise_equipment}, dispo={available_equipment}")
                 
-                # Vérifier si l'équipement requis est disponible
-                if all(eq in available_equipment for eq in exercise_equipment):
+                # Un exercice est disponible si on a AU MOINS UN des équipements requis
+                if not exercise_equipment or any(eq in available_equipment for eq in exercise_equipment):
                     available_exercises.append(exercise)
                 else:
-                    # AJOUTER CE LOG pour les exercices rejetés
-                    if exercise.body_part in ["Pectoraux", "Dos", "Quadriceps"]:
+                    # Log seulement quelques exemples pour debug
+                    if len(available_exercises) < 5 and exercise.body_part in ["Pectoraux", "Dos"]:
                         missing = [eq for eq in exercise_equipment if eq not in available_equipment]
-                        logger.debug(f"  → Rejeté car manque: {missing}")
-                # Vérifier si l'équipement requis est disponible
-                if all(eq in available_equipment for eq in exercise_equipment):
-                    available_exercises.append(exercise)
-            # APRÈS LA BOUCLE, AJOUTER UN RÉSUMÉ
+                        logger.debug(f"Exercice exclu: {exercise.name_fr} - manque: {missing}")
+
+            # Résumé du filtrage
             logger.info(f"=== RÉSULTAT FILTRAGE ===")
             logger.info(f"Exercices disponibles après filtrage: {len(available_exercises)}")
-            if len(available_exercises) == 0:
-                logger.error("AUCUN EXERCICE DISPONIBLE! Vérifier le mapping d'équipement")
-                # Logger les 5 premiers équipements requis pour debug
-                sample_requirements = {}
-                for ex in all_exercises[:20]:
-                    eq_str = str(ex.equipment)
-                    sample_requirements[eq_str] = sample_requirements.get(eq_str, 0) + 1
-                logger.error(f"Échantillon des équipements requis: {sample_requirements}")
-
-            # AJOUTER CES LIGNES DE DEBUG
-            logger.info(f"Équipement disponible pour l'utilisateur {user.id}: {available_equipment}")
-            logger.info(f"Nombre d'exercices disponibles après filtrage: {len(available_exercises)}")
-            
             if len(available_exercises) < 10:
-                logger.error(f"ATTENTION: Seulement {len(available_exercises)} exercices disponibles!")
-                # Log des premiers exercices pour debug
+                logger.warning(f"Peu d'exercices trouvés ({len(available_exercises)})")
                 for i, ex in enumerate(available_exercises[:5]):
-                    logger.info(f"  Exercice {i+1}: {ex.name_fr} (équipement requis: {ex.equipment})")
-            # Vérifier qu'on a assez d'exercices pour générer un programme
-            if len(available_exercises) < 5:  # Minimum absolu
+                    logger.info(f"  Exercice {i+1}: {ex.name_fr}")
+                    
+            # Vérifier qu'on a assez d'exercices
+            if len(available_exercises) < 5:
                 logger.error(f"Impossible de générer un programme avec seulement {len(available_exercises)} exercices")
-                return []  # Retourner un programme vide plutôt que de crasher
+                return []
             
             # Grouper par partie du corps
             body_parts = {}
@@ -640,18 +621,15 @@ class FitnessMLEngine:
             elif frequency == 5:
                 split = ["Pectoraux", "Dos", "Jambes", "Épaules", "Bras"]
             else:
-                # Fallback for unexpected values
                 split = ["Haut du corps", "Bas du corps", "Full body"]
             
             # Générer les séances pour chaque semaine
             for week in range(duration_weeks):
-                # Ajouter un offset pour la rotation
-                exercise_rotation_offset = week % 2  # Alterne entre 2 sélections # 0 ou 1
-                week_intensity = 0.85 + (week * 0.05)  # Progression linéaire
+                exercise_rotation_offset = week % 2
+                week_intensity = 0.85 + (week * 0.05)
                 
                 if week == duration_weeks - 1:
-                    # Semaine de deload
-                    week_intensity = 0.7
+                    week_intensity = 0.7  # Semaine de deload
                 
                 week_program = []
                 
@@ -697,8 +675,7 @@ class FitnessMLEngine:
                                 "rest_time": 90 if user.goals and "strength" in user.goals else 60
                             })
                         except Exception as e:
-                            # Log l'erreur mais continue avec les autres exercices
-                            print(f"Erreur avec l'exercice {exercise.name_fr}: {str(e)}")
+                            logger.error(f"Erreur avec l'exercice {exercise.name_fr}: {str(e)}")
                             continue
                     
                     week_program.append(workout)
