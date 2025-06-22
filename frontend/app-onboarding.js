@@ -1075,7 +1075,19 @@ async function saveUserProfile() {
         showToast('Aucun objectif sélectionné', 'error');
         return;
     }
-    
+
+    // VALIDATION: Vérifier que equipment_config n'est pas vide
+    if (!transformedEquipmentConfig || Object.keys(transformedEquipmentConfig).length === 0) {
+        showToast('Configuration d\'équipement requise', 'error');
+        return;
+    }
+
+    // VALIDATION: Vérifier que goals existe
+    if (!userData.goals || userData.goals.length === 0) {
+        showToast('Au moins un objectif doit être sélectionné', 'error');
+        return;
+    }
+
     const user = await saveUser(userData);
     
     if (user) {

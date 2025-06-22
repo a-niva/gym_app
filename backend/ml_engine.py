@@ -510,19 +510,21 @@ class FitnessMLEngine:
             user.goals = ["hypertrophy"]  # Objectif par défaut
 
         # Valider la configuration
+        # CORRECTION: Fallback robuste pour equipment_config
         if not user.equipment_config:
-            # Programme minimal au poids du corps
+            # Retourner un programme basique au poids du corps avec message explicite
             return [{
                 "week": 1,
                 "day": 1,
-                "muscle_group": "Full body",
+                "muscle_group": "Configuration requise",
                 "exercises": [{
                     "exercise_id": 0,
-                    "exercise_name": "Configuration d'équipement requise",
+                    "exercise_name": "⚠️ Configuration d'équipement manquante",
                     "sets": 0,
                     "target_reps": 0,
                     "predicted_weight": 0,
-                    "rest_time": 0
+                    "rest_time": 0,
+                    "note": "Complétez votre profil dans les paramètres"
                 }]
             }]
         
@@ -1093,7 +1095,13 @@ class ProgressionAnalyzer:
         if not commitment:
             return {
                 "status": "no_commitment",
-                "message": "Définissez vos objectifs pour un suivi personnalisé"
+                "on_track": False,
+                "sessions_this_week": 0,
+                "sessions_target": 0,
+                "volume_adherence": 0.0,
+                "consistency_score": 0.0,
+                "muscle_balance": {},
+                "insights": ["Définissez vos objectifs pour commencer le suivi"]
             }
         
         # Calculer les métriques sur 7 jours glissants

@@ -123,6 +123,28 @@ async function generateProgram(event) {
         
         const data = await response.json();
         const program = data.program;
+
+        // CORRECTION: Vérifier si le programme est valide
+        if (!program || program.length === 0 || 
+            (program[0].exercises && program[0].exercises[0].exercise_name && 
+            program[0].exercises[0].exercise_name.includes('Configuration'))) {
+            
+            resultDiv.innerHTML = `
+                <div class="error-message">
+                    <h3>⚠️ Configuration incomplète</h3>
+                    <p>Pour générer un programme, vous devez :</p>
+                    <ul>
+                        <li>✅ Définir vos équipements disponibles</li>
+                        <li>✅ Choisir vos objectifs d'entraînement</li>
+                        <li>✅ Configurer vos préférences</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="showView('onboarding')" style="margin-top: 1rem;">
+                        🔧 Compléter ma configuration
+                    </button>
+                </div>
+            `;
+            return;
+        }
         
         // Afficher le programme
         displayProgram(program);
