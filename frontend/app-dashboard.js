@@ -91,9 +91,10 @@ function showClassicDashboard(container, hasProgram) {
         
         <div class="stats-grid" style="
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+            gap: 1rem;
             margin-bottom: 2rem;
+            overflow-x: hidden;
         ">
             <!-- Carte principale d'action -->
             <div class="stat-card" style="
@@ -186,8 +187,10 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid ${trajectory.on_track ? '#10b981' : '#f59e0b'};
             border-radius: 16px;
-            padding: 2rem;
+            padding: 1.5rem;
             margin-bottom: 2rem;
+            overflow-x: auto;
+            word-wrap: break-word;
         ">
             <div class="trajectory-header" style="
                 display: flex;
@@ -298,6 +301,34 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                 </button>
             `}
         </div>
+        ${!hasProgram ? `
+            <div style="
+                margin-top: 2rem;
+                padding: 1.5rem;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                text-align: center;
+            ">
+                <h3>🎯 Pas encore de programme ?</h3>
+                <p style="margin: 1rem 0; color: var(--gray);">
+                    Créez votre programme personnalisé ou commencez par une séance libre
+                </p>
+                <button class="btn" onclick="showProgramGenerator()" style="
+                    background: #10b981;
+                    color: white;
+                    margin-bottom: 1rem;
+                ">
+                    Créer mon programme
+                </button>
+                <button class="btn btn-secondary" onclick="showView('exercises')" style="
+                    background: transparent;
+                    border: 1px solid #3b82f6;
+                    color: #3b82f6;
+                ">
+                    Séance libre
+                </button>
+            </div>
+        ` : ''}
         
         <!-- État des muscles -->
         ${hasProgram && targets && targets.length > 0 ? `
