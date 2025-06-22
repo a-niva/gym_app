@@ -795,7 +795,7 @@ function displayProgram(program) {
 
 // ===== TOGGLE SEMAINE =====
 function toggleWeek(week) {
-    const content = document.getElementById(`week-${week}`);
+    const content = document.getElementById(`week-content-${week}`);
     const toggle = document.getElementById(`toggle-week-${week}`);
     
     if (content.style.display === 'none' || !content.style.display) {
