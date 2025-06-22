@@ -512,19 +512,18 @@ class FitnessMLEngine:
         # Valider la configuration
         # CORRECTION: Fallback robuste pour equipment_config
         if not user.equipment_config:
-            # Retourner un programme basique au poids du corps avec message explicite
+            # Retourner un programme avec la structure correcte
             return [{
                 "week": 1,
                 "day": 1,
-                "muscle_group": "Configuration requise",
+                "muscle_group": "Configuration d'équipement requise",
                 "exercises": [{
                     "exercise_id": 0,
-                    "exercise_name": "⚠️ Configuration d'équipement manquante",
+                    "exercise_name": "⚠️ Configuration manquante",
                     "sets": 0,
                     "target_reps": 0,
                     "predicted_weight": 0,
-                    "rest_time": 0,
-                    "note": "Complétez votre profil dans les paramètres"
+                    "rest_time": 0
                 }]
             }]
         

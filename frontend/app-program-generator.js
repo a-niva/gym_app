@@ -124,10 +124,42 @@ async function generateProgram(event) {
         const data = await response.json();
         const program = data.program;
 
-        // CORRECTION: Vérifier si le programme est valide
-        if (!program || program.length === 0 || 
-            (program[0].exercises && program[0].exercises[0].exercise_name && 
-            program[0].exercises[0].exercise_name.includes('Configuration'))) {
+        // CORRECTION: Vérification robuste de la validité du programme
+        const isValidProgram = (program) => {
+            // Vérifier que le programme existe et n'est pas vide
+            if (!program || program.length === 0) {
+                return false;
+            }
+            
+            // Vérifier le premier élément
+            const firstItem = program[0];
+            if (!firstItem) {
+                return false;
+            }
+            
+            // Si exercises existe, vérifier qu'il contient des exercices valides
+            if (firstItem.exercises) {
+                if (firstItem.exercises.length === 0) {
+                    return false;
+                }
+                
+                // Vérifier le premier exercice
+                const firstExercise = firstItem.exercises[0];
+                if (firstExercise && firstExercise.exercise_name && 
+                    firstExercise.exercise_name.includes('Configuration')) {
+                    return false;
+                }
+                
+                // Vérifier que l'exercise_id n'est pas 0 (cas d'erreur)
+                if (firstExercise && firstExercise.exercise_id === 0) {
+                    return false;
+                }
+            }
+            
+            return true;
+        };
+
+        if (!isValidProgram(program)) {
             
             resultDiv.innerHTML = `
                 <div class="error-message">
