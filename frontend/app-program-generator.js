@@ -156,38 +156,52 @@ function showCommitmentForm(container) {
         style.id = 'commitment-styles';
         style.textContent = `
             .commitment-section {
-                background: var(--surface);
-                padding: 1.5rem;
-                border-radius: 12px;
-                margin-bottom: 1.5rem;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 2rem;
+                border-radius: 16px;
+                margin-bottom: 2rem;
+            }
+            
+            .commitment-section h3 {
+                color: white;
+                margin-bottom: 0.5rem;
+                font-size: 1.25rem;
             }
             
             .frequency-selector, .time-selector {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-                gap: 0.75rem;
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 1rem;
+                margin-top: 1rem;
             }
             
             .frequency-btn, .time-btn {
-                padding: 1rem 0.5rem;
-                background: var(--background);
-                border: 2px solid var(--border);
-                border-radius: 8px;
+                padding: 1rem;
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
                 cursor: pointer;
                 transition: all 0.2s;
                 text-align: center;
                 font-weight: 600;
+                color: rgba(255, 255, 255, 0.7);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.25rem;
             }
             
             .frequency-btn:hover, .time-btn:hover {
-                border-color: var(--primary);
+                border-color: #3b82f6;
+                background: rgba(59, 130, 246, 0.1);
                 transform: translateY(-2px);
             }
             
             .frequency-btn.selected, .time-btn.selected {
-                background: var(--primary);
+                background: #3b82f6;
                 color: white;
-                border-color: var(--primary);
+                border-color: #3b82f6;
             }
             
             .frequency-btn small, .time-btn small {
@@ -195,30 +209,80 @@ function showCommitmentForm(container) {
                 font-size: 0.75rem;
                 font-weight: 400;
                 opacity: 0.8;
-                margin-top: 0.25rem;
             }
             
             .muscle-priority-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
                 gap: 1rem;
+                margin-top: 1rem;
             }
             
             .muscle-priority-item {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 0.75rem;
-                background: var(--background);
+                padding: 1rem;
+                background: rgba(255, 255, 255, 0.03);
                 border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .muscle-priority-item span {
+                color: rgba(255, 255, 255, 0.9);
             }
             
             .muscle-priority-item select {
-                padding: 0.25rem 0.5rem;
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 4px;
+                padding: 0.5rem;
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 6px;
+                color: white;
                 font-size: 0.875rem;
+                cursor: pointer;
+            }
+            
+            .muscle-priority-item select option {
+                background: #1e293b;
+                color: white;
+            }
+            
+            .btn-primary {
+                background: #10b981;
+                color: white;
+                border: none;
+                padding: 1rem 2rem;
+                border-radius: 12px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                width: 100%;
+            }
+            
+            .btn-primary:hover {
+                background: #059669;
+                transform: translateY(-2px);
+            }
+            
+            .loading-container {
+                text-align: center;
+                padding: 3rem;
+                color: rgba(255, 255, 255, 0.7);
+            }
+            
+            .loading-spinner {
+                width: 48px;
+                height: 48px;
+                border: 3px solid rgba(255, 255, 255, 0.1);
+                border-top-color: #3b82f6;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 1rem;
+            }
+            
+            @keyframes spin {
+                to { transform: rotate(360deg); }
             }
         `;
         document.head.appendChild(style);
@@ -442,40 +506,104 @@ function displayProgram(program) {
         weeklyProgram[workout.week].push(workout);
     });
     
-    let html = '<h3>Votre programme personnalisé</h3>';
+    let html = '<h3 style="color: white; margin-bottom: 2rem;">Votre programme personnalisé</h3>';
     
-    Object.entries(weeklyProgram).forEach(([week, workouts]) => {
+    Object.entries(weeklyProgram).forEach(([week, workouts], index) => {
+        // Déplier automatiquement la première semaine
+        const isFirstWeek = index === 0;
+        
         html += `
-            <div class="week-section">
-                <h4 onclick="toggleWeek(${week})" style="cursor: pointer;">
-                    <span class="week-toggle" id="toggle-week-${week}">▶</span>
+            <div class="week-section" style="
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                margin-bottom: 1rem;
+                overflow: hidden;
+            ">
+                <h4 onclick="toggleWeek(${week})" style="
+                    cursor: pointer;
+                    margin: 0;
+                    padding: 1.25rem;
+                    color: #3b82f6;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    background: rgba(59, 130, 246, 0.1);
+                    transition: background 0.2s;
+                " onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" 
+                   onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'">
+                    <span class="week-toggle" id="toggle-week-${week}" style="
+                        transition: transform 0.2s;
+                        ${isFirstWeek ? 'transform: rotate(90deg);' : ''}
+                    ">▶</span>
                     Semaine ${week}
                 </h4>
-                <div id="week-${week}" class="week-content" style="display: none;">
+                <div id="week-${week}" class="week-content" style="
+                    padding: 1.5rem;
+                    ${isFirstWeek ? 'display: block;' : 'display: none;'}
+                ">
         `;
         
         workouts.forEach(workout => {
             html += `
-                <div class="workout-day">
-                    <h5>Jour ${workout.day} - ${workout.muscle_group}</h5>
-                    <ul class="exercise-list">
+                <div class="workout-day" style="
+                    margin-bottom: 1.5rem;
+                    padding-bottom: 1.5rem;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                ">
+                    <h5 style="
+                        color: #10b981;
+                        margin-bottom: 1rem;
+                        font-size: 1.1rem;
+                    ">Jour ${workout.day} - ${workout.muscle_group}</h5>
+                    <div class="exercise-list" style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                    ">
             `;
             
-            workout.exercises.forEach(ex => {
+            workout.exercises.forEach((ex, exIndex) => {
                 html += `
-                    <li>
-                        <strong>${ex.exercise_name}</strong><br>
-                        ${ex.sets} séries × ${ex.target_reps} reps<br>
-                        <span style="color: var(--gray-light);">
-                            Poids suggéré: ${ex.predicted_weight}kg | 
-                            Repos: ${ex.rest_time}s
-                        </span>
-                    </li>
+                    <div class="exercise-item" style="
+                        background: rgba(255, 255, 255, 0.03);
+                        padding: 1rem;
+                        border-radius: 8px;
+                        border-left: 3px solid #3b82f6;
+                    ">
+                        <div style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: start;
+                            margin-bottom: 0.5rem;
+                        ">
+                            <strong style="color: white; font-size: 1rem;">
+                                ${exIndex + 1}. ${ex.exercise_name}
+                            </strong>
+                            <span style="
+                                background: rgba(59, 130, 246, 0.2);
+                                color: #3b82f6;
+                                padding: 0.25rem 0.75rem;
+                                border-radius: 999px;
+                                font-size: 0.875rem;
+                                font-weight: 600;
+                            ">${ex.sets} × ${ex.target_reps}</span>
+                        </div>
+                        <div style="
+                            display: flex;
+                            gap: 2rem;
+                            color: rgba(255, 255, 255, 0.6);
+                            font-size: 0.875rem;
+                        ">
+                            <span>💪 ${ex.predicted_weight}kg suggéré</span>
+                            <span>⏱️ ${ex.rest_time}s repos</span>
+                        </div>
+                    </div>
                 `;
             });
             
             html += `
-                    </ul>
+                    </div>
                 </div>
             `;
         });
@@ -486,10 +614,28 @@ function displayProgram(program) {
         `;
     });
     
+    // Informations sur le programme
+    const totalWorkouts = Object.values(weeklyProgram).reduce((acc, week) => acc + week.length, 0);
+    const totalExercises = Object.values(weeklyProgram).reduce((acc, week) => 
+        acc + week.reduce((sum, workout) => sum + workout.exercises.length, 0), 0
+    );
+    
     html += `
-        <button class="btn btn-primary" onclick="saveProgram()" style="margin-top: 2rem;">
-            💾 Sauvegarder ce programme
-        </button>
+        <div style="
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+        ">
+            <p style="color: #10b981; margin: 0; font-size: 1.1rem;">
+                ✅ Programme de ${Object.keys(weeklyProgram).length} semaines généré avec succès !
+            </p>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                ${totalWorkouts} séances • ${totalExercises} exercices au total
+            </p>
+        </div>
     `;
     
     resultDiv.innerHTML = html;
@@ -500,12 +646,26 @@ function toggleWeek(week) {
     const content = document.getElementById(`week-${week}`);
     const toggle = document.getElementById(`toggle-week-${week}`);
     
-    if (content.style.display === 'none') {
+    if (content.style.display === 'none' || !content.style.display) {
         content.style.display = 'block';
-        toggle.textContent = '▼';
+        toggle.style.transform = 'rotate(90deg)';
+        
+        // Animation d'ouverture
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            content.style.transition = 'opacity 0.3s, transform 0.3s';
+            content.style.opacity = '1';
+            content.style.transform = 'translateY(0)';
+        }, 10);
     } else {
-        content.style.display = 'none';
-        toggle.textContent = '▶';
+        // Animation de fermeture
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            content.style.display = 'none';
+            toggle.style.transform = 'rotate(0deg)';
+        }, 300);
     }
 }
 

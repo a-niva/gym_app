@@ -3,6 +3,7 @@
 // Pas de complexité inutile, juste des fonctions async/await simples
 
 import { 
+    currentUser,
     setAllExercises, 
     setUserPrograms,
     setUserCommitment,
