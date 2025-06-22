@@ -185,7 +185,6 @@ export {
     audioContext,
     isSilentMode,
     currentProgram,
-    userPrograms,
     isAutoWeightEnabled,
     currentAdaptiveWorkout,
     userCommitment,
@@ -312,10 +311,6 @@ export function setCurrentProgram(program) {
 
 export function getUserPrograms() {
     return userPrograms;
-}
-
-export function setUserPrograms(programs) {
-    userPrograms = programs;
 }
 
 export function getIsAutoWeightEnabled() {
