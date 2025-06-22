@@ -4,16 +4,7 @@
 import { currentUser } from './app-state.js';
 import { BODY_PART_COLORS } from './app-config.js';
 
-function getColorForMuscle(muscle, opacity = 1) {
-    const baseColor = BODY_PART_COLORS[muscle] || '#94a3b8';
-    if (opacity === 1) return baseColor;
-    
-    // Convertir hex en rgba avec opacité
-    const r = parseInt(baseColor.slice(1, 3), 16);
-    const g = parseInt(baseColor.slice(3, 5), 16);
-    const b = parseInt(baseColor.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-}
+
 
 const statsCharts = {};
 
