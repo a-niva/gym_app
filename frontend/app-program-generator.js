@@ -521,6 +521,7 @@ async function generateProgram(event) {
 // ===== AFFICHAGE DU PROGRAMME GÉNÉRÉ =====
 function displayProgram(program) {
     const resultDiv = document.getElementById('programResult');
+    
     // DEBUG: Logger les informations reçues
     console.group('🔍 Debug génération programme');
     console.log('Programme complet reçu:', program);
@@ -537,7 +538,7 @@ function displayProgram(program) {
     });
     console.log('Exercices par groupe musculaire:', muscleGroups);
     console.groupEnd();
-
+    
     // Vérifier que le programme contient des données
     if (!program || program.length === 0) {
         resultDiv.innerHTML = `
@@ -548,6 +549,38 @@ function displayProgram(program) {
             ">
                 <p>❌ Aucun exercice généré</p>
                 <p>Veuillez réessayer</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Compter le nombre total d'exercices
+    const totalExercises = program.reduce((total, workout) => 
+        total + (workout.exercises ? workout.exercises.length : 0), 0
+    );
+    
+    if (totalExercises === 0) {
+        resultDiv.innerHTML = `
+            <div style="
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                border-radius: 12px;
+                padding: 2rem;
+                text-align: center;
+                margin-top: 2rem;
+            ">
+                <h3 style="color: #ef4444; margin-bottom: 1rem;">
+                    ⚠️ Programme incomplet
+                </h3>
+                <p style="color: rgba(255, 255, 255, 0.7);">
+                    Le programme a été généré mais ne contient aucun exercice.
+                    ${!currentUser.equipment_config.dumbbells.available ? 
+                      '<br><strong>💡 Conseil :</strong> Activez les haltères dans votre configuration pour plus d\'exercices.' : 
+                      'Cela peut être dû à une incompatibilité avec votre équipement.'}
+                </p>
+                <button onclick="generateProgram(event)" class="button-primary" style="margin-top: 1rem;">
+                    🔄 Réessayer avec d'autres paramètres
+                </button>
             </div>
         `;
         return;
@@ -610,206 +643,153 @@ function displayProgram(program) {
                         transition: transform 0.2s;
                         ${isFirstWeek ? 'transform: rotate(90deg);' : ''}
                     ">▶</span>
-                    <span style="flex: 1;">Semaine ${week}</span>
+                    Semaine ${week}
                     <span style="
-                        font-size: 0.875rem;
+                        margin-left: auto;
+                        font-size: 0.9rem;
                         color: rgba(255, 255, 255, 0.6);
+                        font-weight: normal;
                     ">${workouts.length} séances</span>
                 </h4>
                 
-                <div id="week-${week}" class="week-content" style="
-                    padding: 1.5rem;
-                    ${isFirstWeek ? 'display: block;' : 'display: none;'}
-                    animation: ${isFirstWeek ? 'fadeIn 0.3s ease-out' : 'none'};
+                <div id="week-content-${week}" style="
+                    padding: 0 1.25rem 1.25rem 1.25rem;
+                    ${isFirstWeek ? '' : 'display: none;'}
                 ">
-        `;
-        
-        // Afficher chaque jour de la semaine
-        workouts.forEach(workout => {
-            const exerciseCount = workout.exercises ? workout.exercises.length : 0;
-            
-            html += `
-                <div class="workout-day" style="
-                    margin-bottom: 2rem;
-                    padding-bottom: 2rem;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                ">
-                    <div style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-bottom: 1rem;
-                    ">
-                        <h5 style="
-                            color: #10b981;
-                            margin: 0;
-                            font-size: 1.1rem;
-                        ">Jour ${workout.day} - ${workout.muscle_group}</h5>
-                        <span style="
-                            background: rgba(16, 185, 129, 0.2);
-                            color: #10b981;
-                            padding: 0.25rem 0.75rem;
-                            border-radius: 999px;
-                            font-size: 0.875rem;
-                        ">${exerciseCount} exercices</span>
-                    </div>
-            `;
-            
-            // Vérifier si les exercices existent
-            if (workout.exercises && workout.exercises.length > 0) {
-                html += `
-                    <div class="exercise-list" style="
-                        display: flex;
-                        flex-direction: column;
-                        gap: 0.75rem;
-                    ">
-                `;
-                
-                workout.exercises.forEach((ex, exIndex) => {
-                    html += `
-                        <div class="exercise-item" style="
-                            background: rgba(255, 255, 255, 0.03);
-                            padding: 1rem;
-                            border-radius: 8px;
-                            border-left: 3px solid #3b82f6;
-                            transition: all 0.2s;
-                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.05)'"
-                           onmouseout="this.style.background='rgba(255, 255, 255, 0.03)'">
+                    ${workouts.map(workout => {
+                        // Couleurs différentes selon le type de séance
+                        const colors = {
+                            'Pectoraux/Triceps': '#60a5fa',
+                            'Dos/Biceps': '#34d399',
+                            'Jambes': '#f59e0b',
+                            'Épaules/Abdos': '#a78bfa',
+                            'Haut du corps': '#60a5fa',
+                            'Bas du corps': '#f59e0b',
+                            'Full body': '#ec4899'
+                        };
+                        const color = colors[workout.muscle_group] || '#60a5fa';
+                        
+                        return `
                             <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: start;
-                                margin-bottom: 0.5rem;
+                                margin-top: 1rem;
+                                padding: 1rem;
+                                background: rgba(255, 255, 255, 0.03);
+                                border-radius: 8px;
+                                border: 1px solid rgba(255, 255, 255, 0.1);
                             ">
-                                <strong style="color: white; font-size: 1rem;">
-                                    ${exIndex + 1}. ${ex.exercise_name || 'Exercice'}
-                                </strong>
-                                <span style="
-                                    background: rgba(59, 130, 246, 0.2);
-                                    color: #3b82f6;
-                                    padding: 0.25rem 0.75rem;
-                                    border-radius: 999px;
-                                    font-size: 0.875rem;
-                                    font-weight: 600;
-                                ">${ex.sets} × ${ex.target_reps}</span>
+                                <p style="
+                                    color: ${color};
+                                    margin: 0 0 1rem 0;
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                ">
+                                    <strong>Jour ${workout.day} - ${workout.muscle_group}</strong>
+                                    <span style="
+                                        font-size: 0.9rem;
+                                        color: rgba(255, 255, 255, 0.6);
+                                    ">${workout.exercises.length} exercices</span>
+                                </p>
+                                
+                                ${workout.exercises.map((ex, idx) => `
+                                    <div style="
+                                        background: rgba(255, 255, 255, 0.03);
+                                        border: 1px solid rgba(255, 255, 255, 0.1);
+                                        border-radius: 8px;
+                                        padding: 1rem;
+                                        margin-bottom: 0.75rem;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 1rem;
+                                    ">
+                                        <div style="
+                                            color: #3b82f6;
+                                            font-weight: bold;
+                                            font-size: 1.1rem;
+                                            min-width: 25px;
+                                        ">${idx + 1}.</div>
+                                        
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="
+                                                font-weight: 500;
+                                                color: white;
+                                                margin-bottom: 0.25rem;
+                                                word-wrap: break-word;
+                                                overflow-wrap: break-word;
+                                                hyphens: auto;
+                                                line-height: 1.4;
+                                            ">${ex.exercise_name}</div>
+                                            
+                                            <div style="
+                                                display: flex;
+                                                gap: 1rem;
+                                                align-items: center;
+                                                flex-wrap: wrap;
+                                                font-size: 0.85rem;
+                                                color: rgba(255, 255, 255, 0.7);
+                                            ">
+                                                <span style="
+                                                    background: rgba(59, 130, 246, 0.1);
+                                                    padding: 0.2rem 0.6rem;
+                                                    border-radius: 4px;
+                                                    white-space: nowrap;
+                                                ">${ex.sets} × ${ex.target_reps}</span>
+                                                <span style="
+                                                    color: #60a5fa;
+                                                    font-weight: 500;
+                                                    white-space: nowrap;
+                                                ">${ex.predicted_weight}kg</span>
+                                                <span style="
+                                                    color: rgba(255, 255, 255, 0.5);
+                                                    white-space: nowrap;
+                                                ">${ex.rest_time}s repos</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
-                            <div style="
-                                display: flex;
-                                gap: 2rem;
-                                color: rgba(255, 255, 255, 0.6);
-                                font-size: 0.875rem;
-                            ">
-                                <span>💪 ${ex.predicted_weight || 0}kg suggéré</span>
-                                <span>⏱️ ${ex.rest_time || 60}s repos</span>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += '</div>';
-            } else {
-                html += `
-                    <p style="
-                        color: var(--gray);
-                        text-align: center;
-                        padding: 1rem;
-                        background: rgba(255, 255, 255, 0.03);
-                        border-radius: 8px;
-                    ">
-                        Aucun exercice pour ce jour
-                    </p>
-                `;
-            }
-            
-            html += '</div>';
-        });
-        
-        html += `
+                        `;
+                    }).join('')}
                 </div>
             </div>
         `;
     });
     
-    // Ajouter l'animation CSS si elle n'existe pas
-    if (!document.getElementById('program-animations')) {
-        const style = document.createElement('style');
-        style.id = 'program-animations';
-        style.textContent = `
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-10px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            .week-section:hover {
-                border-color: rgba(59, 130, 246, 0.3) !important;
-            }
-            
-            .exercise-item:hover {
-                transform: translateX(5px);
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // Si aucun exercice dans aucune semaine, afficher un message d'erreur
-    const totalExercises = Object.values(weeklyProgram).reduce((acc, week) => 
-        acc + week.reduce((sum, workout) => 
-            sum + (workout.exercises ? workout.exercises.length : 0), 0
-        ), 0
-    );
-
-    if (totalExercises === 0) {
-        resultDiv.innerHTML = `
-            <div style="
-                background: rgba(239, 68, 68, 0.1);
-                border: 1px solid rgba(239, 68, 68, 0.3);
-                border-radius: 12px;
-                padding: 2rem;
-                text-align: center;
-                margin-top: 2rem;
-            ">
-                <h3 style="color: #ef4444; margin-bottom: 1rem;">
-                    ⚠️ Programme incomplet
-                </h3>
-                <p style="color: rgba(255, 255, 255, 0.7);">
-                    Le programme a été généré mais ne contient aucun exercice.
-                    Cela peut être dû à une incompatibilité avec votre équipement.
-                </p>
-                <details style="margin-top: 1rem; font-size: 0.85rem; opacity: 0.7;">
-                    <summary style="cursor: pointer;">Détails techniques (cliquer)</summary>
-                    <pre style="
-                        background: rgba(0,0,0,0.2); 
-                        padding: 1rem; 
-                        border-radius: 8px; 
-                        margin-top: 0.5rem;
-                        overflow-x: auto;
-                        text-align: left;
-                    ">
-    Équipement configuré: ${
-        currentUser && currentUser.equipment_config 
-            ? JSON.stringify(currentUser.equipment_config, null, 2) 
-            : "Non défini"
-    }
-
-    Programme reçu: ${JSON.stringify(program.slice(0, 2), null, 2)}${program.length > 2 ? "..." : ""}
-
-    Total exercices: ${totalExercises}
-                    </pre>
-                </details>
-                <button class="btn btn-primary" onclick="showProgramGenerator()" style="margin-top: 1rem;">
-                    Réessayer avec d'autres paramètres
+    // Ajouter le bouton de validation
+    html += `
+        <div style="
+            margin-top: 2rem;
+            padding: 2rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            text-align: center;
+        ">
+            <h4 style="color: #22c55e; margin-bottom: 0.5rem;">
+                ✅ Programme prêt !
+            </h4>
+            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 1.5rem;">
+                Commencez dès maintenant ou sauvegardez pour plus tard
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button onclick="activateProgramAndStart()" class="button-primary" style="
+                    background: #22c55e;
+                    padding: 0.75rem 2rem;
+                    font-size: 1rem;
+                ">
+                    🚀 Commencer ce programme
+                </button>
+                <button onclick="saveForLater()" class="button-secondary" style="
+                    padding: 0.75rem 2rem;
+                    font-size: 1rem;
+                ">
+                    💾 Sauvegarder pour plus tard
                 </button>
             </div>
-        `;
-    } else {
-        resultDiv.innerHTML = html;
-    }
+        </div>
+    `;
+    
+    resultDiv.innerHTML = html;
 }
 
 

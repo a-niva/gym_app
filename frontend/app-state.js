@@ -55,7 +55,7 @@ let timerInterval = null;
 let audioContext = null;
 let isSilentMode = false;
 let currentProgram = null;
-let userPrograms = [];
+
 let isAutoWeightEnabled = localStorage.getItem('isAutoWeightEnabled') !== 'false'; // true par défaut
 // Variables pour le système adaptatif (Phase 2.2)
 let userCommitment = null;
@@ -65,6 +65,7 @@ let currentAdaptiveWorkout = null;
 
 // État des suggestions ML
 export let lastCompletedSetId = parseInt(localStorage.getItem('lastCompletedSetId')) || null;
+export let userPrograms = [];
 
 export function setLastCompletedSetId(id) {
     lastCompletedSetId = id;
@@ -148,6 +149,10 @@ export function addToStateHistory(entry) {
 
 export function clearSessionHistory() {
     sessionHistory = [];
+}
+
+export function setUserPrograms(programs) {
+    userPrograms = programs;
 }
 
 // Variables accessibles directement pour simplicité

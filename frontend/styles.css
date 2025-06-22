@@ -1212,6 +1212,8 @@ select.form-input {
     cursor: pointer;
     transition: all 0.3s ease;
     border: 1px solid transparent;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .exercise-card:hover {
@@ -3021,3 +3023,20 @@ select.form-input {
     justify-content: space-between;
     align-items: center;
 }
+
+/* Amélioration affichage programme */
+@media (max-width: 480px) {
+    .week-section h4 {
+        font-size: 0.95rem;
+    }
+    
+    .exercise-name {
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    
+    .exercise-details {
+        font-size: 0.85rem;
+    }
+}
+
