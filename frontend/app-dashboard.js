@@ -30,18 +30,123 @@ async function loadDashboard() {
     if (!currentUser) return;
     
     try {
-        // Charger directement les stats normales
+        // Charger les données adaptatives
+        const [commitment, trajectory, targets] = await Promise.all([
+            getUserCommitment(currentUser.id),
+            getTrajectoryAnalysis(currentUser.id),
+            getAdaptiveTargets(currentUser.id)
+        ]);
+        
+        const dashboardView = document.getElementById('dashboard');
+        if (!dashboardView) return;
+        
+        // Si pas d'engagement, afficher l'ancien dashboard + bouton pour créer un programme
+        if (!commitment || !trajectory || trajectory.status === "no_commitment") {
+            // Dashboard classique
+            updateWelcomeMessage();
+            await loadUserStats();
+            
+            // Ajouter une carte pour créer un programme
+            const statsContainer = document.querySelector('.stats-grid');
+            if (statsContainer) {
+                // Vérifier si la carte existe déjà pour éviter les doublons
+                if (!document.getElementById('create-program-card')) {
+                    const programCard = document.createElement('div');
+                    programCard.className = 'stat-card';
+                    programCard.id = 'create-program-card';
+                    programCard.innerHTML = `
+                        <h3>🎯 Créer mon programme</h3>
+                        <p>Définissez vos objectifs et générez un programme personnalisé</p>
+                        <button class="btn" onclick="showProgramGenerator()" style="margin-top: 1rem;">
+                            Commencer
+                        </button>
+                    `;
+                    statsContainer.insertBefore(programCard, statsContainer.firstChild);
+                }
+            }
+            
+            // Charger l'historique
+            setTimeout(() => {
+                loadWorkoutHistory();
+            }, 1000);
+        } else {
+            // Dashboard adaptatif complet
+            dashboardView.innerHTML = `
+                <div class="dashboard-header" style="margin-bottom: 2rem;">
+                    <h1>Bonjour ${currentUser.name} ! 💪</h1>
+                    <p style="color: var(--gray);">${new Date().toLocaleDateString('fr-FR', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    })}</p>
+                </div>
+                
+                <!-- Widget Trajectoire -->
+                <div class="trajectory-widget ${trajectory.on_track ? 'on-track' : 'off-track'}">
+                    <div class="trajectory-header">
+                        <h3>${trajectory.on_track ? '✅ Sur la bonne voie !' : '⚠️ Ajustons le rythme'}</h3>
+                        <span class="trajectory-badge">
+                            ${trajectory.sessions_this_week}/${trajectory.sessions_target} séances
+                        </span>
+                    </div>
+                    
+                    <div class="trajectory-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Régularité (30j)</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${trajectory.consistency_score * 100}%"></div>
+                            </div>
+                            <span class="stat-value">${Math.round(trajectory.consistency_score * 100)}%</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <span class="stat-label">Adhérence au volume</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${trajectory.volume_adherence * 100}%"></div>
+                            </div>
+                            <span class="stat-value">${Math.round(trajectory.volume_adherence * 100)}%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Insights personnalisés -->
+                    ${trajectory.insights && trajectory.insights.length > 0 ? `
+                        <div class="insights-section">
+                            <h4>💡 Conseils personnalisés</h4>
+                            <ul>
+                                ${trajectory.insights.map(insight => `<li>${insight}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Actions rapides -->
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="generateQuickWorkout()">
+                        🚀 Séance rapide adaptée
+                    </button>
+                    <button class="btn" onclick="showProgramGenerator()">
+                        📋 Modifier mon programme
+                    </button>
+                </div>
+                
+                <!-- État des muscles -->
+                <div class="muscle-status-widget">
+                    <h3>État de vos muscles</h3>
+                    <div class="muscle-grid">
+                        ${renderMuscleStatus(targets)}
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Erreur loading dashboard:', error);
+        // Fallback vers dashboard simple
         updateWelcomeMessage();
         await loadUserStats();
-        
-        // Charger l'historique après un court délai
         setTimeout(() => {
             loadWorkoutHistory();
         }, 1000);
-        
-    } catch (error) {
-        console.error('Erreur chargement dashboard:', error);
-        showToast('Erreur lors du chargement', 'error');
     }
 }
 // ========== NOUVELLES FONCTIONS DASHBOARD ADAPTATIF ==========
