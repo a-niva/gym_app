@@ -1,7 +1,7 @@
 import { currentUser, setCurrentProgram } from './app-state.js';
 import { showToast } from './app-ui.js';
 import { showView } from './app-navigation.js';
-import { activateProgram, loadUserPrograms, saveProgram } from './app-api.js';
+import { activateProgram, loadUserPrograms, saveProgram, getUserCommitment, saveUserCommitment } from './app-api.js';
 
 // Variable pour stocker temporairement les paramètres du programme
 let pendingProgramParams = null;
@@ -530,8 +530,12 @@ window.activateProgramAndStart = activateProgramAndStart;
 // ===== EXPORTS GLOBAUX =====
 window.showProgramGenerator = showProgramGenerator;
 window.generateProgram = generateProgram;
+window.selectFrequency = selectFrequency;  
+window.selectTime = selectTime;            
+window.submitCommitment = submitCommitment;
+window.resetCommitment = resetCommitment;  
 window.toggleWeek = toggleWeek;
-window.saveProgram = saveProgram;
+window.activateProgramAndStart = activateProgramAndStart;
 
 // Export pour les modules
 export { showProgramGenerator };

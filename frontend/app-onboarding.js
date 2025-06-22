@@ -65,16 +65,6 @@ function toggleEquipment(card) {
     }
 }
 
-// Créer une nouvelle fonction qui gère la logique spéciale
-function enhancedNextStep() {
-    const currentStepEl = document.querySelector('.onboarding-step.active');
-    
-    // Sinon, utiliser la navigation normale
-    if (navigationNextStep) {
-        navigationNextStep();
-    }
-}
-
 
 // ===== VALIDATION DES DONNÉES =====
 function validateEmail(email) {

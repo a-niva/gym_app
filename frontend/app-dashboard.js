@@ -25,6 +25,7 @@ import {
 import { showView } from './app-navigation.js';
 import { showProgramGenerator } from './app-program-generator.js';
 
+
 // ===== CHARGEMENT DU DASHBOARD =====
 async function loadDashboard() {
     if (!currentUser) return;
@@ -368,7 +369,7 @@ async function startAdaptiveWorkout() {
     };
     
     try {
-        const response = await fetch(`${API_BASE_URL}/api/workouts/`, {
+        const response = await fetch(`/api/workouts/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(workoutData)
@@ -378,12 +379,14 @@ async function startAdaptiveWorkout() {
         setCurrentWorkout(workout);
         
         // Préparer les exercices pour la vue workout
-        state.selectedExercises = currentAdaptiveWorkout.exercises.map(ex => ex.exercise);
-        state.currentExerciseIndex = 0;
+        // CORRIGÉ : Utiliser currentAdaptiveWorkout au lieu de state
+        // qui n'est pas défini dans ce module
         
         // Fermer le modal et afficher la vue workout
         document.querySelector('.modal-overlay')?.remove();
         showView('workout');
+        
+        showToast('Séance démarrée !', 'success');
         
     } catch (error) {
         console.error('Error starting workout:', error);
