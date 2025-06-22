@@ -773,6 +773,13 @@ function displayProgram(program) {
             </div>
         `;
     }
+    const debugInfo = `
+    <details style="margin-top: 1rem; font-size: 0.9rem;">
+        <summary>Détails techniques</summary>
+        <p>Équipement configuré : ${JSON.stringify(currentUser.equipment_config)}</p>
+        <p>Programme reçu : ${JSON.stringify(program)}</p>
+    </details>
+    `;
 }
 
 // ===== TOGGLE SEMAINE =====

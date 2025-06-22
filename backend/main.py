@@ -7,14 +7,18 @@ from sqlalchemy import create_engine, text
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
-
-import json
-import os
-
 from backend.database import engine, get_db, SessionLocal
 from backend.models import Base, User, Exercise, Workout, Set, Program, ProgramDay, ProgramExercise
 from backend.routes import router as ml_router, router
 from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate, ProgramCreate, ProgramResponse
+
+import json
+import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -122,7 +126,10 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
     # Barres
     for barre_type, barre_config in config.get("barres", {}).items():
         if barre_config.get("available", False):
-            available_equipment.append(barre_type)
+            if barre_type in ["olympique", "courte"]:
+                available_equipment.append("barbell_standard")
+            elif barre_type == "ez":
+                available_equipment.append("barbell_ez")
     
     # Haltères
     if config.get("dumbbells", {}).get("available", False):
