@@ -211,7 +211,8 @@ class FitnessMLEngine:
                 closest_weight = min(available_weights, key=lambda x: abs(x - target_weight))
                 return closest_weight * 2  # Multiplié par 2 pour la paire
         
-        return round(base_weight * experience_mult * goal_mult, 2.5)
+        # Arrondir à 2.5kg près
+        return round(base_weight * experience_mult * goal_mult / 2.5) * 2.5
     
     def _get_user_weight(self, user: User) -> float:
         """Retourne le poids réel de l'utilisateur"""
@@ -700,7 +701,9 @@ class FitnessMLEngine:
         experience_level: str,
         exercise_rotation_offset: int = 0
     ) -> List[Exercise]:
-        # AJOUTER CES LOGS
+        """
+        Sélectionne les exercices pour une journée
+        """
         logger.error(f"DEBUG _select_exercises_for_day:")
         logger.error(f"  - muscle_group demandé: '{muscle_group}'")
         logger.error(f"  - body_parts disponibles: {list(body_parts.keys())}")
@@ -737,9 +740,10 @@ class FitnessMLEngine:
         # Pour chaque partie musculaire
         for i, part in enumerate(target_parts):
             logger.error(f"  - Recherche de '{part}' dans body_parts...")
+            
             if part in body_parts:
-                logger.error(f"    ✓ Trouvé {len(part_exercises)} exercices")
                 part_exercises = body_parts[part]
+                logger.error(f"    ✓ Trouvé {len(part_exercises)} exercices")
                 
                 # Appliquer la rotation
                 if exercise_rotation_offset > 0 and len(part_exercises) > 3:
@@ -779,8 +783,8 @@ class FitnessMLEngine:
             selected.extend(remaining[:3 - len(selected)])
         
         logger.error(f"  - Retour de {len(selected)} exercices sélectionnés")
-        return selected[:max_exercises]  # Ne jamais dépasser le max
-        
+        return selected[:max_exercises]
+   
     def _get_sets_reps_for_level(
         self,
         exercise: Exercise,
