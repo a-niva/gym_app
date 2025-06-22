@@ -3,7 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
-from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, ProgramExercise
+from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, ProgramExercise, UserCommitment
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -713,13 +713,13 @@ class FitnessMLEngine:
         # Mapping des groupes musculaires
         muscle_mapping = {
             "Pectoraux/Triceps": ["Pectoraux", "Triceps"],
-            "Dos/Biceps": ["Dos", "Biceps"],
-            "Jambes": ["Quadriceps", "Ischio-jambiers", "Mollets"],
-            "Épaules/Abdos": ["Épaules", "Abdominaux"],
-            "Haut du corps": ["Pectoraux", "Dos", "Épaules"],
-            "Bas du corps": ["Quadriceps", "Ischio-jambiers", "Mollets"],
-            "Full body": ["Pectoraux", "Dos", "Jambes", "Épaules"],
-            "Bras": ["Biceps", "Triceps"],
+            "Dos/Biceps": ["Trapèzes", "Biceps"],  # "Dos" → "Trapèzes"
+            "Jambes": ["Quadriceps", "Fessiers"],  # Retirer "Ischio-jambiers" et "Mollets" 
+            "Épaules/Abdos": ["Deltoïdes", "Abdominaux"],  # "Épaules" → "Deltoïdes"
+            "Haut du corps": ["Pectoraux", "Trapèzes", "Deltoïdes"],
+            "Bas du corps": ["Quadriceps", "Fessiers"],
+            "Full body": ["Pectoraux", "Trapèzes", "Quadriceps", "Deltoïdes"],
+            "Bras": ["Biceps", "Triceps", "Avants-Bras"],
         }
         
         target_parts = muscle_mapping.get(muscle_group, [muscle_group])

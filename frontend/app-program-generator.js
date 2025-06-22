@@ -2,6 +2,7 @@ import { currentUser, setCurrentProgram, setUserPrograms } from './app-state.js'
 import { showToast } from './app-ui.js';
 import { showView } from './app-navigation.js';
 import { activateProgram, loadUserPrograms, saveProgram, getUserCommitment, saveUserCommitment } from './app-api.js';
+import { loadDashboard } from './app-dashboard.js';
 
 // Variable pour stocker temporairement les paramètres du programme
 let pendingProgramParams = null;
@@ -857,6 +858,9 @@ async function activateProgramAndStart(programId) {
         if (activeProgram) {
             setCurrentProgram(activeProgram);
         }
+        
+        // Forcer le rechargement complet du dashboard
+        await loadDashboard();  // ← AJOUTER CETTE LIGNE
         
         // Retourner au dashboard
         showView('dashboard');

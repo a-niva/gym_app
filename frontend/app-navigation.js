@@ -5,12 +5,14 @@ import {
     currentStep, 
     totalSteps,
     setCurrentStep,
+    getCurrentStep,
     currentUser,
     timerInterval,
     restTimerInterval,
     setTimerInterval,
     setRestTimerInterval
 } from './app-state.js';
+
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {
