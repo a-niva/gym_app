@@ -453,7 +453,6 @@ function formatWeightDisplay(weight, exercise) {
 export {
     calculateAvailableWeights,
     validateWeight,
-    filterExercisesByEquipment,
     getExerciseType,
     calculateSuggestedWeight,
     formatWeightDisplay
