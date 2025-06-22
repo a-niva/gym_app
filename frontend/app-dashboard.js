@@ -21,6 +21,7 @@ import {
     currentAdaptiveWorkout,
     setCurrentWorkout,
     getCurrentProgram,
+    setCurrentProgram,
     setCurrentAdaptiveWorkout
 } from './app-state.js';
 
