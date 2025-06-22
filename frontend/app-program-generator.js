@@ -497,6 +497,21 @@ async function generateProgram(event) {
 function displayProgram(program) {
     const resultDiv = document.getElementById('programResult');
     
+    // Vérifier que le programme contient des données
+    if (!program || program.length === 0) {
+        resultDiv.innerHTML = `
+            <div style="
+                text-align: center;
+                padding: 2rem;
+                color: var(--gray);
+            ">
+                <p>❌ Aucun exercice généré</p>
+                <p>Veuillez réessayer</p>
+            </div>
+        `;
+        return;
+    }
+    
     // Grouper par semaine
     const weeklyProgram = {};
     program.forEach(workout => {
@@ -506,7 +521,22 @@ function displayProgram(program) {
         weeklyProgram[workout.week].push(workout);
     });
     
-    let html = '<h3 style="color: white; margin-bottom: 2rem;">Votre programme personnalisé</h3>';
+    let html = `
+        <h3 style="
+            color: white; 
+            margin: 2rem 0 1rem 0;
+            text-align: center;
+        ">Votre programme personnalisé</h3>
+        
+        <p style="
+            text-align: center;
+            color: var(--gray);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        ">
+            💡 Cliquez sur une semaine pour voir le détail des exercices
+        </p>
+    `;
     
     Object.entries(weeklyProgram).forEach(([week, workouts], index) => {
         // Déplier automatiquement la première semaine
@@ -519,6 +549,7 @@ function displayProgram(program) {
                 border-radius: 12px;
                 margin-bottom: 1rem;
                 overflow: hidden;
+                transition: all 0.3s;
             ">
                 <h4 onclick="toggleWeek(${week})" style="
                     cursor: pointer;
@@ -527,85 +558,129 @@ function displayProgram(program) {
                     color: #3b82f6;
                     display: flex;
                     align-items: center;
-                    gap: 0.5rem;
+                    gap: 0.75rem;
                     background: rgba(59, 130, 246, 0.1);
                     transition: background 0.2s;
+                    user-select: none;
                 " onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" 
                    onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'">
                     <span class="week-toggle" id="toggle-week-${week}" style="
+                        font-size: 0.8rem;
                         transition: transform 0.2s;
                         ${isFirstWeek ? 'transform: rotate(90deg);' : ''}
                     ">▶</span>
-                    Semaine ${week}
+                    <span style="flex: 1;">Semaine ${week}</span>
+                    <span style="
+                        font-size: 0.875rem;
+                        color: rgba(255, 255, 255, 0.6);
+                    ">${workouts.length} séances</span>
                 </h4>
+                
                 <div id="week-${week}" class="week-content" style="
                     padding: 1.5rem;
                     ${isFirstWeek ? 'display: block;' : 'display: none;'}
+                    animation: ${isFirstWeek ? 'fadeIn 0.3s ease-out' : 'none'};
                 ">
         `;
         
+        // Afficher chaque jour de la semaine
         workouts.forEach(workout => {
+            const exerciseCount = workout.exercises ? workout.exercises.length : 0;
+            
             html += `
                 <div class="workout-day" style="
-                    margin-bottom: 1.5rem;
-                    padding-bottom: 1.5rem;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    margin-bottom: 2rem;
+                    padding-bottom: 2rem;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
                 ">
-                    <h5 style="
-                        color: #10b981;
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
                         margin-bottom: 1rem;
-                        font-size: 1.1rem;
-                    ">Jour ${workout.day} - ${workout.muscle_group}</h5>
+                    ">
+                        <h5 style="
+                            color: #10b981;
+                            margin: 0;
+                            font-size: 1.1rem;
+                        ">Jour ${workout.day} - ${workout.muscle_group}</h5>
+                        <span style="
+                            background: rgba(16, 185, 129, 0.2);
+                            color: #10b981;
+                            padding: 0.25rem 0.75rem;
+                            border-radius: 999px;
+                            font-size: 0.875rem;
+                        ">${exerciseCount} exercices</span>
+                    </div>
+            `;
+            
+            // Vérifier si les exercices existent
+            if (workout.exercises && workout.exercises.length > 0) {
+                html += `
                     <div class="exercise-list" style="
                         display: flex;
                         flex-direction: column;
-                        gap: 1rem;
+                        gap: 0.75rem;
                     ">
-            `;
-            
-            workout.exercises.forEach((ex, exIndex) => {
-                html += `
-                    <div class="exercise-item" style="
-                        background: rgba(255, 255, 255, 0.03);
-                        padding: 1rem;
-                        border-radius: 8px;
-                        border-left: 3px solid #3b82f6;
-                    ">
-                        <div style="
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: start;
-                            margin-bottom: 0.5rem;
-                        ">
-                            <strong style="color: white; font-size: 1rem;">
-                                ${exIndex + 1}. ${ex.exercise_name}
-                            </strong>
-                            <span style="
-                                background: rgba(59, 130, 246, 0.2);
-                                color: #3b82f6;
-                                padding: 0.25rem 0.75rem;
-                                border-radius: 999px;
-                                font-size: 0.875rem;
-                                font-weight: 600;
-                            ">${ex.sets} × ${ex.target_reps}</span>
-                        </div>
-                        <div style="
-                            display: flex;
-                            gap: 2rem;
-                            color: rgba(255, 255, 255, 0.6);
-                            font-size: 0.875rem;
-                        ">
-                            <span>💪 ${ex.predicted_weight}kg suggéré</span>
-                            <span>⏱️ ${ex.rest_time}s repos</span>
-                        </div>
-                    </div>
                 `;
-            });
+                
+                workout.exercises.forEach((ex, exIndex) => {
+                    html += `
+                        <div class="exercise-item" style="
+                            background: rgba(255, 255, 255, 0.03);
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border-left: 3px solid #3b82f6;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.05)'"
+                           onmouseout="this.style.background='rgba(255, 255, 255, 0.03)'">
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: start;
+                                margin-bottom: 0.5rem;
+                            ">
+                                <strong style="color: white; font-size: 1rem;">
+                                    ${exIndex + 1}. ${ex.exercise_name || 'Exercice'}
+                                </strong>
+                                <span style="
+                                    background: rgba(59, 130, 246, 0.2);
+                                    color: #3b82f6;
+                                    padding: 0.25rem 0.75rem;
+                                    border-radius: 999px;
+                                    font-size: 0.875rem;
+                                    font-weight: 600;
+                                ">${ex.sets} × ${ex.target_reps}</span>
+                            </div>
+                            <div style="
+                                display: flex;
+                                gap: 2rem;
+                                color: rgba(255, 255, 255, 0.6);
+                                font-size: 0.875rem;
+                            ">
+                                <span>💪 ${ex.predicted_weight || 0}kg suggéré</span>
+                                <span>⏱️ ${ex.rest_time || 60}s repos</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            } else {
+                html += `
+                    <p style="
+                        color: var(--gray);
+                        text-align: center;
+                        padding: 1rem;
+                        background: rgba(255, 255, 255, 0.03);
+                        border-radius: 8px;
+                    ">
+                        Aucun exercice pour ce jour
+                    </p>
+                `;
+            }
             
-            html += `
-                    </div>
-                </div>
-            `;
+            html += '</div>';
         });
         
         html += `
@@ -614,31 +689,65 @@ function displayProgram(program) {
         `;
     });
     
-    // Informations sur le programme
-    const totalWorkouts = Object.values(weeklyProgram).reduce((acc, week) => acc + week.length, 0);
-    const totalExercises = Object.values(weeklyProgram).reduce((acc, week) => 
-        acc + week.reduce((sum, workout) => sum + workout.exercises.length, 0), 0
-    );
-    
-    html += `
-        <div style="
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            text-align: center;
-        ">
-            <p style="color: #10b981; margin: 0; font-size: 1.1rem;">
-                ✅ Programme de ${Object.keys(weeklyProgram).length} semaines généré avec succès !
-            </p>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
-                ${totalWorkouts} séances • ${totalExercises} exercices au total
-            </p>
-        </div>
-    `;
+    // Ajouter l'animation CSS si elle n'existe pas
+    if (!document.getElementById('program-animations')) {
+        const style = document.createElement('style');
+        style.id = 'program-animations';
+        style.textContent = `
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .week-section:hover {
+                border-color: rgba(59, 130, 246, 0.3) !important;
+            }
+            
+            .exercise-item:hover {
+                transform: translateX(5px);
+            }
+        `;
+        document.head.appendChild(style);
+    }
     
     resultDiv.innerHTML = html;
+    
+    // Si aucun exercice dans aucune semaine, afficher un message d'erreur
+    const totalExercises = Object.values(weeklyProgram).reduce((acc, week) => 
+        acc + week.reduce((sum, workout) => 
+            sum + (workout.exercises ? workout.exercises.length : 0), 0
+        ), 0
+    );
+    
+    if (totalExercises === 0) {
+        resultDiv.innerHTML = `
+            <div style="
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                border-radius: 12px;
+                padding: 2rem;
+                text-align: center;
+                margin-top: 2rem;
+            ">
+                <h3 style="color: #ef4444; margin-bottom: 1rem;">
+                    ⚠️ Programme incomplet
+                </h3>
+                <p style="color: rgba(255, 255, 255, 0.7);">
+                    Le programme a été généré mais ne contient aucun exercice.
+                    Cela peut être dû à une incompatibilité avec votre équipement.
+                </p>
+                <button class="btn btn-primary" onclick="showProgramGenerator()" style="margin-top: 1rem;">
+                    Réessayer avec d'autres paramètres
+                </button>
+            </div>
+        `;
+    }
 }
 
 // ===== TOGGLE SEMAINE =====

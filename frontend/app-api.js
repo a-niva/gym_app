@@ -3,9 +3,10 @@
 // Pas de complexité inutile, juste des fonctions async/await simples
 
 import { 
-    currentUser,
+    currentUser,         
     setAllExercises, 
-    setUserPrograms,
+    setCurrentWorkout,
+    setCurrentUser,
     setUserCommitment,
     setAdaptiveTargets,
     setTrajectoryAnalysis,

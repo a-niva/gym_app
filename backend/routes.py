@@ -273,3 +273,38 @@ async def get_program_adjustments(
     except Exception as e:
         logger.error(f"Error getting adjustments: {str(e)}")
         raise HTTPException(status_code=500, detail="Analysis failed")
+
+@router.post("/api/users/{user_id}/adaptive-workout")
+async def generate_adaptive_workout(
+    user_id: int,
+    request: dict,
+    db: Session = Depends(get_db)
+):
+    """Génère une séance adaptative basée sur le temps disponible"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    time_available = request.get("time_available", 60)
+    
+    # Utiliser le SessionBuilder pour générer la séance
+    session_builder = SessionBuilder(db)
+    
+    try:
+        # Récupérer les targets adaptatifs
+        targets = db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user_id
+        ).all()
+        
+        # Construire la séance adaptative
+        workout = session_builder.build_adaptive_session(
+            user=user,
+            time_available=time_available,
+            targets=targets
+        )
+        
+        return workout
+        
+    except Exception as e:
+        logger.error(f"Error generating adaptive workout: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate workout")
