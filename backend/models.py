@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from backend.database import Base
 
+
 class User(Base):
     __tablename__ = "users"
     
@@ -14,17 +15,14 @@ class User(Base):
     weight = Column(Float)  # en kg
     experience_level = Column(String)
     goals = Column(JSON)
-    
-    # NOUVELLE STRUCTURE ÉQUIPEMENT (prioritaire)
     equipment_config = Column(JSON)  # Structure complète nouvelle
-    
-
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    workouts = relationship("Workout", back_populates="user")
-    programs = relationship("Program", back_populates="user")
-    commitment = relationship("UserCommitment", back_populates="user", uselist=False)
-    adaptive_targets = relationship("AdaptiveTargets", back_populates="user")
+    # AJOUTER cascade="all, delete-orphan" à toutes les relations
+    workouts = relationship("Workout", back_populates="user", cascade="all, delete-orphan")
+    programs = relationship("Program", back_populates="user", cascade="all, delete-orphan")
+    commitment = relationship("UserCommitment", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    adaptive_targets = relationship("AdaptiveTargets", back_populates="user", cascade="all, delete-orphan")
 
 class Exercise(Base):
     __tablename__ = "exercises"

@@ -1060,15 +1060,53 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     
     try:
-        # Les cascades devraient supprimer automatiquement les workouts et sets
-        # grâce aux relations définies dans les modèles
+        # Si les cascades ne fonctionnent pas, supprimer manuellement dans l'ordre
+        # pour éviter les contraintes de clés étrangères
+        
+        # 1. Supprimer d'abord les tables qui dépendent d'autres tables
+        # Supprimer les sets (dépendent des workouts)
+        db.execute(text("""
+            DELETE FROM sets 
+            WHERE workout_id IN (
+                SELECT id FROM workouts WHERE user_id = :user_id
+            )
+        """), {"user_id": user_id})
+        
+        # Supprimer les program_exercises (dépendent des program_days)
+        db.execute(text("""
+            DELETE FROM program_exercises 
+            WHERE program_day_id IN (
+                SELECT pd.id FROM program_days pd
+                JOIN programs p ON pd.program_id = p.id
+                WHERE p.user_id = :user_id
+            )
+        """), {"user_id": user_id})
+        
+        # Supprimer les program_days (dépendent des programs)
+        db.execute(text("""
+            DELETE FROM program_days 
+            WHERE program_id IN (
+                SELECT id FROM programs WHERE user_id = :user_id
+            )
+        """), {"user_id": user_id})
+        
+        # 2. Supprimer les tables directement liées à l'utilisateur
+        db.execute(text("DELETE FROM workouts WHERE user_id = :user_id"), {"user_id": user_id})
+        db.execute(text("DELETE FROM programs WHERE user_id = :user_id"), {"user_id": user_id})
+        db.execute(text("DELETE FROM user_commitments WHERE user_id = :user_id"), {"user_id": user_id})
+        db.execute(text("DELETE FROM adaptive_targets WHERE user_id = :user_id"), {"user_id": user_id})
+        
+        # 3. Finalement supprimer l'utilisateur
         db.delete(user)
         db.commit()
         
         return {"message": "User deleted successfully", "user_id": user_id}
+        
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error deleting user {user_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     
     
 
