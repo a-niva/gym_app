@@ -24,12 +24,12 @@ function loadProfileInfo() {
                 
                 <div class="profile-row">
                     <span style="color: var(--gray);">Taille:</span>
-                    <strong>${currentUser.height} cm</strong>
+                    <strong>${currentUser.height || 'Non renseignée'} ${currentUser.height ? 'cm' : ''}</strong>
                 </div>
-                
+
                 <div class="profile-row">
                     <span style="color: var(--gray);">Poids:</span>
-                    <strong>${currentUser.weight} kg</strong>
+                    <strong>${currentUser.weight || 'Non renseigné'} ${currentUser.weight ? 'kg' : ''}</strong>
                 </div>
                 
                 <div class="profile-row">

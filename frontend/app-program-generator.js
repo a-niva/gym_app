@@ -96,49 +96,55 @@ function showCommitmentForm(container) {
                     <div class="muscle-priority-item">
                         <span>Pectoraux</span>
                         <select name="chest_priority">
-                            <option value="normal">Normal</option>
-                            <option value="priority">Priorité</option>
-                            <option value="maintain">Maintenir</option>
+                        <option value="never">Jamais</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="priority">Priorité</option>
+                        <option value="always">Toujours</option>
                         </select>
                     </div>
                     <div class="muscle-priority-item">
                         <span>Dos</span>
                         <select name="back_priority">
-                            <option value="normal">Normal</option>
-                            <option value="priority">Priorité</option>
-                            <option value="maintain">Maintenir</option>
+                        <option value="never">Jamais</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="priority">Priorité</option>
+                        <option value="always">Toujours</option>
                         </select>
                     </div>
                     <div class="muscle-priority-item">
                         <span>Épaules</span>
                         <select name="shoulders_priority">
-                            <option value="normal">Normal</option>
-                            <option value="priority">Priorité</option>
-                            <option value="maintain">Maintenir</option>
+                        <option value="never">Jamais</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="priority">Priorité</option>
+                        <option value="always">Toujours</option>
                         </select>
                     </div>
                     <div class="muscle-priority-item">
                         <span>Jambes</span>
                         <select name="legs_priority">
-                            <option value="normal">Normal</option>
-                            <option value="priority">Priorité</option>
-                            <option value="maintain">Maintenir</option>
+                        <option value="never">Jamais</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="priority">Priorité</option>
+                        <option value="always">Toujours</option>
                         </select>
                     </div>
                     <div class="muscle-priority-item">
                         <span>Bras</span>
                         <select name="arms_priority">
-                            <option value="normal">Normal</option>
-                            <option value="priority">Priorité</option>
-                            <option value="maintain">Maintenir</option>
+                        <option value="never">Jamais</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="priority">Priorité</option>
+                        <option value="always">Toujours</option>
                         </select>
                     </div>
                     <div class="muscle-priority-item">
                         <span>Abdos</span>
                         <select name="core_priority">
-                            <option value="normal">Normal</option>
-                            <option value="priority">Priorité</option>
-                            <option value="maintain">Maintenir</option>
+                        <option value="never">Jamais</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="priority">Priorité</option>
+                        <option value="always">Toujours</option>
                         </select>
                     </div>
                 </div>
@@ -435,8 +441,27 @@ async function generateProgram(event) {
     const formData = new FormData(event.target);
     const weeks = parseInt(formData.get('weeks'));
     
-    // Récupérer l'engagement actuel
+    // Vérifier que l'utilisateur a un engagement
     const commitment = await getUserCommitment(currentUser.id);
+    if (!commitment) {
+        resultDiv.innerHTML = `
+            <div style="
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                border-radius: 12px;
+                padding: 2rem;
+                text-align: center;
+            ">
+                <h3 style="color: #ef4444;">⚠️ Configuration incomplète</h3>
+                <p>Veuillez d'abord définir vos préférences d'entraînement</p>
+                <button class="btn btn-primary" onclick="showCommitmentForm()">
+                    Configurer mes préférences
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
     const frequency = commitment.sessions_per_week;
     
     const resultDiv = document.getElementById('programResult');

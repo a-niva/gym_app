@@ -489,172 +489,169 @@ class FitnessMLEngine:
             reasons.append("Ajustement pour maintenir la qualité")
         
         return " - ".join(reasons) if reasons else "Répétitions standards"
-    
+        
     def generate_adaptive_program(
-        self,
-        user: User,
-        duration_weeks: int = 4,
-        frequency: int = 3  # Add this parameter
-    ) -> List[Dict]:
-        """
-        Génère un programme adaptatif basé sur:
-        - Les objectifs de l'utilisateur
-        - Son équipement disponible
-        - Son historique de performance
-        - Les principes de périodisation
-        """
-        program = []
-    
-        # Vérifier que l'utilisateur a des objectifs
-        if not user.goals:
-            user.goals = ["hypertrophy"]  # Objectif par défaut
-
-        # Valider la configuration
-        # CORRECTION: Fallback robuste pour equipment_config
-        if not user.equipment_config:
-            # Retourner un programme avec la structure correcte
-            return [{
-                "week": 1,
-                "day": 1,
-                "muscle_group": "Configuration d'équipement requise",
-                "exercises": [{
-                    "exercise_id": 0,
-                    "exercise_name": "⚠️ Configuration manquante",
-                    "sets": 0,
-                    "target_reps": 0,
-                    "predicted_weight": 0,
-                    "rest_time": 0
-                }]
-            }]
+            self,
+            user: User,
+            duration_weeks: int = 4,
+            frequency: int = 3
+        ) -> List[Dict]:
+            """
+            Génère un programme adaptatif basé sur:
+            - Les objectifs de l'utilisateur
+            - Son équipement disponible
+            - Son historique de performance
+            - Les principes de périodisation
+            """
+            program = []
         
-        # Récupérer les exercices disponibles selon l'équipement
-        # Extraire l'équipement disponible depuis equipment_config
-        available_equipment = []
-        if user.equipment_config:
-            config = user.equipment_config
-            # Barres
-            for barre_type, barre_config in config.get("barres", {}).items():
-                if barre_config.get("available", False):
-                    if barre_type == "olympique" or barre_type == "courte":
-                        available_equipment.append("barbell_standard")
-                    elif barre_type == "ez":
-                        available_equipment.append("barbell_ez")
-            # Haltères
-            if config.get("dumbbells", {}).get("available", False):
-                available_equipment.append("dumbbells")
-            # Poids du corps toujours disponible
-            available_equipment.append("bodyweight")
-            # Autres équipements...
-            # Banc
-            if config.get("banc", {}).get("available", False):
-                available_equipment.append("bench_plat")
-                if config["banc"].get("inclinable_haut", False):
-                    available_equipment.append("bench_inclinable")
-                if config["banc"].get("inclinable_bas", False):
-                    available_equipment.append("bench_declinable")
+            # Vérifier que l'utilisateur a des objectifs
+            if not user.goals:
+                user.goals = ["hypertrophy"]  # Objectif par défaut
 
-            # Élastiques
-            if config.get("elastiques", {}).get("available", False):
-                available_equipment.append("elastiques")
+            # Valider la configuration d'équipement
+            if not user.equipment_config or not isinstance(user.equipment_config, dict):
+                logger.error(f"Configuration d'équipement invalide pour l'utilisateur {user.id}")
+                return []
 
-            # Autres équipements
-            autres = config.get("autres", {})
-            if autres.get("kettlebell", {}).get("available", False):
-                available_equipment.append("kettlebell")
-            if autres.get("barre_traction", {}).get("available", False):
-                available_equipment.append("barre_traction")
+            # Vérifier qu'au moins un équipement est disponible
+            has_equipment = False
+            for category, items in user.equipment_config.items():
+                if isinstance(items, dict) and items.get("available", False):
+                    has_equipment = True
+                    break
 
-        # Récupérer TOUS les exercices et filtrer manuellement
-        all_exercises = self.db.query(Exercise).all()
-        available_exercises = []
-        for exercise in all_exercises:
-            exercise_equipment = exercise.equipment or []
-            # Vérifier si l'équipement requis est disponible
-            if all(eq in available_equipment for eq in exercise_equipment):
-                available_exercises.append(exercise)
-        
-        # Grouper par partie du corps
-        body_parts = {}
-        for ex in available_exercises:
-            if ex.body_part not in body_parts:
-                body_parts[ex.body_part] = []
-            body_parts[ex.body_part].append(ex)
-
-        # Create rotation based on requested frequency
-        if frequency == 3:
-            split = ["Pectoraux/Triceps", "Dos/Biceps", "Jambes"]
-        elif frequency == 4:
-            split = ["Pectoraux/Triceps", "Dos/Biceps", "Jambes", "Épaules/Abdos"]
-        elif frequency == 5:
-            split = ["Pectoraux", "Dos", "Jambes", "Épaules", "Bras"]
-        else:
-            # Fallback for unexpected values
-            split = ["Haut du corps", "Bas du corps", "Full body"]
-        
-        # Générer les séances pour chaque semaine
-        for week in range(duration_weeks):
-            # Ajouter un offset pour la rotation
-            exercise_rotation_offset = week % 2  # Alterne entre 2 sélections # 0 ou 1
-            week_intensity = 0.85 + (week * 0.05)  # Progression linéaire
+            if not has_equipment:
+                logger.error(f"Aucun équipement disponible pour l'utilisateur {user.id}")
+                return []
             
-            if week == duration_weeks - 1:
-                # Semaine de deload
-                week_intensity = 0.7
+            # Récupérer les exercices disponibles selon l'équipement
+            available_equipment = []
+            if user.equipment_config:
+                config = user.equipment_config
+                # Barres
+                for barre_type, barre_config in config.get("barres", {}).items():
+                    if barre_config.get("available", False):
+                        if barre_type == "olympique" or barre_type == "courte":
+                            available_equipment.append("barbell_standard")
+                        elif barre_type == "ez":
+                            available_equipment.append("barbell_ez")
+                # Haltères
+                if config.get("dumbbells", {}).get("available", False):
+                    available_equipment.append("dumbbells")
+                # Poids du corps toujours disponible
+                available_equipment.append("bodyweight")
+                # Autres équipements...
+                # Banc
+                if config.get("banc", {}).get("available", False):
+                    available_equipment.append("bench_plat")
+                    if config["banc"].get("inclinable_haut", False):
+                        available_equipment.append("bench_inclinable")
+                    if config["banc"].get("inclinable_bas", False):
+                        available_equipment.append("bench_declinable")
+
+                # Élastiques
+                if config.get("elastiques", {}).get("available", False):
+                    available_equipment.append("elastiques")
+
+                # Autres équipements
+                autres = config.get("autres", {})
+                if autres.get("kettlebell", {}).get("available", False):
+                    available_equipment.append("kettlebell")
+                if autres.get("barre_traction", {}).get("available", False):
+                    available_equipment.append("barre_traction")
+
+            # Récupérer TOUS les exercices et filtrer manuellement
+            all_exercises = self.db.query(Exercise).all()
+            available_exercises = []
+            for exercise in all_exercises:
+                exercise_equipment = exercise.equipment or []
+                # Vérifier si l'équipement requis est disponible
+                if all(eq in available_equipment for eq in exercise_equipment):
+                    available_exercises.append(exercise)
             
-            week_program = []
+            # Grouper par partie du corps
+            body_parts = {}
+            for ex in available_exercises:
+                if ex.body_part not in body_parts:
+                    body_parts[ex.body_part] = []
+                body_parts[ex.body_part].append(ex)
+
+            # Create rotation based on requested frequency
+            if frequency == 3:
+                split = ["Pectoraux/Triceps", "Dos/Biceps", "Jambes"]
+            elif frequency == 4:
+                split = ["Pectoraux/Triceps", "Dos/Biceps", "Jambes", "Épaules/Abdos"]
+            elif frequency == 5:
+                split = ["Pectoraux", "Dos", "Jambes", "Épaules", "Bras"]
+            else:
+                # Fallback for unexpected values
+                split = ["Haut du corps", "Bas du corps", "Full body"]
             
-            for day_num, muscle_group in enumerate(split):
-                workout = {
-                    "week": week + 1,
-                    "day": day_num + 1,
-                    "muscle_group": muscle_group,
-                    "exercises": []
-                }
+            # Générer les séances pour chaque semaine
+            for week in range(duration_weeks):
+                # Ajouter un offset pour la rotation
+                exercise_rotation_offset = week % 2  # Alterne entre 2 sélections # 0 ou 1
+                week_intensity = 0.85 + (week * 0.05)  # Progression linéaire
                 
-                # Sélectionner les exercices pour ce jour
-                selected_exercises = self._select_exercises_for_day(
-                    body_parts, 
-                    muscle_group, 
-                    user.experience_level,
-                    exercise_rotation_offset
-                )
+                if week == duration_weeks - 1:
+                    # Semaine de deload
+                    week_intensity = 0.7
                 
-                for exercise in selected_exercises:
-                    try:
-                        # Obtenir les recommandations pour cet exercice
-                        sets_reps = self._get_sets_reps_for_level(
-                            exercise, 
-                            user.experience_level,
-                            user.goals
-                        )
-                        
-                        # Prédire le poids
-                        prediction = self.predict_next_session_performance(
-                            user, 
-                            exercise,
-                            sets_reps["sets"],
-                            sets_reps["reps"]
-                        )
-                        
-                        workout["exercises"].append({
-                            "exercise_id": exercise.id,
-                            "exercise_name": exercise.name_fr,
-                            "sets": int(sets_reps["sets"] * week_intensity),
-                            "target_reps": sets_reps["reps"],
-                            "predicted_weight": prediction["predicted_weight"],
-                            "rest_time": 90 if user.goals and "strength" in user.goals else 60
-                        })
-                    except Exception as e:
-                        # Log l'erreur mais continue avec les autres exercices
-                        print(f"Erreur avec l'exercice {exercise.name_fr}: {str(e)}")
-                        continue
+                week_program = []
                 
-                week_program.append(workout)
+                for day_num, muscle_group in enumerate(split):
+                    workout = {
+                        "week": week + 1,
+                        "day": day_num + 1,
+                        "muscle_group": muscle_group,
+                        "exercises": []
+                    }
+                    
+                    # Sélectionner les exercices pour ce jour
+                    selected_exercises = self._select_exercises_for_day(
+                        body_parts, 
+                        muscle_group, 
+                        user.experience_level,
+                        exercise_rotation_offset
+                    )
+                    
+                    for exercise in selected_exercises:
+                        try:
+                            # Obtenir les recommandations pour cet exercice
+                            sets_reps = self._get_sets_reps_for_level(
+                                exercise, 
+                                user.experience_level,
+                                user.goals
+                            )
+                            
+                            # Prédire le poids
+                            prediction = self.predict_next_session_performance(
+                                user, 
+                                exercise,
+                                sets_reps["sets"],
+                                sets_reps["reps"]
+                            )
+                            
+                            workout["exercises"].append({
+                                "exercise_id": exercise.id,
+                                "exercise_name": exercise.name_fr,
+                                "sets": int(sets_reps["sets"] * week_intensity),
+                                "target_reps": sets_reps["reps"],
+                                "predicted_weight": prediction["predicted_weight"],
+                                "rest_time": 90 if user.goals and "strength" in user.goals else 60
+                            })
+                        except Exception as e:
+                            # Log l'erreur mais continue avec les autres exercices
+                            print(f"Erreur avec l'exercice {exercise.name_fr}: {str(e)}")
+                            continue
+                    
+                    week_program.append(workout)
+                
+                program.extend(week_program)
             
-            program.extend(week_program)
-        
-        return program
-    
+            return program
+
     def _select_exercises_for_day(
         self,
         body_parts: Dict,
@@ -933,10 +930,13 @@ class VolumeOptimizer:
         
         # Ajuster selon le focus musculaire
         if commitment and muscle in commitment.focus_muscles:
-            if commitment.focus_muscles[muscle] == "priority":
+            focus_level = commitment.focus_muscles[muscle]
+            if focus_level == "always":
+                exp_mult *= 1.5
+            elif focus_level == "priority":
                 exp_mult *= 1.3
-            elif commitment.focus_muscles[muscle] == "maintain":
-                exp_mult *= 0.7
+            elif focus_level == "never":
+                exp_mult *= 0.3  # Minimum vital pour éviter les blessures
         
         return int(base_volume * exp_mult)
     
