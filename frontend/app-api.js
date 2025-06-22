@@ -572,14 +572,36 @@ async function getTrajectoryAnalysis(userId) {
     try {
         const response = await fetch(`${API_BASE_URL}/users/${userId}/trajectory`);
         
-        if (!response.ok) throw new Error('Failed to get trajectory');
+        if (!response.ok) {
+            // Retourner des données par défaut au lieu de throw
+            return {
+                status: "error",
+                on_track: false,
+                sessions_this_week: 0,
+                sessions_target: 0,
+                volume_adherence: 0.0,
+                consistency_score: 0.0,
+                muscle_balance: {},
+                insights: ["Données non disponibles"]
+            };
+        }
         
         const data = await response.json();
         setTrajectoryAnalysis(data);
         return data;
     } catch (error) {
         console.error('Error getting trajectory:', error);
-        return null;
+        // Retourner des données par défaut
+        return {
+            status: "error",
+            on_track: false,
+            sessions_this_week: 0,
+            sessions_target: 0,
+            volume_adherence: 0.0,
+            consistency_score: 0.0,
+            muscle_balance: {},
+            insights: ["Erreur de connexion"]
+        };
     }
 }
 

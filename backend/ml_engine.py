@@ -1,10 +1,10 @@
 # ===== backend/ml_engine.py =====
-from typing import List, Dict
-from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
-from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, ProgramExercise
 from sqlalchemy import func
-from typing import Any
+from sqlalchemy.orm import Session
+from typing import List, Dict, Any
+from datetime import datetime, timedelta
+from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, ProgramExercise
+
 
 
 class FitnessMLEngine:
