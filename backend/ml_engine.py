@@ -607,11 +607,17 @@ class FitnessMLEngine:
                 return []
             
             # Grouper par partie du corps
+            logger.error(f"DEBUG: Groupage de {len(available_exercises)} exercices")
             body_parts = {}
             for ex in available_exercises:
                 if ex.body_part not in body_parts:
                     body_parts[ex.body_part] = []
                 body_parts[ex.body_part].append(ex)
+
+            # AJOUTER CE LOG
+            logger.error(f"DEBUG: Body parts trouvés: {list(body_parts.keys())}")
+            for bp, exs in body_parts.items():
+                logger.error(f"  - {bp}: {len(exs)} exercices")
 
             # Create rotation based on requested frequency
             if frequency == 3:
@@ -694,9 +700,11 @@ class FitnessMLEngine:
         experience_level: str,
         exercise_rotation_offset: int = 0
     ) -> List[Exercise]:
-        """
-        Sélectionne les exercices pour une journée
-        """
+        # AJOUTER CES LOGS
+        logger.error(f"DEBUG _select_exercises_for_day:")
+        logger.error(f"  - muscle_group demandé: '{muscle_group}'")
+        logger.error(f"  - body_parts disponibles: {list(body_parts.keys())}")
+        
         selected = []
         
         # Mapping des groupes musculaires
@@ -712,6 +720,7 @@ class FitnessMLEngine:
         }
         
         target_parts = muscle_mapping.get(muscle_group, [muscle_group])
+        logger.error(f"  - target_parts après mapping: {target_parts}")
         
         # Nombre d'exercices selon le niveau
         exercise_counts = {
@@ -727,7 +736,9 @@ class FitnessMLEngine:
         
         # Pour chaque partie musculaire
         for i, part in enumerate(target_parts):
+            logger.error(f"  - Recherche de '{part}' dans body_parts...")
             if part in body_parts:
+                logger.error(f"    ✓ Trouvé {len(part_exercises)} exercices")
                 part_exercises = body_parts[part]
                 
                 # Appliquer la rotation
@@ -756,6 +767,8 @@ class FitnessMLEngine:
                 
                 if len(selected) >= max_exercises:
                     break
+            else:
+                logger.error(f"    ✗ '{part}' NON TROUVÉ dans {list(body_parts.keys())}")
         
         # Assurer un minimum de 3 exercices
         if len(selected) < 3:
@@ -765,6 +778,7 @@ class FitnessMLEngine:
             remaining = [ex for ex in all_available if ex not in selected]
             selected.extend(remaining[:3 - len(selected)])
         
+        logger.error(f"  - Retour de {len(selected)} exercices sélectionnés")
         return selected[:max_exercises]  # Ne jamais dépasser le max
         
     def _get_sets_reps_for_level(
