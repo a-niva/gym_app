@@ -10,7 +10,8 @@ import {
     setUserCommitment,
     setAdaptiveTargets,
     setTrajectoryAnalysis,
-    setCurrentAdaptiveWorkout
+    setCurrentAdaptiveWorkout,
+    setUserPrograms 
 } from './app-state.js';
 import { showToast } from './app-ui.js';
 

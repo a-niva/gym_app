@@ -441,7 +441,7 @@ async function generateProgram(event) {
     
     const formData = new FormData(event.target);
     const weeks = parseInt(formData.get('weeks'));
-    
+    const resultDiv = document.getElementById('programResult');
     // Vérifier que l'utilisateur a un engagement
     const commitment = await getUserCommitment(currentUser.id);
     if (!commitment) {
@@ -465,7 +465,7 @@ async function generateProgram(event) {
     
     const frequency = commitment.sessions_per_week;
     
-    const resultDiv = document.getElementById('programResult');
+
     resultDiv.innerHTML = `
         <div class="loading-container">
             <div class="loading-spinner"></div>
@@ -814,38 +814,7 @@ function displayProgram(program) {
                 </div>
             </div>
         `;
-    });
-    
-    // Ajouter le bouton de validation
-    html += `
-        <div style="
-            margin-top: 2rem;
-            padding: 2rem;
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            border-radius: 12px;
-            text-align: center;
-        ">
-            <h4 style="color: #22c55e; margin-bottom: 0.5rem;">
-                ✅ Programme prêt !
-            </h4>
-            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 1.5rem;">
-                Commencez dès maintenant ou sauvegardez pour plus tard
-            </p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <button onclick="activateProgramAndStart(${currentGeneratedProgramId})" class="button-primary">
-                    🚀 Commencer ce programme
-                </button>
-                <button onclick="saveForLater()" class="button-secondary" style="
-                    padding: 0.75rem 2rem;
-                    font-size: 1rem;
-                ">
-                    💾 Sauvegarder pour plus tard
-                </button>
-            </div>
-        </div>
-    `;
-    
+    });    
     resultDiv.innerHTML = html;
 }
 
