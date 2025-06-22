@@ -10,7 +10,8 @@ import {
     getTrajectoryAnalysis, 
     getAdaptiveTargets,
     generateAdaptiveWorkout,
-    completeAdaptiveWorkout
+    completeAdaptiveWorkout,
+    loadUserPrograms
 } from './app-api.js';
 import { 
     currentUser,
