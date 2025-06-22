@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, ProgramExercise
+import logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class FitnessMLEngine:
@@ -541,6 +544,11 @@ class FitnessMLEngine:
                     available_equipment.append("dumbbells")
                 # Poids du corps toujours disponible
                 available_equipment.append("bodyweight")
+                
+                # TEMPORAIRE - TEST SEULEMENT - À RETIRER APRÈS
+                logger.warning("TEST: Ajout forcé de tous les équipements")
+                available_equipment.extend(["pull_up_bar", "bodyweight_vest", "ankle_weights", "kettlebell"])
+
                 # Autres équipements...
                 # Banc
                 if config.get("banc", {}).get("available", False):
@@ -559,7 +567,7 @@ class FitnessMLEngine:
                 if autres.get("kettlebell", {}).get("available", False):
                     available_equipment.append("kettlebell")
                 if autres.get("barre_traction", {}).get("available", False):
-                    available_equipment.append("barre_traction")
+                    available_equipment.append("pull_up_bar")
 
             # Récupérer TOUS les exercices et filtrer manuellement
             all_exercises = self.db.query(Exercise).all()
@@ -569,6 +577,19 @@ class FitnessMLEngine:
                 # Vérifier si l'équipement requis est disponible
                 if all(eq in available_equipment for eq in exercise_equipment):
                     available_exercises.append(exercise)
+            # AJOUTER CES LIGNES DE DEBUG
+            logger.info(f"Équipement disponible pour l'utilisateur {user.id}: {available_equipment}")
+            logger.info(f"Nombre d'exercices disponibles après filtrage: {len(available_exercises)}")
+            
+            if len(available_exercises) < 10:
+                logger.error(f"ATTENTION: Seulement {len(available_exercises)} exercices disponibles!")
+                # Log des premiers exercices pour debug
+                for i, ex in enumerate(available_exercises[:5]):
+                    logger.info(f"  Exercice {i+1}: {ex.name_fr} (équipement requis: {ex.equipment})")
+            # Vérifier qu'on a assez d'exercices pour générer un programme
+            if len(available_exercises) < 5:  # Minimum absolu
+                logger.error(f"Impossible de générer un programme avec seulement {len(available_exercises)} exercices")
+                return []  # Retourner un programme vide plutôt que de crasher
             
             # Grouper par partie du corps
             body_parts = {}

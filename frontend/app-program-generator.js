@@ -521,7 +521,23 @@ async function generateProgram(event) {
 // ===== AFFICHAGE DU PROGRAMME GÉNÉRÉ =====
 function displayProgram(program) {
     const resultDiv = document.getElementById('programResult');
+    // DEBUG: Logger les informations reçues
+    console.group('🔍 Debug génération programme');
+    console.log('Programme complet reçu:', program);
+    console.log('Nombre de semaines:', program.length > 0 ? Math.max(...program.map(w => w.week)) : 0);
+    console.log('Équipement utilisateur:', currentUser.equipment_config);
     
+    // Compter les exercices par groupe musculaire
+    const muscleGroups = {};
+    program.forEach(workout => {
+        if (!muscleGroups[workout.muscle_group]) {
+            muscleGroups[workout.muscle_group] = 0;
+        }
+        muscleGroups[workout.muscle_group] += (workout.exercises?.length || 0);
+    });
+    console.log('Exercices par groupe musculaire:', muscleGroups);
+    console.groupEnd();
+
     // Vérifier que le programme contient des données
     if (!program || program.length === 0) {
         resultDiv.innerHTML = `
@@ -741,15 +757,13 @@ function displayProgram(program) {
         document.head.appendChild(style);
     }
     
-    resultDiv.innerHTML = html;
-    
     // Si aucun exercice dans aucune semaine, afficher un message d'erreur
     const totalExercises = Object.values(weeklyProgram).reduce((acc, week) => 
         acc + week.reduce((sum, workout) => 
             sum + (workout.exercises ? workout.exercises.length : 0), 0
         ), 0
     );
-    
+
     if (totalExercises === 0) {
         resultDiv.innerHTML = `
             <div style="
@@ -767,20 +781,37 @@ function displayProgram(program) {
                     Le programme a été généré mais ne contient aucun exercice.
                     Cela peut être dû à une incompatibilité avec votre équipement.
                 </p>
+                <details style="margin-top: 1rem; font-size: 0.85rem; opacity: 0.7;">
+                    <summary style="cursor: pointer;">Détails techniques (cliquer)</summary>
+                    <pre style="
+                        background: rgba(0,0,0,0.2); 
+                        padding: 1rem; 
+                        border-radius: 8px; 
+                        margin-top: 0.5rem;
+                        overflow-x: auto;
+                        text-align: left;
+                    ">
+    Équipement configuré: ${
+        currentUser && currentUser.equipment_config 
+            ? JSON.stringify(currentUser.equipment_config, null, 2) 
+            : "Non défini"
+    }
+
+    Programme reçu: ${JSON.stringify(program.slice(0, 2), null, 2)}${program.length > 2 ? "..." : ""}
+
+    Total exercices: ${totalExercises}
+                    </pre>
+                </details>
                 <button class="btn btn-primary" onclick="showProgramGenerator()" style="margin-top: 1rem;">
                     Réessayer avec d'autres paramètres
                 </button>
             </div>
         `;
+    } else {
+        resultDiv.innerHTML = html;
     }
-    const debugInfo = `
-    <details style="margin-top: 1rem; font-size: 0.9rem;">
-        <summary>Détails techniques</summary>
-        <p>Équipement configuré : ${JSON.stringify(currentUser.equipment_config)}</p>
-        <p>Programme reçu : ${JSON.stringify(program)}</p>
-    </details>
-    `;
 }
+
 
 // ===== TOGGLE SEMAINE =====
 function toggleWeek(week) {

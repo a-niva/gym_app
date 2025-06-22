@@ -147,11 +147,21 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
     if config.get("elastiques", {}).get("available", False):
         available_equipment.append("elastiques")
     
-    # Autres équipements
+    # Autres équipements avec mapping correct
     autres = config.get("autres", {})
+    equipment_mapping = {
+        "barre_traction": "pull_up_bar",
+        "kettlebell": "kettlebell",
+        "lest_corps": "bodyweight_vest",
+        "lest_chevilles": "ankle_weights",
+        "lest_poignets": "wrist_weights"
+    }
+
     for equip_type, equip_config in autres.items():
         if equip_config.get("available", False):
-            available_equipment.append(equip_type)
+            # Utiliser le nom mappé si disponible, sinon le nom original
+            mapped_name = equipment_mapping.get(equip_type, equip_type)
+            available_equipment.append(mapped_name)
     
     # Poids du corps toujours disponible
     available_equipment.append("bodyweight")
