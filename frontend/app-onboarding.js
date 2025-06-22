@@ -27,7 +27,7 @@ import {
 } from './app-navigation.js';
 
 import { showToast, getEquipmentIcon, getEquipmentName } from './app-ui.js';
-import { saveUser, saveUserCommitment } from './app-api.js';
+import { saveUser } from './app-api.js';
 import { 
     GOAL_NAMES,
     COMMON_DUMBBELL_WEIGHTS,
@@ -66,262 +66,9 @@ function toggleEquipment(card) {
     }
 }
 
-// Fonction pour créer l'étape d'engagement
-function createCommitmentStep() {
-    const onboardingContainer = document.querySelector('.onboarding-steps');
-    if (!onboardingContainer) return;
-    
-    // Créer l'étape 3.5 : Engagement
-    const commitmentStep = document.createElement('div');
-    commitmentStep.className = 'onboarding-step';
-    commitmentStep.id = 'step-commitment';
-    commitmentStep.style.display = 'none';
-    commitmentStep.innerHTML = `
-        <h2>Votre engagement 🎯</h2>
-        <p style="color: var(--gray); margin-bottom: 2rem;">Définissons ensemble vos objectifs réalistes</p>
-        
-        <div class="commitment-section">
-            <h3>Fréquence d'entraînement</h3>
-            <p style="color: var(--gray); font-size: 0.9rem; margin-bottom: 1rem;">
-                Combien de séances par semaine pouvez-vous faire de manière réaliste ?
-            </p>
-            <div class="frequency-selector">
-                <button class="frequency-btn" data-frequency="2">2×/sem<br><small>Débutant</small></button>
-                <button class="frequency-btn" data-frequency="3">3×/sem<br><small>Recommandé</small></button>
-                <button class="frequency-btn" data-frequency="4">4×/sem<br><small>Intermédiaire</small></button>
-                <button class="frequency-btn" data-frequency="5">5×/sem<br><small>Avancé</small></button>
-                <button class="frequency-btn" data-frequency="6">6×/sem<br><small>Expert</small></button>
-            </div>
-        </div>
-        
-        <div class="commitment-section" style="margin-top: 2rem;">
-            <h3>Temps par séance</h3>
-            <p style="color: var(--gray); font-size: 0.9rem; margin-bottom: 1rem;">
-                Combien de temps avez-vous généralement ?
-            </p>
-            <div class="time-selector">
-                <button class="time-btn" data-time="30">30 min<br><small>Express</small></button>
-                <button class="time-btn" data-time="45">45 min<br><small>Standard</small></button>
-                <button class="time-btn" data-time="60">60 min<br><small>Complet</small></button>
-                <button class="time-btn" data-time="90">90 min<br><small>Intensif</small></button>
-            </div>
-        </div>
-        
-        <div class="commitment-section" style="margin-top: 2rem;">
-            <h3>Muscles prioritaires</h3>
-            <p style="color: var(--gray); font-size: 0.9rem; margin-bottom: 1rem;">
-                Quels groupes musculaires voulez-vous prioriser ?
-            </p>
-            <div class="muscle-priority-grid">
-                <div class="muscle-priority-item" data-muscle="chest">
-                    <span>Pectoraux</span>
-                    <select class="priority-select">
-                        <option value="normal">Normal</option>
-                        <option value="priority">Priorité</option>
-                        <option value="maintain">Maintenir</option>
-                    </select>
-                </div>
-                <div class="muscle-priority-item" data-muscle="back">
-                    <span>Dos</span>
-                    <select class="priority-select">
-                        <option value="normal">Normal</option>
-                        <option value="priority">Priorité</option>
-                        <option value="maintain">Maintenir</option>
-                    </select>
-                </div>
-                <div class="muscle-priority-item" data-muscle="shoulders">
-                    <span>Épaules</span>
-                    <select class="priority-select">
-                        <option value="normal">Normal</option>
-                        <option value="priority">Priorité</option>
-                        <option value="maintain">Maintenir</option>
-                    </select>
-                </div>
-                <div class="muscle-priority-item" data-muscle="legs">
-                    <span>Jambes</span>
-                    <select class="priority-select">
-                        <option value="normal">Normal</option>
-                        <option value="priority">Priorité</option>
-                        <option value="maintain">Maintenir</option>
-                    </select>
-                </div>
-                <div class="muscle-priority-item" data-muscle="arms">
-                    <span>Bras</span>
-                    <select class="priority-select">
-                        <option value="normal">Normal</option>
-                        <option value="priority">Priorité</option>
-                        <option value="maintain">Maintenir</option>
-                    </select>
-                </div>
-                <div class="muscle-priority-item" data-muscle="core">
-                    <span>Abdos</span>
-                    <select class="priority-select">
-                        <option value="normal">Normal</option>
-                        <option value="priority">Priorité</option>
-                        <option value="maintain">Maintenir</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-            <button class="btn btn-secondary" onclick="prevStep()">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-                Retour
-            </button>
-            <button class="btn" onclick="saveCommitment()">
-                Valider mon engagement
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </button>
-        </div>
-    `;
-    
-    // Insérer après l'étape des objectifs
-    const step2 = document.getElementById('step2');
-    if (step2 && step2.parentNode) {
-        step2.parentNode.insertBefore(commitmentStep, step2.nextSibling);
-    }
-    
-    // Ajouter les styles CSS
-    const style = document.createElement('style');
-    style.textContent = `
-        .commitment-section {
-            background: var(--surface);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-        }
-        
-        .frequency-selector, .time-selector {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 0.75rem;
-        }
-        
-        .frequency-btn, .time-btn {
-            padding: 1rem 0.5rem;
-            background: var(--background);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            font-weight: 600;
-        }
-        
-        .frequency-btn:hover, .time-btn:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-        
-        .frequency-btn.selected, .time-btn.selected {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        .frequency-btn small, .time-btn small {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 400;
-            opacity: 0.8;
-            margin-top: 0.25rem;
-        }
-        
-        .muscle-priority-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-        }
-        
-        .muscle-priority-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: var(--background);
-            border-radius: 8px;
-        }
-        
-        .priority-select {
-            padding: 0.25rem 0.5rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 0.875rem;
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Ajouter les event listeners
-    document.querySelectorAll('.frequency-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.frequency-btn').forEach(b => b.classList.remove('selected'));
-            this.classList.add('selected');
-        });
-    });
-    
-    document.querySelectorAll('.time-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
-            this.classList.add('selected');
-        });
-    });
-}
-
-// Fonction pour sauvegarder l'engagement
-async function saveCommitment() {
-    const selectedFrequency = document.querySelector('.frequency-btn.selected');
-    const selectedTime = document.querySelector('.time-btn.selected');
-    
-    if (!selectedFrequency || !selectedTime) {
-        showToast('Veuillez sélectionner une fréquence et une durée', 'error');
-        return;
-    }
-    
-    // Collecter les priorités musculaires
-    const focusMuscles = {};
-    document.querySelectorAll('.muscle-priority-item').forEach(item => {
-        const muscle = item.dataset.muscle;
-        const priority = item.querySelector('.priority-select').value;
-        if (priority !== 'normal') {
-            focusMuscles[muscle] = priority;
-        }
-    });
-    
-    const commitment = {
-        sessions_per_week: parseInt(selectedFrequency.dataset.frequency),
-        time_per_session: parseInt(selectedTime.dataset.time),
-        focus_muscles: focusMuscles
-    };
-    
-    try {
-        await saveUserCommitment(currentUser.id, commitment);
-        showToast('Engagement enregistré avec succès !', 'success');
-        
-        // Passer à l'étape suivante
-        nextStep();
-    } catch (error) {
-        console.error('Error saving commitment:', error);
-    }
-}
-
 // Créer une nouvelle fonction qui gère la logique spéciale
 function enhancedNextStep() {
     const currentStepEl = document.querySelector('.onboarding-step.active');
-    if (currentStepEl && currentStepEl.id === 'step2') {
-        // Après les objectifs, montrer l'engagement si nécessaire
-        const commitmentStep = document.getElementById('step-commitment');
-        if (commitmentStep && !userCommitment) {
-            currentStepEl.classList.remove('active');
-            commitmentStep.classList.add('active');
-            return;
-        }
-    }
     
     // Sinon, utiliser la navigation normale
     if (navigationNextStep) {
@@ -329,8 +76,6 @@ function enhancedNextStep() {
     }
 }
 
-// Initialiser l'étape d'engagement au chargement
-document.addEventListener('DOMContentLoaded', createCommitmentStep);
 
 // ===== VALIDATION DES DONNÉES =====
 function validateEmail(email) {
@@ -398,19 +143,7 @@ function nextStep() {
             return;
         }
     }
-    
-    // AJOUTER : Gérer le passage depuis l'étape commitment
-    if (currentStepEl && currentStepEl.id === 'step-commitment') {
-        currentStepEl.classList.remove('active');
-        // Passer à l'étape 3 (équipement)
-        const step3 = document.getElementById('step3');
-        if (step3) {
-            step3.classList.add('active');
-            updateProgressBar();
-            return;
-        }
-    }
-    
+        
     // NOUVEAU : Gérer le passage depuis l'étape 3 (équipement)
     if (currentStepEl && currentStepEl.id === 'step3') {
         // Vérifier si l'équipement sélectionné nécessite une configuration détaillée
@@ -1149,7 +882,6 @@ window.removeBand = removeBand;
 window.toggleBenchFeature = toggleBenchFeature;
 window.showConfigPanel = showConfigPanel;
 window.logout = logout;
-window.saveCommitment = saveCommitment;
 
 // Export pour les autres modules
 export {

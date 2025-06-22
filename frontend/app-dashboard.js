@@ -6,7 +6,6 @@ import { loadWorkoutHistory } from './app-history.js';
 import { showToast, showLoadingOverlay, hideLoadingOverlay } from './app-ui.js';
 import { 
     getUserStats,
-    getUserCommitment, 
     getTrajectoryAnalysis, 
     getAdaptiveTargets,
     generateAdaptiveWorkout,
@@ -14,7 +13,6 @@ import {
 } from './app-api.js';
 import { 
     currentUser,
-    userCommitment, 
     adaptiveTargets, 
     trajectoryAnalysis,
     currentAdaptiveWorkout,
@@ -30,180 +28,21 @@ async function loadDashboard() {
     if (!currentUser) return;
     
     try {
-        // Charger les données adaptatives en parallèle avec les stats existantes
-        const [commitment, trajectory, targets] = await Promise.all([
-            getUserCommitment(currentUser.id),
-            getTrajectoryAnalysis(currentUser.id),
-            getAdaptiveTargets(currentUser.id)
-        ]);
+        // Charger directement les stats normales
+        updateWelcomeMessage();
+        await loadUserStats();
         
-        // Modifier le contenu du dashboard selon si l'utilisateur a des objectifs ou non
-        const dashboardView = document.getElementById('dashboard');
-        if (!dashboardView) return;
-        
-        // Si pas d'engagement, afficher l'ancien dashboard + bouton pour définir objectifs
-        if (!commitment || !trajectory || trajectory.status === "no_commitment") {
-            // Conserver l'ancien comportement
-            updateWelcomeMessage();
-            await loadUserStats();
-            
-            // Ajouter un bouton pour définir les objectifs
-            const statsContainer = document.querySelector('.stats-grid');
-            if (statsContainer) {
-                const objectifsCard = document.createElement('div');
-                objectifsCard.className = 'stat-card';
-                objectifsCard.innerHTML = `
-                    <h3>🎯 Définir mes objectifs</h3>
-                    <p>Personnalisez votre entraînement</p>
-                    <button class="btn" onclick="showCommitmentModal()" style="margin-top: 1rem;">
-                        Commencer
-                    </button>
-                `;
-                statsContainer.insertBefore(objectifsCard, statsContainer.firstChild);
-            }
-        } else {
-            // Nouveau dashboard adaptatif
-            dashboardView.innerHTML = `
-                <div class="dashboard-header" style="margin-bottom: 2rem;">
-                    <h1>Bonjour ${currentUser.name} ! 💪</h1>
-                    <p style="color: var(--gray);">${new Date().toLocaleDateString('fr-FR', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                    })}</p>
-                </div>
-                
-                <!-- Widget Trajectoire -->
-                <div class="trajectory-widget ${trajectory.on_track ? 'on-track' : 'off-track'}">
-                    <div class="trajectory-header">
-                        <h3>${trajectory.on_track ? '✅ Sur la bonne voie !' : '⚠️ Ajustons le rythme'}</h3>
-                        <span class="trajectory-badge">
-                            ${trajectory.sessions_this_week}/${trajectory.sessions_target} séances
-                        </span>
-                    </div>
-                    
-                    <div class="trajectory-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Régularité (30j)</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${trajectory.consistency_score * 100}%"></div>
-                            </div>
-                            <span class="stat-value">${Math.round(trajectory.consistency_score * 100)}%</span>
-                        </div>
-                        
-                        <div class="stat-item">
-                            <span class="stat-label">Adhérence au volume</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${trajectory.volume_adherence * 100}%"></div>
-                            </div>
-                            <span class="stat-value">${Math.round(trajectory.volume_adherence * 100)}%</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Insights personnalisés -->
-                    ${trajectory.insights && trajectory.insights.length > 0 ? `
-                        <div class="insights-section">
-                            ${trajectory.insights.map(insight => `
-                                <div class="insight-item">${insight}</div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-                
-                <!-- Actions rapides -->
-                <div class="quick-actions">
-                    <button class="action-card" onclick="generateQuickWorkout()">
-                        <div class="action-icon">🎯</div>
-                        <div class="action-content">
-                            <h4>Séance adaptative</h4>
-                            <p>Générée selon votre état</p>
-                        </div>
-                    </button>
-                    
-                    <button class="action-card" onclick="showView('program-generator')">
-                        <div class="action-icon">📋</div>
-                        <div class="action-content">
-                            <h4>Programme complet</h4>
-                            <p>Planifiez vos semaines</p>
-                        </div>
-                    </button>
-                    
-                    <button class="action-card" onclick="showView('stats')">
-                        <div class="action-icon">📊</div>
-                        <div class="action-content">
-                            <h4>Statistiques</h4>
-                            <p>Analysez votre progression</p>
-                        </div>
-                    </button>
-                </div>
-                
-                <!-- État des muscles -->
-                <div class="muscle-status-widget">
-                    <h3>État de récupération musculaire</h3>
-                    <div class="muscle-grid">
-                        ${renderMuscleStatus(targets)}
-                    </div>
-                </div>
-                
-                <!-- Stats classiques -->
-                <div class="stats-grid" id="statsGrid"></div>
-                
-                <!-- Historique -->
-                <div class="workout-history" id="workoutHistory">
-                    <h3>Historique récent</h3>
-                    <div id="historyList"></div>
-                </div>
-            `;
-            
-            // Charger les stats classiques dans la nouvelle structure
-            await loadUserStats();
-        }
-        
-        // Charger les prédictions ML (existant)
-        try {
-            const response = await fetch(`/api/users/${currentUser.id}/muscle-performance-prediction`);
-            if (response.ok) {
-                const predictions = await response.json();
-                addPredictionCards(predictions);
-            }
-        } catch (error) {
-            console.error('Erreur chargement prédictions:', error);
-        }
-        
-        // Charger l'historique
+        // Charger l'historique après un court délai
         setTimeout(() => {
             loadWorkoutHistory();
         }, 1000);
         
     } catch (error) {
-        console.error('Error loading dashboard:', error);
-        // Fallback vers l'ancien dashboard
-        updateWelcomeMessage();
-        await loadUserStats();
-        setTimeout(() => {
-            loadWorkoutHistory();
-        }, 1000);
+        console.error('Erreur chargement dashboard:', error);
+        showToast('Erreur lors du chargement', 'error');
     }
 }
-
 // ========== NOUVELLES FONCTIONS DASHBOARD ADAPTATIF ==========
-
-// Modal pour définir les objectifs
-function showCommitmentModal() {
-    // Rediriger vers l'onboarding à l'étape commitment
-    showView('onboarding');
-    // Aller directement à l'étape commitment
-    setTimeout(() => {
-        const commitmentStep = document.getElementById('step-commitment');
-        if (commitmentStep) {
-            document.querySelectorAll('.onboarding-step').forEach(step => {
-                step.style.display = 'none';
-            });
-            commitmentStep.style.display = 'block';
-        }
-    }, 100);
-}
 
 // Fonction pour afficher l'état des muscles
 async function renderMuscleStatus(targets) {
@@ -446,7 +285,6 @@ async function startAdaptiveWorkout() {
 }
 
 // Ajouter les exports pour les nouvelles fonctions
-window.showCommitmentModal = showCommitmentModal;
 window.generateQuickWorkout = generateQuickWorkout;
 window.startAdaptiveWorkout = startAdaptiveWorkout;
 
