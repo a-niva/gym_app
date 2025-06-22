@@ -308,6 +308,13 @@ select.form-input {
     display: grid;
     gap: 1.5rem;
     margin-bottom: 2rem;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.muscle-status {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .stat-card {

@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 from datetime import datetime, timedelta
 from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, ProgramExercise, UserCommitment
 import logging
+import random
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1015,7 +1016,53 @@ class SessionBuilder:
     def __init__(self, db: Session):
         self.db = db
         self.ml_engine = FitnessMLEngine(db)  # Réutiliser l'existant
-    
+
+    def build_adaptive_session(self, muscles: List[str], duration: int, user_level: str) -> List[Dict]:
+        """
+        Construit une séance adaptative basée sur les muscles et la durée
+        """
+        # Nombre d'exercices selon la durée
+        exercise_count = {
+            30: 4,  # 30 min = 4 exercices
+            45: 6,  # 45 min = 6 exercices  
+            60: 8   # 60 min = 8 exercices
+        }.get(duration, 6)
+        
+        # Répartir équitablement entre les muscles
+        exercises_per_muscle = max(1, exercise_count // len(muscles))
+        
+        workout = []
+        
+        for muscle in muscles:
+            # Récupérer les exercices disponibles pour ce muscle
+            muscle_exercises = self.db.query(Exercise).filter(
+                Exercise.body_part == muscle
+            ).all()
+            
+            if muscle_exercises:
+                # Sélectionner aléatoirement
+                selected = random.sample(
+                    muscle_exercises, 
+                    min(exercises_per_muscle, len(muscle_exercises))
+                )
+                
+                for exercise in selected:
+                    sets_reps = self._get_sets_reps_for_level(
+                        exercise, 
+                        user_level, 
+                        []
+                    )
+                    
+                    workout.append({
+                        "exercise_id": exercise.id,
+                        "exercise_name": exercise.name_fr,
+                        "sets": sets_reps["sets"],
+                        "reps": sets_reps["reps"],
+                        "rest_time": 90
+                    })
+        
+        return workout
+
     def build_session(self, muscles: List[str], time_budget: int, 
                      user: User, constraints: Dict = None) -> List[Dict]:
         """Construction d'une séance optimisée"""

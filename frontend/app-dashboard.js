@@ -288,6 +288,14 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                 <button class="btn" onclick="showProgramGenerator()" style="flex: 1; max-width: 300px;">
                     📋 Modifier mon programme
                 </button>
+                <button class="btn" onclick="showView('workout')" style="
+                    background: rgba(255, 255, 255, 0.1);
+                    color: white;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                ">
+                    💪 Séance libre
+                </button>
             `}
         </div>
         
