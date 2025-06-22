@@ -2,6 +2,18 @@
 // Ce fichier gère les graphiques avancés de la page stats
 
 import { currentUser } from './app-state.js';
+import { BODY_PART_COLORS } from './app-config.js';
+
+function getColorForMuscle(muscle, opacity = 1) {
+    const baseColor = BODY_PART_COLORS[muscle] || '#94a3b8';
+    if (opacity === 1) return baseColor;
+    
+    // Convertir hex en rgba avec opacité
+    const r = parseInt(baseColor.slice(1, 3), 16);
+    const g = parseInt(baseColor.slice(3, 5), 16);
+    const b = parseInt(baseColor.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
 
 const statsCharts = {};
 
@@ -453,14 +465,16 @@ function createBodyPartSunburst(data, container) {
         .style('font-size', '12px')
         .style('font-weight', '600')
         .text(d => {
-            const percentage = ((d.value / root.value) * 100).toFixed(0);
+            const rootValue = root.value || 1;
+            const percentage = rootValue > 0 ? ((d.value / rootValue) * 100).toFixed(0) : '0';
             return percentage > 5 ? d.data.name : '';
         });
     
     // Tooltip amélioré
     paths.on('mouseover', function(event, d) {
         const totalVolume = root.value;
-        const percentage = ((d.value / totalVolume) * 100).toFixed(1);
+        const totalVolume = root.value || 1; // Éviter division par 0
+        const percentage = totalVolume > 0 ? ((d.value / totalVolume) * 100).toFixed(1) : '0';
         
         const tooltip = d3.select('body').append('div')
             .attr('class', 'sunburst-tooltip')
@@ -488,7 +502,8 @@ function createBodyPartSunburst(data, container) {
         } else {
             // Tooltip pour exercice
             const muscleVolume = d.parent.value;
-            const exercisePercentage = ((d.value / muscleVolume) * 100).toFixed(0);
+            const muscleVolume = d.parent.value || 1; // Éviter division par 0
+            const exercisePercentage = muscleVolume > 0 ? ((d.value / muscleVolume) * 100).toFixed(0) : '0';
             content = `<strong>${d.data.name}</strong><br/>
                       Muscle: ${d.parent.data.name}<br/>
                       Volume: ${Math.round(d.value)}kg<br/>

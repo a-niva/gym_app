@@ -18,7 +18,8 @@ import {
     adaptiveTargets, 
     trajectoryAnalysis,
     currentAdaptiveWorkout,
-    setCurrentWorkout
+    setCurrentWorkout,
+    getCurrentProgram
 } from './app-state.js';
 
 import { showView } from './app-navigation.js';
@@ -581,11 +582,11 @@ function addPredictionCards(predictions) {
     }
 
     // Carte suggestions d'adaptation du programme
-    if (currentProgram) {
+    if (getCurrentProgram()) {
         (async () => {
             try {
                 const response = await fetch(
-                    `/api/programs/${currentProgram.id}/adjustments?user_id=${currentUser.id}`
+                    `/api/programs/${getCurrentProgram().id}/adjustments?user_id=${currentUser.id}`
                 );
                 
                 if (response.ok) {

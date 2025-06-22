@@ -515,7 +515,7 @@ async function createRestPeriod(restData) {
 
 async function saveUserCommitment(userId, commitment) {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/commitment`, {
+        const response = await fetch(`${API_BASE_URL}/users/${userId}/commitment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -536,7 +536,7 @@ async function saveUserCommitment(userId, commitment) {
 
 async function getUserCommitment(userId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/commitment`);
+        const response = await fetch(`${API_BASE_URL}/users/${userId}/commitment`);
         
         if (response.status === 404) {
             return null;
@@ -555,7 +555,7 @@ async function getUserCommitment(userId) {
 
 async function getAdaptiveTargets(userId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/adaptive-targets`);
+        const response = await fetch(`${API_BASE_URL}/users/${userId}/adaptive-targets`);
         
         if (!response.ok) throw new Error('Failed to get adaptive targets');
         
@@ -570,7 +570,7 @@ async function getAdaptiveTargets(userId) {
 
 async function getTrajectoryAnalysis(userId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/trajectory`);
+        const response = await fetch(`${API_BASE_URL}/users/${userId}/trajectory`);
         
         if (!response.ok) throw new Error('Failed to get trajectory');
         
@@ -586,7 +586,7 @@ async function getTrajectoryAnalysis(userId) {
 async function generateAdaptiveWorkout(userId, timeAvailable = 60) {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/users/${userId}/generate-adaptive-workout?time_available=${timeAvailable}`,
+            `${API_BASE_URL}/users/${userId}/generate-adaptive-workout?time_available=${timeAvailable}`,
             {
                 method: 'POST',
                 headers: {
@@ -610,7 +610,7 @@ async function generateAdaptiveWorkout(userId, timeAvailable = 60) {
 async function completeAdaptiveWorkout(workoutId) {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/workouts/${workoutId}/complete-adaptive`,
+            `${API_BASE_URL}/workouts/${workoutId}/complete-adaptive`,
             {
                 method: 'POST',
                 headers: {
@@ -637,7 +637,7 @@ async function completeAdaptiveWorkout(workoutId) {
 async function skipSession(userId, reason = null) {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/users/${userId}/skip-session`,
+            `${API_BASE_URL}/users/${userId}/skip-session`,
             {
                 method: 'POST',
                 headers: {
