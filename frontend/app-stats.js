@@ -472,7 +472,6 @@ function createBodyPartSunburst(data, container) {
     
     // Tooltip amélioré
     paths.on('mouseover', function(event, d) {
-        const totalVolume = root.value;
         const totalVolume = root.value || 1; // Éviter division par 0
         const percentage = totalVolume > 0 ? ((d.value / totalVolume) * 100).toFixed(1) : '0';
         
@@ -501,7 +500,6 @@ function createBodyPartSunburst(data, container) {
             }
         } else {
             // Tooltip pour exercice
-            const muscleVolume = d.parent.value;
             const muscleVolume = d.parent.value || 1; // Éviter division par 0
             const exercisePercentage = muscleVolume > 0 ? ((d.value / muscleVolume) * 100).toFixed(0) : '0';
             content = `<strong>${d.data.name}</strong><br/>
