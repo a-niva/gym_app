@@ -9,7 +9,7 @@ from backend.schemas import UserCreate, WorkoutCreate, SetCreate, ProgramGenerat
 from backend.schemas import UserCommitmentCreate, UserCommitmentResponse, AdaptiveTargetsResponse, TrajectoryAnalysis
 from backend.models import UserCommitment, AdaptiveTargets
 from backend.ml_engine import RecoveryTracker, VolumeOptimizer, SessionBuilder, ProgressionAnalyzer, RealTimeAdapter
-import datetime
+from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
 
