@@ -4,25 +4,25 @@ import { showToast } from './app-ui.js';
 let currentExerciseIndex = 0;
 let guidedWorkoutPlan = null;
 
-// Fonction pour démarrer le mode guidé
-function startGuidedWorkout(adaptiveWorkout) {
+// Point d'entrée unique pour démarrer le mode guidé
+export function startGuidedWorkout(adaptiveWorkout) {
     console.log('🎯 Démarrage mode guidé avec:', adaptiveWorkout);
     
     guidedWorkoutPlan = adaptiveWorkout;
     currentExerciseIndex = 0;
     
-    // Cacher l'interface standard et afficher l'interface guidée
+    // Cacher l'interface standard
     const standardInterface = document.getElementById('exerciseSelection');
     if (standardInterface) {
         standardInterface.style.display = 'none';
     }
     
-    // Créer l'interface guidée
+    // Afficher l'interface guidée
     showGuidedInterface();
 }
 
 // Afficher l'interface de progression guidée
-function showGuidedInterface() {
+export function showGuidedInterface() {
     // Chercher d'abord dans training-view, sinon dans workout
     let container = document.querySelector('#training-view #mainContent');
     if (!container) {
@@ -186,7 +186,7 @@ function showGuidedInterface() {
 }
 
 // Fonction pour commencer l'exercice actuel
-async function startCurrentExercise() {
+export async function startCurrentExercise() {
     if (!guidedWorkoutPlan || currentExerciseIndex >= guidedWorkoutPlan.exercises.length) {
         showToast('Exercice non disponible', 'error');
         return;
@@ -231,7 +231,7 @@ async function startCurrentExercise() {
 }
 
 // Pré-configurer l'interface avec les paramètres guidés
-function preConfigureExerciseInterface(exerciseData) {
+export function preConfigureExerciseInterface(exerciseData) {
     console.log('⚙️ Pré-configuration interface:', exerciseData);
     
     // Afficher les objectifs guidés
@@ -265,7 +265,7 @@ function preConfigureExerciseInterface(exerciseData) {
 }
 
 // Ajouter bouton retour interface guidée
-function addReturnToGuidedButton() {
+export function addReturnToGuidedButton() {
     const exerciseControls = document.querySelector('.exercise-controls');
     if (exerciseControls && !document.getElementById('returnToGuided')) {
         const returnButton = document.createElement('button');
@@ -279,7 +279,7 @@ function addReturnToGuidedButton() {
 }
 
 // Retour à l'interface guidée
-function returnToGuidedInterface() {
+export function returnToGuidedInterface() {
     // Masquer l'interface d'exercice
     const exerciseArea = document.getElementById('exerciseArea');
     if (exerciseArea) {
@@ -290,8 +290,23 @@ function returnToGuidedInterface() {
     showGuidedInterface();
 }
 
-// Navigation avec gestion des exercices terminés
-function nextGuidedExercise() {
+// Navigation simple entre exercices
+export function nextExercise() {
+    if (currentExerciseIndex < guidedWorkoutPlan.exercises.length - 1) {
+        currentExerciseIndex++;
+        showGuidedInterface();
+    }
+}
+
+export function previousExercise() {
+    if (currentExerciseIndex > 0) {
+        currentExerciseIndex--;
+        showGuidedInterface();
+    }
+}
+
+// Navigation avec progression (appelée après fin d'exercice)
+export function nextGuidedExercise() {
     if (currentExerciseIndex < guidedWorkoutPlan.exercises.length - 1) {
         currentExerciseIndex++;
         
@@ -310,7 +325,7 @@ function nextGuidedExercise() {
 }
 
 // Interface de fin de séance guidée
-function showWorkoutCompletion() {
+export function showWorkoutCompletion() {
     const container = document.getElementById('mainContent');
     if (!container) return;
     
@@ -342,42 +357,14 @@ function showWorkoutCompletion() {
     `;
 }
 
-// Navigation entre exercices
-function nextExercise() {
-    if (currentExerciseIndex < guidedWorkoutPlan.exercises.length - 1) {
-        currentExerciseIndex++;
-        showGuidedInterface();
-    }
-}
-
-function previousExercise() {
-    if (currentExerciseIndex > 0) {
-        currentExerciseIndex--;
-        showGuidedInterface();
-    }
-}
-
-// Exports globaux corrects (noms existants)
+// === EXPORTS GLOBAUX (window) ===
 window.startGuidedWorkout = startGuidedWorkout;
-window.nextGuidedExercise = nextGuidedExercise;
-window.returnToGuidedInterface = returnToGuidedInterface;
+window.showGuidedInterface = showGuidedInterface;
+window.startCurrentExercise = startCurrentExercise;
 window.preConfigureExerciseInterface = preConfigureExerciseInterface;
 window.addReturnToGuidedButton = addReturnToGuidedButton;
-window.showWorkoutCompletion = showWorkoutCompletion;
-window.previousExercise = previousExercise;
+window.returnToGuidedInterface = returnToGuidedInterface;
 window.nextExercise = nextExercise;
-window.startCurrentExercise = startCurrentExercise;
-
-export {
-    startGuidedWorkout,
-    showGuidedInterface,
-    startCurrentExercise,
-    nextExercise,
-    previousExercise,
-    nextGuidedExercise,
-    returnToGuidedInterface,
-    preConfigureExerciseInterface,
-    addReturnToGuidedButton,
-    showWorkoutCompletion
-};
-
+window.previousExercise = previousExercise;
+window.nextGuidedExercise = nextGuidedExercise;
+window.showWorkoutCompletion = showWorkoutCompletion;

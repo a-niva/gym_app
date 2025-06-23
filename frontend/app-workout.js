@@ -24,7 +24,6 @@ import {
     clearSessionHistory,
     currentSetNumber
 } from './app-state.js';
-import { showGuidedInterface } from './app-guided-workout.js';
 import { startGuidedWorkout } from './app-guided-workout.js';
 import { showView, showProfileForm } from './app-navigation.js';
 import { showToast } from './app-ui.js';
@@ -39,13 +38,11 @@ import {
     createRestPeriod,
     createSet
 } from './app-api.js';
-
 import { finishExercise } from './app-exercises.js';
-
 import { SYNC_INTERVAL } from './app-config.js';
 
 // ===== DÉMARRAGE D'UNE SÉANCE =====
-async function startWorkout(type) {
+export async function startWorkout(type) {
     console.log(`🚀 Démarrage séance type: ${type}`);
     
     if (!currentUser) {
@@ -119,7 +116,7 @@ async function startWorkout(type) {
 }
 
 // ===== VÉRIFICATION DE SÉANCE ACTIVE =====
-async function checkActiveWorkout() {
+export async function checkActiveWorkout() {
     if (!currentUser) return null;
     
     try {
@@ -181,6 +178,7 @@ async function checkActiveWorkout() {
     } catch (error) {
         console.error('Erreur vérification workout actif:', error);
     }
+    
     // Si on arrive ici, il n'y a pas de session active
     // Nettoyer le localStorage pour éviter des incohérences futures
     localStorage.removeItem('currentWorkout');
@@ -189,7 +187,7 @@ async function checkActiveWorkout() {
 }
 
 // ===== MONITORING DE LA SÉANCE =====
-function startWorkoutMonitoring() {
+export function startWorkoutMonitoring() {
     // Sync toutes les 30 secondes pour gérer Render qui s'endort
     if (workoutCheckInterval) clearInterval(workoutCheckInterval);
     
@@ -210,7 +208,7 @@ function startWorkoutMonitoring() {
 }
 
 // ===== PAUSE DE LA SÉANCE =====
-async function pauseWorkout() {
+export async function pauseWorkout() {
     if (!currentWorkout) return;
     
     const result = await pauseWorkoutAPI(currentWorkout.id);
@@ -232,7 +230,7 @@ async function pauseWorkout() {
 }
 
 // ===== REPRISE DE LA SÉANCE =====
-async function resumeWorkout() {
+export async function resumeWorkout() {
     if (!currentWorkout) return;
     
     const result = await resumeWorkoutAPI(currentWorkout.id);
@@ -250,7 +248,7 @@ async function resumeWorkout() {
 }
 
 // ===== FIN DE LA SÉANCE =====
-async function completeWorkout() {
+export async function completeWorkout() {
     if (!currentWorkout) return;
     
     if (!confirm('Terminer la séance ?')) return;
@@ -275,7 +273,7 @@ async function completeWorkout() {
 }
 
 // ===== ABANDON DE LA SÉANCE =====
-async function abandonWorkout() {
+export async function abandonWorkout() {
     if (!currentWorkout) return;
     
     if (!confirm('Abandonner la séance ? Les données seront perdues.')) return;
@@ -288,7 +286,7 @@ async function abandonWorkout() {
 }
 
 // ===== NETTOYAGE DES DONNÉES =====
-function cleanupWorkout() {
+export function cleanupWorkout() {
     setCurrentWorkout(null);
     localStorage.removeItem('currentWorkout');
     
@@ -322,13 +320,13 @@ function cleanupWorkout() {
     localStorage.removeItem('currentSessionHistory');
 
     // Nettoyer les données de séance guidée
-    localStorage.removeItem('adaptiveWorkoutPlan');
-    localStorage.removeItem('currentGuidedIndex');
-    localStorage.removeItem('guidedExerciseParams');
+    localStorage.removeItem('guidedWorkoutPlan');
+    localStorage.removeItem('guidedWorkoutProgress');
+    localStorage.removeItem('workoutType');
 }
 
 // ===== GESTION DES ACTIONS FATIGUE =====
-function reduceSetsRemaining() {
+export function reduceSetsRemaining() {
     // Réduire le nombre de séries restantes
     if (currentSetNumber > 0) {
         showToast('Programme adapté - Réduction des séries', 'info');
@@ -337,7 +335,7 @@ function reduceSetsRemaining() {
     }
 }
 
-function switchToLighterExercise() {
+export function switchToLighterExercise() {
     // Proposer un exercice plus léger
     dismissFatigueModal();
     
@@ -349,13 +347,13 @@ function switchToLighterExercise() {
     showToast('Sélectionnez un exercice plus adapté', 'info');
 }
 
-function dismissFatigueModal() {
+export function dismissFatigueModal() {
     const modals = document.querySelectorAll('.fatigue-modal');
     modals.forEach(modal => modal.remove());
 }
 
 // ===== SYNCHRONISATION DES DONNÉES EN ATTENTE =====
-async function syncPendingSets() {
+export async function syncPendingSets() {
     const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
     if (pendingSets.length === 0) return;
     
@@ -388,7 +386,7 @@ async function syncPendingSets() {
     }
 }
 
-async function syncInterExerciseRests() {
+export async function syncInterExerciseRests() {
     const pendingRests = JSON.parse(localStorage.getItem('pendingInterExerciseRests') || '[]');
     
     if (pendingRests.length === 0) return;
@@ -404,8 +402,7 @@ async function syncInterExerciseRests() {
 }
 
 // ===== MISE À JOUR DE L'INTERFACE DE TRAINING =====
-// ===== MISE À JOUR DE L'INTERFACE DE TRAINING =====
-function updateTrainingInterface() {
+export function updateTrainingInterface() {
     const container = document.getElementById('workoutInterface');
     if (!container || !currentWorkout) return;
     
@@ -455,19 +452,21 @@ function updateTrainingInterface() {
     const isAdaptiveType = currentWorkout.type === 'adaptive';
     
     if (isAdaptiveType && guidedPlan) {
-        console.log('🎯 Mode adaptatif détecté - Chargement interface guidée');
-        initializeGuidedMode(JSON.parse(guidedPlan));
-    } else if (isAdaptiveType && !guidedPlan) {
-        console.warn('⚠️ Mode adaptatif sans plan - Fallback mode libre');
-        showToast('Plan adaptatif manquant, passage en mode libre', 'warning');
-        initializeFreeMode();
+        console.log('🎯 Mode adaptatif détecté');
+        // Import direct et appel de la fonction
+        import('./app-guided-workout.js').then(module => {
+            module.startGuidedWorkout(JSON.parse(guidedPlan));
+        }).catch(error => {
+            console.error('Erreur chargement mode guidé:', error);
+            showToast('Erreur chargement interface guidée', 'error');
+            initializeFreeMode();
+        });
     } else {
-        console.log('📝 Mode libre standard');
         initializeFreeMode();
     }
 }
 
-// Fonction helper pour le label du type de séance
+// ===== FONCTIONS HELPERS =====
 function getWorkoutTypeLabel() {
     if (!currentWorkout) return 'Inconnue';
     
@@ -479,23 +478,6 @@ function getWorkoutTypeLabel() {
     }
 }
 
-// Initialisation du mode guidé adaptatif
-async function initializeGuidedMode(guidedPlan) {
-    try {
-        // Import dynamique et appel direct
-        const { startGuidedWorkout } = await import('./app-guided-workout.js');
-        
-        // Appeler directement la fonction avec le plan
-        startGuidedWorkout(guidedPlan);
-        
-    } catch (error) {
-        console.error('❌ Erreur initialisation mode guidé:', error);
-        showToast('Erreur chargement mode guidé', 'error');
-        initializeFreeMode(); // Fallback
-    }
-}
-
-// Initialisation du mode libre standard
 function initializeFreeMode() {
     // Charger l'interface de sélection d'exercices standard
     if (typeof window.showExerciseSelector === 'function') {
@@ -516,7 +498,6 @@ function initializeFreeMode() {
     }
 }
 
-// Interface de secours minimale en cas d'erreur
 function showFallbackInterface() {
     const exerciseArea = document.getElementById('exerciseArea');
     if (exerciseArea) {
@@ -533,7 +514,7 @@ function showFallbackInterface() {
 }
 
 // ===== NAVIGATION VERS L'ENTRAINEMENT =====
-async function handleTrainingNavigation() {
+export async function handleTrainingNavigation() {
     if (!currentUser) {
         showToast('Veuillez vous connecter', 'error');
         showProfileForm();
@@ -551,7 +532,7 @@ async function handleTrainingNavigation() {
     }
 }
 
-// ===== EXPORT GLOBAL =====
+// ===== EXPORTS GLOBAUX (window) =====
 window.handleTrainingNavigation = handleTrainingNavigation;
 window.startWorkout = startWorkout;
 window.pauseWorkout = pauseWorkout;
@@ -561,14 +542,3 @@ window.abandonWorkout = abandonWorkout;
 window.reduceSetsRemaining = reduceSetsRemaining;
 window.switchToLighterExercise = switchToLighterExercise;
 window.dismissFatigueModal = dismissFatigueModal;
-
-// Export pour les autres modules
-export {
-    checkActiveWorkout,
-    startWorkoutMonitoring,
-    cleanupWorkout,
-    syncPendingSets,
-    syncInterExerciseRests,
-    updateTrainingInterface,
-    startWorkout
-};
