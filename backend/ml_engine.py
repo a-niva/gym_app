@@ -611,6 +611,7 @@ class FitnessMLEngine:
             logger.info(f"=== DIAGNOSTIC ÉQUIPEMENT ===")
             logger.info(f"Config utilisateur brute: {user.equipment_config}")
             logger.info(f"Équipement mappé disponible: {available_equipment}")
+            all_exercises = self.db.query(Exercise).all()
             
             # Debug détaillé des premiers exercices
             logger.info(f"=== DIAGNOSTIC DÉTAILLÉ ÉQUIPEMENT ===")
@@ -623,7 +624,6 @@ class FitnessMLEngine:
                     logger.info(f"  Compatible: {len(matches) > 0}")
 
             # Récupérer TOUS les exercices et filtrer manuellement
-            all_exercises = self.db.query(Exercise).all()
             logger.info(f"Nombre total d'exercices dans la DB: {len(all_exercises)}")
 
             # Filtrer les exercices
