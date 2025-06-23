@@ -20,6 +20,7 @@ import {
     setLastExerciseEndTime,
     interExerciseRestTime,
     setInterExerciseRestTime,
+    getCurrentAdaptiveWorkout,
     clearSessionHistory,
     currentSetNumber
 } from './app-state.js';
@@ -51,7 +52,17 @@ async function startWorkout(type) {
         }
         return;
     }
-        
+    
+    // Pour les séances adaptatives, récupérer les données
+    let adaptiveData = null;
+    if (type === 'adaptive') {
+        adaptiveData = getCurrentAdaptiveWorkout();
+        if (!adaptiveData) {
+            showToast('Aucune séance adaptative sélectionnée', 'error');
+            return;
+        }
+    }
+    
     // Vérifier s'il y a déjà une session active
     const activeWorkout = await checkActiveWorkout();
     if (activeWorkout) {
@@ -65,6 +76,12 @@ async function startWorkout(type) {
     const workout = await createWorkout(currentUser.id, type);
     
     if (workout) {
+        setCurrentWorkout(workout);
+        
+        // Si c'est une séance adaptive, stocker les exercices prévus
+        if (type === 'adaptive' && adaptiveData) {
+            localStorage.setItem('adaptiveWorkoutPlan', JSON.stringify(adaptiveData));
+        }
         setCurrentWorkout(workout);
         // Nettoyer les données de la séance précédente
         localStorage.removeItem('lastCompletedSetId');

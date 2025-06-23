@@ -15,15 +15,17 @@ import {
 } from './app-api.js';
 import { 
     currentUser,
+    currentWorkout,
+    getCurrentAdaptiveWorkout,
+    setCurrentAdaptiveWorkout,
     userCommitment,
     adaptiveTargets, 
     trajectoryAnalysis,
     currentAdaptiveWorkout,
     setCurrentWorkout,
     getCurrentProgram,
-    setCurrentProgram,
-    setCurrentAdaptiveWorkout
-} from './app-state.js';
+    setCurrentProgram
+    } from './app-state.js';
 
 import { showView } from './app-navigation.js';
 import { showProgramGenerator } from './app-program-generator.js';
@@ -882,18 +884,20 @@ function showAdaptiveWorkoutModal(workout) {
                 gap: 1rem;
                 margin-top: 2rem;
             ">
-                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()" style="
-                    flex: 1;
-                    padding: 1rem;
-                    background: rgba(255, 255, 255, 0.1);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    color: white;
-                    border-radius: 8px;
-                    cursor: pointer;
-                ">
-                    Modifier
+                <button class="btn btn-secondary" 
+                    onclick="window.modifyAdaptiveWorkout()" 
+                    style="
+                        flex: 1;
+                        padding: 1rem;
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        color: white;
+                        border-radius: 8px;
+                        cursor: pointer;
+                    ">
+                    Régénérer
                 </button>
-                <button class="btn btn-primary" onclick="startAdaptiveWorkout()" style="
+                <button class="btn btn-primary" onclick="window.startAdaptiveWorkout()" style="
                     flex: 1;
                     padding: 1rem;
                     background: var(--primary);
@@ -1237,6 +1241,49 @@ async function showProgramAdjustments() {
     showToast('Analysez votre programme actuel depuis cette page', 'info');
 }
 
+async function modifyAdaptiveWorkout() {
+    const adaptiveWorkout = getCurrentAdaptiveWorkout();
+    if (!adaptiveWorkout) {
+        showToast('Aucune séance à modifier', 'error');
+        return;
+    }
+    
+    // Fermer le modal actuel
+    document.querySelector('.modal-overlay')?.remove();
+    
+    // Déterminer le temps initialement sélectionné
+    const estimatedTime = adaptiveWorkout.estimated_duration;
+    const timeAvailable = Math.round(estimatedTime / 0.8); // Inverser le calcul du backend
+    
+    showLoadingOverlay('Génération d\'une nouvelle séance...');
+    
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/adaptive-workout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                time_available: timeAvailable,
+                exclude_muscles: adaptiveWorkout.muscles // Optionnel : exclure les muscles déjà sélectionnés
+            })
+        });
+        
+        hideLoadingOverlay();
+        
+        if (!response.ok) {
+            throw new Error('Erreur lors de la régénération');
+        }
+        
+        const newWorkout = await response.json();
+        setCurrentAdaptiveWorkout(newWorkout);
+        showAdaptiveWorkoutModal(newWorkout);
+        
+    } catch (error) {
+        hideLoadingOverlay();
+        showToast('Erreur lors de la modification', 'error');
+    }
+}
+
+
 // ===== EXPORT GLOBAL =====
 window.clearWorkoutHistory = clearWorkoutHistory;
 window.loadDashboard = loadDashboard;
@@ -1244,6 +1291,8 @@ window.refreshDashboard = refreshDashboard;
 window.showDetailedStats = showDetailedStats;
 window.showProgramAdjustments = showProgramAdjustments;
 window.generateQuickWorkout = generateQuickWorkout;
+window.startAdaptiveWorkout = startAdaptiveWorkout;
+window.modifyAdaptiveWorkout = modifyAdaptiveWorkout;
 
 // Export pour les autres modules
 export {

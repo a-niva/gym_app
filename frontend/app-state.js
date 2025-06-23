@@ -63,6 +63,17 @@ let adaptiveTargets = [];
 let trajectoryAnalysis = null;
 let currentAdaptiveWorkout = null;
 
+
+export function setCurrentAdaptiveWorkout(workout) {
+    currentAdaptiveWorkout = workout;
+}
+
+export function getCurrentAdaptiveWorkout() {
+    return currentAdaptiveWorkout;
+}
+
+export { currentAdaptiveWorkout };
+
 // État des suggestions ML
 export let lastCompletedSetId = parseInt(localStorage.getItem('lastCompletedSetId')) || null;
 export let userPrograms = [];
