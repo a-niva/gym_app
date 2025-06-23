@@ -1,4 +1,5 @@
 # ===== backend/ml_engine.py =====
+from logging import config
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
@@ -202,10 +203,37 @@ class FitnessMLEngine:
                     goal_mult *= self.GOAL_ADJUSTMENTS[goal]["weight"]
             goal_mult = goal_mult ** (1/len(user.goals))  # Moyenne géométrique
         
-        # Si haltères, ajuster au poids disponible le plus proche
-        if "halteres" in exercise.equipment and user.equipment_config and user.equipment_config.get("halteres", {}).get("weights"):
+        # Si dumbbells, ajuster au poids disponible le plus proche
+        if "dumbbells" in exercise.equipment and user.equipment_config:
             target_weight = base_weight * experience_mult * goal_mult / 2
-            available_weights = sorted(user.equipment_config["halteres"]["weights"])
+            
+            # Vérifier dumbbells fixes d'abord
+            dumbbell_config = user.equipment_config.get("dumbbells", {})
+            if dumbbell_config.get("available", False) and dumbbell_config.get("weights"):
+                available_weights = sorted(dumbbell_config["weights"])
+                closest_weight = min(available_weights, key=lambda x: abs(x - target_weight))
+                return closest_weight * 2  # Paire d'haltères
+            
+            # Sinon, utiliser équivalence barres courtes + disques
+            barres_courtes = user.equipment_config.get("barres", {}).get("courte", {})
+            disques_config = user.equipment_config.get("disques", {})
+            if (barres_courtes.get("available", False) and 
+                barres_courtes.get("count", 0) >= 2 and 
+                disques_config.get("available", False)):
+                
+                # Calculer avec barre courte + disques disponibles
+                barre_weight = barres_courtes.get("weight", 2.5)
+                available_plates = []
+                for weight_str, count in disques_config.get("weights", {}).items():
+                    weight = float(weight_str)
+                    # On peut utiliser jusqu'à la moitié des disques (pour faire une paire)
+                    available_plates.extend([weight] * (count // 2))
+                
+                if available_plates:
+                    # Trouver la combinaison optimale pour se rapprocher de target_weight - barre_weight
+                    target_plate_weight = max(0, target_weight - barre_weight)
+                    closest_plate = min(available_plates, key=lambda x: abs(x - target_plate_weight))
+                    return (barre_weight + closest_plate) * 2  # Paire
             
             # Trouver le poids le plus proche
             if available_weights:
@@ -542,14 +570,15 @@ class FitnessMLEngine:
                     elif barre_type == "ez":
                         available_equipment.append("barre_ez")
                     
-                    # Équivalence barre courte = haltères (si paire)
-                    if barre_type == "courte" and barre_config.get("count", 0) >= 2:
-                        logger.info("Barres courtes en paire détectées - ajout équivalence dumbbells")
-                        available_equipment.append("halteres")
+                    # Équivalence barre courte = dumbbells (si paire + disques)
+                    if (barre_type == "courte" and barre_config.get("count", 0) >= 2 and 
+                        config.get("disques", {}).get("available", False)):
+                        logger.info("Barres courtes en paire + disques détectées - ajout équivalence dumbbells")
+                        available_equipment.append("dumbbells")
 
             # Haltères
-            if config.get("halteres", {}).get("available", False):
-                available_equipment.append("halteres")
+            if config.get("dumbbells", {}).get("available", False):
+                available_equipment.append("dumbbells")
                 
             # Poids du corps toujours disponible
             available_equipment.append("poids_du_corps")
@@ -558,9 +587,9 @@ class FitnessMLEngine:
             if config.get("banc", {}).get("available", False):
                 available_equipment.append("banc_plat")
                 if config["banc"].get("inclinable_haut", False):
-                    available_equipment.append("bench_inclinable")
+                    available_equipment.append("banc_inclinable")
                 if config["banc"].get("inclinable_bas", False):
-                    available_equipment.append("bench_declinable")
+                    available_equipment.append("banc_declinable")
 
             # Élastiques
             if config.get("elastiques", {}).get("available", False):
@@ -579,15 +608,19 @@ class FitnessMLEngine:
                                 "machine_shrug", "dip_bars"]
             # Ces équipements ne sont pas dans la config utilisateur, donc toujours False
 
-            # Élastiques - vérifier le nom correct
-            if config.get("elastiques", {}).get("available", False):
-                available_equipment.append("elastiques")
-                # Ajouter aussi l'alias si nécessaire
-                available_equipment.append("elastiques")
-
             logger.info(f"=== DIAGNOSTIC ÉQUIPEMENT ===")
             logger.info(f"Config utilisateur brute: {user.equipment_config}")
             logger.info(f"Équipement mappé disponible: {available_equipment}")
+            
+            # Debug détaillé des premiers exercices
+            logger.info(f"=== DIAGNOSTIC DÉTAILLÉ ÉQUIPEMENT ===")
+            for i, exercise in enumerate(all_exercises[:10]):
+                logger.info(f"Exercice {i+1}: {exercise.name_fr}")
+                logger.info(f"  Équipement requis: {exercise.equipment}")
+                if exercise.equipment:
+                    matches = [eq for eq in exercise.equipment if eq in available_equipment]
+                    logger.info(f"  Équipements correspondants: {matches}")
+                    logger.info(f"  Compatible: {len(matches) > 0}")
 
             # Récupérer TOUS les exercices et filtrer manuellement
             all_exercises = self.db.query(Exercise).all()

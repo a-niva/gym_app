@@ -131,21 +131,32 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
             elif barre_type == "ez":
                 available_equipment.append("barre_ez")
             
-            # Équivalence barre courte = haltères
-            if barre_type == "courte" and barre_config.get("count", 0) >= 2:
-                available_equipment.append("halteres")
-    
-    # Haltères
-    if config.get("halteres", {}).get("available", False):
-        available_equipment.append("halteres")
+            # Équivalence barre courte = dumbbells (si paire + disques)
+            if (barre_type == "courte" and barre_config.get("count", 0) >= 2 and 
+                config.get("disques", {}).get("available", False)):
+                logger.info("Barres courtes en paire + disques détectées - ajout équivalence dumbbells")
+                available_equipment.append("dumbbells")
+        
+    # Dumbbells (haltères fixes)
+    if config.get("dumbbells", {}).get("available", False):
+        available_equipment.append("dumbbells")
+
+    # Équivalence : 2 barres courtes + disques = dumbbells
+    barres_courtes = config.get("barres", {}).get("courte", {})
+    has_disques = config.get("disques", {}).get("available", False)
+    if (barres_courtes.get("available", False) and 
+        barres_courtes.get("count", 0) >= 2 and 
+        has_disques):
+        available_equipment.append("dumbbells")  # Équivalence fonctionnelle
+        logger.info("Équivalence détectée: 2 barres courtes + disques = dumbbells disponibles")
     
     # Banc
     if config.get("banc", {}).get("available", False):
         available_equipment.append("banc_plat")
         if config["banc"].get("inclinable_haut", False):
-            available_equipment.append("bench_inclinable")
+            available_equipment.append("banc_inclinable")
         if config["banc"].get("inclinable_bas", False):
-            available_equipment.append("bench_declinable")
+            available_equipment.append("banc_declinable")
     
     # Élastiques
     if config.get("elastiques", {}).get("available", False):

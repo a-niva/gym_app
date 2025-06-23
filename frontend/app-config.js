@@ -7,7 +7,7 @@ export const EXERCISE_CATEGORIES = {
     BODYWEIGHT_PURE: ['poids_du_corps'],  // Pompes, tractions...
     BODYWEIGHT_WEIGHTED: ['poids_du_corps', 'lest_possible'],  // Peut ajouter du lest
     TIME_BASED: ['gainage', 'planche', 'isometric'],  // En secondes
-    WEIGHTED: ['halteres', 'barbell', 'kettlebell', 'poulies', 'machine']  // Avec poids
+    WEIGHTED: ['dumbbells', 'barre_olympique', 'barre_ez', 'kettlebell', 'poulies', 'machine']  // Avec poids
 };
 
 // Détection du type d'exercice basée sur le nom
@@ -22,19 +22,23 @@ export const REST_TARGET_TIME = 60; // 60 secondes de repos par défaut
 
 // Noms d'équipement en français
 export const EQUIPMENT_NAMES = {
-    'halteres': 'Haltères',
-    'barbell': 'Barres & Disques',
+    'dumbbells': 'Haltères fixes',
+    'barre_olympique': 'Barre olympique',
+    'barre_ez': 'Barre EZ',
+    'disques': 'Disques',
     'elastiques': 'Élastiques',
-    'bench': 'Banc',
+    'banc_plat': 'Banc plat',
+    'banc_inclinable': 'Banc inclinable',
+    'banc_declinable': 'Banc déclinable',
     'barre_traction': 'Barre de traction',
     'kettlebell': 'Kettlebells'
 };
 
 // Icônes SVG pour l'équipement
 export const EQUIPMENT_ICONS = {
-    'halteres': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/></svg>',
-    'barbell': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8m-4-8v16"/></svg>',
-    'elastiques': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+    'dumbbells': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/></svg>',
+    'barre_olympique': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8m-4-8v16"/></svg>',
+    'disques': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',    'elastiques': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
     'bench': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18m-9-9v18"/></svg>',
     'barre_traction': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14m-7 0v18"/></svg>',
     'kettlebell': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>'

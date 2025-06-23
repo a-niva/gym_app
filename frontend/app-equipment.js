@@ -79,7 +79,7 @@ function calculateAvailableWeights(exercise) {
     }
     
     // Haltères (dumbbells classiques OU haltères courtes + disques)
-    if (exercise.equipment.includes('halteres')) {
+    if (exercise.equipment.includes('dumbbells')) {
         // Option 1: Haltères fixes classiques
         if (config.dumbbells?.weights?.length > 0) {
             config.dumbbells.weights.forEach(w => {
@@ -364,18 +364,24 @@ export function filterExercisesByEquipment(exercises) {
         
         // Vérifier si on a AU MOINS UN équipement requis (logique OR)
         return required.some(eq => {
-            // Si l'exercice demande des haltères et qu'on a des barres courtes, c'est OK
-            if (eq === 'halteres' && hasShortBarbells) {
+            // Si l'exercice demande des dumbbells et qu'on a des barres courtes, c'est OK
+            if (eq === 'dumbbells' && hasShortBarbells) {
                 return true;
             }
-            
+
             // Sinon, vérifier normalement
             switch(eq) {
                 case 'poids_du_corps':
                     return true;
-                case 'halteres':
-                    return config.dumbbells?.available && 
+                case 'dumbbells':
+                    // Vérifier dumbbells fixes OU équivalence barres courtes + disques
+                    const hasDumbbells = config.dumbbells?.available && 
                         config.dumbbells?.weights?.length > 0;
+                    const hasEquivalence = config.barres?.courte?.available && 
+                        config.barres?.courte?.count >= 2 && 
+                        config.disques?.available && 
+                        Object.keys(config.disques?.weights || {}).length > 0;
+                    return hasDumbbells || hasEquivalence;
                 case 'barre_olympique':
                     return config.barres?.olympique?.available || 
                         config.barres?.courte?.available;
@@ -383,9 +389,9 @@ export function filterExercisesByEquipment(exercises) {
                     return config.barres?.ez?.available;
                 case 'banc_plat':
                     return config.banc?.available;
-                case 'bench_inclinable':
+                case 'banc_inclinable':
                     return config.banc?.available && config.banc?.inclinable_haut;
-                case 'bench_declinable':
+                case 'banc_declinable':
                     return config.banc?.available && config.banc?.inclinable_bas;
                 case 'poulies':
                     return false; // Pas dans la config actuelle
