@@ -572,6 +572,18 @@ class FitnessMLEngine:
                 available_equipment.append("kettlebell")
             if autres.get("barre_traction", {}).get("available", False):
                 available_equipment.append("pull_up_bar")  # Mapping correct
+            # Ajouter après les autres mappings d'équipement
+            # Machines (non disponibles dans la config actuelle)
+            machine_equipment = ["cables", "machine_convergente", "machine_pectoraux", 
+                                "machine_developpe", "machine_epaules", "machine_oiseau",
+                                "machine_shrug", "dip_bars"]
+            # Ces équipements ne sont pas dans la config utilisateur, donc toujours False
+
+            # Élastiques - vérifier le nom correct
+            if config.get("elastiques", {}).get("available", False):
+                available_equipment.append("elastiques")
+                # Ajouter aussi l'alias si nécessaire
+                available_equipment.append("resistance_bands")
 
             logger.info(f"=== DIAGNOSTIC ÉQUIPEMENT ===")
             logger.info(f"Config utilisateur brute: {user.equipment_config}")
@@ -714,7 +726,7 @@ class FitnessMLEngine:
         # Mapping des groupes musculaires
         muscle_mapping = {
             "Pectoraux/Triceps": ["Pectoraux", "Triceps"],
-            "Dos/Biceps": ["Trapèzes", "Biceps"],  # "Dos" → "Trapèzes"
+            "Dos/Biceps": ["Trapèzes", "Latéraux", "Rhomboïdes", "Biceps"],  # Dos complet
             "Jambes": ["Quadriceps", "Fessiers"],  # Retirer "Ischio-jambiers" et "Mollets" 
             "Épaules/Abdos": ["Deltoïdes", "Abdominaux"],  # "Épaules" → "Deltoïdes"
             "Haut du corps": ["Pectoraux", "Trapèzes", "Deltoïdes"],

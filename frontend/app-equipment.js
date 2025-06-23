@@ -390,6 +390,7 @@ export function filterExercisesByEquipment(exercises) {
                 case 'cables':
                     return false; // Pas dans la config actuelle
                 case 'elastiques':
+                case 'resistance_bands':  // Alias pour compatibilité
                     return config.elastiques?.available && 
                         config.elastiques?.bands?.length > 0;
                 case 'barre_traction':

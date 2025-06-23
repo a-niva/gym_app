@@ -150,6 +150,9 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
     # Élastiques
     if config.get("elastiques", {}).get("available", False):
         available_equipment.append("elastiques")
+    # Note: Les équipements suivants dans exercises.json ne sont pas supportés :
+    # - cables, dip_bars, machine_*, squat_rack
+    # Ces exercices seront automatiquement exclus du filtrage
     
     # Autres équipements avec mapping correct
     autres = config.get("autres", {})
