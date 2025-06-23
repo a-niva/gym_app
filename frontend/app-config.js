@@ -49,7 +49,6 @@ export const BODY_PART_COLORS = {
     'Abdominaux': '#f97316',     // Orange
     'Jambes': '#eab308',     // Jaune
     'Dos': '#ef4444',       // Cyan
-    'Bras': '#8b5cf6'     // Indigo
 };
 
 // Mapping des couleurs hexadécimales vers des noms
