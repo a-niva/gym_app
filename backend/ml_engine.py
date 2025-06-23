@@ -661,7 +661,7 @@ class FitnessMLEngine:
                         logger.info(f"Tentative d'ajout de l'exercice: {exercise.name_fr} (ID: {exercise.id})")
                         try:
                             # Obtenir les recommandations pour cet exercice
-                            sets_reps = self._get_sets_reps_for_level(
+                            sets_reps = self.get_sets_reps_for_level(
                                 exercise, 
                                 user.experience_level,
                                 user.goals
