@@ -29,19 +29,40 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         # Check if exercises already imported
-        if db.query(Exercise).count() == 0:
-            # Import from JSON
-            json_path = os.path.join(os.path.dirname(__file__), "..", "exercises.json")
-            if os.path.exists(json_path):
-                with open(json_path, "r", encoding="utf-8") as f:
-                    exercises_data = json.load(f)
-                    for ex_data in exercises_data:
-                        exercise = Exercise(**ex_data)
-                        db.add(exercise)
-                    db.commit()
-                    print(f"Imported {len(exercises_data)} exercises")
-            else:
-                print(f"Warning: {json_path} not found. Please add your exercises.json file.")
+        try:
+            exercise_count = db.query(Exercise).count()
+            logger.info(f"Exercises in DB: {exercise_count}")
+            
+            if exercise_count == 0:
+                json_path = os.path.join(os.path.dirname(__file__), "..", "exercises.json")
+                logger.info(f"Looking for exercises.json at: {json_path}")
+                
+                if os.path.exists(json_path):
+                    logger.info("exercises.json found, importing...")
+                    with open(json_path, "r", encoding="utf-8") as f:
+                        exercises_data = json.load(f)
+                        logger.info(f"Loaded {len(exercises_data)} exercises from JSON")
+                        
+                        for i, ex_data in enumerate(exercises_data):
+                            try:
+                                exercise = Exercise(**ex_data)
+                                db.add(exercise)
+                                if i < 3:  # Log premiers exercices
+                                    logger.info(f"Added exercise: {ex_data.get('name_fr', 'Unknown')}")
+                            except Exception as ex_error:
+                                logger.error(f"Error adding exercise {i}: {ex_error}")
+                                
+                        db.commit()
+                        logger.info(f"Successfully imported {len(exercises_data)} exercises")
+                else:
+                    logger.error(f"exercises.json NOT FOUND at: {json_path}")
+                    # Lister les fichiers du répertoire parent
+                    parent_dir = os.path.dirname(os.path.dirname(__file__))
+                    files = os.listdir(parent_dir)
+                    logger.error(f"Files in parent directory: {files}")
+        except Exception as import_error:
+            logger.error(f"Critical error during exercises import: {import_error}")
+            raise
     finally:
         db.close()
     
