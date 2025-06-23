@@ -668,9 +668,11 @@ async function generateQuickWorkout() {
         }
         
         const workout = await response.json();
+        console.log('Workout reçu:', workout); // Vérifier la structure
         setCurrentAdaptiveWorkout(workout);
-        
-        // Afficher la séance générée
+
+        // Vérifier que la fonction est bien appelée
+        console.log('Affichage du modal...');
         showAdaptiveWorkoutModal(workout);
         
     } catch (error) {
@@ -800,22 +802,71 @@ async function showTimeSelectionModal() {
 function showAdaptiveWorkoutModal(workout) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
+    
+    // Ajouter les styles directement sur l'élément
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    `;
+    
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 600px;">
-            <h3>Votre séance adaptative 🎯</h3>
-            <p class="workout-duration">Durée estimée : ${Math.round(workout.estimated_duration)} minutes</p>
+        <div class="modal-content" style="
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        ">
+            <h3 style="margin-bottom: 1rem;">Votre séance adaptative 🎯</h3>
+            <p class="workout-duration" style="margin-bottom: 1.5rem; color: var(--gray);">
+                Durée estimée : ${Math.round(workout.estimated_duration)} minutes
+            </p>
             
-            <div class="workout-muscles">
+            <div class="workout-muscles" style="margin-bottom: 2rem;">
                 <strong>Muscles ciblés :</strong> ${workout.muscles.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(', ')}
             </div>
             
-            <div class="exercises-list">
+            <div class="exercises-list" style="margin-bottom: 2rem;">
                 ${workout.exercises.map((ex, idx) => `
-                    <div class="exercise-item">
-                        <span class="exercise-number">${idx + 1}</span>
-                        <div class="exercise-details">
-                            <h4>${ex.exercise.name_fr}</h4>
-                            <div class="exercise-specs">
+                    <div class="exercise-item" style="
+                        display: flex;
+                        align-items: center;
+                        padding: 1rem;
+                        margin-bottom: 0.5rem;
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 8px;
+                    ">
+                        <span class="exercise-number" style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            width: 30px;
+                            height: 30px;
+                            background: var(--primary);
+                            color: white;
+                            border-radius: 50%;
+                            margin-right: 1rem;
+                            font-weight: bold;
+                        ">${idx + 1}</span>
+                        <div class="exercise-details" style="flex: 1;">
+                            <h4 style="margin: 0 0 0.5rem 0;">${ex.exercise_name || ex.exercise.name_fr}</h4>
+                            <div class="exercise-specs" style="
+                                display: flex;
+                                gap: 1rem;
+                                font-size: 0.9rem;
+                                color: var(--gray);
+                            ">
                                 <span>${ex.sets} séries</span>
                                 <span>${ex.target_reps} reps</span>
                                 <span>${ex.rest_time}s repos</span>
@@ -826,11 +877,32 @@ function showAdaptiveWorkoutModal(workout) {
                 `).join('')}
             </div>
             
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+            <div class="modal-actions" style="
+                display: flex;
+                gap: 1rem;
+                margin-top: 2rem;
+            ">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()" style="
+                    flex: 1;
+                    padding: 1rem;
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: white;
+                    border-radius: 8px;
+                    cursor: pointer;
+                ">
                     Modifier
                 </button>
-                <button class="btn" onclick="startAdaptiveWorkout()">
+                <button class="btn btn-primary" onclick="startAdaptiveWorkout()" style="
+                    flex: 1;
+                    padding: 1rem;
+                    background: var(--primary);
+                    border: none;
+                    color: white;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">
                     Commencer la séance
                 </button>
             </div>
