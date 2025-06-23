@@ -1041,9 +1041,34 @@ class SessionBuilder:
         logger.info(f"Total exercises in DB: {len(all_exercises)}")
         
         # Filtrer par muscle
-        muscle_exercises = [e for e in all_exercises if e.body_part in muscles]
-        logger.info(f"Exercises for selected muscles: {len(muscle_exercises)}")
+        # Mapping anglais -> français pour les muscles
+        muscle_name_mapping = {
+            "chest": "Pectoraux",
+            "back": "Trapèzes",  
+            "shoulders": "Deltoïdes",
+            "legs": "Quadriceps",  # ou ["Quadriceps", "Fessiers"] si vous voulez les deux
+            "arms": "Biceps",  # ou ["Biceps", "Triceps"] si vous voulez les deux
+            "core": "Abdominaux"
+        }
 
+        # Convertir les noms anglais en français
+        french_muscles = []
+        for muscle in muscles:
+            if muscle in muscle_name_mapping:
+                mapped = muscle_name_mapping[muscle]
+                if isinstance(mapped, list):
+                    french_muscles.extend(mapped)
+                else:
+                    french_muscles.append(mapped)
+            else:
+                french_muscles.append(muscle)  # Garder tel quel si pas de mapping
+
+        logger.info(f"Muscles demandés (anglais): {muscles}")
+        logger.info(f"Muscles convertis (français): {french_muscles}")
+
+        # Filtrer par muscle avec les noms français
+        muscle_exercises = [e for e in all_exercises if e.body_part in french_muscles]
+        logger.info(f"Exercises for selected muscles: {len(muscle_exercises)}")
 
         session = []
         time_used = 0
