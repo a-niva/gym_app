@@ -20,3 +20,4 @@ consolidated_content.txt
 bdd_shower.ipynb
 enrich_with_ollama_fixed.py
 exercises_old.json
+.eslintrc.json

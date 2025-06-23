@@ -317,7 +317,7 @@ function nextExercise() {
     }
 }
 
-function previousExercise() {
+export function previousExercise() {
     if (currentExerciseIndex > 0) {
         currentExerciseIndex--;
         showGuidedInterface();
