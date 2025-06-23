@@ -490,7 +490,7 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                 text-align: center;
             ">
                 <div class="stat-value" id="lastWorkout">
-                    ${trajectory.last_workout ? new Date(trajectory.last_workout).toLocaleDateString('fr-FR') : 'Jamais'}
+                    ${getLastWorkoutDate()}
                 </div>
                 <div class="stat-label" style="font-size: 0.85rem; color: var(--gray);">Dernière séance</div>
             </div>
@@ -848,31 +848,21 @@ function showAdaptiveWorkoutModal(workout) {
 
 // Fonction pour démarrer la séance adaptative
 async function startAdaptiveWorkout() {
-    if (!currentAdaptiveWorkout) return;
-    
-    // Créer la séance
-    const workoutData = {
-        user_id: currentUser.id,
-        type: "adaptive"
-    };
+    const adaptiveWorkout = getCurrentAdaptiveWorkout();
+    if (!adaptiveWorkout) {
+        showToast('Aucune séance adaptative sélectionnée', 'error');
+        return;
+    }
     
     try {
-        const response = await fetch(`/api/workouts/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(workoutData)
-        });
+        // Importer dynamiquement pour éviter les dépendances circulaires
+        const { startWorkout } = await import('./app-workout.js');
         
-        const workout = await response.json();
-        setCurrentWorkout(workout);
-        
-        // Préparer les exercices pour la vue workout
-        // CORRIGÉ : Utiliser currentAdaptiveWorkout au lieu de state
-        // qui n'est pas défini dans ce module
-        
-        // Fermer le modal et afficher la vue workout
+        // Fermer le modal
         document.querySelector('.modal-overlay')?.remove();
-        showView('workout');
+        
+        // Démarrer la séance avec le type adaptive
+        await startWorkout('adaptive');
         
         showToast('Séance démarrée !', 'success');
         
@@ -1157,6 +1147,15 @@ async function clearWorkoutHistory() {
     }
 }
 
+async function getLastWorkoutDate() {
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/stats`);
+        const stats = await response.json();
+        return stats.last_workout || 'Jamais';
+    } catch {
+        return 'Jamais';
+    }
+}
 
 // ===== AFFICHER LES AJUSTEMENTS DE PROGRAMME =====
 async function showProgramAdjustments() {

@@ -1251,7 +1251,7 @@ class ProgressionAnalyzer:
                 adherence = min(1.0, target.current_volume / target.target_volume)
                 adherences.append(adherence)
         
-        return sum(adherences) / len(adherences) if adherences else 1.0
+        return sum(adherences) / len(adherences) if adherences else 0.5  # 50% par défaut
     
     def _analyze_muscle_balance(self, volume_by_muscle: Dict[str, int]) -> Dict[str, float]:
         """Analyse l'équilibre entre les groupes musculaires"""

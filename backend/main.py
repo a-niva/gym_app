@@ -317,9 +317,46 @@ def complete_workout(workout_id: int, db: Session = Depends(get_db)):
     from backend.ml_engine import RealTimeAdapter
     adapter = RealTimeAdapter(db)
     adapter.handle_session_completed(workout)
+    # Mettre à jour les volumes adaptatifs
+    update_adaptive_targets_volume(workout.user_id, db)
     db.commit()
     
     return {"status": "completed", "completed_at": workout.completed_at}
+
+def update_adaptive_targets_volume(user_id: int, db: Session):
+    """Met à jour le volume actuel des AdaptiveTargets"""
+    from datetime import datetime, timedelta
+    from backend.models import AdaptiveTargets
+    
+    # Calculer le volume des 7 derniers jours
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    
+    # Requête pour obtenir le volume par muscle
+    volume_by_muscle = db.query(
+        Exercise.body_part,
+        func.sum(Set.actual_reps * Set.weight).label('volume')
+    ).join(
+        Set, Set.exercise_id == Exercise.id
+    ).join(
+        Workout, Workout.id == Set.workout_id
+    ).filter(
+        Workout.user_id == user_id,
+        Workout.completed_at >= seven_days_ago,
+        Workout.status == "completed"
+    ).group_by(Exercise.body_part).all()
+    
+    # Mettre à jour chaque target
+    for muscle, volume in volume_by_muscle:
+        target = db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user_id,
+            AdaptiveTargets.muscle_group == muscle
+        ).first()
+        
+        if target:
+            target.current_volume = float(volume or 0)
+            target.last_trained = datetime.utcnow()
+    
+    db.commit()
 
 @app.put("/api/workouts/{workout_id}/pause")
 def pause_workout(workout_id: int, db: Session = Depends(get_db)):
