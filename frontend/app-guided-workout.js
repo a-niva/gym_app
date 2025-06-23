@@ -3,6 +3,11 @@ import { showToast } from './app-ui.js';
 
 let currentExerciseIndex = 0;
 let guidedWorkoutPlan = null;
+// Ensure functions are available globally for onclick handlers
+window.nextExercise = nextExercise;
+window.previousExercise = previousExercise;
+window.startCurrentExercise = startCurrentExercise;
+
 
 // Point d'entrée unique pour démarrer le mode guidé
 export function startGuidedWorkout(adaptiveWorkout) {
@@ -23,6 +28,13 @@ export function startGuidedWorkout(adaptiveWorkout) {
 
 // Afficher l'interface de progression guidée
 export function showGuidedInterface() {
+    // Ensure we're in the training view
+    if (!document.getElementById('training-view')) {
+        console.error('❌ Vue training non active');
+        showView('training');
+        setTimeout(() => showGuidedInterface(), 100);
+        return;
+    }
     // Chercher d'abord dans training-view, sinon dans workout
     let container = document.querySelector('#training-view #mainContent');
     if (!container) {
@@ -357,14 +369,16 @@ export function showWorkoutCompletion() {
     `;
 }
 
-// === EXPORTS GLOBAUX (window) ===
-window.startGuidedWorkout = startGuidedWorkout;
-window.showGuidedInterface = showGuidedInterface;
-window.startCurrentExercise = startCurrentExercise;
-window.preConfigureExerciseInterface = preConfigureExerciseInterface;
-window.addReturnToGuidedButton = addReturnToGuidedButton;
-window.returnToGuidedInterface = returnToGuidedInterface;
-window.nextExercise = nextExercise;
-window.previousExercise = previousExercise;
-window.nextGuidedExercise = nextGuidedExercise;
-window.showWorkoutCompletion = showWorkoutCompletion;
+// ES6 Module exports
+export {
+    startGuidedWorkout,
+    showGuidedInterface,
+    startCurrentExercise,
+    preConfigureExerciseInterface,
+    addReturnToGuidedButton,
+    returnToGuidedInterface,
+    nextExercise,
+    previousExercise,
+    nextGuidedExercise,
+    showWorkoutCompletion
+};

@@ -455,7 +455,12 @@ export function updateTrainingInterface() {
         console.log('🎯 Mode adaptatif détecté');
         // Import direct et appel de la fonction
         import('./app-guided-workout.js').then(module => {
-            module.startGuidedWorkout(JSON.parse(guidedPlan));
+            if (module && module.startGuidedWorkout) {
+                module.startGuidedWorkout(JSON.parse(guidedPlan));
+            } else {
+                console.error('Module guidé incomplet');
+                initializeFreeMode();
+            }
         }).catch(error => {
             console.error('Erreur chargement mode guidé:', error);
             showToast('Erreur chargement interface guidée', 'error');
