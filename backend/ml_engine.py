@@ -1078,6 +1078,24 @@ class SessionBuilder:
                     })
                     time_used += exercise_time
         
+        # Si aucun exercice n'a pu être ajouté, ajouter au moins un exercice de base
+        if not session and muscles:
+            # Fallback : prendre n'importe quel exercice disponible
+            fallback_exercise = self.db.query(Exercise).filter(
+                Exercise.body_part.in_(muscles)
+            ).first()
+            
+            if fallback_exercise:
+                session.append({
+                    "exercise_id": fallback_exercise.id,
+                    "exercise_name": fallback_exercise.name_fr,
+                    "body_part": fallback_exercise.body_part,
+                    "sets": 3,
+                    "target_reps": 10,
+                    "rest_time": 90,
+                    "predicted_weight": 0
+                })
+                
         return session
     
     def _check_equipment_availability(self, exercise: Exercise, user: User) -> bool:

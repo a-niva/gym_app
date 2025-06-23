@@ -211,10 +211,21 @@ async def generate_adaptive_workout(
         user=user
     )
     
+    # Calculer la durée avec vérification
+    if workout and len(workout) > 0:
+        # Temps par série (30s) + repos, multiplié par le nombre de séries
+        estimated_duration = sum(
+            ex.get("sets", 3) * (30 + ex.get("rest_time", 90)) 
+            for ex in workout
+        ) / 60
+    else:
+        # Estimation par défaut basée sur le temps demandé
+        estimated_duration = time_available * 0.8  # 80% du temps disponible
+        
     return {
         "muscles": selected_muscles,
         "exercises": workout,
-        "estimated_duration": int(sum(ex["sets"] * (30 + ex["rest_time"]) for ex in workout) / 60),  # Forcer int
+        "estimated_duration": int(max(1, estimated_duration)),  # Au minimum 1 minute
         "readiness_scores": {m: round(s, 2) for m, s in muscle_readiness.items()}
     }
 
