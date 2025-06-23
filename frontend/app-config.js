@@ -44,14 +44,10 @@ export const EQUIPMENT_ICONS = {
 export const BODY_PART_COLORS = {
     'Pectoraux': '#3b82f6',      // Bleu
     'Bras': '#8b5cf6',         // Violet
-    'Bras': '#8b5cf6',        // Mauve
     'Deltoïdes': '#ec4899',      // Rose
     'Dos': '#ef4444',            // Rouge
     'Abdominaux': '#f97316',     // Orange
     'Jambes': '#eab308',     // Jaune
-    'Jambes': '#eab308', // Vert clair
-    'Jambes': '#eab308',        // Vert
-    'Jambes': '#eab308',       // Turquoise
     'Dos': '#ef4444',       // Cyan
     'Bras': '#8b5cf6'     // Indigo
 };

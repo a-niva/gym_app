@@ -581,8 +581,8 @@ async function generateProgram(event) {
                             font-weight: 600;
                             cursor: pointer;
                             transition: all 0.3s ease;
-                        " onmouseover="this.style.Dosground='rgba(255, 255, 255, 0.15)'" 
-                        onmouseout="this.style.Dosground='rgba(255, 255, 255, 0.1)'">
+                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'" 
+                        onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
                             💾 Sauvegarder pour plus tard
                         </button>
                     </div>
@@ -723,8 +723,8 @@ function displayProgram(program) {
                     background: rgba(59, 130, 246, 0.1);
                     transition: background 0.2s;
                     user-select: none;
-                " onmouseover="this.style.Dosground='rgba(59, 130, 246, 0.2)'" 
-                   onmouseout="this.style.Dosground='rgba(59, 130, 246, 0.1)'">
+                " onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" 
+                   onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'">
                     <span class="week-toggle" id="toggle-week-${week}" style="
                         font-size: 0.8rem;
                         transition: transform 0.2s;
