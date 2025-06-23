@@ -1069,11 +1069,12 @@ class SessionBuilder:
                 if time_used + exercise_time <= time_budget:
                     session.append({
                         "exercise_id": selected.id,
-                        "exercise": selected,
-                        "sets": sets,
-                        "target_reps": reps,
-                        "rest_time": rest,
-                        "predicted_weight": weight
+                        "exercise_name": selected.name_fr,  # Le frontend attend exercise_name
+                        "body_part": selected.body_part,    # Ajouter pour le frontend
+                        "sets": int(sets),                  # Forcer int
+                        "target_reps": int(reps),           # Forcer int
+                        "suggested_weight": float(weight),   # Forcer float
+                        "rest_time": int(rest)              # Forcer int
                     })
                     time_used += exercise_time
         

@@ -160,6 +160,14 @@ function showClassicDashboard(container, hasProgram) {
 
 // ===== DASHBOARD ADAPTATIF =====
 async function showAdaptiveDashboard(container, commitment, hasProgram) {
+    // Initialiser les targets si nécessaire
+    try {
+        await fetch(`/api/users/${currentUser.id}/init-adaptive-targets`, {
+            method: 'POST'
+        });
+    } catch (error) {
+        console.log('Targets déjà initialisés ou erreur:', error);
+    }
     // Charger les données adaptatives
     const [trajectory, targets] = await Promise.all([
         getTrajectoryAnalysis(currentUser.id),
@@ -360,15 +368,6 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                                 font-weight: 500;
                             ">
                                 ${muscleName}
-                            </div>
-                            
-                            <!-- Indicateur de statut -->
-                            <div style="
-                                margin-top: 0.25rem;
-                                font-size: 0.75rem;
-                                color: ${percentage >= 80 ? '#10b981' : percentage >= 50 ? '#f59e0b' : '#ef4444'};
-                            ">
-                                ${percentage >= 80 ? '✓ Optimal' : percentage >= 50 ? '• Moyen' : '• À travailler'}
                             </div>
                         </div>
                     `;

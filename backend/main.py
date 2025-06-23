@@ -313,6 +313,10 @@ def complete_workout(workout_id: int, db: Session = Depends(get_db)):
     
     workout.completed_at = datetime.utcnow()
     workout.status = "completed"
+    # Mettre à jour les adaptive targets
+    from backend.ml_engine import RealTimeAdapter
+    adapter = RealTimeAdapter(db)
+    adapter.handle_session_completed(workout)
     db.commit()
     
     return {"status": "completed", "completed_at": workout.completed_at}
