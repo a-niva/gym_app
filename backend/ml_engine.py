@@ -915,21 +915,42 @@ class FitnessMLEngine:
         }
     
     def calculate_weight_for_exercise(self, user: User, exercise: Exercise, reps: int) -> float:
-        """Calcule le poids pour un exercice donné (méthode manquante)"""
+        """Calcule le poids pour un exercice donné avec gestion d'erreur robuste"""
         try:
+            # Validation des paramètres d'entrée
+            if not user or not exercise:
+                logger.warning("Paramètres invalides pour calculate_weight_for_exercise")
+                return 20.0
+                
             prediction = self.predict_next_session_performance(user, exercise, 3, reps)
-            return float(prediction.get("predicted_weight", 20.0))
+            
+            # Validation du résultat
+            if not prediction or "predicted_weight" not in prediction:
+                logger.warning(f"Prédiction invalide pour {exercise.name_fr}")
+                return self.calculate_starting_weight(user, exercise)
+                
+            weight = float(prediction.get("predicted_weight", 20.0))
+            
+            # Validation du poids (doit être positif et raisonnable)
+            if weight <= 0 or weight > 500:
+                logger.warning(f"Poids invalide {weight} pour {exercise.name_fr}")
+                return self.calculate_starting_weight(user, exercise)
+                
+            return weight
+            
         except Exception as e:
-            logger.error(f"Erreur calcul poids pour {exercise.name_fr}: {e}")
-            # Poids par défaut selon niveau
-            defaults = {
-                "débutant": 10.0, "intermédiaire": 20.0, "avancé": 30.0,
-                "élite": 40.0, "extrême": 50.0
-            }
-            return defaults.get(user.experience_level, 20.0)
-
-
-
+            logger.error(f"Exception dans calculate_weight_for_exercise pour {exercise.name_fr}: {e}")
+            # Fallback vers calculate_starting_weight
+            try:
+                return self.calculate_starting_weight(user, exercise)
+            except Exception as e2:
+                logger.error(f"Erreur fallback calculate_starting_weight: {e2}")
+                # Dernier recours : poids par défaut selon niveau
+                defaults = {
+                    "débutant": 10.0, "intermédiaire": 20.0, "avancé": 30.0,
+                    "élite": 40.0, "extrême": 50.0
+                }
+                return defaults.get(user.experience_level, 20.0)
 
 # ========== NOUVEAUX MODULES PHASE 2.2 ==========
 
@@ -1101,10 +1122,12 @@ class SessionBuilder:
                 else:
                     rest = 120
                 
-                # Calculer le poids suggéré via ML existant
-                weight = self.ml_engine.calculate_weight_for_exercise(
-                    user, selected, reps
-                )
+                # Calculer le poids suggéré via ML existant avec gestion d'erreur
+                try:
+                    weight = self.ml_engine.calculate_weight_for_exercise(user, selected, reps)
+                except Exception as e:
+                    logger.error(f"Erreur calcul poids pour {selected.name_fr}: {e}")
+                    weight = 20.0  # Poids par défaut sécurisé
                 
                 exercise_time = sets * (30 + rest)  # 30s par série + repos
                 
@@ -1128,6 +1151,12 @@ class SessionBuilder:
             ).first()
             
             if fallback_exercise:
+                try:
+                    fallback_weight = self.ml_engine.calculate_weight_for_exercise(user, fallback_exercise, 10)
+                except Exception as e:
+                    logger.error(f"Erreur calcul poids fallback pour {fallback_exercise.name_fr}: {e}")
+                    fallback_weight = 20.0
+                
                 session.append({
                     "exercise_id": fallback_exercise.id,
                     "exercise_name": fallback_exercise.name_fr,
@@ -1135,7 +1164,7 @@ class SessionBuilder:
                     "sets": 3,
                     "target_reps": 10,
                     "rest_time": 90,
-                    "suggested_weight": float(weight)
+                    "suggested_weight": float(fallback_weight)
                 })
                 
         return session

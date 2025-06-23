@@ -512,14 +512,47 @@ async function generateProgram(event) {
         
         const data = await response.json();
         const program = data.program;
-        
+
+        // ✅ VALIDATION EN PREMIER - AVANT displayProgram()
+        if (!program || program.length === 0) {
+            const totalExercises = program ? program.reduce((total, workout) => 
+                total + (workout.exercises ? workout.exercises.length : 0), 0
+            ) : 0;
+            
+            resultDiv.innerHTML = `
+                <div style="
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                    border-radius: 12px;
+                    padding: 2rem;
+                    text-align: center;
+                    margin-top: 2rem;
+                ">
+                    <h3 style="color: #ef4444; margin-bottom: 1rem;">
+                        ⚠️ Programme incomplet
+                    </h3>
+                    <p style="color: rgba(255, 255, 255, 0.7);">
+                        ${totalExercises === 0 ? 
+                            'Aucun exercice trouvé avec votre équipement actuel.' : 
+                            `Seulement ${totalExercises} exercice(s) trouvé(s).`
+                        }
+                    </p>
+                    <button onclick="showView('equipment')" class="btn btn-primary" style="margin-top: 1rem;">
+                        🔧 Modifier mon équipement
+                    </button>
+                </div>
+            `;
+            return; // ❌ STOP ICI - displayProgram() ne sera PAS appelé
+        }
+
+        // ✅ Seulement si le programme est valide :
         // Afficher le programme
         displayProgram(program);
-        
+
         // Transformer et sauvegarder le programme
         const programToSave = transformProgramForSaving(program, weeks, frequency);
         const savedProgram = await saveProgram(programToSave);
-        
+                
         if (savedProgram) {
             currentGeneratedProgramId = savedProgram.id;
             // Ajouter les boutons d'action stylés
