@@ -385,8 +385,6 @@ export {
     preConfigureExerciseInterface,
     addReturnToGuidedButton,
     returnToGuidedInterface,
-    nextExercise,
-    previousExercise,
     nextGuidedExercise,
     showWorkoutCompletion
 };
