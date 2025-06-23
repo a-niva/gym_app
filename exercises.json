@@ -6,7 +6,7 @@
       "machine_convergente"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -56,7 +56,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -71,7 +71,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -83,7 +83,7 @@
       "bench_plat"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -133,7 +133,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -148,7 +148,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -160,7 +160,7 @@
       "bench_plat"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -210,7 +210,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -225,7 +225,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -236,7 +236,7 @@
       "machine_convergente"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -286,7 +286,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -301,7 +301,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -313,7 +313,7 @@
       "bench_declinable"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -364,7 +364,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -379,7 +379,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -391,7 +391,7 @@
       "bench_declinable"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -442,7 +442,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -457,7 +457,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -469,7 +469,7 @@
       "bench_inclinable"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -520,7 +520,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -535,7 +535,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -547,7 +547,7 @@
       "bench_inclinable"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -598,7 +598,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -613,7 +613,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -624,7 +624,7 @@
       "machine_convergente"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -674,7 +674,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -689,7 +689,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -700,7 +700,7 @@
       "dip_bars"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -748,7 +748,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -763,7 +763,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -776,7 +776,7 @@
       "bench_plat"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -827,7 +827,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -842,7 +842,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -855,7 +855,7 @@
       "bench_plat"
     ],
     "level": "basic",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -906,7 +906,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -921,7 +921,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -933,7 +933,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -983,7 +983,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -998,7 +998,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1010,7 +1010,7 @@
       "bench_declinable"
     ],
     "level": "advanced",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1061,7 +1061,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1076,7 +1076,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1088,7 +1088,7 @@
       "bench_inclinable"
     ],
     "level": "advanced",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1139,7 +1139,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1154,7 +1154,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1165,7 +1165,7 @@
       "machine_pectoraux"
     ],
     "level": "advanced",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1215,7 +1215,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1230,7 +1230,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1241,7 +1241,7 @@
       "bodyweight"
     ],
     "level": "advanced",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1289,7 +1289,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1304,7 +1304,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1315,7 +1315,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1363,7 +1363,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1378,7 +1378,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1389,7 +1389,7 @@
       "cables"
     ],
     "level": "finition",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1437,7 +1437,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1452,7 +1452,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1463,7 +1463,7 @@
       "cables"
     ],
     "level": "finition",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1511,7 +1511,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1526,7 +1526,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1537,7 +1537,7 @@
       "machine_developpe"
     ],
     "level": "finition",
-    "body_part": "Pectoraux",
+    "body_part": "chest",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1587,7 +1587,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "pectoraux"
+        "chest"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1602,7 +1602,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1613,7 +1613,7 @@
       "abmat"
     ],
     "level": "basic",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1661,7 +1661,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1676,7 +1676,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1687,7 +1687,7 @@
       "cables"
     ],
     "level": "basic",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1735,7 +1735,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1750,7 +1750,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1761,7 +1761,7 @@
       "abmat"
     ],
     "level": "basic",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1809,7 +1809,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1824,7 +1824,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1835,7 +1835,7 @@
       "barre_traction"
     ],
     "level": "basic",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1885,7 +1885,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1909,7 +1909,7 @@
       "banc_lombaires"
     ],
     "level": "basic",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1957,7 +1957,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -1972,7 +1972,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -1983,7 +1983,7 @@
       "bodyweight"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2031,7 +2031,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2046,7 +2046,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2057,7 +2057,7 @@
       "machine_abdos"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2107,7 +2107,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2122,7 +2122,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2133,7 +2133,7 @@
       "swiss_ball"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2181,7 +2181,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2196,7 +2196,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2207,7 +2207,7 @@
       "bodyweight"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2255,7 +2255,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2270,7 +2270,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2281,7 +2281,7 @@
       "bodyweight"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2329,7 +2329,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2344,7 +2344,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2355,7 +2355,7 @@
       "abmat"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2403,7 +2403,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2418,7 +2418,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2429,7 +2429,7 @@
       "swiss_ball"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2477,7 +2477,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2492,7 +2492,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2503,7 +2503,7 @@
       "barre_traction"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2553,7 +2553,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2568,7 +2568,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2579,7 +2579,7 @@
       "machine_rotation"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2629,7 +2629,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2644,7 +2644,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2655,7 +2655,7 @@
       "bodyweight"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2703,7 +2703,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2718,7 +2718,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2729,7 +2729,7 @@
       "bodyweight"
     ],
     "level": "finition",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2777,7 +2777,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2792,7 +2792,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2803,7 +2803,7 @@
       "bench_plat"
     ],
     "level": "finition",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2851,7 +2851,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2866,7 +2866,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2877,7 +2877,7 @@
       "dumbbells"
     ],
     "level": "finition",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2927,7 +2927,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -2942,7 +2942,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -2953,7 +2953,7 @@
       "bodyweight"
     ],
     "level": "finition",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3001,7 +3001,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3016,7 +3016,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3027,7 +3027,7 @@
       "bodyweight"
     ],
     "level": "finition",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3075,7 +3075,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3090,7 +3090,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3101,7 +3101,7 @@
       "balai"
     ],
     "level": "finition",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3149,7 +3149,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3164,7 +3164,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3175,7 +3175,7 @@
       "machine_hack_squat"
     ],
     "level": "basic",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3225,7 +3225,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3240,7 +3240,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3251,7 +3251,7 @@
       "machine_jambes"
     ],
     "level": "basic",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3301,7 +3301,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3316,7 +3316,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3327,7 +3327,7 @@
       "machine_jambes"
     ],
     "level": "basic",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3377,7 +3377,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3392,7 +3392,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3403,7 +3403,7 @@
       "machine_jambes"
     ],
     "level": "basic",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3453,7 +3453,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3468,7 +3468,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3480,7 +3480,7 @@
       "squat_rack"
     ],
     "level": "basic",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3530,7 +3530,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3545,7 +3545,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3557,7 +3557,7 @@
       "squat_rack"
     ],
     "level": "basic",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3607,7 +3607,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3622,7 +3622,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3634,7 +3634,7 @@
       "squat_rack"
     ],
     "level": "basic",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3684,7 +3684,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3699,7 +3699,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "genou"
+      "knee"
     ],
     "can_superset_with": []
   },
@@ -3710,7 +3710,7 @@
       "barbell_standard"
     ],
     "level": "advanced",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3760,7 +3760,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3775,7 +3775,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3786,7 +3786,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3836,7 +3836,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3851,7 +3851,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3862,7 +3862,7 @@
       "barbell_standard"
     ],
     "level": "advanced",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3912,7 +3912,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -3927,7 +3927,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -3940,7 +3940,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3991,7 +3991,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4015,7 +4015,7 @@
       "ceinture_lest"
     ],
     "level": "advanced",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4063,7 +4063,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4078,7 +4078,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4089,7 +4089,7 @@
       "machine_squat"
     ],
     "level": "advanced",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4139,7 +4139,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4154,7 +4154,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "genou"
+      "knee"
     ]
   },
   {
@@ -4165,7 +4165,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4215,7 +4215,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4230,7 +4230,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4242,7 +4242,7 @@
       "dumbbells"
     ],
     "level": "finition",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4293,7 +4293,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4318,7 +4318,7 @@
       "dumbbells"
     ],
     "level": "finition",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4369,7 +4369,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4384,7 +4384,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4395,7 +4395,7 @@
       "bodyweight"
     ],
     "level": "finition",
-    "body_part": "Quadriceps",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4443,7 +4443,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "quadriceps"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4458,7 +4458,7 @@
     },
     "recovery_hours": 72,
     "injury_risk_zones": [
-      "genou"
+      "knee"
     ],
     "can_superset_with": []
   },
@@ -4470,7 +4470,7 @@
       "squat_rack"
     ],
     "level": "basic",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4520,7 +4520,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4535,7 +4535,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4546,7 +4546,7 @@
       "dumbbells"
     ],
     "level": "basic",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4596,7 +4596,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "détoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4611,7 +4611,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4622,7 +4622,7 @@
       "machine_épaules"
     ],
     "level": "basic",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4672,7 +4672,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4687,7 +4687,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4699,7 +4699,7 @@
       "bench_plat"
     ],
     "level": "basic",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4749,7 +4749,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4764,7 +4764,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4776,7 +4776,7 @@
       "bench_plat"
     ],
     "level": "basic",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4826,7 +4826,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4841,7 +4841,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4852,7 +4852,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4902,7 +4902,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4917,7 +4917,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -4928,7 +4928,7 @@
       "barbell_standard"
     ],
     "level": "advanced",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4979,7 +4979,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -4994,7 +4994,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5005,7 +5005,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5055,7 +5055,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5070,7 +5070,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5081,7 +5081,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5131,7 +5131,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5146,7 +5146,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5157,7 +5157,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5207,7 +5207,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5222,7 +5222,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5234,7 +5234,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5284,7 +5284,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5299,7 +5299,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5310,7 +5310,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5358,7 +5358,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5373,7 +5373,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5384,7 +5384,7 @@
       "cables"
     ],
     "level": "finition",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5434,7 +5434,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5449,7 +5449,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5460,7 +5460,7 @@
       "machine_oiseau"
     ],
     "level": "finition",
-    "body_part": "Deltoïdes",
+    "body_part": "shoulders",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5510,7 +5510,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "deltoïdes"
+        "shoulders"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5534,7 +5534,7 @@
       "barbell_standard"
     ],
     "level": "basic",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5584,7 +5584,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5608,7 +5608,7 @@
       "barbell_ez"
     ],
     "level": "basic",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5658,7 +5658,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5673,7 +5673,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5684,7 +5684,7 @@
       "dumbbells"
     ],
     "level": "basic",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5734,7 +5734,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5749,7 +5749,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5761,7 +5761,7 @@
       "bench_inclinable"
     ],
     "level": "basic",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5812,7 +5812,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5827,7 +5827,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5838,7 +5838,7 @@
       "dumbbells"
     ],
     "level": "basic",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5888,7 +5888,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5903,7 +5903,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5914,7 +5914,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5962,7 +5962,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -5977,7 +5977,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -5988,7 +5988,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6036,7 +6036,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6051,7 +6051,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6063,7 +6063,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6113,7 +6113,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6138,7 +6138,7 @@
       "banc_preacher"
     ],
     "level": "advanced",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6188,7 +6188,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6203,7 +6203,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6215,7 +6215,7 @@
       "banc_preacher"
     ],
     "level": "advanced",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6265,7 +6265,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6280,7 +6280,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6292,7 +6292,7 @@
       "banc_preacher"
     ],
     "level": "advanced",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6342,7 +6342,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6357,7 +6357,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6368,7 +6368,7 @@
       "machine_biceps"
     ],
     "level": "finition",
-    "body_part": "Biceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6418,7 +6418,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "biceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6433,7 +6433,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6444,7 +6444,7 @@
       "barbell_standard"
     ],
     "level": "advanced",
-    "body_part": "Avants-Bras",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6494,7 +6494,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "avants-bras"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6509,7 +6509,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6520,7 +6520,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Avants-Bras",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6570,7 +6570,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "avants-bras"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6585,7 +6585,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6597,7 +6597,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Avants-Bras",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6647,7 +6647,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "avants-bras"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6662,7 +6662,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6674,7 +6674,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Avants-Bras",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6724,7 +6724,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "avants-bras"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6739,7 +6739,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6750,7 +6750,7 @@
       "cables"
     ],
     "level": "finition",
-    "body_part": "Avants-Bras",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6798,7 +6798,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "avants-bras"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6813,7 +6813,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6824,7 +6824,7 @@
       "machine_poignets"
     ],
     "level": "finition",
-    "body_part": "Avants-Bras",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6874,7 +6874,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "avants-bras"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6889,7 +6889,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6901,7 +6901,7 @@
       "barbell_standard"
     ],
     "level": "basic",
-    "body_part": "Trapèzes",
+    "body_part": "back",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6952,7 +6952,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "trapèzes"
+        "back"
       ],
       "secondary": [],
       "stabilizers": [
@@ -6967,7 +6967,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -6978,7 +6978,7 @@
       "barbell_standard"
     ],
     "level": "basic",
-    "body_part": "Trapèzes",
+    "body_part": "back",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7028,7 +7028,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "trapèzes"
+        "back"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7043,7 +7043,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7054,7 +7054,7 @@
       "dumbbells"
     ],
     "level": "basic",
-    "body_part": "Trapèzes",
+    "body_part": "back",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7104,7 +7104,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "trapèzes"
+        "back"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7119,7 +7119,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7130,7 +7130,7 @@
       "machine_shrug"
     ],
     "level": "basic",
-    "body_part": "Trapèzes",
+    "body_part": "back",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7180,7 +7180,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "trapèzes"
+        "back"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7195,7 +7195,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7206,7 +7206,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Trapèzes",
+    "body_part": "back",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7254,7 +7254,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "trapèzes"
+        "back"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7269,7 +7269,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7280,7 +7280,7 @@
       "barbell_standard"
     ],
     "level": "advanced",
-    "body_part": "Trapèzes",
+    "body_part": "back",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7330,7 +7330,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "trapèzes"
+        "back"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7345,7 +7345,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7356,7 +7356,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Trapèzes",
+    "body_part": "back",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7406,7 +7406,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "trapèzes"
+        "back"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7421,7 +7421,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7432,7 +7432,7 @@
       "cables"
     ],
     "level": "finition",
-    "body_part": "Trapèzes",
+    "body_part": "back",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7480,7 +7480,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "trapèzes"
+        "back"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7495,7 +7495,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7508,7 +7508,7 @@
       "bench_plat"
     ],
     "level": "basic",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7559,7 +7559,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7574,7 +7574,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7585,7 +7585,7 @@
       "dip_bars"
     ],
     "level": "basic",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7633,7 +7633,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7648,7 +7648,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7659,7 +7659,7 @@
       "cables"
     ],
     "level": "basic",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7707,7 +7707,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7722,7 +7722,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7734,7 +7734,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7784,7 +7784,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7799,7 +7799,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7810,7 +7810,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7860,7 +7860,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7875,7 +7875,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7887,7 +7887,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7937,7 +7937,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -7952,7 +7952,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -7963,7 +7963,7 @@
       "machine_triceps"
     ],
     "level": "advanced",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8013,7 +8013,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8038,7 +8038,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8088,7 +8088,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8103,7 +8103,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8115,7 +8115,7 @@
       "corde_triceps"
     ],
     "level": "finition",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8163,7 +8163,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8178,7 +8178,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8189,7 +8189,7 @@
       "cables"
     ],
     "level": "finition",
-    "body_part": "Triceps",
+    "body_part": "arms",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8237,7 +8237,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "triceps"
+        "arms"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8252,7 +8252,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8264,7 +8264,7 @@
       "tapis"
     ],
     "level": "basic",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8312,7 +8312,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8327,7 +8327,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8338,7 +8338,7 @@
       "machine_crunch"
     ],
     "level": "basic",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8388,7 +8388,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8403,7 +8403,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8414,7 +8414,7 @@
       "barre_traction"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8464,7 +8464,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8479,7 +8479,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8490,7 +8490,7 @@
       "bench_plat"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8538,7 +8538,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8553,7 +8553,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8564,7 +8564,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8612,7 +8612,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8627,7 +8627,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8640,7 +8640,7 @@
       "medicine_ball"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8688,7 +8688,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8703,7 +8703,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8715,7 +8715,7 @@
       "tapis"
     ],
     "level": "basic",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8763,7 +8763,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8778,7 +8778,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8790,7 +8790,7 @@
       "tapis"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8838,7 +8838,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8853,7 +8853,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8864,7 +8864,7 @@
       "roue_abdos"
     ],
     "level": "advanced",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8912,7 +8912,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -8927,7 +8927,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -8939,7 +8939,7 @@
       "tapis"
     ],
     "level": "finition",
-    "body_part": "Abdominaux",
+    "body_part": "core",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8987,7 +8987,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "abdominaux"
+        "core"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9002,7 +9002,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9014,7 +9014,7 @@
       "tapis"
     ],
     "level": "basic",
-    "body_part": "Fessiers",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9062,7 +9062,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "fessiers"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9077,7 +9077,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9089,7 +9089,7 @@
       "bench_plat"
     ],
     "level": "basic",
-    "body_part": "Fessiers",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9139,7 +9139,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "fessiers"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9154,7 +9154,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9165,7 +9165,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Fessiers",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9215,7 +9215,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "fessiers"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9239,7 +9239,7 @@
       "machine_abduction"
     ],
     "level": "advanced",
-    "body_part": "Fessiers",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9289,7 +9289,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "fessiers"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9304,7 +9304,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9315,7 +9315,7 @@
       "machine_adduction"
     ],
     "level": "advanced",
-    "body_part": "Fessiers",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9365,7 +9365,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "fessiers"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9380,7 +9380,7 @@
     },
     "recovery_hours": 24,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9391,7 +9391,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Fessiers",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9439,7 +9439,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "fessiers"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9454,7 +9454,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9466,7 +9466,7 @@
       "bench_plat"
     ],
     "level": "finition",
-    "body_part": "Fessiers",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9516,7 +9516,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "fessiers"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9531,7 +9531,7 @@
     },
     "recovery_hours": 36,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9542,7 +9542,7 @@
       "machine_mollets_debout"
     ],
     "level": "basic",
-    "body_part": "Mollets",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9592,7 +9592,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "mollets"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9607,7 +9607,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9618,7 +9618,7 @@
       "machine_mollets_assis"
     ],
     "level": "basic",
-    "body_part": "Mollets",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9668,7 +9668,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "mollets"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9692,7 +9692,7 @@
       "machine_jambes"
     ],
     "level": "basic",
-    "body_part": "Mollets",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9742,7 +9742,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "mollets"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9757,7 +9757,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9768,7 +9768,7 @@
       "dumbbells"
     ],
     "level": "advanced",
-    "body_part": "Mollets",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9818,7 +9818,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "mollets"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9833,7 +9833,7 @@
     },
     "recovery_hours": 48,
     "injury_risk_zones": [
-      "épaule"
+      "shoulder"
     ],
     "can_superset_with": []
   },
@@ -9844,7 +9844,7 @@
       "cables"
     ],
     "level": "advanced",
-    "body_part": "Mollets",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9892,7 +9892,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "mollets"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [
@@ -9916,7 +9916,7 @@
       "corde_sauter"
     ],
     "level": "finition",
-    "body_part": "Mollets",
+    "body_part": "legs",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9964,7 +9964,7 @@
     },
     "muscle_groups": {
       "primary": [
-        "mollets"
+        "legs"
       ],
       "secondary": [],
       "stabilizers": [

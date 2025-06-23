@@ -725,14 +725,14 @@ class FitnessMLEngine:
         
         # Mapping des groupes musculaires
         muscle_mapping = {
-            "Pectoraux/Triceps": ["Pectoraux", "Triceps"],
+            "Pectoraux/Triceps": ["chest", "arms"],
             "Dos/Biceps": ["Trapèzes", "Latéraux", "Rhomboïdes", "Biceps"],  # Dos complet
-            "Jambes": ["Quadriceps", "Fessiers"],  # Retirer "Ischio-jambiers" et "Mollets" 
-            "Épaules/Abdos": ["Deltoïdes", "Abdominaux"],  # "Épaules" → "Deltoïdes"
-            "Haut du corps": ["Pectoraux", "Trapèzes", "Deltoïdes"],
-            "Bas du corps": ["Quadriceps", "Fessiers"],
-            "Full body": ["Pectoraux", "Trapèzes", "Quadriceps", "Deltoïdes"],
-            "Bras": ["Biceps", "Triceps", "Avants-Bras"],
+            "Jambes": ["legs"],  # Retirer "Ischio-jambiers" et "Mollets" 
+            "Épaules/Abdos": ["shoulders", "core"],  # "Épaules" → "Deltoïdes"
+            "Haut du corps": ["chest", "back", "shoulders"],
+            "Bas du corps": ["legs"],
+            "Full body": ["chest", "back", "legs", "shoulders"],
+            "Bras": ["arms"],
         }
         
         target_parts = muscle_mapping.get(muscle_group, [muscle_group])
@@ -767,7 +767,7 @@ class FitnessMLEngine:
                 isolation = [ex for ex in part_exercises if ex.level in ["isolation", "finition"]]
                 
                 # Sélection selon le type de muscle
-                if part in ["Pectoraux", "Dos", "Quadriceps"]:
+                if part in ["chest", "back", "legs"]:
                     # Gros muscles : privilégier les composés
                     if compound:
                         selected.extend(compound[:min(2, exercises_per_part)])
@@ -1053,33 +1053,8 @@ class SessionBuilder:
         logger.info(f"Total exercises in DB: {len(all_exercises)}")
         
         # Filtrer par muscle
-        # Mapping anglais -> français pour les muscles
-        muscle_name_mapping = {
-            "chest": "Pectoraux",
-            "back": "Trapèzes",  
-            "shoulders": "Deltoïdes",
-            "legs": "Quadriceps",  # ou ["Quadriceps", "Fessiers"] si vous voulez les deux
-            "arms": "Biceps",  # ou ["Biceps", "Triceps"] si vous voulez les deux
-            "core": "Abdominaux"
-        }
-
-        # Convertir les noms anglais en français
-        french_muscles = []
-        for muscle in muscles:
-            if muscle in muscle_name_mapping:
-                mapped = muscle_name_mapping[muscle]
-                if isinstance(mapped, list):
-                    french_muscles.extend(mapped)
-                else:
-                    french_muscles.append(mapped)
-            else:
-                french_muscles.append(muscle)  # Garder tel quel si pas de mapping
-
-        logger.info(f"Muscles demandés (anglais): {muscles}")
-        logger.info(f"Muscles convertis (français): {french_muscles}")
-
-        # Filtrer par muscle avec les noms français
-        muscle_exercises = [e for e in all_exercises if e.body_part in french_muscles]
+        # Plus besoin de mapping, tout est en anglais maintenant
+        muscle_exercises = [e for e in all_exercises if e.body_part in muscles]
         logger.info(f"Exercises for selected muscles: {len(muscle_exercises)}")
 
         session = []

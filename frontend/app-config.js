@@ -42,18 +42,18 @@ export const EQUIPMENT_ICONS = {
 
 // Couleurs des groupes musculaires
 export const BODY_PART_COLORS = {
-    'Pectoraux': '#3b82f6',      // Bleu
-    'Biceps': '#8b5cf6',         // Violet
-    'Triceps': '#a855f7',        // Mauve
-    'Deltoïdes': '#ec4899',      // Rose
-    'Dos': '#ef4444',            // Rouge
-    'Abdominaux': '#f97316',     // Orange
-    'Quadriceps': '#eab308',     // Jaune
-    'Ischio-jambiers': '#84cc16', // Vert clair
-    'Mollets': '#22c55e',        // Vert
-    'Fessiers': '#14b8a6',       // Turquoise
-    'Trapèzes': '#06b6d4',       // Cyan
-    'Avants-Bras': '#6366f1'     // Indigo
+    'chest': '#3b82f6',      // Bleu
+    'arms': '#8b5cf6',         // Violet
+    'arms': '#8b5cf6',        // Mauve
+    'shoulders': '#ec4899',      // Rose
+    'back': '#ef4444',            // Rouge
+    'core': '#f97316',     // Orange
+    'legs': '#eab308',     // Jaune
+    'legs': '#eab308', // Vert clair
+    'legs': '#eab308',        // Vert
+    'legs': '#eab308',       // Turquoise
+    'back': '#ef4444',       // Cyan
+    'arms': '#8b5cf6'     // Indigo
 };
 
 // Mapping des couleurs hexadécimales vers des noms
