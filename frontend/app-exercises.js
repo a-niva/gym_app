@@ -205,12 +205,12 @@ function finishExercise() {
         if (currentWorkout.type === 'adaptive' && guidedPlan) {
             // Mode guidé - passer à l'exercice suivant
             import('./app-guided-workout.js').then(module => {
-                if (module.nextExercise) {
-                    module.nextExercise();  // ✅ Fonction correcte
-                } else if (window.nextExercise) {
-                    window.nextExercise();  // ✅ Fallback global
+                if (module.nextGuidedExercise) {
+                    module.nextGuidedExercise();  // ✅ CORRECT - Gère progression complète
+                } else if (window.nextGuidedExercise) {
+                    window.nextGuidedExercise();  // ✅ CORRECT - Fallback global
                 } else {
-                    console.warn('nextExercise non disponible, retour au sélecteur');
+                    console.warn('nextGuidedExercise non disponible, retour au sélecteur');
                     showExerciseSelector();
                 }
             }).catch(error => {

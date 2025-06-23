@@ -1,4 +1,5 @@
 // ===== MODULE SÉANCE GUIDÉE ADAPTATIVE =====
+import { showToast } from './app-ui.js';
 
 let currentExerciseIndex = 0;
 let guidedWorkoutPlan = null;
@@ -346,16 +347,21 @@ function previousExercise() {
 }
 
 // Exports globaux corrects (noms existants)
-window.startGuidedWorkout = startGuidedWorkout;
-window.startCurrentExercise = startCurrentExercise;
-window.nextExercise = nextExercise;
-window.previousExercise = previousExercise;
+window.nextGuidedExercise = nextGuidedExercise;
+window.returnToGuidedInterface = returnToGuidedInterface;
+window.preConfigureExerciseInterface = preConfigureExerciseInterface;
+window.addReturnToGuidedButton = addReturnToGuidedButton;
+window.showWorkoutCompletion = showWorkoutCompletion;
 
-// Export pour les autres modules
 export {
     startGuidedWorkout,
     showGuidedInterface,
     startCurrentExercise,
     nextExercise,
-    previousExercise
+    previousExercise,
+    nextGuidedExercise,
+    returnToGuidedInterface,
+    preConfigureExerciseInterface,
+    addReturnToGuidedButton,
+    showWorkoutCompletion
 };
