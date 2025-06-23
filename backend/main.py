@@ -152,7 +152,21 @@ def get_exercise(exercise_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Exercise not found")
     return exercise
 
-# NOUVEAU: Endpoint pour exercices disponibles selon équipement utilisateur
+@app.get("/api/exercises/{exercise_id}/alternatives", response_model=List[ExerciseResponse])
+def get_exercise_alternatives(exercise_id: int, db: Session = Depends(get_db)):
+    exercise = db.query(Exercise).filter(Exercise.id == exercise_id).first()
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Exercise not found")
+    
+    # Récupérer les exercices du même groupe musculaire
+    alternatives = db.query(Exercise).filter(
+        Exercise.body_part == exercise.body_part,
+        Exercise.id != exercise_id
+    ).limit(10).all()
+    
+    return alternatives
+
+# Endpoint pour exercices disponibles selon équipement utilisateur
 @app.get("/api/users/{user_id}/available-exercises", response_model=List[ExerciseResponse])
 def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -1250,7 +1264,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
         logger.error(f"Error deleting user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-    
+
     
 
 # Static files

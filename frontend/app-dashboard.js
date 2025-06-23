@@ -805,7 +805,6 @@ function showAdaptiveWorkoutModal(workout) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     
-    // Ajouter les styles directement sur l'élément
     modal.style.cssText = `
         position: fixed;
         top: 0;
@@ -817,109 +816,503 @@ function showAdaptiveWorkoutModal(workout) {
         align-items: center;
         justify-content: center;
         z-index: 1000;
+        backdrop-filter: blur(4px);
     `;
+    
+    // Calculer les priorités musculaires
+    const musclePriorities = workout.muscles.map((muscle, index) => ({
+        muscle,
+        priority: index === 0 ? "Priorité haute" : index === 1 ? "Priorité moyenne" : "Priorité basse",
+        color: index === 0 ? "#10b981" : index === 1 ? "#f59e0b" : "#6b7280"
+    }));
     
     modal.innerHTML = `
         <div class="modal-content" style="
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border-radius: 20px;
+            padding: 0;
+            max-width: 700px;
+            width: 95%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         ">
-            <h3 style="margin-bottom: 1rem;">Votre séance adaptative 🎯</h3>
-            <p class="workout-duration" style="margin-bottom: 1.5rem; color: var(--gray);">
-                Durée estimée : ${Math.round(workout.estimated_duration)} minutes
-            </p>
-            
-            <div class="workout-muscles" style="margin-bottom: 2rem;">
-                <strong>Muscles ciblés :</strong> ${workout.muscles.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(', ')}
+            <!-- Header avec contexte de la séance -->
+            <div style="
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                padding: 2rem;
+                text-align: center;
+                position: relative;
+            ">
+                <h2 style="
+                    margin: 0 0 0.5rem 0;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: white;
+                ">🎯 Séance Adaptative</h2>
+                <p style="
+                    margin: 0;
+                    opacity: 0.9;
+                    font-size: 0.95rem;
+                ">Optimisée selon votre équipement et objectifs</p>
+                
+                <!-- Durée et informations clés -->
+                <div style="
+                    display: flex;
+                    justify-content: space-around;
+                    margin-top: 1.5rem;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    padding: 1rem;
+                ">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.2rem; font-weight: 700;">⏱️ ${workout.estimated_duration}</div>
+                        <div style="font-size: 0.8rem; opacity: 0.8;">minutes</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.2rem; font-weight: 700;">💪 ${workout.exercises.length}</div>
+                        <div style="font-size: 0.8rem; opacity: 0.8;">exercices</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.2rem; font-weight: 700;">🔥 Adaptatif</div>
+                        <div style="font-size: 0.8rem; opacity: 0.8;">temps réel</div>
+                    </div>
+                </div>
             </div>
             
-            <div class="exercises-list" style="margin-bottom: 2rem;">
-                ${workout.exercises.map((ex, idx) => `
-                    <div class="exercise-item" style="
-                        display: flex;
-                        align-items: center;
-                        padding: 1rem;
-                        margin-bottom: 0.5rem;
-                        background: rgba(255, 255, 255, 0.05);
-                        border-radius: 8px;
-                    ">
-                        <span class="exercise-number" style="
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            width: 30px;
-                            height: 30px;
-                            background: var(--primary);
-                            color: white;
-                            border-radius: 50%;
-                            margin-right: 1rem;
-                            font-weight: bold;
-                        ">${idx + 1}</span>
-                        <div class="exercise-details" style="flex: 1;">
-                            <h4 style="margin: 0 0 0.5rem 0;">${ex.exercise_name || ex.exercise.name_fr}</h4>
-                            <div class="exercise-specs" style="
-                                display: flex;
-                                gap: 1rem;
-                                font-size: 0.9rem;
-                                color: var(--gray);
-                            ">
-                                <span>${ex.sets} séries</span>
-                                <span>${ex.target_reps} reps</span>
-                                <span>${ex.rest_time}s repos</span>
-                                ${ex.predicted_weight ? `<span>${ex.predicted_weight}kg</span>` : ''}
+            <!-- Muscles ciblés avec priorités -->
+            <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <h4 style="margin: 0 0 1rem 0; color: #f3f4f6; font-size: 1rem;">
+                    🎯 Muscles ciblés & priorités
+                </h4>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    ${musclePriorities.map(mp => `
+                        <div style="
+                            background: linear-gradient(135deg, ${mp.color}22 0%, ${mp.color}11 100%);
+                            border: 1px solid ${mp.color}44;
+                            border-radius: 8px;
+                            padding: 0.5rem 1rem;
+                            flex: 1;
+                            min-width: 140px;
+                        ">
+                            <div style="font-weight: 600; color: ${mp.color}; font-size: 0.9rem;">
+                                ${mp.muscle}
+                            </div>
+                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
+                                ${mp.priority}
                             </div>
                         </div>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
             </div>
             
-            <div class="modal-actions" style="
-                display: flex;
-                gap: 1rem;
-                margin-top: 2rem;
+            <!-- Programme d'exercices avec interaction -->
+            <div style="padding: 1.5rem; max-height: 400px; overflow-y: auto;">
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1rem;
+                ">
+                    <h4 style="margin: 0; color: #f3f4f6; font-size: 1rem;">
+                        📋 Programme de la séance
+                    </h4>
+                    <div style="
+                        background: rgba(16, 185, 129, 0.1);
+                        border: 1px solid rgba(16, 185, 129, 0.3);
+                        border-radius: 6px;
+                        padding: 0.25rem 0.5rem;
+                        font-size: 0.75rem;
+                        color: #10b981;
+                    ">
+                        Glissez pour réorganiser
+                    </div>
+                </div>
+                
+                <div id="exercisesList" style="display: flex; flex-direction: column; gap: 1rem;">
+                    ${workout.exercises.map((ex, index) => `
+                        <div class="exercise-item" data-exercise-id="${ex.exercise_id}" style="
+                            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+                            border: 1px solid rgba(255, 255, 255, 0.1);
+                            border-radius: 12px;
+                            padding: 1.25rem;
+                            cursor: grab;
+                            transition: all 0.2s ease;
+                            position: relative;
+                        "
+                        draggable="true"
+                        onmouseover="this.style.borderColor='rgba(59, 130, 246, 0.5)'; this.style.transform='translateY(-2px)'"
+                        onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.transform='translateY(0)'"
+                        >
+                            <!-- Numéro et handle de drag -->
+                            <div style="
+                                position: absolute;
+                                top: 0.75rem;
+                                left: 0.75rem;
+                                background: #3b82f6;
+                                color: white;
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 0.8rem;
+                                font-weight: 700;
+                            ">${index + 1}</div>
+                            
+                            <div style="
+                                position: absolute;
+                                top: 0.75rem;
+                                right: 0.75rem;
+                                color: #6b7280;
+                                font-size: 1.2rem;
+                                cursor: grab;
+                            ">⋮⋮</div>
+                            
+                            <!-- Informations exercice -->
+                            <div style="margin-left: 2.5rem; margin-right: 2rem;">
+                                <h5 style="
+                                    margin: 0 0 0.5rem 0;
+                                    color: #f3f4f6;
+                                    font-size: 1.1rem;
+                                    font-weight: 600;
+                                ">${ex.exercise_name}</h5>
+                                
+                                <div style="
+                                    display: flex;
+                                    gap: 1rem;
+                                    margin-bottom: 1rem;
+                                    flex-wrap: wrap;
+                                ">
+                                    <div style="
+                                        background: rgba(16, 185, 129, 0.1);
+                                        border: 1px solid rgba(16, 185, 129, 0.3);
+                                        border-radius: 6px;
+                                        padding: 0.25rem 0.5rem;
+                                        font-size: 0.8rem;
+                                        color: #10b981;
+                                    ">${ex.body_part}</div>
+                                    
+                                    <div style="color: #9ca3af; font-size: 0.85rem;">
+                                        ${ex.sets} séries × ${ex.target_reps} reps
+                                    </div>
+                                    
+                                    ${ex.suggested_weight ? `
+                                        <div style="color: #f59e0b; font-size: 0.85rem;">
+                                            💪 ${ex.suggested_weight}kg
+                                        </div>
+                                    ` : ''}
+                                    
+                                    <div style="color: #6b7280; font-size: 0.85rem;">
+                                        ⏱️ ${ex.rest_time || 120}s repos
+                                    </div>
+                                </div>
+                                
+                                <!-- Bouton d'échange -->
+                                <button 
+                                    onclick="showExerciseAlternatives(${ex.exercise_id}, ${index})"
+                                    style="
+                                        background: rgba(99, 102, 241, 0.1);
+                                        border: 1px solid rgba(99, 102, 241, 0.3);
+                                        border-radius: 6px;
+                                        padding: 0.5rem 1rem;
+                                        color: #6366f1;
+                                        font-size: 0.8rem;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                    "
+                                    onmouseover="this.style.background='rgba(99, 102, 241, 0.2)'"
+                                    onmouseout="this.style.background='rgba(99, 102, 241, 0.1)'"
+                                >
+                                    🔄 Échanger cet exercice
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <!-- Actions finales -->
+            <div style="
+                padding: 1.5rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                background: rgba(0, 0, 0, 0.2);
             ">
-                <button class="btn btn-secondary" 
-                    onclick="window.modifyAdaptiveWorkout()" 
-                    style="
+                <div style="
+                    display: flex;
+                    gap: 1rem;
+                ">
+                    <button onclick="window.modifyAdaptiveWorkout()" style="
                         flex: 1;
-                        padding: 1rem;
                         background: rgba(255, 255, 255, 0.1);
                         border: 1px solid rgba(255, 255, 255, 0.2);
+                        border-radius: 10px;
+                        padding: 1rem;
                         color: white;
-                        border-radius: 8px;
+                        font-weight: 600;
                         cursor: pointer;
-                    ">
-                    Régénérer
-                </button>
-                <button class="btn btn-primary" onclick="window.startAdaptiveWorkout()" style="
-                    flex: 1;
-                    padding: 1rem;
-                    background: var(--primary);
-                    border: none;
-                    color: white;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-weight: bold;
+                        transition: all 0.2s;
+                    "
+                    onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'"
+                    onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'"
+                    >
+                        🎲 Régénérer
+                    </button>
+                    
+                    <button onclick="window.startAdaptiveWorkout()" style="
+                        flex: 2;
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        border: none;
+                        border-radius: 10px;
+                        padding: 1rem;
+                        color: white;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        font-size: 1rem;
+                    "
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 10px 25px rgba(16, 185, 129, 0.3)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                    >
+                        🚀 Commencer la séance
+                    </button>
+                </div>
+                
+                <div style="
+                    text-align: center;
+                    margin-top: 1rem;
+                    color: #6b7280;
+                    font-size: 0.8rem;
                 ">
-                    Commencer la séance
-                </button>
+                    💡 Le programme s'adaptera à vos performances en temps réel
+                </div>
             </div>
         </div>
     `;
     
     document.body.appendChild(modal);
     
+    // Ajouter la fonctionnalité de drag & drop
+    setupDragAndDrop();
+    
+    // Fermer le modal en cliquant à l'extérieur
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.remove();
         }
     });
+}
+
+// Fonction pour configurer le drag & drop
+function setupDragAndDrop() {
+    const exercisesList = document.getElementById('exercisesList');
+    if (!exercisesList) return;
+    
+    let draggedElement = null;
+    
+    exercisesList.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('exercise-item')) {
+            draggedElement = e.target;
+            e.target.style.opacity = '0.5';
+            e.target.style.cursor = 'grabbing';
+        }
+    });
+    
+    exercisesList.addEventListener('dragend', (e) => {
+        if (e.target.classList.contains('exercise-item')) {
+            e.target.style.opacity = '1';
+            e.target.style.cursor = 'grab';
+        }
+    });
+    
+    exercisesList.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+    
+    exercisesList.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (draggedElement && e.target.closest('.exercise-item')) {
+            const dropTarget = e.target.closest('.exercise-item');
+            if (dropTarget !== draggedElement) {
+                const rect = dropTarget.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    exercisesList.insertBefore(draggedElement, dropTarget);
+                } else {
+                    exercisesList.insertBefore(draggedElement, dropTarget.nextSibling);
+                }
+                
+                // Mettre à jour les numéros d'ordre
+                updateExerciseNumbers();
+                
+                // Sauvegarder le nouvel ordre
+                saveReorderedExercises();
+            }
+        }
+    });
+}
+
+// Fonction pour mettre à jour les numéros d'exercices
+function updateExerciseNumbers() {
+    const exercises = document.querySelectorAll('.exercise-item');
+    exercises.forEach((item, index) => {
+        const numberElement = item.querySelector('div');
+        if (numberElement && numberElement.textContent.match(/^\d+$/)) {
+            numberElement.textContent = index + 1;
+        }
+    });
+}
+
+// Fonction pour sauvegarder l'ordre modifié
+function saveReorderedExercises() {
+    const exercises = document.querySelectorAll('.exercise-item');
+    const newOrder = Array.from(exercises).map(item => 
+        parseInt(item.dataset.exerciseId)
+    );
+    
+    // Mettre à jour l'ordre dans le workout adaptatif
+    const currentWorkout = getCurrentAdaptiveWorkout();
+    if (currentWorkout) {
+        const reorderedExercises = newOrder.map(exerciseId => 
+            currentWorkout.exercises.find(ex => ex.exercise_id === exerciseId)
+        ).filter(Boolean);
+        
+        currentWorkout.exercises = reorderedExercises;
+        setCurrentAdaptiveWorkout(currentWorkout);
+        
+        showToast('Ordre des exercices mis à jour', 'success');
+    }
+}
+
+// Fonction pour afficher les alternatives d'exercices
+async function showExerciseAlternatives(exerciseId, exerciseIndex) {
+    showLoadingOverlay('Recherche d\'alternatives...');
+    
+    try {
+        // Appel API pour récupérer les exercices alternatifs
+        const response = await fetch(`/api/exercises/${exerciseId}/alternatives`);
+        if (!response.ok) throw new Error('Erreur API');
+        
+        const alternatives = await response.json();
+        hideLoadingOverlay();
+        
+        showAlternativesModal(alternatives, exerciseId, exerciseIndex);
+        
+    } catch (error) {
+        hideLoadingOverlay();
+        console.error('Erreur récupération alternatives:', error);
+        
+        // Fallback : afficher quelques exercices du même muscle
+        const currentWorkout = getCurrentAdaptiveWorkout();
+        const currentExercise = currentWorkout.exercises.find(ex => ex.exercise_id === exerciseId);
+        
+        if (currentExercise) {
+            showToast(`Recherche d'alternatives pour ${currentExercise.body_part}...`, 'info');
+            // TODO: Implémenter le fallback
+        }
+    }
+}
+
+// Modal pour sélectionner un exercice alternatif
+function showAlternativesModal(alternatives, originalExerciseId, exerciseIndex) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1001;
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: #1f2937;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 70vh;
+            overflow-y: auto;
+        ">
+            <h3 style="margin: 0 0 1.5rem 0; color: white;">
+                🔄 Choisir un exercice alternatif
+            </h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${alternatives.slice(0, 5).map(alt => `
+                    <button 
+                        onclick="replaceExercise(${originalExerciseId}, ${alt.id}, ${exerciseIndex})"
+                        style="
+                            background: rgba(255, 255, 255, 0.05);
+                            border: 1px solid rgba(255, 255, 255, 0.1);
+                            border-radius: 8px;
+                            padding: 1rem;
+                            color: white;
+                            text-align: left;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        "
+                        onmouseover="this.style.borderColor='#3b82f6'"
+                        onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'"
+                    >
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">
+                            ${alt.name_fr}
+                        </div>
+                        <div style="font-size: 0.8rem; color: #9ca3af;">
+                            Cible : ${alt.body_part} • Niveau : ${alt.level}
+                        </div>
+                    </button>
+                `).join('')}
+            </div>
+            
+            <button onclick="this.closest('.modal-overlay').remove()" style="
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                padding: 0.75rem;
+                color: white;
+                width: 100%;
+                margin-top: 1rem;
+                cursor: pointer;
+            ">
+                Annuler
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Fonction pour remplacer un exercice
+function replaceExercise(oldExerciseId, newExerciseId, exerciseIndex) {
+    const currentWorkout = getCurrentAdaptiveWorkout();
+    if (!currentWorkout) return;
+    
+    // Fermer le modal des alternatives
+    document.querySelector('.modal-overlay[style*="z-index: 1001"]')?.remove();
+    
+    // Mettre à jour l'exercice dans le workout
+    if (currentWorkout.exercises[exerciseIndex]) {
+        currentWorkout.exercises[exerciseIndex].exercise_id = newExerciseId;
+        // Note: Le nom et autres détails seront mis à jour via un appel API si nécessaire
+        
+        setCurrentAdaptiveWorkout(currentWorkout);
+        
+        // Fermer et rouvrir le modal principal avec les nouvelles données
+        document.querySelector('.modal-overlay')?.remove();
+        showAdaptiveWorkoutModal(currentWorkout);
+        
+        showToast('Exercice remplacé avec succès', 'success');
+    }
 }
 
 // Fonction pour démarrer la séance adaptative
@@ -1293,6 +1686,8 @@ window.showProgramAdjustments = showProgramAdjustments;
 window.generateQuickWorkout = generateQuickWorkout;
 window.startAdaptiveWorkout = startAdaptiveWorkout;
 window.modifyAdaptiveWorkout = modifyAdaptiveWorkout;
+window.showExerciseAlternatives = showExerciseAlternatives;
+window.replaceExercise = replaceExercise;
 
 // Export pour les autres modules
 export {

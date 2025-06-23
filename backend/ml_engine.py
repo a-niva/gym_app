@@ -1096,19 +1096,35 @@ class SessionBuilder:
         self.ml_engine = FitnessMLEngine(db)  # Réutiliser l'existant
 
     def build_session(self, muscles: List[str], time_budget: int, 
-                     user: User, constraints: Dict = None) -> List[Dict]:
-        """Construction d'une séance optimisée"""
+                    user: User, constraints: Dict = None) -> List[Dict]:
+        """Construction d'une séance optimisée avec limitation intelligente"""
 
-        # Ajouter des logs de débogage
+        # AJOUTER au début (après les logs existants) :
+        # Calculer le nombre max d'exercices selon le temps disponible
+        if time_budget <= 30:
+            max_total_exercises = 2
+            max_per_muscle = 1
+        elif time_budget <= 45:
+            max_total_exercises = 3
+            max_per_muscle = 2  # Max 2 exercices par muscle
+        elif time_budget <= 60:
+            max_total_exercises = 4
+            max_per_muscle = 2
+        else:
+            max_total_exercises = 5
+            max_per_muscle = 2
+
+        logger.info(f"Time budget: {time_budget}min -> Max {max_total_exercises} exercises total, {max_per_muscle} per muscle")
+
+        # Ajouter des logs de débogage (GARDER votre code existant)
         logger.info(f"Building session for muscles: {muscles}")
         logger.info(f"User equipment: {user.equipment_config}")
         
-        # Récupérer tous les exercices disponibles
+        # Récupérer tous les exercices disponibles (GARDER votre code)
         all_exercises = self.db.query(Exercise).all()
         logger.info(f"Total exercises in DB: {len(all_exercises)}")
         
-        # Filtrer par muscle
-        # Plus besoin de mapping, tout est en anglais maintenant
+        # Filtrer par muscle (GARDER votre code)
         muscle_exercises = [e for e in all_exercises if e.body_part in muscles]
         logger.info(f"Exercises for selected muscles: {len(muscle_exercises)}")
 
@@ -1116,13 +1132,19 @@ class SessionBuilder:
         time_used = 0
         constraints = constraints or {}
         
-        for muscle in muscles[:3]:  # Max 3 groupes musculaires par séance
-            # Récupérer exercices disponibles
+        # MODIFIER cette ligne pour limiter les muscles traités :
+        for muscle in muscles[:2]:  # Max 2 groupes musculaires pour rester raisonnable
+            # Vérifier si on a déjà atteint le max d'exercices
+            if len(session) >= max_total_exercises:
+                logger.info(f"Max exercises ({max_total_exercises}) atteint, arrêt de l'ajout")
+                break
+                
+            # Récupérer exercices disponibles (GARDER votre code existant)
             exercises = self.db.query(Exercise).filter(
                 Exercise.body_part == muscle
             ).all()
             
-            # Filtrer par équipement disponible
+            # Filtrer par équipement disponible (GARDER votre code)
             available_exercises = []
             for ex in exercises:
                 if self._check_equipment_availability(ex, user):
@@ -1131,13 +1153,18 @@ class SessionBuilder:
             if not available_exercises:
                 continue
             
-            # Sélectionner 1-2 exercices par muscle
+            # MODIFIER cette ligne pour utiliser la limite calculée :
             selected_exercises = self._select_best_exercises(
-                available_exercises, user, muscle, max_exercises=2
+                available_exercises, user, muscle, max_exercises=max_per_muscle
             )
             
             for selected in selected_exercises:
-                # Utiliser la logique existante pour sets/reps
+                # Vérifier si on a déjà atteint le max total
+                if len(session) >= max_total_exercises:
+                    logger.info(f"Max total exercises ({max_total_exercises}) atteint")
+                    break
+                    
+                # GARDER TOUT votre code existant pour sets/reps/poids/temps :
                 sets = 3 if user.experience_level in ["débutant", "intermédiaire"] else 4
                 
                 # Adapter les reps selon l'objectif
@@ -1165,33 +1192,36 @@ class SessionBuilder:
                 
                 exercise_time = sets * (30 + rest)  # 30s par série + repos
                 
-                if time_used + exercise_time <= time_budget:
+                if time_used + exercise_time <= time_budget * 60:  # Convertir minutes en secondes
                     session.append({
                         "exercise_id": selected.id,
-                        "exercise_name": selected.name_fr,  # Le frontend attend exercise_name
-                        "body_part": selected.body_part,    # Ajouter pour le frontend
-                        "sets": int(sets),                  # Forcer int
-                        "target_reps": int(reps),           # Forcer int
-                        "suggested_weight": float(weight),   # Forcer float
-                        "rest_time": int(rest)              # Forcer int
+                        "exercise_name": selected.name_fr,
+                        "body_part": selected.body_part,
+                        "sets": int(sets),
+                        "target_reps": int(reps),
+                        "suggested_weight": float(weight),
+                        "rest_time": int(rest)
                     })
                     time_used += exercise_time
         
+        # GARDER TOUT votre code de logs et fallbacks existant :
         logger.info(f"Session construite: {len(session)} exercices")
         for ex in session:
             logger.info(f"  - {ex['exercise_name']} ({ex['body_part']})")
 
-        # Si moins de 3 exercices, essayer d'en ajouter plus
-        if len(session) < 3:
+        # Si moins de 2 exercices (au lieu de 3), essayer d'en ajouter plus
+        min_exercises = 2 if time_budget <= 30 else 3
+        if len(session) < min_exercises:
             logger.warning(f"Seulement {len(session)} exercices trouvés, recherche supplémentaire...")
-            # Essayer tous les muscles un par un
+            # GARDER votre logique de recherche supplémentaire
             all_exercises = self.db.query(Exercise).filter(Exercise.body_part.in_(muscles)).all()
             available_all = [ex for ex in all_exercises if self._check_equipment_availability(ex, user)]
             
-            # Ajouter jusqu'à 5 exercices max
-            for ex in available_all[:5]:
+            # Limiter l'ajout selon le budget temps
+            for ex in available_all[:max_total_exercises]:
+                if len(session) >= max_total_exercises:
+                    break
                 if ex.id not in [s["exercise_id"] for s in session]:
-                    # Ajouter exercice avec paramètres par défaut
                     session.append({
                         "exercise_id": ex.id,
                         "exercise_name": ex.name_fr,
@@ -1201,12 +1231,12 @@ class SessionBuilder:
                         "suggested_weight": 20.0,
                         "rest_time": 90
                     })
-                    if len(session) >= 3:
+                    if len(session) >= min_exercises:
                         break
             
             logger.info(f"Après recherche supplémentaire: {len(session)} exercices")
 
-        # Si aucun exercice n'a pu être ajouté, ajouter au moins un exercice de base
+        # GARDER votre fallback ultime :
         if not session and muscles:
             # Fallback : prendre n'importe quel exercice disponible
             fallback_exercise = self.db.query(Exercise).filter(
@@ -1230,8 +1260,7 @@ class SessionBuilder:
                     "suggested_weight": float(fallback_weight)
                 })
                 
-        return session
-        
+        return session 
     def _check_equipment_availability(self, exercise: Exercise, user: User) -> bool:
         """Vérifie si l'équipement nécessaire est disponible"""
         if not exercise.equipment:
