@@ -5,8 +5,8 @@
     "equipment": [
       "machine_convergente"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -56,11 +56,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -79,11 +79,11 @@
     "name_fr": "Développé couché avec haltères",
     "name_eng": "Dumbbell Bench Press",
     "equipment": [
-      "dumbbells",
-      "bench_plat"
+      "halteres",
+      "banc_plat"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -133,11 +133,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -156,11 +156,11 @@
     "name_fr": "Développé couché à la barre",
     "name_eng": "Barbell Bench Press",
     "equipment": [
-      "barbell_standard",
-      "bench_plat"
+      "barre_olympique",
+      "banc_plat"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -210,11 +210,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -235,8 +235,8 @@
     "equipment": [
       "machine_convergente"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -286,11 +286,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -309,11 +309,11 @@
     "name_fr": "Développé décliné avec haltères",
     "name_eng": "Decline Dumbbell Press",
     "equipment": [
-      "dumbbells",
+      "halteres",
       "bench_declinable"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -364,11 +364,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -387,11 +387,11 @@
     "name_fr": "Développé décliné à la barre",
     "name_eng": "Decline Barbell Press",
     "equipment": [
-      "barbell_standard",
+      "barre_olympique",
       "bench_declinable"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -442,11 +442,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -465,11 +465,11 @@
     "name_fr": "Développé incliné avec haltères",
     "name_eng": "Incline Dumbbell Press",
     "equipment": [
-      "dumbbells",
+      "halteres",
       "bench_inclinable"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -520,11 +520,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -543,11 +543,11 @@
     "name_fr": "Développé incliné à la barre",
     "name_eng": "Incline Barbell Press",
     "equipment": [
-      "barbell_standard",
+      "barre_olympique",
       "bench_inclinable"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -598,11 +598,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -623,8 +623,8 @@
     "equipment": [
       "machine_convergente"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -674,11 +674,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -699,8 +699,8 @@
     "equipment": [
       "dip_bars"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -748,11 +748,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -771,12 +771,12 @@
     "name_fr": "Pull over avec barre ou haltère",
     "name_eng": "Barbell or Dumbbell Pullover",
     "equipment": [
-      "barbell_standard",
-      "dumbbells",
-      "bench_plat"
+      "barre_olympique",
+      "halteres",
+      "banc_plat"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -827,11 +827,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -850,12 +850,12 @@
     "name_fr": "Pull over en travers d’un banc avec barre ou haltère",
     "name_eng": "Cross-Bench Barbell or Dumbbell Pullover",
     "equipment": [
-      "barbell_standard",
-      "dumbbells",
-      "bench_plat"
+      "barre_olympique",
+      "halteres",
+      "banc_plat"
     ],
-    "level": "basic",
-    "body_part": "chest",
+    "level": "basique",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -906,11 +906,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -929,11 +929,11 @@
     "name_fr": "Écarté couché avec haltères",
     "name_eng": "Dumbbell Fly",
     "equipment": [
-      "dumbbells",
-      "bench_plat"
+      "halteres",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "chest",
+    "level": "avancé",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -983,11 +983,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1006,11 +1006,11 @@
     "name_fr": "Écarté décliné avec haltères",
     "name_eng": "Decline Dumbbell Fly",
     "equipment": [
-      "dumbbells",
+      "halteres",
       "bench_declinable"
     ],
-    "level": "advanced",
-    "body_part": "chest",
+    "level": "avancé",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1061,11 +1061,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1084,11 +1084,11 @@
     "name_fr": "Écarté incliné avec haltères",
     "name_eng": "Incline Dumbbell Fly",
     "equipment": [
-      "dumbbells",
+      "halteres",
       "bench_inclinable"
     ],
-    "level": "advanced",
-    "body_part": "chest",
+    "level": "avancé",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1139,11 +1139,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1164,8 +1164,8 @@
     "equipment": [
       "machine_pectoraux"
     ],
-    "level": "advanced",
-    "body_part": "chest",
+    "level": "avancé",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1215,11 +1215,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1238,10 +1238,10 @@
     "name_fr": "Pompes prise large au sol",
     "name_eng": "Wide-Grip Push-Up",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
-    "level": "advanced",
-    "body_part": "chest",
+    "level": "avancé",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1289,11 +1289,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1312,10 +1312,10 @@
     "name_fr": "Pull over à la poulie basse",
     "name_eng": "Low Cable Pullover",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "chest",
+    "level": "avancé",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1363,11 +1363,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1386,10 +1386,10 @@
     "name_fr": "Écarté à la poulie vis à vis basse",
     "name_eng": "Low Cable Crossover",
     "equipment": [
-      "cables"
+      "poulies"
     ],
     "level": "finition",
-    "body_part": "chest",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1437,11 +1437,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1460,10 +1460,10 @@
     "name_fr": "Écarté à la poulie vis à vis haute",
     "name_eng": "High Cable Crossover",
     "equipment": [
-      "cables"
+      "poulies"
     ],
     "level": "finition",
-    "body_part": "chest",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1511,11 +1511,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1537,7 +1537,7 @@
       "machine_developpe"
     ],
     "level": "finition",
-    "body_part": "chest",
+    "body_part": "Pectoraux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1587,11 +1587,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "chest"
+        "Pectoraux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1612,8 +1612,8 @@
     "equipment": [
       "abmat"
     ],
-    "level": "basic",
-    "body_part": "core",
+    "level": "basique",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1661,11 +1661,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1684,10 +1684,10 @@
     "name_fr": "Crunch à la poulie haute",
     "name_eng": "Cable Crunch",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "basic",
-    "body_part": "core",
+    "level": "basique",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1735,11 +1735,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1760,8 +1760,8 @@
     "equipment": [
       "abmat"
     ],
-    "level": "basic",
-    "body_part": "core",
+    "level": "basique",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1809,11 +1809,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1834,8 +1834,8 @@
     "equipment": [
       "barre_traction"
     ],
-    "level": "basic",
-    "body_part": "core",
+    "level": "basique",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1885,11 +1885,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1908,8 +1908,8 @@
     "equipment": [
       "banc_lombaires"
     ],
-    "level": "basic",
-    "body_part": "core",
+    "level": "basique",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -1957,11 +1957,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -1980,10 +1980,10 @@
     "name_fr": "Crunch abdominaux au sol",
     "name_eng": "Floor Crunch",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2031,11 +2031,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2056,8 +2056,8 @@
     "equipment": [
       "machine_abdos"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2107,11 +2107,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2132,8 +2132,8 @@
     "equipment": [
       "swiss_ball"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2181,11 +2181,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2204,10 +2204,10 @@
     "name_fr": "Crunch oblique au sol",
     "name_eng": "Oblique Floor Crunch",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2255,11 +2255,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2278,10 +2278,10 @@
     "name_fr": "Enroulement de bassin au sol",
     "name_eng": "Reverse Crunch",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2329,11 +2329,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2354,8 +2354,8 @@
     "equipment": [
       "abmat"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2403,11 +2403,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2428,8 +2428,8 @@
     "equipment": [
       "swiss_ball"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2477,11 +2477,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2502,8 +2502,8 @@
     "equipment": [
       "barre_traction"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2553,11 +2553,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2578,8 +2578,8 @@
     "equipment": [
       "machine_rotation"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2629,11 +2629,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2652,10 +2652,10 @@
     "name_fr": "Vacuum",
     "name_eng": "Stomach Vacuum",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2703,11 +2703,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2726,10 +2726,10 @@
     "name_fr": "Crunch abdominaux avec rotation au sol",
     "name_eng": "Rotational Floor Crunch",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
     "level": "finition",
-    "body_part": "core",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2777,11 +2777,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2800,10 +2800,10 @@
     "name_fr": "Drapeau du dragon",
     "name_eng": "Dragon Flag",
     "equipment": [
-      "bench_plat"
+      "banc_plat"
     ],
     "level": "finition",
-    "body_part": "core",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2851,11 +2851,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2874,10 +2874,10 @@
     "name_fr": "Flexion latérale avec haltère",
     "name_eng": "Dumbbell Side Bend",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
     "level": "finition",
-    "body_part": "core",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -2927,11 +2927,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -2950,10 +2950,10 @@
     "name_fr": "Gainage abdominal frontal",
     "name_eng": "Front Plank",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
     "level": "finition",
-    "body_part": "core",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3001,11 +3001,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3024,10 +3024,10 @@
     "name_fr": "Gainage abdominal oblique",
     "name_eng": "Side Plank",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
     "level": "finition",
-    "body_part": "core",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3075,11 +3075,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3101,7 +3101,7 @@
       "balai"
     ],
     "level": "finition",
-    "body_part": "core",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3149,11 +3149,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3174,8 +3174,8 @@
     "equipment": [
       "machine_hack_squat"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3225,11 +3225,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3250,8 +3250,8 @@
     "equipment": [
       "machine_jambes"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3301,11 +3301,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3326,8 +3326,8 @@
     "equipment": [
       "machine_jambes"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3377,11 +3377,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3402,8 +3402,8 @@
     "equipment": [
       "machine_jambes"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3453,11 +3453,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3476,11 +3476,11 @@
     "name_fr": "Squat avant avec barre",
     "name_eng": "Front Squat",
     "equipment": [
-      "barbell_standard",
+      "barre_olympique",
       "squat_rack"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3530,11 +3530,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3553,11 +3553,11 @@
     "name_fr": "Squat avec barre derrière la nuque",
     "name_eng": "Back Squat",
     "equipment": [
-      "barbell_standard",
+      "barre_olympique",
       "squat_rack"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3607,11 +3607,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3630,11 +3630,11 @@
     "name_fr": "Squat sumo avec barre",
     "name_eng": "Sumo Squat",
     "equipment": [
-      "barbell_standard",
+      "barre_olympique",
       "squat_rack"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3684,11 +3684,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3707,10 +3707,10 @@
     "name_fr": "Fente latérale avec barre",
     "name_eng": "Barbell Lateral Lunge",
     "equipment": [
-      "barbell_standard"
+      "barre_olympique"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3760,11 +3760,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3783,10 +3783,10 @@
     "name_fr": "Gobelet Squat avec haltère",
     "name_eng": "Goblet Squat",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3836,11 +3836,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3859,10 +3859,10 @@
     "name_fr": "Hack squat avec une barre",
     "name_eng": "Barbell Hack Squat",
     "equipment": [
-      "barbell_standard"
+      "barre_olympique"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3912,11 +3912,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -3935,12 +3935,12 @@
     "name_fr": "Montée sur banc avec barre ou haltères",
     "name_eng": "Barbell or Dumbbell Step-Up",
     "equipment": [
-      "barbell_standard",
-      "dumbbells",
-      "bench_plat"
+      "barre_olympique",
+      "halteres",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -3991,11 +3991,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4014,8 +4014,8 @@
     "equipment": [
       "ceinture_lest"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4063,11 +4063,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4088,8 +4088,8 @@
     "equipment": [
       "machine_squat"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4139,11 +4139,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4161,11 +4161,11 @@
     "name_fr": "Squat bulgare avec haltères",
     "name_eng": "Bulgarian Split Squat",
     "equipment": [
-      "dumbbells",
-      "bench_plat"
+      "halteres",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4215,11 +4215,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4238,11 +4238,11 @@
     "name_fr": "Fente avant avec barre ou haltères",
     "name_eng": "Barbell or Dumbbell Lunge",
     "equipment": [
-      "barbell_standard",
-      "dumbbells"
+      "barre_olympique",
+      "halteres"
     ],
     "level": "finition",
-    "body_part": "legs",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4293,11 +4293,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4314,11 +4314,11 @@
     "name_fr": "Fente arrière avec barre ou haltères",
     "name_eng": "Reverse Barbell or Dumbbell Lunge",
     "equipment": [
-      "barbell_standard",
-      "dumbbells"
+      "barre_olympique",
+      "halteres"
     ],
     "level": "finition",
-    "body_part": "legs",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4369,11 +4369,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4392,10 +4392,10 @@
     "name_fr": "Squat sauté",
     "name_eng": "Jump Squat",
     "equipment": [
-      "bodyweight"
+      "poids_du_corps"
     ],
     "level": "finition",
-    "body_part": "legs",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4443,11 +4443,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4466,11 +4466,11 @@
     "name_fr": "Développé militaire avec barre",
     "name_eng": "Barbell Military Press",
     "equipment": [
-      "barbell_standard",
+      "barre_olympique",
       "squat_rack"
     ],
-    "level": "basic",
-    "body_part": "shoulders",
+    "level": "basique",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4520,11 +4520,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4543,10 +4543,10 @@
     "name_fr": "Développé militaire avec haltères",
     "name_eng": "Dumbbell Military Press",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "basic",
-    "body_part": "shoulders",
+    "level": "basique",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4596,11 +4596,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4621,8 +4621,8 @@
     "equipment": [
       "machine_épaules"
     ],
-    "level": "basic",
-    "body_part": "shoulders",
+    "level": "basique",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4672,11 +4672,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4695,11 +4695,11 @@
     "name_fr": "Développé militaire assis avec barre",
     "name_eng": "Seated Barbell Military Press",
     "equipment": [
-      "barbell_standard",
-      "bench_plat"
+      "barre_olympique",
+      "banc_plat"
     ],
-    "level": "basic",
-    "body_part": "shoulders",
+    "level": "basique",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4749,11 +4749,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4772,11 +4772,11 @@
     "name_fr": "Développé militaire assis avec haltères",
     "name_eng": "Seated Dumbbell Military Press",
     "equipment": [
-      "dumbbells",
-      "bench_plat"
+      "halteres",
+      "banc_plat"
     ],
-    "level": "basic",
-    "body_part": "shoulders",
+    "level": "basique",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4826,11 +4826,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4849,10 +4849,10 @@
     "name_fr": "Développé Arnold avec haltères",
     "name_eng": "Arnold Press",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "shoulders",
+    "level": "avancé",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4902,11 +4902,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -4925,10 +4925,10 @@
     "name_fr": "Élévation frontale à la barre",
     "name_eng": "Barbell Front Raise",
     "equipment": [
-      "barbell_standard"
+      "barre_olympique"
     ],
-    "level": "advanced",
-    "body_part": "shoulders",
+    "level": "avancé",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -4979,11 +4979,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5002,10 +5002,10 @@
     "name_fr": "Élévation frontale avec haltères",
     "name_eng": "Dumbbell Front Raise",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "shoulders",
+    "level": "avancé",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5055,11 +5055,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5078,10 +5078,10 @@
     "name_fr": "Élévation latérale avec haltères",
     "name_eng": "Dumbbell Lateral Raise",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "shoulders",
+    "level": "avancé",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5131,11 +5131,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5154,10 +5154,10 @@
     "name_fr": "Élévation latérale à la poulie basse",
     "name_eng": "Low Cable Lateral Raise",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "shoulders",
+    "level": "avancé",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5207,11 +5207,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5230,11 +5230,11 @@
     "name_fr": "Oiseau avec haltères",
     "name_eng": "Dumbbell Rear Delt Fly",
     "equipment": [
-      "dumbbells",
-      "bench_plat"
+      "halteres",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "shoulders",
+    "level": "avancé",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5284,11 +5284,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5307,10 +5307,10 @@
     "name_fr": "Oiseau à la poulie basse",
     "name_eng": "Low Cable Rear Delt Fly",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "shoulders",
+    "level": "avancé",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5358,11 +5358,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5381,10 +5381,10 @@
     "name_fr": "Élévation frontale à la poulie basse",
     "name_eng": "Low Cable Front Raise",
     "equipment": [
-      "cables"
+      "poulies"
     ],
     "level": "finition",
-    "body_part": "shoulders",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5434,11 +5434,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5460,7 +5460,7 @@
       "machine_oiseau"
     ],
     "level": "finition",
-    "body_part": "shoulders",
+    "body_part": "Deltoïdes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5510,11 +5510,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "shoulders"
+        "Deltoïdes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5531,10 +5531,10 @@
     "name_fr": "Curl avec barre droite",
     "name_eng": "Barbell Curl",
     "equipment": [
-      "barbell_standard"
+      "barre_olympique"
     ],
-    "level": "basic",
-    "body_part": "arms",
+    "level": "basique",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5584,11 +5584,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5605,10 +5605,10 @@
     "name_fr": "Curl avec barre EZ",
     "name_eng": "EZ Bar Curl",
     "equipment": [
-      "barbell_ez"
+      "barre_ez"
     ],
-    "level": "basic",
-    "body_part": "arms",
+    "level": "basique",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5658,11 +5658,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5681,10 +5681,10 @@
     "name_fr": "Curl avec haltères",
     "name_eng": "Dumbbell Curl",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "basic",
-    "body_part": "arms",
+    "level": "basique",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5734,11 +5734,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5757,11 +5757,11 @@
     "name_fr": "Curl incliné avec haltères",
     "name_eng": "Incline Dumbbell Curl",
     "equipment": [
-      "dumbbells",
+      "halteres",
       "bench_inclinable"
     ],
-    "level": "basic",
-    "body_part": "arms",
+    "level": "basique",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5812,11 +5812,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5835,10 +5835,10 @@
     "name_fr": "Curl marteau avec haltères",
     "name_eng": "Hammer Curl",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "basic",
-    "body_part": "arms",
+    "level": "basique",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5888,11 +5888,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5911,10 +5911,10 @@
     "name_fr": "Curl à la poulie basse",
     "name_eng": "Low Cable Curl",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -5962,11 +5962,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -5985,10 +5985,10 @@
     "name_fr": "Curl à la poulie haute",
     "name_eng": "High Cable Curl",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6036,11 +6036,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6059,11 +6059,11 @@
     "name_fr": "Curl concentré avec haltère",
     "name_eng": "Concentration Curl",
     "equipment": [
-      "dumbbells",
-      "bench_plat"
+      "halteres",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6113,11 +6113,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6134,11 +6134,11 @@
     "name_fr": "Curl prêcheur avec barre droite",
     "name_eng": "Barbell Preacher Curl",
     "equipment": [
-      "barbell_standard",
+      "barre_olympique",
       "banc_preacher"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6188,11 +6188,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6211,11 +6211,11 @@
     "name_fr": "Curl prêcheur avec barre EZ",
     "name_eng": "EZ Bar Preacher Curl",
     "equipment": [
-      "barbell_ez",
+      "barre_ez",
       "banc_preacher"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6265,11 +6265,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6288,11 +6288,11 @@
     "name_fr": "Curl prêcheur avec haltères",
     "name_eng": "Dumbbell Preacher Curl",
     "equipment": [
-      "dumbbells",
+      "halteres",
       "banc_preacher"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6342,11 +6342,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6368,7 +6368,7 @@
       "machine_biceps"
     ],
     "level": "finition",
-    "body_part": "arms",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6418,11 +6418,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6441,10 +6441,10 @@
     "name_fr": "Curl inversé avec barre",
     "name_eng": "Reverse Barbell Curl",
     "equipment": [
-      "barbell_standard"
+      "barre_olympique"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6494,11 +6494,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6517,10 +6517,10 @@
     "name_fr": "Curl inversé avec haltères",
     "name_eng": "Reverse Dumbbell Curl",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6570,11 +6570,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6593,11 +6593,11 @@
     "name_fr": "Curl poignet avec barre",
     "name_eng": "Barbell Wrist Curl",
     "equipment": [
-      "barbell_standard",
-      "bench_plat"
+      "barre_olympique",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6647,11 +6647,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6670,11 +6670,11 @@
     "name_fr": "Curl poignet avec haltères",
     "name_eng": "Dumbbell Wrist Curl",
     "equipment": [
-      "dumbbells",
-      "bench_plat"
+      "halteres",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6724,11 +6724,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6747,10 +6747,10 @@
     "name_fr": "Curl inversé à la poulie basse",
     "name_eng": "Low Cable Reverse Curl",
     "equipment": [
-      "cables"
+      "poulies"
     ],
     "level": "finition",
-    "body_part": "arms",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6798,11 +6798,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6824,7 +6824,7 @@
       "machine_poignets"
     ],
     "level": "finition",
-    "body_part": "arms",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6874,11 +6874,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6898,10 +6898,10 @@
     "name_eng": "T-Bar Row",
     "equipment": [
       "machine_t_bar",
-      "barbell_standard"
+      "barre_olympique"
     ],
-    "level": "basic",
-    "body_part": "back",
+    "level": "basique",
+    "body_part": "Dos",
     "sets_reps": [
       {
         "level": "beginner",
@@ -6952,11 +6952,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "back"
+        "Dos"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -6975,10 +6975,10 @@
     "name_fr": "Shrug avec barre",
     "name_eng": "Barbell Shrug",
     "equipment": [
-      "barbell_standard"
+      "barre_olympique"
     ],
-    "level": "basic",
-    "body_part": "back",
+    "level": "basique",
+    "body_part": "Dos",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7028,11 +7028,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "back"
+        "Dos"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7051,10 +7051,10 @@
     "name_fr": "Shrug avec haltères",
     "name_eng": "Dumbbell Shrug",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "basic",
-    "body_part": "back",
+    "level": "basique",
+    "body_part": "Dos",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7104,11 +7104,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "back"
+        "Dos"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7129,8 +7129,8 @@
     "equipment": [
       "machine_shrug"
     ],
-    "level": "basic",
-    "body_part": "back",
+    "level": "basique",
+    "body_part": "Dos",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7180,11 +7180,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "back"
+        "Dos"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7203,10 +7203,10 @@
     "name_fr": "Face pull à la poulie",
     "name_eng": "Cable Face Pull",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "back",
+    "level": "avancé",
+    "body_part": "Dos",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7254,11 +7254,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "back"
+        "Dos"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7277,10 +7277,10 @@
     "name_fr": "Rowing vertical avec barre",
     "name_eng": "Barbell Upright Row",
     "equipment": [
-      "barbell_standard"
+      "barre_olympique"
     ],
-    "level": "advanced",
-    "body_part": "back",
+    "level": "avancé",
+    "body_part": "Dos",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7330,11 +7330,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "back"
+        "Dos"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7353,10 +7353,10 @@
     "name_fr": "Rowing vertical avec haltères",
     "name_eng": "Dumbbell Upright Row",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "back",
+    "level": "avancé",
+    "body_part": "Dos",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7406,11 +7406,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "back"
+        "Dos"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7429,10 +7429,10 @@
     "name_fr": "Shrug à la poulie basse",
     "name_eng": "Low Cable Shrug",
     "equipment": [
-      "cables"
+      "poulies"
     ],
     "level": "finition",
-    "body_part": "back",
+    "body_part": "Dos",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7480,11 +7480,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "back"
+        "Dos"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7503,12 +7503,12 @@
     "name_fr": "Barre au front triceps avec barre ou haltères",
     "name_eng": "Skull Crusher",
     "equipment": [
-      "barbell_standard",
-      "dumbbells",
-      "bench_plat"
+      "barre_olympique",
+      "halteres",
+      "banc_plat"
     ],
-    "level": "basic",
-    "body_part": "arms",
+    "level": "basique",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7559,11 +7559,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7584,8 +7584,8 @@
     "equipment": [
       "dip_bars"
     ],
-    "level": "basic",
-    "body_part": "arms",
+    "level": "basique",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7633,11 +7633,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7656,10 +7656,10 @@
     "name_fr": "Extension triceps à la poulie haute",
     "name_eng": "Cable Tricep Pushdown",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "basic",
-    "body_part": "arms",
+    "level": "basique",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7707,11 +7707,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7730,11 +7730,11 @@
     "name_fr": "Développé couché prise serrée avec barre",
     "name_eng": "Close-Grip Barbell Bench Press",
     "equipment": [
-      "barbell_standard",
-      "bench_plat"
+      "barre_olympique",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7784,11 +7784,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7807,10 +7807,10 @@
     "name_fr": "Extension triceps avec haltère au-dessus de la tête",
     "name_eng": "Overhead Dumbbell Tricep Extension",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7860,11 +7860,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7883,11 +7883,11 @@
     "name_fr": "Extension triceps couché avec barre EZ",
     "name_eng": "EZ Bar Lying Tricep Extension",
     "equipment": [
-      "barbell_ez",
-      "bench_plat"
+      "barre_ez",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -7937,11 +7937,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -7962,8 +7962,8 @@
     "equipment": [
       "machine_triceps"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8013,11 +8013,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8034,11 +8034,11 @@
     "name_fr": "Kick back avec haltères",
     "name_eng": "Dumbbell Kickback",
     "equipment": [
-      "dumbbells",
-      "bench_plat"
+      "halteres",
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "arms",
+    "level": "avancé",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8088,11 +8088,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8111,11 +8111,11 @@
     "name_fr": "Extension triceps à la poulie avec corde",
     "name_eng": "Cable Tricep Pushdown with Rope",
     "equipment": [
-      "cables",
+      "poulies",
       "corde_triceps"
     ],
     "level": "finition",
-    "body_part": "arms",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8163,11 +8163,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8186,10 +8186,10 @@
     "name_fr": "Extension triceps à la poulie inversée",
     "name_eng": "Reverse Cable Tricep Pushdown",
     "equipment": [
-      "cables"
+      "poulies"
     ],
     "level": "finition",
-    "body_part": "arms",
+    "body_part": "Bras",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8237,11 +8237,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "arms"
+        "Bras"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8260,11 +8260,11 @@
     "name_fr": "Crunch au sol",
     "name_eng": "Floor Crunch",
     "equipment": [
-      "bodyweight",
+      "poids_du_corps",
       "tapis"
     ],
-    "level": "basic",
-    "body_part": "core",
+    "level": "basique",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8312,11 +8312,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8337,8 +8337,8 @@
     "equipment": [
       "machine_crunch"
     ],
-    "level": "basic",
-    "body_part": "core",
+    "level": "basique",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8388,11 +8388,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8413,8 +8413,8 @@
     "equipment": [
       "barre_traction"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8464,11 +8464,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8487,10 +8487,10 @@
     "name_fr": "Relevé de jambes au banc",
     "name_eng": "Bench Leg Raise",
     "equipment": [
-      "bench_plat"
+      "banc_plat"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8538,11 +8538,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8561,10 +8561,10 @@
     "name_fr": "Obliques à la poulie",
     "name_eng": "Cable Oblique Twist",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8612,11 +8612,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8635,12 +8635,12 @@
     "name_fr": "Russian twist",
     "name_eng": "Russian Twist",
     "equipment": [
-      "bodyweight",
+      "poids_du_corps",
       "tapis",
       "medicine_ball"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8688,11 +8688,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8711,11 +8711,11 @@
     "name_fr": "Planche",
     "name_eng": "Plank",
     "equipment": [
-      "bodyweight",
+      "poids_du_corps",
       "tapis"
     ],
-    "level": "basic",
-    "body_part": "core",
+    "level": "basique",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8763,11 +8763,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8786,11 +8786,11 @@
     "name_fr": "Planche latérale",
     "name_eng": "Side Plank",
     "equipment": [
-      "bodyweight",
+      "poids_du_corps",
       "tapis"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8838,11 +8838,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8863,8 +8863,8 @@
     "equipment": [
       "roue_abdos"
     ],
-    "level": "advanced",
-    "body_part": "core",
+    "level": "avancé",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8912,11 +8912,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -8935,11 +8935,11 @@
     "name_fr": "Mountain climbers",
     "name_eng": "Mountain Climbers",
     "equipment": [
-      "bodyweight",
+      "poids_du_corps",
       "tapis"
     ],
     "level": "finition",
-    "body_part": "core",
+    "body_part": "Abdominaux",
     "sets_reps": [
       {
         "level": "beginner",
@@ -8987,11 +8987,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "core"
+        "Abdominaux"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9010,11 +9010,11 @@
     "name_fr": "Pont fessier",
     "name_eng": "Glute Bridge",
     "equipment": [
-      "bodyweight",
+      "poids_du_corps",
       "tapis"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9062,11 +9062,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9085,11 +9085,11 @@
     "name_fr": "Hip thrust avec barre",
     "name_eng": "Barbell Hip Thrust",
     "equipment": [
-      "barbell_standard",
-      "bench_plat"
+      "barre_olympique",
+      "banc_plat"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9139,11 +9139,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9162,10 +9162,10 @@
     "name_fr": "Fente arrière fessier avec haltères",
     "name_eng": "Dumbbell Reverse Lunge",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9215,11 +9215,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9238,8 +9238,8 @@
     "equipment": [
       "machine_abduction"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9289,11 +9289,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9314,8 +9314,8 @@
     "equipment": [
       "machine_adduction"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9365,11 +9365,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9388,10 +9388,10 @@
     "name_fr": "Kick back fessier à la poulie",
     "name_eng": "Cable Glute Kickback",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9439,11 +9439,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9462,11 +9462,11 @@
     "name_fr": "Élévation latérale fessier au poids du corps",
     "name_eng": "Bodyweight Lateral Step-Up",
     "equipment": [
-      "bodyweight",
-      "bench_plat"
+      "poids_du_corps",
+      "banc_plat"
     ],
     "level": "finition",
-    "body_part": "legs",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9516,11 +9516,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9541,8 +9541,8 @@
     "equipment": [
       "machine_mollets_debout"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9592,11 +9592,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9617,8 +9617,8 @@
     "equipment": [
       "machine_mollets_assis"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9668,11 +9668,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9691,8 +9691,8 @@
     "equipment": [
       "machine_jambes"
     ],
-    "level": "basic",
-    "body_part": "legs",
+    "level": "basique",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9742,11 +9742,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9765,10 +9765,10 @@
     "name_fr": "Mollets debout avec haltères",
     "name_eng": "Dumbbell Standing Calf Raise",
     "equipment": [
-      "dumbbells"
+      "halteres"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9818,11 +9818,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9841,10 +9841,10 @@
     "name_fr": "Mollets à la poulie",
     "name_eng": "Cable Calf Raise",
     "equipment": [
-      "cables"
+      "poulies"
     ],
-    "level": "advanced",
-    "body_part": "legs",
+    "level": "avancé",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9892,11 +9892,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {
@@ -9916,7 +9916,7 @@
       "corde_sauter"
     ],
     "level": "finition",
-    "body_part": "legs",
+    "body_part": "Jambes",
     "sets_reps": [
       {
         "level": "beginner",
@@ -9964,11 +9964,11 @@
     },
     "muscle_groups": {
       "primary": [
-        "legs"
+        "Jambes"
       ],
       "secondary": [],
       "stabilizers": [
-        "core"
+        "Abdominaux"
       ]
     },
     "fatigue_profile": {

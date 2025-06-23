@@ -152,7 +152,7 @@ const chartDefaults = {
                     weight: '400'
                 },
                 padding: 12,
-                callback: function(value) {
+                callbacks: function(value) {
                     return value.toLocaleString('fr-FR');
                 }
             },
@@ -274,7 +274,7 @@ async function refreshMuscleRecovery() {
                         ...chartDefaults.scales.x,
                         max: 168,
                         ticks: {
-                            callback: function(value) {
+                            callbacks: function(value) {
                                 if (value === 168) return '7j+';
                                 if (value % 24 === 0) return `${value/24}j`;
                                 return `${value}h`;

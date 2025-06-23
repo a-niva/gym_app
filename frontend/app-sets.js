@@ -200,7 +200,7 @@ async function showSetInput() {
     const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
         currentExercise.name_fr.toLowerCase().includes(keyword)
     );
-    const isBodyweight = currentExercise.equipment.includes('bodyweight');
+    const isBodyweight = currentExercise.equipment.includes('poids_du_corps');
     
     // Calculer les poids disponibles pour cet exercice
     let availableWeights = calculateAvailableWeights(currentExercise);
@@ -462,7 +462,7 @@ function updateBarbellVisualization() {
     const totalWeight = parseFloat(weightInput.value) || 0;
     
     // Si pas de poids valide, ne pas afficher d'erreur
-    if (totalWeight === 0 && !currentExercise.equipment.includes('bodyweight')) {
+    if (totalWeight === 0 && !currentExercise.equipment.includes('poids_du_corps')) {
         container.innerHTML = '<div class="barbell-info">Sélectionnez un poids</div>';
         return;
     }
@@ -494,10 +494,10 @@ function getBarWeightForExercise(exercise) {
     if (!currentUser?.equipment_config) return 20;
     const config = currentUser.equipment_config;
     
-    if (exercise.equipment.includes('barbell_standard')) {
+    if (exercise.equipment.includes('barre_olympique')) {
         if (config.barres?.olympique?.available) return 20;
         if (config.barres?.courte?.available) return 2.5;
-    } else if (exercise.equipment.includes('barbell_ez')) {
+    } else if (exercise.equipment.includes('barre_ez')) {
         if (config.barres?.ez?.available) return 10;
     }
     return 20;
@@ -898,7 +898,7 @@ async function completeSet() {
     }
     
     // Pour les exercices au poids du corps, ajuster si nécessaire
-    const isBodyweight = currentExercise.equipment.includes('bodyweight');
+    const isBodyweight = currentExercise.equipment.includes('poids_du_corps');
     const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
         currentExercise.name_fr.toLowerCase().includes(keyword)
     );

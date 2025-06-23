@@ -33,18 +33,18 @@ class FitnessMLEngine:
         }
         
         self.EXPERIENCE_MULTIPLIERS = {
-            "beginner": 0.7,
-            "intermediate": 0.85,
-            "advanced": 1.0,
-            "elite": 1.1,
-            "extreme": 1.2
+            "débutant": 0.7,
+            "intermédiaire": 0.85,
+            "avancé": 1.0,
+            "élite": 1.1,
+            "extrême": 1.2
         }
         
         self.GOAL_ADJUSTMENTS = {
-            "strength": {"sets": 0.8, "reps": 0.7, "weight": 1.2},
-            "hypertrophy": {"sets": 1.0, "reps": 1.0, "weight": 1.0},
+            "force": {"sets": 0.8, "reps": 0.7, "weight": 1.2},
+            "hypertrophie": {"sets": 1.0, "reps": 1.0, "weight": 1.0},
             "endurance": {"sets": 1.2, "reps": 1.3, "weight": 0.8},
-            "weight_loss": {"sets": 1.1, "reps": 1.2, "weight": 0.85},
+            "perte_de_poids": {"sets": 1.1, "reps": 1.2, "weight": 0.85},
             "cardio": {"sets": 1.3, "reps": 1.4, "weight": 0.7},
             "flexibility": {"sets": 0.9, "reps": 1.5, "weight": 0.6}
         }
@@ -203,9 +203,9 @@ class FitnessMLEngine:
             goal_mult = goal_mult ** (1/len(user.goals))  # Moyenne géométrique
         
         # Si haltères, ajuster au poids disponible le plus proche
-        if "dumbbells" in exercise.equipment and user.equipment_config and user.equipment_config.get("dumbbells", {}).get("weights"):
+        if "halteres" in exercise.equipment and user.equipment_config and user.equipment_config.get("halteres", {}).get("weights"):
             target_weight = base_weight * experience_mult * goal_mult / 2
-            available_weights = sorted(user.equipment_config["dumbbells"]["weights"])
+            available_weights = sorted(user.equipment_config["halteres"]["weights"])
             
             # Trouver le poids le plus proche
             if available_weights:
@@ -279,10 +279,10 @@ class FitnessMLEngine:
             
             # Arrondir au poids disponible le plus proche
             if (user.equipment_config and 
-                user.equipment_config.get("dumbbells", {}).get("weights") and 
-                "dumbbells" in exercise.equipment):
+                user.equipment_config.get("halteres", {}).get("weights") and 
+                "halteres" in exercise.equipment):
                 target_per_dumbbell = next_weight / 2
-                available = sorted(user.equipment_config["dumbbells"]["weights"])
+                available = sorted(user.equipment_config["halteres"]["weights"])
                 if available:
                     closest = min(available, key=lambda x: abs(x - target_per_dumbbell))
                     next_weight = closest * 2
@@ -512,7 +512,7 @@ class FitnessMLEngine:
         
             # Vérifier que l'utilisateur a des objectifs
             if not user.goals:
-                user.goals = ["hypertrophy"]  # Objectif par défaut
+                user.goals = ["hypertrophie"]  # Objectif par défaut
 
             # Valider la configuration d'équipement
             if not user.equipment_config or not isinstance(user.equipment_config, dict):
@@ -538,25 +538,25 @@ class FitnessMLEngine:
             for barre_type, barre_config in config.get("barres", {}).items():
                 if barre_config.get("available", False):
                     if barre_type in ["olympique", "courte"]:
-                        available_equipment.append("barbell_standard")
+                        available_equipment.append("barre_olympique")
                     elif barre_type == "ez":
-                        available_equipment.append("barbell_ez")
+                        available_equipment.append("barre_ez")
                     
                     # Équivalence barre courte = haltères (si paire)
                     if barre_type == "courte" and barre_config.get("count", 0) >= 2:
                         logger.info("Barres courtes en paire détectées - ajout équivalence dumbbells")
-                        available_equipment.append("dumbbells")
+                        available_equipment.append("halteres")
 
             # Haltères
-            if config.get("dumbbells", {}).get("available", False):
-                available_equipment.append("dumbbells")
+            if config.get("halteres", {}).get("available", False):
+                available_equipment.append("halteres")
                 
             # Poids du corps toujours disponible
-            available_equipment.append("bodyweight")
+            available_equipment.append("poids_du_corps")
             
             # Banc
             if config.get("banc", {}).get("available", False):
-                available_equipment.append("bench_plat")
+                available_equipment.append("banc_plat")
                 if config["banc"].get("inclinable_haut", False):
                     available_equipment.append("bench_inclinable")
                 if config["banc"].get("inclinable_bas", False):
@@ -571,10 +571,10 @@ class FitnessMLEngine:
             if autres.get("kettlebell", {}).get("available", False):
                 available_equipment.append("kettlebell")
             if autres.get("barre_traction", {}).get("available", False):
-                available_equipment.append("pull_up_bar")  # Mapping correct
+                available_equipment.append("barre_traction")  # Mapping correct
             # Ajouter après les autres mappings d'équipement
             # Machines (non disponibles dans la config actuelle)
-            machine_equipment = ["cables", "machine_convergente", "machine_pectoraux", 
+            machine_equipment = ["poulies", "machine_convergente", "machine_pectoraux", 
                                 "machine_developpe", "machine_epaules", "machine_oiseau",
                                 "machine_shrug", "dip_bars"]
             # Ces équipements ne sont pas dans la config utilisateur, donc toujours False
@@ -583,7 +583,7 @@ class FitnessMLEngine:
             if config.get("elastiques", {}).get("available", False):
                 available_equipment.append("elastiques")
                 # Ajouter aussi l'alias si nécessaire
-                available_equipment.append("resistance_bands")
+                available_equipment.append("elastiques")
 
             logger.info(f"=== DIAGNOSTIC ÉQUIPEMENT ===")
             logger.info(f"Config utilisateur brute: {user.equipment_config}")
@@ -693,7 +693,7 @@ class FitnessMLEngine:
                                 "sets": int(sets_reps["sets"] * week_intensity),
                                 "target_reps": sets_reps["reps"],
                                 "predicted_weight": prediction["predicted_weight"],
-                                "rest_time": 90 if user.goals and "strength" in user.goals else 60
+                                "rest_time": 90 if user.goals and "force" in user.goals else 60
                             })
                         except Exception as e:
                             # CHANGEZ print par logger.error pour voir dans les logs serveur
@@ -725,14 +725,14 @@ class FitnessMLEngine:
         
         # Mapping des groupes musculaires
         muscle_mapping = {
-            "Pectoraux/Triceps": ["chest", "arms"],
+            "Pectoraux/Triceps": ["Pectoraux", "Bras"],
             "Dos/Biceps": ["Trapèzes", "Latéraux", "Rhomboïdes", "Biceps"],  # Dos complet
-            "Jambes": ["legs"],  # Retirer "Ischio-jambiers" et "Mollets" 
-            "Épaules/Abdos": ["shoulders", "core"],  # "Épaules" → "Deltoïdes"
-            "Haut du corps": ["chest", "back", "shoulders"],
-            "Bas du corps": ["legs"],
-            "Full body": ["chest", "back", "legs", "shoulders"],
-            "Bras": ["arms"],
+            "Jambes": ["Jambes"],  # Retirer "Ischio-jambiers" et "Mollets" 
+            "Épaules/Abdos": ["Deltoïdes", "Abdominaux"],  # "Épaules" → "Deltoïdes"
+            "Haut du corps": ["Pectoraux", "Dos", "Deltoïdes"],
+            "Bas du corps": ["Jambes"],
+            "Full body": ["Pectoraux", "Dos", "Jambes", "Deltoïdes"],
+            "Bras": ["Bras"],
         }
         
         target_parts = muscle_mapping.get(muscle_group, [muscle_group])
@@ -740,11 +740,11 @@ class FitnessMLEngine:
         
         # Nombre d'exercices selon le niveau
         exercise_counts = {
-            "beginner": 3,
-            "intermediate": 4,
-            "advanced": 5,
-            "elite": 6,
-            "extreme": 7
+            "débutant": 3,
+            "intermédiaire": 4,
+            "avancé": 5,
+            "élite": 6,
+            "extrême": 7
         }
         
         max_exercises = exercise_counts.get(experience_level, 4)
@@ -763,11 +763,11 @@ class FitnessMLEngine:
                     part_exercises = part_exercises[exercise_rotation_offset:] + part_exercises[:exercise_rotation_offset]
                 
                 # Séparer par niveau
-                compound = [ex for ex in part_exercises if ex.level in ["basic", "advanced"]]
+                compound = [ex for ex in part_exercises if ex.level in ["basique", "avancé"]]
                 isolation = [ex for ex in part_exercises if ex.level in ["isolation", "finition"]]
                 
                 # Sélection selon le type de muscle
-                if part in ["chest", "back", "legs"]:
+                if part in ["Pectoraux", "Dos", "Jambes"]:
                     # Gros muscles : privilégier les composés
                     if compound:
                         selected.extend(compound[:min(2, exercises_per_part)])
@@ -816,7 +816,7 @@ class FitnessMLEngine:
         if not sets_reps_config:
             # Utiliser le niveau intermédiaire par défaut
             for config in exercise.sets_reps:
-                if config["level"] == "intermediate":
+                if config["level"] == "intermédiaire":
                     sets_reps_config = config
                     break
         
@@ -923,8 +923,8 @@ class FitnessMLEngine:
             logger.error(f"Erreur calcul poids pour {exercise.name_fr}: {e}")
             # Poids par défaut selon niveau
             defaults = {
-                "beginner": 10.0, "intermediate": 20.0, "advanced": 30.0,
-                "elite": 40.0, "extreme": 50.0
+                "débutant": 10.0, "intermédiaire": 20.0, "avancé": 30.0,
+                "élite": 40.0, "extrême": 50.0
             }
             return defaults.get(user.experience_level, 20.0)
 
@@ -984,12 +984,12 @@ class VolumeOptimizer:
         ).first()
         
         # Volume de base selon objectif principal
-        primary_goal = user.goals[0] if user.goals else "hypertrophy"
+        primary_goal = user.goals[0] if user.goals else "hypertrophie"
         base_volumes = {
-            "strength": 10,
-            "hypertrophy": 16,
+            "force": 10,
+            "hypertrophie": 16,
             "endurance": 20,
-            "weight_loss": 14,
+            "perte_de_poids": 14,
             "cardio": 12,
             "flexibility": 8
         }
@@ -997,11 +997,11 @@ class VolumeOptimizer:
         
         # Ajuster selon l'expérience
         exp_multipliers = {
-            "beginner": 0.7,
-            "intermediate": 1.0,
-            "advanced": 1.2,
-            "elite": 1.4,
-            "extreme": 1.5
+            "débutant": 0.7,
+            "intermédiaire": 1.0,
+            "avancé": 1.2,
+            "élite": 1.4,
+            "extrême": 1.5
         }
         exp_mult = exp_multipliers.get(user.experience_level, 1.0)
         
@@ -1083,10 +1083,10 @@ class SessionBuilder:
             
             for selected in selected_exercises:
                 # Utiliser la logique existante pour sets/reps
-                sets = 3 if user.experience_level in ["beginner", "intermediate"] else 4
+                sets = 3 if user.experience_level in ["débutant", "intermédiaire"] else 4
                 
                 # Adapter les reps selon l'objectif
-                if "strength" in user.goals:
+                if "force" in user.goals:
                     reps = 5
                 elif "endurance" in user.goals:
                     reps = 15
@@ -1094,7 +1094,7 @@ class SessionBuilder:
                     reps = 10
                 
                 # Temps de repos selon objectif
-                if "strength" in user.goals:
+                if "force" in user.goals:
                     rest = 180
                 elif "endurance" in user.goals:
                     rest = 60
@@ -1175,11 +1175,11 @@ class SessionBuilder:
     def _is_suitable_level(self, exercise_level: str, user_level: str) -> bool:
         """Vérifie si l'exercice convient au niveau de l'utilisateur"""
         level_hierarchy = {
-            "beginner": 1,
-            "intermediate": 2,
-            "advanced": 3,
-            "elite": 4,
-            "extreme": 5
+            "débutant": 1,
+            "intermédiaire": 2,
+            "avancé": 3,
+            "élite": 4,
+            "extrême": 5
         }
         
         ex_level = level_hierarchy.get(exercise_level, 2)

@@ -108,7 +108,7 @@ async def create_user_commitment(
     
     # Initialiser les targets adaptatifs
     volume_optimizer = VolumeOptimizer(db)
-    muscles = ["chest", "back", "shoulders", "legs", "arms", "core"]
+    muscles = ["Pectoraux", "Dos", "Deltoïdes", "Jambes", "Bras", "Abdominaux"]
     
     for muscle in muscles:
         # Vérifier si existe déjà
@@ -188,7 +188,7 @@ async def generate_adaptive_workout(
     muscle_readiness = {}
     volume_deficits = volume_optimizer.get_volume_deficit(user)
     
-    for muscle in ["chest", "back", "shoulders", "legs", "arms", "core"]:
+    for muscle in ["Pectoraux", "Dos", "Deltoïdes", "Jambes", "Bras", "Abdominaux"]:
         readiness = recovery_tracker.get_muscle_readiness(muscle, user)
         deficit = volume_deficits.get(muscle, 0)
         
@@ -303,7 +303,7 @@ async def initialize_adaptive_targets(
         return {"status": "already_initialized"}
     
     # Créer les targets pour chaque muscle
-    muscles = ["chest", "back", "shoulders", "legs", "arms", "core"]
+    muscles = ["Pectoraux", "Dos", "Deltoïdes", "Jambes", "Bras", "Abdominaux"]
     for muscle in muscles:
         target = AdaptiveTargets(
             user_id=user_id,

@@ -4,10 +4,10 @@
 
 // Configuration des exercices
 export const EXERCISE_CATEGORIES = {
-    BODYWEIGHT_PURE: ['bodyweight'],  // Pompes, tractions...
-    BODYWEIGHT_WEIGHTED: ['bodyweight', 'lest_possible'],  // Peut ajouter du lest
+    BODYWEIGHT_PURE: ['poids_du_corps'],  // Pompes, tractions...
+    BODYWEIGHT_WEIGHTED: ['poids_du_corps', 'lest_possible'],  // Peut ajouter du lest
     TIME_BASED: ['gainage', 'planche', 'isometric'],  // En secondes
-    WEIGHTED: ['dumbbells', 'barbell', 'kettlebell', 'cables', 'machine']  // Avec poids
+    WEIGHTED: ['halteres', 'barbell', 'kettlebell', 'poulies', 'machine']  // Avec poids
 };
 
 // Détection du type d'exercice basée sur le nom
@@ -22,38 +22,38 @@ export const REST_TARGET_TIME = 60; // 60 secondes de repos par défaut
 
 // Noms d'équipement en français
 export const EQUIPMENT_NAMES = {
-    'dumbbells': 'Haltères',
+    'halteres': 'Haltères',
     'barbell': 'Barres & Disques',
-    'resistance_bands': 'Élastiques',
+    'elastiques': 'Élastiques',
     'bench': 'Banc',
-    'pull_up_bar': 'Barre de traction',
+    'barre_traction': 'Barre de traction',
     'kettlebell': 'Kettlebells'
 };
 
 // Icônes SVG pour l'équipement
 export const EQUIPMENT_ICONS = {
-    'dumbbells': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/></svg>',
+    'halteres': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/></svg>',
     'barbell': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8m-4-8v16"/></svg>',
-    'resistance_bands': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+    'elastiques': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
     'bench': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18m-9-9v18"/></svg>',
-    'pull_up_bar': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14m-7 0v18"/></svg>',
+    'barre_traction': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14m-7 0v18"/></svg>',
     'kettlebell': '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>'
 };
 
 // Couleurs des groupes musculaires
 export const BODY_PART_COLORS = {
-    'chest': '#3b82f6',      // Bleu
-    'arms': '#8b5cf6',         // Violet
-    'arms': '#8b5cf6',        // Mauve
-    'shoulders': '#ec4899',      // Rose
-    'back': '#ef4444',            // Rouge
-    'core': '#f97316',     // Orange
-    'legs': '#eab308',     // Jaune
-    'legs': '#eab308', // Vert clair
-    'legs': '#eab308',        // Vert
-    'legs': '#eab308',       // Turquoise
-    'back': '#ef4444',       // Cyan
-    'arms': '#8b5cf6'     // Indigo
+    'Pectoraux': '#3b82f6',      // Bleu
+    'Bras': '#8b5cf6',         // Violet
+    'Bras': '#8b5cf6',        // Mauve
+    'Deltoïdes': '#ec4899',      // Rose
+    'Dos': '#ef4444',            // Rouge
+    'Abdominaux': '#f97316',     // Orange
+    'Jambes': '#eab308',     // Jaune
+    'Jambes': '#eab308', // Vert clair
+    'Jambes': '#eab308',        // Vert
+    'Jambes': '#eab308',       // Turquoise
+    'Dos': '#ef4444',       // Cyan
+    'Bras': '#8b5cf6'     // Indigo
 };
 
 // Mapping des couleurs hexadécimales vers des noms
@@ -70,11 +70,11 @@ export const COLOR_NAMES = {
 
 // Noms des objectifs
 export const GOAL_NAMES = {
-    'strength': '💪 Force',
-    'hypertrophy': '🦾 Masse musculaire',
+    'force': '💪 Force',
+    'hypertrophie': '🦾 Masse musculaire',
     'endurance': '🏃 Endurance',
-    'weight_loss': '⚖️ Perte de poids',
-    'general_fitness': '❤️ Forme générale',
+    'perte_de_poids': '⚖️ Perte de poids',
+    'forme_generale': '❤️ Forme générale',
     'cardio': '🏃 Cardio',
     'flexibility': '🤸 Souplesse'
 };
@@ -118,7 +118,7 @@ export function isTimeBasedExercise(exerciseName) {
 }
 
 export function isBodyweightExercise(equipment) {
-    return equipment.includes('bodyweight');
+    return equipment.includes('poids_du_corps');
 }
 
 // Fonction pour obtenir le nom hexadécimal d'une couleur approximative

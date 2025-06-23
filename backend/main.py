@@ -127,21 +127,21 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
     for barre_type, barre_config in config.get("barres", {}).items():
         if barre_config.get("available", False):
             if barre_type in ["olympique", "courte"]:
-                available_equipment.append("barbell_standard")
+                available_equipment.append("barre_olympique")
             elif barre_type == "ez":
-                available_equipment.append("barbell_ez")
+                available_equipment.append("barre_ez")
             
             # Équivalence barre courte = haltères
             if barre_type == "courte" and barre_config.get("count", 0) >= 2:
-                available_equipment.append("dumbbells")
+                available_equipment.append("halteres")
     
     # Haltères
-    if config.get("dumbbells", {}).get("available", False):
-        available_equipment.append("dumbbells")
+    if config.get("halteres", {}).get("available", False):
+        available_equipment.append("halteres")
     
     # Banc
     if config.get("banc", {}).get("available", False):
-        available_equipment.append("bench_plat")
+        available_equipment.append("banc_plat")
         if config["banc"].get("inclinable_haut", False):
             available_equipment.append("bench_inclinable")
         if config["banc"].get("inclinable_bas", False):
@@ -157,7 +157,7 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
     # Autres équipements avec mapping correct
     autres = config.get("autres", {})
     equipment_mapping = {
-        "barre_traction": "pull_up_bar",
+        "barre_traction": "barre_traction",
         "kettlebell": "kettlebell",
         "lest_corps": "bodyweight_vest",
         "lest_chevilles": "ankle_weights",
@@ -171,7 +171,7 @@ def get_available_exercises(user_id: int, db: Session = Depends(get_db)):
             available_equipment.append(mapped_name)
     
     # Poids du corps toujours disponible
-    available_equipment.append("bodyweight")
+    available_equipment.append("poids_du_corps")
     
     # Filtrer les exercices
     all_exercises = db.query(Exercise).all()
@@ -239,7 +239,7 @@ def get_workout_history(user_id: int, limit: int = 20, db: Session = Depends(get
             if not s.skipped:
                 # Récupérer l'exercice pour vérifier si c'est du bodyweight
                 exercise = db.query(Exercise).filter(Exercise.id == s.exercise_id).first()
-                if exercise and any('bodyweight' in eq for eq in exercise.equipment):
+                if exercise and any('poids_du_corps' in eq for eq in exercise.equipment):
                     # Pour bodyweight, ajouter le poids du corps à la charge additionnelle
                     user = db.query(User).filter(User.id == user_id).first()
                     body_weight = user.weight if user else 75
@@ -587,9 +587,9 @@ def get_next_weight(user_id: int, exercise_id: int, db: Session = Depends(get_db
             
             # Ajuster selon le niveau d'expérience
             experience_multipliers = {
-                "beginner": 0.6,
-                "intermediate": 0.8,
-                "advanced": 1.0,
+                "débutant": 0.6,
+                "intermédiaire": 0.8,
+                "avancé": 1.0,
                 "expert": 1.2
             }
             multiplier = experience_multipliers.get(user.experience_level, 0.8)
@@ -673,7 +673,7 @@ def get_muscle_summary(workout_id: int, db: Session = Depends(get_db)):
         exercise = db.query(Exercise).filter(Exercise.id == set_item.exercise_id).first()
         if exercise:
             # Déterminer le type d'exercice
-            is_bodyweight = "bodyweight" in exercise.equipment
+            is_bodyweight = "poids_du_corps" in exercise.equipment
             is_time_based = any(keyword in exercise.name_fr.lower() 
                                for keyword in ['gainage', 'planche', 'plank', 'vacuum'])
             
@@ -1121,7 +1121,7 @@ def get_muscle_performance_prediction(user_id: int, db: Session = Depends(get_db
 def init_adaptive_targets(user_id: int, db: Session = Depends(get_db)):
     """Initialise les targets adaptatifs si elles n'existent pas"""
     from backend.models import AdaptiveTargets
-    muscles = ["chest", "back", "shoulders", "legs", "arms", "core"]
+    muscles = ["Pectoraux", "Dos", "Deltoïdes", "Jambes", "Bras", "Abdominaux"]
     for muscle in muscles:
         existing = db.query(AdaptiveTargets).filter(
             AdaptiveTargets.user_id == user_id,

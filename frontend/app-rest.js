@@ -64,7 +64,7 @@ function showRestInterface(setData) {
 function formatSetDisplay(setData) {
     // Déterminer le type d'exercice
     const isTimeBased = currentExercise && currentExercise.name_fr.toLowerCase().match(/gainage|planche|plank|vacuum|isométrique/);
-    const isBodyweight = currentExercise && currentExercise.equipment.includes('bodyweight');
+    const isBodyweight = currentExercise && currentExercise.equipment.includes('poids_du_corps');
     
     if (isTimeBased) {
         return `${setData.actual_reps} secondes${setData.weight > 0 ? ` avec ${setData.weight}kg` : ''}`;

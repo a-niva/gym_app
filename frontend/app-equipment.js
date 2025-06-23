@@ -19,7 +19,7 @@ function calculateAvailableWeights(exercise) {
     );
     
     // Exercices au poids du corps
-    if (exercise.equipment.includes('bodyweight')) {
+    if (exercise.equipment.includes('poids_du_corps')) {
         // Pour les exercices temporels, seulement l'option sans poids
         if (isTimeBased) {
             return [0];
@@ -47,10 +47,10 @@ function calculateAvailableWeights(exercise) {
     if (exercise.equipment.some(eq => eq.includes('barbell'))) {
         let barWeight = 0;
         
-        if (exercise.equipment.includes('barbell_standard')) {
+        if (exercise.equipment.includes('barre_olympique')) {
             if (config.barres?.olympique?.available) barWeight = 20;
             else if (config.barres?.courte?.available) barWeight = 2.5;
-        } else if (exercise.equipment.includes('barbell_ez')) {
+        } else if (exercise.equipment.includes('barre_ez')) {
             if (config.barres?.ez?.available) barWeight = 10;
         }
         
@@ -79,7 +79,7 @@ function calculateAvailableWeights(exercise) {
     }
     
     // Haltères (dumbbells classiques OU haltères courtes + disques)
-    if (exercise.equipment.includes('dumbbells')) {
+    if (exercise.equipment.includes('halteres')) {
         // Option 1: Haltères fixes classiques
         if (config.dumbbells?.weights?.length > 0) {
             config.dumbbells.weights.forEach(w => {
@@ -245,10 +245,10 @@ export function isWeightPossible(exercise, weight, config) {
 
 // ===== FONCTIONS HELPER PRIVÉES =====
 function getBarWeight(exercise, config) {
-    if (exercise.equipment.includes('barbell_standard')) {
+    if (exercise.equipment.includes('barre_olympique')) {
         if (config.barres?.olympique?.available) return 20;
         if (config.barres?.courte?.available) return 2.5;
-    } else if (exercise.equipment.includes('barbell_ez')) {
+    } else if (exercise.equipment.includes('barre_ez')) {
         if (config.barres?.ez?.available) return 10;
     }
     return 0;
@@ -365,32 +365,32 @@ export function filterExercisesByEquipment(exercises) {
         // Vérifier si on a AU MOINS UN équipement requis (logique OR)
         return required.some(eq => {
             // Si l'exercice demande des haltères et qu'on a des barres courtes, c'est OK
-            if (eq === 'dumbbells' && hasShortBarbells) {
+            if (eq === 'halteres' && hasShortBarbells) {
                 return true;
             }
             
             // Sinon, vérifier normalement
             switch(eq) {
-                case 'bodyweight':
+                case 'poids_du_corps':
                     return true;
-                case 'dumbbells':
+                case 'halteres':
                     return config.dumbbells?.available && 
                         config.dumbbells?.weights?.length > 0;
-                case 'barbell_standard':
+                case 'barre_olympique':
                     return config.barres?.olympique?.available || 
                         config.barres?.courte?.available;
-                case 'barbell_ez':
+                case 'barre_ez':
                     return config.barres?.ez?.available;
-                case 'bench_plat':
+                case 'banc_plat':
                     return config.banc?.available;
                 case 'bench_inclinable':
                     return config.banc?.available && config.banc?.inclinable_haut;
                 case 'bench_declinable':
                     return config.banc?.available && config.banc?.inclinable_bas;
-                case 'cables':
+                case 'poulies':
                     return false; // Pas dans la config actuelle
                 case 'elastiques':
-                case 'resistance_bands':  // Alias pour compatibilité
+                case 'elastiques':  // Alias pour compatibilité
                     return config.elastiques?.available && 
                         config.elastiques?.bands?.length > 0;
                 case 'barre_traction':
@@ -419,7 +419,7 @@ function getExerciseType(exercise) {
         exercise.name_fr.toLowerCase().includes(keyword)
     );
     
-    const isBodyweight = exercise.equipment.includes('bodyweight');
+    const isBodyweight = exercise.equipment.includes('poids_du_corps');
     
     if (isTimeBased) {
         return 'time_based';
@@ -462,7 +462,7 @@ function calculateSuggestedWeight(exercise, lastSet = null) {
     const exerciseType = getExerciseType(exercise);
     
     // Exercices au poids du corps
-    if (exercise.equipment.includes('bodyweight')) {
+    if (exercise.equipment.includes('poids_du_corps')) {
         // Pour les exercices temporels, pas de poids
         if (getExerciseType(exercise) === 'time_based') {
             return 0;

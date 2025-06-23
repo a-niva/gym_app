@@ -127,7 +127,7 @@ function nextStep() {
     if (currentStepEl && currentStepEl.id === 'step3') {
         // Vérifier si l'équipement sélectionné nécessite une configuration détaillée
         const needsDetailedConfig = selectedEquipment.some(eq => 
-            ['dumbbells', 'barbell', 'resistance_bands', 'kettlebell', 'bench'].includes(eq)
+            ['halteres', 'barbell', 'elastiques', 'kettlebell', 'bench'].includes(eq)
         );
         
         if (needsDetailedConfig) {
@@ -194,14 +194,14 @@ function generateDetailedEquipmentConfig() {
     container.innerHTML = html;
     
     // Auto-configurer les équipements simples
-    if (selectedEquipment.includes('pull_up_bar')) {
+    if (selectedEquipment.includes('barre_traction')) {
         equipmentConfig.autres.barre_traction = true;
-        updateEquipmentStatus('pull_up_bar');
+        updateEquipmentStatus('barre_traction');
     }
     
     // Afficher les panneaux de configuration pour chaque équipement sélectionné
     selectedEquipment.forEach(eq => {
-        if (eq === 'dumbbells' || eq === 'barbell' || eq === 'resistance_bands' || eq === 'kettlebell' || eq === 'bench') {
+        if (eq === 'halteres' || eq === 'barbell' || eq === 'elastiques' || eq === 'kettlebell' || eq === 'bench') {
             showConfigPanel(eq);
         }
     });
@@ -217,10 +217,10 @@ function showConfigPanel(equipmentType) {
         case 'barbell':
             panel.innerHTML = createBarbellPanel();
             break;
-        case 'dumbbells':
+        case 'halteres':
             panel.innerHTML = createDumbbellsPanel();
             break;
-        case 'resistance_bands':
+        case 'elastiques':
             panel.innerHTML = createBandsPanel();
             break;
         case 'bench':
@@ -416,7 +416,7 @@ function updateDumbbellWeight(weight, count) {
     } else {
         delete equipmentConfig.dumbbells[weight];
     }
-    updateEquipmentStatus('dumbbells');
+    updateEquipmentStatus('halteres');
 }
 
 function updateKettlebellWeight(weight, count) {
@@ -442,7 +442,7 @@ function addBand() {
         });
         
         updateBandsList();
-        updateEquipmentStatus('resistance_bands');
+        updateEquipmentStatus('elastiques');
         
         // Reset inputs
         document.getElementById('bandResistance').value = '';
@@ -473,7 +473,7 @@ function updateBandsList() {
 function removeBand(index) {
     equipmentConfig.elastiques.splice(index, 1);
     updateBandsList();
-    updateEquipmentStatus('resistance_bands');
+    updateEquipmentStatus('elastiques');
 }
 
 function toggleBenchFeature(element, feature) {
@@ -502,7 +502,7 @@ function updateEquipmentStatus(type) {
     let isConfigured = false;
     
     switch(type) {
-        case 'dumbbells':
+        case 'halteres':
             isConfigured = Object.keys(equipmentConfig.dumbbells).length > 0;
             break;
         case 'barbell':
@@ -510,14 +510,14 @@ function updateEquipmentStatus(type) {
             const hasDisques = Object.keys(equipmentConfig.disques).length > 0;
             isConfigured = hasBarbell && hasDisques;
             break;
-        case 'resistance_bands':
+        case 'elastiques':
             isConfigured = equipmentConfig.elastiques.length > 0;
             break;
         case 'bench':
             isConfigured = true;
             equipmentConfig.banc.available = true;
             break;
-        case 'pull_up_bar':
+        case 'barre_traction':
             isConfigured = true;
             equipmentConfig.autres.barre_traction = true;
             break;
@@ -554,7 +554,7 @@ function validateDetailedConfig() {
     let isValid = true;
     let errors = [];
     
-    if (selectedEquipment.includes('dumbbells')) {
+    if (selectedEquipment.includes('halteres')) {
         const dumbellCount = Object.keys(equipmentConfig.dumbbells).length;
         if (dumbellCount === 0) {
             errors.push('Veuillez ajouter au moins un poids d\'haltère');
@@ -576,7 +576,7 @@ function validateDetailedConfig() {
         }
     }
     
-    if (selectedEquipment.includes('resistance_bands')) {
+    if (selectedEquipment.includes('elastiques')) {
         if (equipmentConfig.elastiques.length === 0) {
             errors.push('Veuillez ajouter au moins un élastique');
             isValid = false;
@@ -660,7 +660,7 @@ function updateProfileSummary() {
         summaryHTML += `<strong>${getEquipmentName(eq)}</strong>`;
         
         switch(eq) {
-            case 'dumbbells':
+            case 'halteres':
                 const dumbbellWeights = Object.keys(equipmentConfig.dumbbells).filter(w => equipmentConfig.dumbbells[w] > 0);
                 if (dumbbellWeights.length > 0) {
                     summaryHTML += `<div class="equipment-detail">Poids: ${dumbbellWeights.join(', ')}kg</div>`;
@@ -682,7 +682,7 @@ function updateProfileSummary() {
                 }
                 break;
                 
-            case 'resistance_bands':
+            case 'elastiques':
                 if (equipmentConfig.elastiques.length > 0) {
                     const bands = equipmentConfig.elastiques.map(e => 
                         `${e.color} (${e.resistance}kg)`

@@ -271,24 +271,24 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                     
                     // Gradients uniques par muscle
                     const gradients = {
-                        'chest': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        'back': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                        'shoulders': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                        'legs': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-                        'arms': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                        'core': 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+                        'Pectoraux': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'Dos': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'Deltoïdes': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'Jambes': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'Bras': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                        'Abdominaux': 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
                     };
                     
                     const muscleNames = {
-                        'chest': 'Pectoraux',
-                        'back': 'Dos',
-                        'shoulders': 'Épaules',
-                        'legs': 'Jambes',
-                        'arms': 'Bras',
-                        'core': 'Abdos'
+                        'Pectoraux': 'Pectoraux',
+                        'Dos': 'Dos',
+                        'Deltoïdes': 'Épaules',
+                        'Jambes': 'Jambes',
+                        'Bras': 'Bras',
+                        'Abdominaux': 'Abdos'
                     };
                     
-                    const gradient = gradients[target.muscle_group] || gradients.chest;
+                    const gradient = gradients[target.muscle_group] || gradients.Pectoraux;
                     const muscleName = muscleNames[target.muscle_group] || target.muscle_group;
                     
                     // Calcul de la circonférence pour l'animation
@@ -542,21 +542,21 @@ async function renderMuscleStatus(targets) {
     }
     
     const muscleEmojis = {
-        chest: '🎯',
-        back: '🔙',
-        shoulders: '💪',
-        legs: '🦵',
-        arms: '💪',
-        core: '🎯'
+        Pectoraux: '🎯',
+        Dos: '🔙',
+        Deltoïdes: '💪',
+        Jambes: '🦵',
+        Bras: '💪',
+        Abdominaux: '🎯'
     };
     
     const muscleNames = {
-        chest: 'Pectoraux',
-        back: 'Dos',
-        shoulders: 'Épaules',
-        legs: 'Jambes',
-        arms: 'Bras',
-        core: 'Abdos'
+        Pectoraux: 'Pectoraux',
+        Dos: 'Dos',
+        Deltoïdes: 'Épaules',
+        Jambes: 'Jambes',
+        Bras: 'Bras',
+        Abdominaux: 'Abdos'
     };
     
     // Construire le HTML directement sans Promise

@@ -60,10 +60,10 @@
                     <label for="experienceLevel">Niveau d'expérience</label>
                     <select id="experienceLevel" class="form-input">
                         <option value="">Sélectionnez votre niveau</option>
-                        <option value="beginner">Débutant (moins de 6 mois)</option>
-                        <option value="intermediate">Intermédiaire (6 mois - 2 ans)</option>
-                        <option value="advanced">Avancé (2-5 ans)</option>
-                        <option value="elite">Elite (5+ ans)</option>
+                        <option value="débutant">Débutant (moins de 6 mois)</option>
+                        <option value="intermédiaire">Intermédiaire (6 mois - 2 ans)</option>
+                        <option value="avancé">Avancé (2-5 ans)</option>
+                        <option value="élite">Elite (5+ ans)</option>
                     </select>
                 </div>
                 
@@ -81,10 +81,10 @@
                 <p style="color: var(--gray); margin-bottom: 2rem;">Que souhaitez-vous accomplir ?</p>
                 
                 <div class="chip-group">
-                    <div class="chip" data-goal="strength" onclick="toggleGoal(this)">💪 Force</div>
-                    <div class="chip" data-goal="hypertrophy" onclick="toggleGoal(this)">🦾 Masse musculaire</div>
+                    <div class="chip" data-goal="force" onclick="toggleGoal(this)">💪 Force</div>
+                    <div class="chip" data-goal="hypertrophie" onclick="toggleGoal(this)">🦾 Masse musculaire</div>
                     <div class="chip" data-goal="cardio" onclick="toggleGoal(this)">🏃 Cardio</div>
-                    <div class="chip" data-goal="weight_loss" onclick="toggleGoal(this)">⚖️ Perte de poids</div>
+                    <div class="chip" data-goal="perte_de_poids" onclick="toggleGoal(this)">⚖️ Perte de poids</div>
                     <div class="chip" data-goal="endurance" onclick="toggleGoal(this)">🔋 Endurance</div>
                     <div class="chip" data-goal="flexibility" onclick="toggleGoal(this)">🤸 Souplesse</div>
                 </div>
@@ -110,7 +110,7 @@
     <p style="color: var(--gray); margin-bottom: 2rem;">Sélectionnez ce que vous avez à disposition</p>
     
     <div class="equipment-grid-square">
-        <div class="equipment-card" data-equipment="dumbbells" onclick="toggleEquipment(this)">
+        <div class="equipment-card" data-equipment="halteres" onclick="toggleEquipment(this)">
             <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
             </svg>
@@ -124,7 +124,7 @@
             <div>Barres & Disques</div>
         </div>
         
-        <div class="equipment-card" data-equipment="resistance_bands" onclick="toggleEquipment(this)">
+        <div class="equipment-card" data-equipment="elastiques" onclick="toggleEquipment(this)">
             <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
@@ -138,7 +138,7 @@
             <div>Banc</div>
         </div>
         
-        <div class="equipment-card" data-equipment="pull_up_bar" onclick="toggleEquipment(this)">
+        <div class="equipment-card" data-equipment="barre_traction" onclick="toggleEquipment(this)">
             <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18M5 3v9m14-9v9"/>
             </svg>

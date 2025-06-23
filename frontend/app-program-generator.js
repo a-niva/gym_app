@@ -97,7 +97,7 @@ function showCommitmentForm(container, existingCommitment = null) {
                 <div class="muscle-priority-grid">
                     <div class="muscle-priority-item">
                         <span>Pectoraux</span>
-                        <select name="chest_priority">
+                        <select name="Pectoraux_priority">
                         <option value="never">Jamais</option>
                         <option value="normal" selected>Normal</option>
                         <option value="priority">Priorité</option>
@@ -106,7 +106,7 @@ function showCommitmentForm(container, existingCommitment = null) {
                     </div>
                     <div class="muscle-priority-item">
                         <span>Dos</span>
-                        <select name="back_priority">
+                        <select name="Dos_priority">
                         <option value="never">Jamais</option>
                         <option value="normal" selected>Normal</option>
                         <option value="priority">Priorité</option>
@@ -115,7 +115,7 @@ function showCommitmentForm(container, existingCommitment = null) {
                     </div>
                     <div class="muscle-priority-item">
                         <span>Épaules</span>
-                        <select name="shoulders_priority">
+                        <select name="Deltoïdes_priority">
                         <option value="never">Jamais</option>
                         <option value="normal" selected>Normal</option>
                         <option value="priority">Priorité</option>
@@ -124,7 +124,7 @@ function showCommitmentForm(container, existingCommitment = null) {
                     </div>
                     <div class="muscle-priority-item">
                         <span>Jambes</span>
-                        <select name="legs_priority">
+                        <select name="Jambes_priority">
                         <option value="never">Jamais</option>
                         <option value="normal" selected>Normal</option>
                         <option value="priority">Priorité</option>
@@ -133,7 +133,7 @@ function showCommitmentForm(container, existingCommitment = null) {
                     </div>
                     <div class="muscle-priority-item">
                         <span>Bras</span>
-                        <select name="arms_priority">
+                        <select name="Bras_priority">
                         <option value="never">Jamais</option>
                         <option value="normal" selected>Normal</option>
                         <option value="priority">Priorité</option>
@@ -142,7 +142,7 @@ function showCommitmentForm(container, existingCommitment = null) {
                     </div>
                     <div class="muscle-priority-item">
                         <span>Abdos</span>
-                        <select name="core_priority">
+                        <select name="Abdominaux_priority">
                         <option value="never">Jamais</option>
                         <option value="normal" selected>Normal</option>
                         <option value="priority">Priorité</option>
@@ -376,7 +376,7 @@ async function submitCommitment(event) {
     
     // Collecter les priorités musculaires
     const focusMuscles = {};
-    const muscles = ['chest', 'back', 'shoulders', 'legs', 'arms', 'core'];
+    const muscles = ['Pectoraux', 'Dos', 'Deltoïdes', 'Jambes', 'Bras', 'Abdominaux'];
     
     muscles.forEach(muscle => {
         const priority = document.querySelector(`select[name="${muscle}_priority"]`).value;
@@ -581,8 +581,8 @@ async function generateProgram(event) {
                             font-weight: 600;
                             cursor: pointer;
                             transition: all 0.3s ease;
-                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'" 
-                        onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
+                        " onmouseover="this.style.Dosground='rgba(255, 255, 255, 0.15)'" 
+                        onmouseout="this.style.Dosground='rgba(255, 255, 255, 0.1)'">
                             💾 Sauvegarder pour plus tard
                         </button>
                     </div>
@@ -723,8 +723,8 @@ function displayProgram(program) {
                     background: rgba(59, 130, 246, 0.1);
                     transition: background 0.2s;
                     user-select: none;
-                " onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" 
-                   onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'">
+                " onmouseover="this.style.Dosground='rgba(59, 130, 246, 0.2)'" 
+                   onmouseout="this.style.Dosground='rgba(59, 130, 246, 0.1)'">
                     <span class="week-toggle" id="toggle-week-${week}" style="
                         font-size: 0.8rem;
                         transition: transform 0.2s;

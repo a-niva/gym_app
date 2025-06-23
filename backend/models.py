@@ -30,7 +30,7 @@ class Exercise(Base):
     id = Column(Integer, primary_key=True, index=True)
     name_fr = Column(String, nullable=False)
     name_eng = Column(String, nullable=False)
-    equipment = Column(JSON)  # ["barbell_standard", "dumbbells"]
+    equipment = Column(JSON)  # ["barre_olympique", "halteres"]
     level = Column(String)
     body_part = Column(String)
     sets_reps = Column(JSON)
@@ -123,7 +123,7 @@ class UserCommitment(Base):
     
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     sessions_per_week = Column(Integer, nullable=False)
-    focus_muscles = Column(JSON)  # {"chest": "priority", "legs": "maintain"}
+    focus_muscles = Column(JSON)  # {"Pectoraux": "priority", "Jambes": "maintain"}
     time_per_session = Column(Integer)  # Minutes moyennes souhaitées
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
