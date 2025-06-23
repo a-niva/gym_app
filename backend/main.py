@@ -1114,6 +1114,30 @@ def get_muscle_performance_prediction(user_id: int, db: Session = Depends(get_db
     
     return {"predictions": predictions}
 
+@app.post("/api/users/{user_id}/init-adaptive-targets")
+def init_adaptive_targets(user_id: int, db: Session = Depends(get_db)):
+    """Initialise les targets adaptatifs si elles n'existent pas"""
+    from backend.models import AdaptiveTargets
+    muscles = ["chest", "back", "shoulders", "legs", "arms", "core"]
+    for muscle in muscles:
+        existing = db.query(AdaptiveTargets).filter(
+            AdaptiveTargets.user_id == user_id,
+            AdaptiveTargets.muscle_group == muscle
+        ).first()
+        if not existing:
+            target = AdaptiveTargets(
+                user_id=user_id,
+                muscle_group=muscle,
+                target_volume=100.0,
+                current_volume=0.0,
+                recovery_debt=0.0,
+                adaptation_rate=1.0
+            )
+            db.add(target)
+    db.commit()
+    update_adaptive_targets_volume(user_id, db)
+    return {"status": "initialized"}
+
 @app.delete("/api/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     """Supprimer complètement un utilisateur et toutes ses données"""
