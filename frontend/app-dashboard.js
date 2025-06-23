@@ -159,7 +159,6 @@ function showClassicDashboard(container, hasProgram) {
 }
 
 // ===== DASHBOARD ADAPTATIF =====
-// ===== DASHBOARD ADAPTATIF CORRIGÉ =====
 async function showAdaptiveDashboard(container, commitment, hasProgram) {
     // Charger les données adaptatives
     const [trajectory, targets] = await Promise.all([
@@ -185,259 +184,210 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
         
         <!-- Widget Trajectoire -->
         <div class="trajectory-widget ${trajectory.on_track ? 'on-track' : 'off-track'}" style="
+            background: linear-gradient(135deg, 
+                ${trajectory.on_track ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'}, 
+                rgba(255, 255, 255, 0.02)
+            );
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid ${trajectory.on_track ? '#10b981' : '#f59e0b'};
+            text-align: center;
+        ">
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${statusMessage}</h2>
+            <p style="color: var(--gray); margin: 0;">
+                ${trajectory.sessions_this_week}/${commitment.sessions_per_week} séances cette semaine
+            </p>
+        </div>
+        
+        <!-- Widget Engagement -->
+        <div style="
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid ${trajectory.on_track ? '#10b981' : '#f59e0b'};
             border-radius: 16px;
             padding: 1.5rem;
-            margin-bottom: 2rem;
-            overflow-x: auto;
-            word-wrap: break-word;
+            margin-bottom: 1.5rem;
         ">
-            <div class="trajectory-header" style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1.5rem;
-                flex-wrap: wrap;
+            <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                🎯 Engagement 
+                <span style="font-size: 0.8rem; color: var(--gray);">
+                    ${commitment.sessions_per_week} séances/sem
+                </span>
+            </h3>
+            
+            <!-- Stats sur une ligne -->
+            <div style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
                 gap: 1rem;
             ">
-                <h3 style="margin: 0; flex: 1; min-width: 200px;">${statusMessage}</h3>
-                <span class="trajectory-badge" style="
-                    background: ${trajectory.on_track ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'};
-                    color: ${trajectory.on_track ? '#10b981' : '#f59e0b'};
-                    padding: 0.5rem 1rem;
-                    border-radius: 999px;
-                    font-weight: 600;
-                    white-space: nowrap;
-                ">
-                    ${trajectory.sessions_this_week}/${commitment.sessions_per_week} séances
-                </span>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: bold; color: ${trajectory.consistency_score >= 0.7 ? '#10b981' : '#f59e0b'};">
+                        ${Math.round(trajectory.consistency_score * 100)}%
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--gray);">Régularité (30j)</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: bold; color: ${trajectory.volume_adherence >= 0.8 ? '#10b981' : '#f59e0b'};">
+                        ${Math.round(trajectory.volume_adherence * 100)}%
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--gray);">Adhérence volume</div>
+                </div>
             </div>
-            
-            ${hasProgram ? `
-                <div class="trajectory-stats" style="
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1rem;
-                    margin-bottom: 1.5rem;
-                ">
-                    <div class="stat-item" style="
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        padding: 0.75rem;
-                        background: rgba(255, 255, 255, 0.03);
-                        border-radius: 8px;
-                        min-height: 60px;
-                    ">
-                        <div style="flex: 1; min-width: 0;">
-                            <span class="stat-label" style="color: var(--gray); font-size: 0.875rem; display: block;">Régularité (30j)</span>
-                            <div class="progress-bar" style="
-                                background: rgba(255, 255, 255, 0.1);
-                                height: 6px;
-                                border-radius: 3px;
-                                overflow: hidden;
-                                margin-top: 0.5rem;
-                                width: 100%;
-                            ">
-                                <div class="progress-fill" style="
-                                    background: #10b981;
-                                    height: 100%;
-                                    width: ${trajectory.consistency_score * 100}%;
-                                    transition: width 0.3s;
-                                "></div>
-                            </div>
-                        </div>
-                        <span class="stat-value" style="
-                            font-weight: 600; 
-                            margin-left: 1rem; 
-                            font-size: 1.1rem;
-                            min-width: 40px;
-                            text-align: right;
-                        ">${Math.round(trajectory.consistency_score * 100)}%</span>
-                    </div>
-                    
-                    <div class="stat-item" style="
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        padding: 0.75rem;
-                        background: rgba(255, 255, 255, 0.03);
-                        border-radius: 8px;
-                        min-height: 60px;
-                    ">
-                        <div style="flex: 1; min-width: 0;">
-                            <span class="stat-label" style="color: var(--gray); font-size: 0.875rem; display: block;">Adhérence au volume</span>
-                            <div class="progress-bar" style="
-                                background: rgba(255, 255, 255, 0.1);
-                                height: 6px;
-                                border-radius: 3px;
-                                overflow: hidden;
-                                margin-top: 0.5rem;
-                                width: 100%;
-                            ">
-                                <div class="progress-fill" style="
-                                    background: #3b82f6;
-                                    height: 100%;
-                                    width: ${trajectory.volume_adherence * 100}%;
-                                    transition: width 0.3s;
-                                "></div>
-                            </div>
-                        </div>
-                        <span class="stat-value" style="
-                            font-weight: 600; 
-                            margin-left: 1rem; 
-                            font-size: 1.1rem;
-                            min-width: 40px;
-                            text-align: right;
-                        ">${Math.round(trajectory.volume_adherence * 100)}%</span>
-                    </div>
-                </div>
-            ` : ''}
-            
-            <!-- Insights personnalisés -->
-            ${trajectory.insights && trajectory.insights.length > 0 ? `
-                <div class="insights-section" style="
-                    display: flex;
-                    flex-direction: column;
-                    gap: 0.5rem;
-                    margin-top: 1rem;
-                    padding-top: 1rem;
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
-                ">
-                    <h5 style="color: var(--gray); font-size: 0.85rem; margin: 0; margin-bottom: 0.5rem;">CONSEILS PERSONNALISÉS</h5>
-                    ${trajectory.insights.map(insight => `
-                        <div class="insight-item" style="
-                            padding: 0.75rem;
-                            background: rgba(255, 255, 255, 0.02);
-                            border-radius: 8px;
-                            font-size: 0.9rem;
-                            border-left: 3px solid #10b981;
-                        ">
-                            ${insight}
-                        </div>
-                    `).join('')}
-                </div>
-            ` : ''}
+        </div>
+        
+        <!-- Conseil personnalisé avec défilement automatique -->
+        <div id="insightCarousel" style="
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 16px;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        ">
+            <div id="insightText" style="
+                text-align: center;
+                font-size: 1rem;
+                line-height: 1.5;
+                transition: opacity 0.5s ease;
+            ">
+                ${trajectory.insights && trajectory.insights.length > 0 ? trajectory.insights[0] : '💪 Continuez vos efforts !'}
+            </div>
         </div>
         
         <!-- Actions rapides -->
-        <div style="
+        <div class="action-grid" style="
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin-bottom: 2rem;
         ">
-            <button class="btn" onclick="generateQuickWorkout()" style="
-                background: #10b981;
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.5rem;
-                min-height: 60px;
-                border-radius: 12px;
-            ">
-                ⚡ Séance rapide adaptée
-            </button>
-            
-            ${hasProgram ? `
-                <button class="btn" onclick="showView('program')" style="
-                    background: #3b82f6;
-                    color: white;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 0.5rem;
-                    min-height: 60px;
-                    border-radius: 12px;
-                ">
-                    📋 Modifier mon programme
-                </button>
-            ` : `
-                <button class="btn" onclick="showProgramGenerator()" style="
-                    background: #6366f1;
-                    color: white;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 0.5rem;
-                    min-height: 60px;
-                    border-radius: 12px;
-                ">
-                    🚀 Créer programme
-                </button>
-            `}
-            
-            <button class="btn" onclick="showView('workout')" style="
-                background: rgba(255, 255, 255, 0.1);
-                color: white;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.5rem;
-                min-height: 60px;
-                border-radius: 12px;
-            ">
-                💪 Séance libre
-            </button>
-        </div>
-        
-        <!-- État des muscles -->
-        ${targets && targets.length > 0 ? `
-            <div class="muscle-status-widget" style="
-                background: rgba(255, 255, 255, 0.05);
+            <div class="action-card" onclick="generateQuickWorkout()" style="
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+                border: 2px solid #10b981;
                 border-radius: 16px;
                 padding: 1.5rem;
-                margin-top: 2rem;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
             ">
-                <h3 style="margin-bottom: 1rem;">🔋 État de vos muscles</h3>
-                <div class="muscle-grid" style="
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-                    gap: 1rem;
-                    margin-top: 1rem;
+                <h3 style="margin-bottom: 0.5rem;">⚡ Séance rapide adaptée</h3>
+                <p style="font-size: 0.9rem; color: var(--gray); margin: 0;">
+                    ${trajectory.next_muscles ? `${trajectory.next_muscles.join(' + ')}` : 'Optimisée pour vous'}
+                </p>
+            </div>
+            
+            <div class="action-card" onclick="window.startWorkout('free')" style="
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid var(--gray);
+                border-radius: 16px;
+                padding: 1.5rem;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            ">
+                <h3 style="margin-bottom: 0.5rem;">🏃 Séance libre</h3>
+                <p style="font-size: 0.9rem; color: var(--gray); margin: 0;">Choisissez vos exercices</p>
+            </div>
+        </div>
+        
+        ${!hasProgram ? `
+            <!-- Call to action programme -->
+            <div style="
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+                border-radius: 20px;
+                padding: 2rem;
+                text-align: center;
+                margin-bottom: 2rem;
+            ">
+                <h3 style="margin-bottom: 1rem;">🚀 Créez votre programme personnalisé</h3>
+                <p style="color: var(--gray); margin-bottom: 1.5rem;">
+                    Optimisé selon vos objectifs et votre emploi du temps
+                </p>
+                <button class="btn" onclick="showProgramGenerator()" style="
+                    background: white;
+                    color: #8b5cf6;
+                    padding: 0.75rem 2rem;
                 ">
-                    ${targets.map(target => {
-                        const readiness = target.recovery_debt < 0.3 ? 'ready' : 
-                                        target.recovery_debt < 0.7 ? 'moderate' : 'tired';
-                        const emoji = readiness === 'ready' ? '💚' : 
-                                    readiness === 'moderate' ? '🟡' : '🔴';
-                        const status = readiness === 'ready' ? 'Prêt' : 
-                                     readiness === 'moderate' ? 'Moyen' : 'Fatigué';
-                        
-                        return `
-                            <div class="muscle-item ${readiness}" style="
-                                background: rgba(255, 255, 255, 0.03);
-                                border-radius: 12px;
-                                padding: 1rem;
-                                border: 2px solid ${readiness === 'ready' ? '#10b981' : 
-                                                  readiness === 'moderate' ? '#f59e0b' : '#ef4444'};
-                                transition: all 0.3s ease;
-                                text-align: center;
-                            ">
-                                <div class="muscle-header" style="
-                                    display: flex;
-                                    flex-direction: column;
-                                    align-items: center;
-                                    gap: 0.5rem;
-                                    margin-bottom: 0.75rem;
-                                ">
-                                    <span class="muscle-emoji" style="font-size: 1.5rem;">${emoji}</span>
-                                    <span class="muscle-name" style="font-weight: 600; font-size: 0.85rem;">${target.muscle_group}</span>
-                                </div>
-                                <div class="mini-progress" style="
-                                    font-size: 0.75rem;
-                                    color: var(--gray);
-                                ">${status}</div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
+                    Créer mon programme
+                </button>
             </div>
         ` : ''}
+        
+        <!-- Stats classiques en bas -->
+        <div style="
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        ">
+            <div class="stat-card" style="
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 1rem;
+                text-align: center;
+            ">
+                <div class="stat-value" id="totalWorkouts">${trajectory.total_workouts || 0}</div>
+                <div class="stat-label" style="font-size: 0.85rem; color: var(--gray);">Séances totales</div>
+            </div>
+            <div class="stat-card" style="
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 1rem;
+                text-align: center;
+            ">
+                <div class="stat-value" id="weekStreak">${trajectory.week_streak || 0}</div>
+                <div class="stat-label" style="font-size: 0.85rem; color: var(--gray);">Semaines d'affilée</div>
+            </div>
+            <div class="stat-card" style="
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 1rem;
+                text-align: center;
+            ">
+                <div class="stat-value" id="lastWorkout">
+                    ${trajectory.last_workout ? new Date(trajectory.last_workout).toLocaleDateString('fr-FR') : 'Jamais'}
+                </div>
+                <div class="stat-label" style="font-size: 0.85rem; color: var(--gray);">Dernière séance</div>
+            </div>
+        </div>
+        
+        <!-- Historique -->
+        <div id="workoutHistory" style="margin-top: 2rem;">
+            <!-- L'historique sera chargé ici -->
+        </div>
     `;
+    
+    // Démarrer le carousel des insights
+    if (trajectory.insights && trajectory.insights.length > 1) {
+        let currentInsightIndex = 0;
+        const insightText = document.getElementById('insightText');
+        
+        setInterval(() => {
+            // Fondu sortant
+            insightText.style.opacity = '0';
+            
+            setTimeout(() => {
+                // Changer le texte
+                currentInsightIndex = (currentInsightIndex + 1) % trajectory.insights.length;
+                insightText.textContent = trajectory.insights[currentInsightIndex];
+                // Fondu entrant
+                insightText.style.opacity = '1';
+            }, 500);
+        }, 4000); // Change toutes les 4 secondes
+    }
+    
+    // Charger les stats et l'historique
+    updateWelcomeMessage();
+    loadUserStats();
+    
+    // Charger l'historique après un délai
+    setTimeout(() => {
+        loadWorkoutHistory();
+    }, 500);
 }
 
 // ========== NOUVELLES FONCTIONS DASHBOARD ADAPTATIF ==========
