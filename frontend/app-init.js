@@ -27,7 +27,7 @@ import {
     getCurrentUser,
     getCurrentWorkout
 } from './app-state.js';
-import { showView, showMainInterface, updateProgressBar } from './app-navigation.js';
+import { showView, showMainInterface, showProfileForm } from './app-navigation.js';
 import { checkActiveWorkout } from './app-workout.js';
 import { showToast } from './app-ui.js';
 
@@ -363,4 +363,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Export de la fonction d'initialisation si nécessaire
-export { initializeApp };
+export { initializeApp, showWelcomeScreen, loadProfile, startNewProfile };
+export { loadUser, loadFromCache, registerServiceWorker, setupBirthDateInput, loadSilentModePreference };
