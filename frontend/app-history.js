@@ -4,7 +4,7 @@
 
 import {
     sessionHistory,
-    addToStateHistory as addToState,  // ← CHANGEMENT ICI
+    addToSessionHistory as addToState,
     currentWorkout,
     currentUser
 } from './app-state.js';
