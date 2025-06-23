@@ -786,12 +786,7 @@ class FitnessMLEngine:
         logger.error(f"  - Retour de {len(selected)} exercices sélectionnés")
         return selected[:max_exercises]
    
-    def _get_sets_reps_for_level(
-        self,
-        exercise: Exercise,
-        level: str,
-        goals: List[str]
-    ) -> Dict:
+    def get_sets_reps_for_level(self, exercise: Exercise, level: str, goals: List[str]) -> Dict:
         """
         Obtient les sets/reps recommandés
         """

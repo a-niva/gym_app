@@ -330,9 +330,31 @@ async def generate_adaptive_workout(
             
             for ex in muscle_exercises:
                 if ex:
-                    sets_reps = ml_engine.get_sets_reps_for_level(
-                        ex, user.experience_level, user.goals
-                    )
+                    # Calcul direct des sets/reps selon le niveau
+                    if user.experience_level == "beginner":
+                        sets = 3
+                        reps = 12
+                    elif user.experience_level == "intermediate":
+                        sets = 4
+                        reps = 10
+                    elif user.experience_level == "advanced":
+                        sets = 4
+                        reps = 8
+                    else:  # elite/extreme
+                        sets = 5
+                        reps = 6
+
+                    # Ajuster selon les objectifs
+                    if "strength" in user.goals:
+                        sets = max(3, int(sets * 0.8))
+                        reps = max(5, int(reps * 0.7))
+                    elif "endurance" in user.goals:
+                        sets = int(sets * 1.2)
+                        reps = min(20, int(reps * 1.3))
+                    elif "hypertrophy" in user.goals:
+                        reps = 10  # Force 8-12 reps pour hypertrophie
+
+                    sets_reps = {"sets": sets, "reps": reps}
                     weight = ml_engine.calculate_starting_weight(user, ex)
                     
                     exercises.append({

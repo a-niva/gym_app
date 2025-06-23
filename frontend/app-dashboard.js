@@ -234,7 +234,149 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                 </div>
             </div>
         </div>
-        
+
+        <!-- Progression muscles avec cercles -->
+        ${targets && targets.length > 0 ? `
+        <div style="
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        ">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1rem; color: var(--gray);">
+                💪 Progression musculaire (7j)
+            </h3>
+            
+            <div style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+                row-gap: 2rem;
+            ">
+                ${targets.map((target, index) => {
+                    const percentage = target.target_volume > 0 
+                        ? Math.round((target.current_volume / target.target_volume) * 100)
+                        : 0;
+                    
+                    // Gradients uniques par muscle
+                    const gradients = {
+                        'chest': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'back': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'shoulders': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'legs': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'arms': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                        'core': 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+                    };
+                    
+                    const muscleNames = {
+                        'chest': 'Pectoraux',
+                        'back': 'Dos',
+                        'shoulders': 'Épaules',
+                        'legs': 'Jambes',
+                        'arms': 'Bras',
+                        'core': 'Abdos'
+                    };
+                    
+                    const gradient = gradients[target.muscle_group] || gradients.chest;
+                    const muscleName = muscleNames[target.muscle_group] || target.muscle_group;
+                    
+                    // Calcul de la circonférence pour l'animation
+                    const radius = 45;
+                    const circumference = 2 * Math.PI * radius;
+                    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+                    
+                    return `
+                        <div style="
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            text-align: center;
+                        ">
+                            <div style="
+                                position: relative;
+                                width: 120px;
+                                height: 120px;
+                            ">
+                                <!-- Cercle de fond -->
+                                <svg width="120" height="120" style="
+                                    transform: rotate(-90deg);
+                                    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+                                ">
+                                    <circle
+                                        cx="60"
+                                        cy="60"
+                                        r="${radius}"
+                                        stroke="rgba(255, 255, 255, 0.1)"
+                                        stroke-width="10"
+                                        fill="none"
+                                    />
+                                    <!-- Cercle de progression avec gradient -->
+                                    <defs>
+                                        <linearGradient id="gradient-${index}" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" style="stop-color:${gradient.match(/#[a-f0-9]{6}/gi)[0]};stop-opacity:1" />
+                                            <stop offset="100%" style="stop-color:${gradient.match(/#[a-f0-9]{6}/gi)[1]};stop-opacity:1" />
+                                        </linearGradient>
+                                    </defs>
+                                    <circle
+                                        cx="60"
+                                        cy="60"
+                                        r="${radius}"
+                                        stroke="url(#gradient-${index})"
+                                        stroke-width="10"
+                                        fill="none"
+                                        stroke-linecap="round"
+                                        stroke-dasharray="${circumference}"
+                                        stroke-dashoffset="${strokeDashoffset}"
+                                        style="
+                                            transition: stroke-dashoffset 1s ease-in-out;
+                                            filter: drop-shadow(0 0 6px ${gradient.match(/#[a-f0-9]{6}/gi)[0]}40);
+                                        "
+                                    />
+                                </svg>
+                                
+                                <!-- Pourcentage au centre -->
+                                <div style="
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    transform: translate(-50%, -50%);
+                                    font-size: 1.8rem;
+                                    font-weight: bold;
+                                    background: ${gradient};
+                                    -webkit-background-clip: text;
+                                    -webkit-text-fill-color: transparent;
+                                    background-clip: text;
+                                ">
+                                    ${percentage}%
+                                </div>
+                            </div>
+                            
+                            <!-- Nom du muscle -->
+                            <div style="
+                                margin-top: 0.75rem;
+                                font-size: 0.9rem;
+                                color: #e5e7eb;
+                                font-weight: 500;
+                            ">
+                                ${muscleName}
+                            </div>
+                            
+                            <!-- Indicateur de statut -->
+                            <div style="
+                                margin-top: 0.25rem;
+                                font-size: 0.75rem;
+                                color: ${percentage >= 80 ? '#10b981' : percentage >= 50 ? '#f59e0b' : '#ef4444'};
+                            ">
+                                ${percentage >= 80 ? '✓ Optimal' : percentage >= 50 ? '• Moyen' : '• À travailler'}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+        ` : ''}
+                
         <!-- Conseil personnalisé avec défilement automatique -->
         <div id="insightCarousel" style="
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
