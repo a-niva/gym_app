@@ -474,5 +474,6 @@ export {
     cleanupWorkout,
     syncPendingSets,
     syncInterExerciseRests,
-    updateTrainingInterface
+    updateTrainingInterface,
+    startWorkout
 };
