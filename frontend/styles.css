@@ -3047,3 +3047,76 @@ select.form-input {
     }
 }
 
+/* Guided Workout Styles */
+.guided-workout-container {
+    padding: 1rem;
+}
+
+.workout-progress {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.progress-bar-container {
+    background: rgba(255, 255, 255, 0.1);
+    height: 8px;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--primary);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.current-exercise-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.exercise-targets {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.target-info {
+    text-align: center;
+}
+
+.target-info .label {
+    display: block;
+    color: var(--gray);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.target-info .value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.guided-targets {
+    text-align: center;
+    color: var(--primary);
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.upcoming-exercises {
+    margin-top: 2rem;
+}
+
+.upcoming-exercise {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--radius);
+}

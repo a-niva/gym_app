@@ -199,8 +199,21 @@ function finishExercise() {
     setSelectedFatigue(3);
     setSelectedEffort(3);
     
+    // Vérifier le mode de séance et afficher l'interface appropriée
     if (currentWorkout && currentWorkout.status === 'started') {
-        showExerciseSelector();
+        const guidedPlan = localStorage.getItem('adaptiveWorkoutPlan');
+        if (currentWorkout.type === 'adaptive' && guidedPlan) {
+            // Mode guidé - passer à l'exercice suivant
+            import('./app-guided-workout.js').then(module => {
+                module.nextGuidedExercise();
+            }).catch(error => {
+                console.error('Erreur import module guidé:', error);
+                showExerciseSelector(); // Fallback
+            });
+        } else {
+            // Mode libre - afficher le sélecteur
+            showExerciseSelector();
+        }
     }
 }
 

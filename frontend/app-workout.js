@@ -92,10 +92,10 @@ async function startWorkout(type) {
             id: workout.id,
             status: workout.status,
             created_at: workout.created_at,
-            type: workout.type,
+            type: type,  // Utiliser le paramètre type passé à la fonction
             user_id: currentUser.id
         }));
-        
+                
         // Démarrer le monitoring
         startWorkoutMonitoring();
         syncPendingSets();
@@ -309,6 +309,11 @@ function cleanupWorkout() {
     // Nettoyer l'historique de session
     clearSessionHistory();
     localStorage.removeItem('currentSessionHistory');
+
+    // Nettoyer les données de séance guidée
+    localStorage.removeItem('adaptiveWorkoutPlan');
+    localStorage.removeItem('currentGuidedIndex');
+    localStorage.removeItem('guidedExerciseParams');
 }
 
 // ===== GESTION DES ACTIONS FATIGUE =====
@@ -432,8 +437,16 @@ function updateTrainingInterface() {
     `;
     
     // Afficher le sélecteur d'exercices
-    if (window.showExerciseSelector) {
-        window.showExerciseSelector();
+    // Vérifier le type de séance et afficher l'interface appropriée
+    const workoutPlan = localStorage.getItem('adaptiveWorkoutPlan');
+    if (currentWorkout.type === 'adaptive' && workoutPlan) {
+        const plan = JSON.parse(workoutPlan);
+        showGuidedExerciseInterface(plan);
+    } else {
+        // Mode libre standard
+        if (window.showExerciseSelector) {
+            window.showExerciseSelector();
+        }
     }
 }
 

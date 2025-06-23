@@ -112,9 +112,26 @@ async function showSetInput() {
 
     // DÉCLARATION DE TOUTES LES VARIABLES ICI
     let mlRepsSuggestion = null;
-    let mlSuggestion = null;  // AJOUT : Déclarer mlSuggestion ICI
-    let adjustments = null;   // AJOUT : Déclarer adjustments ICI
+    let mlSuggestion = null;
+    let adjustments = null;
     let adjustmentsError = null;
+
+    // NOUVEAU : Récupérer les paramètres guidés si disponibles
+    const guidedParams = localStorage.getItem('guidedExerciseParams');
+    let isGuidedMode = false;
+    let targetSets = null;
+    let targetReps = null;
+    let suggestedWeight = null;
+    let guidedRestTime = null;
+
+    if (guidedParams && currentWorkout && currentWorkout.type === 'adaptive') {
+        const params = JSON.parse(guidedParams);
+        isGuidedMode = true;
+        targetSets = params.targetSets;
+        targetReps = params.targetReps;
+        suggestedWeight = params.suggestedWeight;
+        guidedRestTime = params.restTime;
+    }
 
     // Récupérer les suggestions ML uniquement si on a une série valide pour cet exercice
     if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId) {
@@ -138,7 +155,7 @@ async function showSetInput() {
                         exerciseId: currentExercise.id
                     });
                     
-                    adjustments = await getWorkoutAdjustments(  // MODIFICATION : Utiliser la variable déclarée
+                    adjustments = await getWorkoutAdjustments(
                         currentWorkout.id,
                         lastCompletedSetId,
                         remainingSets
@@ -215,6 +232,14 @@ async function showSetInput() {
         }
     }
 
+    // NOUVEAU : En mode guidé, privilégier le poids suggéré du plan
+    if (isGuidedMode && suggestedWeight) {
+        // Si on a un poids suggéré par le plan guidé et pas de ML ou si c'est la première série
+        if (!mlSuggestion || currentSetNumber === 1) {
+            mlSuggestion = suggestedWeight;
+        }
+    }
+
     // Stocker globalement pour référence
     window.currentMLRepsSuggestion = mlRepsSuggestion;
     window.currentMLSuggestion = mlSuggestion;
@@ -249,7 +274,11 @@ async function showSetInput() {
         'Poids total (kg)';
     
     const repsLabel = isTimeBased ? 'Durée (secondes)' : 'Répétitions';
-    const defaultReps = isTimeBased ? 30 : currentTargetReps;
+    
+    // NOUVEAU : En mode guidé, utiliser les répétitions cibles comme valeur par défaut
+    const defaultReps = isGuidedMode && targetReps && currentSetNumber === 1 ? 
+        (typeof targetReps === 'string' ? parseInt(targetReps.split('-')[0]) : targetReps) : 
+        (isTimeBased ? 30 : currentTargetReps);
     
     container.innerHTML = `
         <div class="current-exercise">
@@ -258,7 +287,21 @@ async function showSetInput() {
         </div>
         
         <div class="set-tracker">
-            <h3>Série ${currentSetNumber}</h3>
+            <h3>Série ${currentSetNumber}${isGuidedMode && targetSets ? ` / ${targetSets}` : ''}</h3>
+            ${isGuidedMode ? `
+                <div class="guided-targets" style="
+                    text-align: center;
+                    color: var(--primary);
+                    margin-bottom: 1rem;
+                    padding: 0.75rem;
+                    background: rgba(59, 130, 246, 0.1);
+                    border-radius: 8px;
+                ">
+                    <span style="font-weight: 600;">Objectif :</span> 
+                    ${targetReps} reps @ ${suggestedWeight ? suggestedWeight + 'kg' : 'À déterminer'}
+                    ${guidedRestTime ? ` • Repos : ${guidedRestTime}s` : ''}
+                </div>
+            ` : ''}
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
             
             <div class="set-input-grid-vertical">
@@ -394,12 +437,14 @@ async function showSetInput() {
     } else {
         window.addEventListener('resize', handleViewportChange);
     }
+    
     // Mettre à jour les suggestions visuelles après un court délai
     setTimeout(() => {
         updateWeightSuggestionVisual();
     }, 500);
     
     attachWeightChangeListeners();
+    
     // Forcer la mise à jour des suggestions visuelles après un court délai
     setTimeout(() => {
         updateWeightSuggestionVisual();
