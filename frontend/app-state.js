@@ -63,17 +63,6 @@ let adaptiveTargets = [];
 let trajectoryAnalysis = null;
 let currentAdaptiveWorkout = null;
 
-
-export function setCurrentAdaptiveWorkout(workout) {
-    currentAdaptiveWorkout = workout;
-}
-
-export function getCurrentAdaptiveWorkout() {
-    return currentAdaptiveWorkout;
-}
-
-export { currentAdaptiveWorkout };
-
 // État des suggestions ML
 export let lastCompletedSetId = parseInt(localStorage.getItem('lastCompletedSetId')) || null;
 export let userPrograms = [];
@@ -154,7 +143,7 @@ export function getSessionHistory() {
     return sessionHistory;
 }
 
-export function addToStateHistory(entry) {
+export function addToSessionHistory(entry) {
     sessionHistory.push(entry);
 }
 
@@ -197,7 +186,6 @@ export {
     isSilentMode,
     currentProgram,
     isAutoWeightEnabled,
-    currentAdaptiveWorkout,
     userCommitment,
     adaptiveTargets,
     trajectoryAnalysis
