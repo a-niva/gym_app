@@ -23,8 +23,19 @@ function startGuidedWorkout(adaptiveWorkout) {
 
 // Afficher l'interface de progression guidée
 function showGuidedInterface() {
-    const container = document.getElementById('mainContent');
-    if (!container || !guidedWorkoutPlan) return;
+    // Chercher d'abord dans training-view, sinon dans workout
+    let container = document.querySelector('#training-view #mainContent');
+    if (!container) {
+        container = document.querySelector('#workout #mainContent');
+    }
+    if (!container) {
+        container = document.getElementById('mainContent');
+    }
+    
+    if (!container || !guidedWorkoutPlan) {
+        console.error('❌ Container ou plan manquant:', { container, guidedWorkoutPlan });
+        return;
+    }
     
     const currentExercise = guidedWorkoutPlan.exercises[currentExerciseIndex];
     const totalExercises = guidedWorkoutPlan.exercises.length;

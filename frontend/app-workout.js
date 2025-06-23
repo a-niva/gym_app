@@ -25,6 +25,7 @@ import {
     currentSetNumber
 } from './app-state.js';
 import { showGuidedInterface } from './app-guided-workout.js';
+import { startGuidedWorkout } from './app-guided-workout.js';
 import { showView, showProfileForm } from './app-navigation.js';
 import { showToast } from './app-ui.js';
 import { 
@@ -481,23 +482,16 @@ function getWorkoutTypeLabel() {
 // Initialisation du mode guidé adaptatif
 async function initializeGuidedMode(guidedPlan) {
     try {
-        // Import dynamique sécurisé
-        const guidedModule = await import('./app-guided-workout.js');
+        // Import dynamique et appel direct
+        const { startGuidedWorkout } = await import('./app-guided-workout.js');
         
-        if (guidedModule.startGuidedWorkout) {
-            guidedModule.startGuidedWorkout(guidedPlan);
-        } else {
-            throw new Error('Module guidé incomplet');
-        }
+        // Appeler directement la fonction avec le plan
+        startGuidedWorkout(guidedPlan);
+        
     } catch (error) {
-        console.error('❌ Erreur chargement module guidé:', error);
-        showToast('Erreur interface guidée, passage en mode libre', 'error');
-        
-        // Fallback sécurisé vers le mode libre
-        localStorage.removeItem('guidedWorkoutPlan');
-        currentWorkout.type = 'free';
-        localStorage.setItem('currentWorkout', JSON.stringify(currentWorkout));
-        initializeFreeMode();
+        console.error('❌ Erreur initialisation mode guidé:', error);
+        showToast('Erreur chargement mode guidé', 'error');
+        initializeFreeMode(); // Fallback
     }
 }
 
