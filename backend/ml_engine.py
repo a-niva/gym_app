@@ -1177,6 +1177,35 @@ class SessionBuilder:
                     })
                     time_used += exercise_time
         
+        logger.info(f"Session construite: {len(session)} exercices")
+        for ex in session:
+            logger.info(f"  - {ex['exercise_name']} ({ex['body_part']})")
+
+        # Si moins de 3 exercices, essayer d'en ajouter plus
+        if len(session) < 3:
+            logger.warning(f"Seulement {len(session)} exercices trouvés, recherche supplémentaire...")
+            # Essayer tous les muscles un par un
+            all_exercises = self.db.query(Exercise).filter(Exercise.body_part.in_(muscles)).all()
+            available_all = [ex for ex in all_exercises if self._check_equipment_availability(ex, user)]
+            
+            # Ajouter jusqu'à 5 exercices max
+            for ex in available_all[:5]:
+                if ex.id not in [s["exercise_id"] for s in session]:
+                    # Ajouter exercice avec paramètres par défaut
+                    session.append({
+                        "exercise_id": ex.id,
+                        "exercise_name": ex.name_fr,
+                        "body_part": ex.body_part,
+                        "sets": 3,
+                        "target_reps": 10,
+                        "suggested_weight": 20.0,
+                        "rest_time": 90
+                    })
+                    if len(session) >= 3:
+                        break
+            
+            logger.info(f"Après recherche supplémentaire: {len(session)} exercices")
+
         # Si aucun exercice n'a pu être ajouté, ajouter au moins un exercice de base
         if not session and muscles:
             # Fallback : prendre n'importe quel exercice disponible
@@ -1202,22 +1231,64 @@ class SessionBuilder:
                 })
                 
         return session
-    
+        
     def _check_equipment_availability(self, exercise: Exercise, user: User) -> bool:
         """Vérifie si l'équipement nécessaire est disponible"""
         if not exercise.equipment:
             return True
         
-        user_equipment = set()
-        if user.equipment_config:
-            if "available_equipment" in user.equipment_config:
-                for cat in user.equipment_config["available_equipment"].values():
-                    user_equipment.update(cat)
-            elif "equipment" in user.equipment_config:
-                # Ancien format
-                user_equipment = set(user.equipment_config["equipment"])
+        # Utiliser la même logique que get_available_exercises de FitnessMLEngine
+        config = user.equipment_config or {}
+        available_equipment = []
         
-        return any(eq in user_equipment for eq in exercise.equipment)
+        # Barres
+        for barre_type, barre_config in config.get("barres", {}).items():
+            if barre_config.get("available", False):
+                if barre_type in ["olympique", "courte"]:
+                    available_equipment.append("barre_olympique")
+                elif barre_type == "ez":
+                    available_equipment.append("barre_ez")
+                    
+                # Équivalence barre courte = dumbbells (si paire + disques)
+                if (barre_type == "courte" and barre_config.get("count", 0) >= 2 and 
+                    config.get("disques", {}).get("available", False)):
+                    available_equipment.append("dumbbells")
+
+        # Haltères
+        if config.get("dumbbells", {}).get("available", False):
+            available_equipment.append("dumbbells")
+            
+        # Poids du corps toujours disponible
+        available_equipment.append("poids_du_corps")
+        
+        # Banc
+        if config.get("banc", {}).get("available", False):
+            available_equipment.append("banc_plat")
+            if config["banc"].get("inclinable_haut", False):
+                available_equipment.append("banc_inclinable")
+            if config["banc"].get("inclinable_bas", False):
+                available_equipment.append("banc_declinable")
+
+        # Élastiques
+        if config.get("elastiques", {}).get("available", False):
+            available_equipment.append("elastiques")
+
+        # Autres équipements
+        autres = config.get("autres", {})
+        if autres.get("kettlebell", {}).get("available", False):
+            available_equipment.append("kettlebell")
+        if autres.get("barre_traction", {}).get("available", False):
+            available_equipment.append("barre_traction")
+        
+        # Vérifier compatibilité
+        exercise_equipment = exercise.equipment or []
+        compatible = not exercise_equipment or any(eq in available_equipment for eq in exercise_equipment)
+        
+        # LOG POUR DEBUG
+        if not compatible:
+            logger.warning(f"❌ Exercice {exercise.name_fr} incompatible - Demande: {exercise_equipment}, Disponible: {available_equipment}")
+        
+        return compatible
     
     def _select_best_exercises(self, exercises: List[Exercise], 
                              user: User, muscle: str, max_exercises: int = 2) -> List[Exercise]:
