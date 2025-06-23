@@ -1193,7 +1193,7 @@ async function showExerciseAlternatives(exerciseId, exerciseIndex) {
     
     try {
         // Appel API pour récupérer les exercices alternatifs
-        const response = await fetch(`/api/exercises/${exerciseId}/alternatives`);
+        const response = await fetch(`/api/exercises/${exerciseId}/alternatives?user_id=${currentUser.id}`);
         if (!response.ok) throw new Error('Erreur API');
         
         const alternatives = await response.json();
@@ -1293,25 +1293,55 @@ function showAlternativesModal(alternatives, originalExerciseId, exerciseIndex) 
 }
 
 // Fonction pour remplacer un exercice
-function replaceExercise(oldExerciseId, newExerciseId, exerciseIndex) {
+async function replaceExercise(oldExerciseId, newExerciseId, exerciseIndex) {
     const currentWorkout = getCurrentAdaptiveWorkout();
     if (!currentWorkout) return;
     
     // Fermer le modal des alternatives
     document.querySelector('.modal-overlay[style*="z-index: 1001"]')?.remove();
     
-    // Mettre à jour l'exercice dans le workout
-    if (currentWorkout.exercises[exerciseIndex]) {
-        currentWorkout.exercises[exerciseIndex].exercise_id = newExerciseId;
-        // Note: Le nom et autres détails seront mis à jour via un appel API si nécessaire
+    showLoadingOverlay('Remplacement de l\'exercice...');
+    
+    try {
+        // Récupérer les détails du nouvel exercice depuis l'API
+        const response = await fetch(`/api/exercises/${newExerciseId}`);
+        if (!response.ok) throw new Error('Erreur récupération exercice');
         
+        const newExercise = await response.json();
+        
+        // Conserver les paramètres de l'ancien exercice (sets, reps, etc.)
+        const oldExerciseData = currentWorkout.exercises[exerciseIndex];
+        
+        // Mettre à jour l'exercice dans le workout avec TOUTES les nouvelles données
+        currentWorkout.exercises[exerciseIndex] = {
+            exercise_id: newExercise.id,
+            exercise_name: newExercise.name_fr,
+            body_part: newExercise.body_part,
+            sets: oldExerciseData.sets,
+            target_reps: oldExerciseData.target_reps,
+            suggested_weight: oldExerciseData.suggested_weight, // Garder le poids ou recalculer ?
+            rest_time: oldExerciseData.rest_time
+        };
+        
+        // Sauvegarder le workout modifié
         setCurrentAdaptiveWorkout(currentWorkout);
+        
+        hideLoadingOverlay();
         
         // Fermer et rouvrir le modal principal avec les nouvelles données
         document.querySelector('.modal-overlay')?.remove();
-        showAdaptiveWorkoutModal(currentWorkout);
         
-        showToast('Exercice remplacé avec succès', 'success');
+        // Attendre un peu pour que le DOM se mette à jour
+        setTimeout(() => {
+            showAdaptiveWorkoutModal(currentWorkout);
+        }, 100);
+        
+        showToast(`Exercice remplacé par "${newExercise.name_fr}"`, 'success');
+        
+    } catch (error) {
+        hideLoadingOverlay();
+        console.error('Erreur remplacement exercice:', error);
+        showToast('Erreur lors du remplacement', 'error');
     }
 }
 
@@ -1641,12 +1671,11 @@ async function modifyAdaptiveWorkout() {
         return;
     }
     
-    // Fermer le modal actuel
+    // Fermer le modal actuel AVANT de régénérer
     document.querySelector('.modal-overlay')?.remove();
     
     // Déterminer le temps initialement sélectionné
     const estimatedTime = adaptiveWorkout.estimated_duration;
-    const timeAvailable = Math.round(estimatedTime / 0.8); // Inverser le calcul du backend
     
     showLoadingOverlay('Génération d\'une nouvelle séance...');
     
@@ -1655,8 +1684,11 @@ async function modifyAdaptiveWorkout() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                time_available: timeAvailable,
-                exclude_muscles: adaptiveWorkout.muscles // Optionnel : exclure les muscles déjà sélectionnés
+                time_available: estimatedTime,
+                // AJOUTER un paramètre pour forcer la régénération
+                force_regenerate: true,
+                // Optionnel : exclure les exercices déjà sélectionnés pour plus de variété
+                exclude_exercises: adaptiveWorkout.exercises.map(ex => ex.exercise_id)
             })
         });
         
@@ -1667,12 +1699,19 @@ async function modifyAdaptiveWorkout() {
         }
         
         const newWorkout = await response.json();
+        
+        // Mettre à jour le workout actuel
         setCurrentAdaptiveWorkout(newWorkout);
+        
+        // Afficher le nouveau modal
         showAdaptiveWorkoutModal(newWorkout);
+        
+        showToast('Nouvelle séance générée !', 'success');
         
     } catch (error) {
         hideLoadingOverlay();
-        showToast('Erreur lors de la modification', 'error');
+        console.error('Erreur régénération:', error);
+        showToast('Erreur lors de la régénération', 'error');
     }
 }
 

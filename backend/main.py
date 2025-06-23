@@ -11,6 +11,7 @@ from backend.database import engine, get_db, SessionLocal
 from backend.models import Base, User, Exercise, Workout, Set, Program, ProgramDay, ProgramExercise
 from backend.routes import router as ml_router, router
 from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate, ProgramCreate, ProgramResponse
+from backend.ml_engine import FitnessMLEngine, SessionBuilder
 
 import json
 import os
@@ -153,18 +154,32 @@ def get_exercise(exercise_id: int, db: Session = Depends(get_db)):
     return exercise
 
 @app.get("/api/exercises/{exercise_id}/alternatives", response_model=List[ExerciseResponse])
-def get_exercise_alternatives(exercise_id: int, db: Session = Depends(get_db)):
+def get_exercise_alternatives(exercise_id: int, user_id: int, db: Session = Depends(get_db)):
     exercise = db.query(Exercise).filter(Exercise.id == exercise_id).first()
     if not exercise:
         raise HTTPException(status_code=404, detail="Exercise not found")
     
-    # Récupérer les exercices du même groupe musculaire
-    alternatives = db.query(Exercise).filter(
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Récupérer TOUS les exercices du même groupe musculaire
+    all_alternatives = db.query(Exercise).filter(
         Exercise.body_part == exercise.body_part,
         Exercise.id != exercise_id
-    ).limit(10).all()
+    ).all()
     
-    return alternatives
+    # Filtrer par équipement disponible (utiliser la même logique que SessionBuilder)
+    ml_engine = FitnessMLEngine(db)
+    session_builder = SessionBuilder(db)
+    
+    compatible_alternatives = []
+    for alt in all_alternatives:
+        if session_builder._check_equipment_availability(alt, user):
+            compatible_alternatives.append(alt)
+    
+    # Limiter à 8 alternatives max, triées par niveau de compatibilité
+    return compatible_alternatives[:8]
 
 # Endpoint pour exercices disponibles selon équipement utilisateur
 @app.get("/api/users/{user_id}/available-exercises", response_model=List[ExerciseResponse])
