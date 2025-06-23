@@ -26,7 +26,7 @@ import {
     setIsAutoWeightEnabled
 } from './app-state.js';
 
-import { showToast } from './app-ui.js';
+import { showToast, showFatigueModal } from './app-ui.js';
 import {
     calculateAvailableWeights,
     validateWeight,
@@ -776,13 +776,13 @@ function validateWeightInput() {
         
         // Message explicatif si le poids n'est pas possible
         if (!isWeightPossible(currentExercise, currentWeight)) {
-            const availableWeights = calculateAvailableWeights(currentExercise);
+            let availableWeights = calculateAvailableWeights(currentExercise);  
             // Pour les exercices avec barbell, filtrer les poids inférieurs à la barre
             if (currentExercise.equipment.some(eq => eq.includes('barbell'))) {
                 const barWeight = getBarWeightForExercise(currentExercise);
                 const filteredWeights = availableWeights.filter(w => w >= barWeight);
                 if (filteredWeights.length > 0) {
-                    availableWeights = filteredWeights;
+                    availableWeights = filteredWeights;  
                 }
             }
             const nearbyWeights = availableWeights
@@ -790,7 +790,7 @@ function validateWeightInput() {
                 .slice(0, 5);
             
             showToast(
-                `Poids ${currentWeight}kg impossible. Alternatives : ${nearbyWeights.join(', ')}kg`, 
+                `Poids ${currentWeight}kg impossible. Alternatives : ${nearbyWeights.join(', ')}kg`,
                 'warning'
             );
         }

@@ -12,7 +12,7 @@ import {
     setTimerInterval,
     setRestTimerInterval
 } from './app-state.js';
-
+import { loadProfileInfo } from './app-profile.js';
 
 // ===== NAVIGATION & VUES =====
 function showView(viewName) {

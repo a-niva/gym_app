@@ -4,7 +4,7 @@
 
 import { currentUser } from './app-state.js';
 import { TIME_BASED_KEYWORDS } from './app-config.js';
-
+import { showToast } from './app-ui.js';
 
 // ===== CALCUL DES POIDS DISPONIBLES =====
 function calculateAvailableWeights(exercise) {
@@ -395,7 +395,6 @@ export function filterExercisesByEquipment(exercises) {
                     return config.banc?.available && config.banc?.inclinable_bas;
                 case 'poulies':
                     return false; // Pas dans la config actuelle
-                case 'elastiques':
                 case 'elastiques':  // Alias pour compatibilité
                     return config.elastiques?.available && 
                         config.elastiques?.bands?.length > 0;

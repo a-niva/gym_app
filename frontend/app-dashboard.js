@@ -23,6 +23,7 @@ import {
     trajectoryAnalysis,
     currentAdaptiveWorkout,
     setCurrentWorkout,
+    setCurrentUser,
     getCurrentProgram,
     setCurrentProgram
     } from './app-state.js';

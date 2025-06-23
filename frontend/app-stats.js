@@ -2,9 +2,10 @@
 // Ce fichier gère les graphiques avancés de la page stats
 
 import { currentUser } from './app-state.js';
-import { BODY_PART_COLORS } from './app-config.js';
 
-
+// Déclaration des bibliothèques globales chargées via <script>
+/* global Chart */
+/* global d3 */
 
 const statsCharts = {};
 

@@ -1,5 +1,6 @@
 // ===== MODULE SÉANCE GUIDÉE ADAPTATIVE =====
 import { showToast } from './app-ui.js';
+import { showView } from './app-navigation.js';
 
 let currentExerciseIndex = 0;
 let guidedWorkoutPlan = null;
@@ -317,7 +318,7 @@ function nextExercise() {
     }
 }
 
-export function previousExercise() {
+function previousExercise() {
     if (currentExerciseIndex > 0) {
         currentExerciseIndex--;
         showGuidedInterface();

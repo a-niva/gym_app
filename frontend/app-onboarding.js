@@ -1,6 +1,6 @@
 // ===== MODULE D'ONBOARDING =====
 // Ce fichier gère tout le processus d'inscription et de configuration initiale
-
+import {showWelcomeScreen} from './app-init.js';
 import { 
     selectedGoals,
     selectedEquipment,
@@ -17,13 +17,14 @@ import {
 
 import { 
     nextStep as navigationNextStep,
+    prevStep,
     nextStepSimple as navigateNext,
     prevStep as navigatePrev,
     updateProgressBar,
     showMainInterface,
     showProfileForm,
-    showStep
-} from './app-navigation.js';
+    showStep,
+    } from './app-navigation.js';
 
 import { showToast, getEquipmentIcon, getEquipmentName } from './app-ui.js';
 import { saveUser } from './app-api.js';
