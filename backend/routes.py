@@ -279,7 +279,7 @@ async def generate_adaptive_workout(
     user_id: int,
     request: dict,
     db: Session = Depends(get_db)
-):
+    ):
     """Génère une séance adaptative basée sur le temps disponible"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -287,23 +287,70 @@ async def generate_adaptive_workout(
     
     time_available = request.get("time_available", 60)
     
-    # Utiliser le SessionBuilder pour générer la séance
-    session_builder = SessionBuilder(db)
-    
     try:
-        # Récupérer les targets adaptatifs
-        targets = db.query(AdaptiveTargets).filter(
-            AdaptiveTargets.user_id == user_id
-        ).all()
+        # Utiliser le ML Engine directement pour générer une séance adaptative
+        ml_engine = FitnessMLEngine(db)
         
-        # Construire la séance adaptative
-        workout = session_builder.build_adaptive_session(
-            user=user,
-            time_available=time_available,
-            targets=targets
-        )
+        # Récupérer les muscles à entraîner selon la récupération
+        recovery_tracker = RecoveryTracker(db)
+        volume_optimizer = VolumeOptimizer(db)
         
-        return workout
+        muscle_readiness = {}
+        volume_deficits = volume_optimizer.get_volume_deficit(user)
+        
+        # Mapping des groupes musculaires
+        muscle_mapping = {
+            "chest": "Pectoraux",
+            "back": "Trapèzes",
+            "shoulders": "Deltoïdes", 
+            "legs": "Quadriceps",
+            "arms": "Biceps",
+            "core": "Abdominaux"
+        }
+        
+        for muscle_key, muscle_name in muscle_mapping.items():
+            readiness = recovery_tracker.get_muscle_readiness(muscle_key, user)
+            deficit = volume_deficits.get(muscle_key, 0)
+            priority_score = readiness * 0.4 + deficit * 0.6
+            muscle_readiness[muscle_key] = priority_score
+        
+        # Sélectionner les 2-3 meilleurs muscles
+        sorted_muscles = sorted(muscle_readiness.items(), key=lambda x: x[1], reverse=True)
+        selected_muscles = [muscle_mapping[m[0]] for m in sorted_muscles[:3] if m[1] > 0.3]
+        
+        if not selected_muscles:
+            selected_muscles = ["Pectoraux", "Biceps"]  # Fallback
+        
+        # Générer les exercices via le ML Engine
+        exercises = []
+        for muscle in selected_muscles:
+            muscle_exercises = db.query(Exercise).filter(
+                Exercise.body_part == muscle
+            ).limit(2).all()
+            
+            for ex in muscle_exercises:
+                if ex:
+                    sets_reps = ml_engine._get_sets_reps_for_level(
+                        ex, user.experience_level, user.goals
+                    )
+                    weight = ml_engine._predict_weight(user, ex)
+                    
+                    exercises.append({
+                        "exercise_id": ex.id,
+                        "exercise_name": ex.name_fr,
+                        "body_part": ex.body_part,
+                        "sets": sets_reps["sets"],
+                        "target_reps": sets_reps["reps"],
+                        "suggested_weight": weight,
+                        "rest_time": 90 if "strength" in user.goals else 60
+                    })
+        
+        return {
+            "muscles": selected_muscles,
+            "exercises": exercises,
+            "estimated_duration": time_available,
+            "readiness_scores": {m: round(s, 2) for m, s in muscle_readiness.items()}
+        }
         
     except Exception as e:
         logger.error(f"Error generating adaptive workout: {str(e)}")
