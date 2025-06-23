@@ -330,7 +330,7 @@ async def generate_adaptive_workout(
             
             for ex in muscle_exercises:
                 if ex:
-                    sets_reps = ml_engine._get_sets_reps_for_level(
+                    sets_reps = ml_engine.get_sets_reps_for_level(
                         ex, user.experience_level, user.goals
                     )
                     weight = ml_engine.calculate_starting_weight(user, ex)
