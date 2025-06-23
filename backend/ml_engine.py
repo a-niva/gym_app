@@ -1031,6 +1031,20 @@ class SessionBuilder:
     def build_session(self, muscles: List[str], time_budget: int, 
                      user: User, constraints: Dict = None) -> List[Dict]:
         """Construction d'une séance optimisée"""
+
+        # Ajouter des logs de débogage
+        logger.info(f"Building session for muscles: {muscles}")
+        logger.info(f"User equipment: {user.equipment_config}")
+        
+        # Récupérer tous les exercices disponibles
+        all_exercises = self.db.query(Exercise).all()
+        logger.info(f"Total exercises in DB: {len(all_exercises)}")
+        
+        # Filtrer par muscle
+        muscle_exercises = [e for e in all_exercises if e.body_part in muscles]
+        logger.info(f"Exercises for selected muscles: {len(muscle_exercises)}")
+
+
         session = []
         time_used = 0
         constraints = constraints or {}
@@ -1442,7 +1456,7 @@ class RealTimeAdapter:
         """Calcule le volume sur 7 jours glissants"""
         cutoff = datetime.utcnow() - timedelta(days=7)
         
-        result = self.db.query(func.sum(Set.actual_reps)).join(
+        result = self.db.query(func.sum(Set.actual_reps * Set.weight)).join(
             Workout
         ).join(
             Exercise

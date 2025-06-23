@@ -24,7 +24,7 @@ import {
     clearSessionHistory,
     currentSetNumber
 } from './app-state.js';
-
+import { showGuidedExerciseInterface } from './app-guided-workout.js';
 import { showView, showProfileForm } from './app-navigation.js';
 import { showToast } from './app-ui.js';
 import { 
@@ -441,7 +441,23 @@ function updateTrainingInterface() {
     const workoutPlan = localStorage.getItem('adaptiveWorkoutPlan');
     if (currentWorkout.type === 'adaptive' && workoutPlan) {
         const plan = JSON.parse(workoutPlan);
-        showGuidedExerciseInterface(plan);
+        if (typeof showGuidedExerciseInterface === 'function') {
+            showGuidedExerciseInterface(plan);
+        } else {
+            console.error('showGuidedExerciseInterface non définie, chargement du module...');
+            // Charger dynamiquement le module si nécessaire
+            import('./app-guided-workout.js').then(module => {
+                if (module.showGuidedExerciseInterface) {
+                    module.showGuidedExerciseInterface(plan);
+                }
+            }).catch(err => {
+                console.error('Erreur chargement module guidé:', err);
+                // Fallback vers le mode libre
+                if (window.showExerciseSelector) {
+                    window.showExerciseSelector();
+                }
+            });
+        }
     } else {
         // Mode libre standard
         if (window.showExerciseSelector) {
