@@ -1359,6 +1359,7 @@ async function startAdaptiveWorkout() {
         // ÉTAPE 1: Sauvegarder le plan adaptatif AVANT de créer la séance
         localStorage.setItem('guidedWorkoutPlan', JSON.stringify(adaptiveWorkout));
         localStorage.setItem('workoutType', 'adaptive');
+        localStorage.removeItem('adaptiveWorkoutPlan');
         
         // ÉTAPE 2: Fermer le modal
         document.querySelector('.modal-overlay')?.remove();

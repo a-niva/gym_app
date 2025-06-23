@@ -201,11 +201,18 @@ function finishExercise() {
     
     // Vérifier le mode de séance et afficher l'interface appropriée
     if (currentWorkout && currentWorkout.status === 'started') {
-        const guidedPlan = localStorage.getItem('adaptiveWorkoutPlan');
+        const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
         if (currentWorkout.type === 'adaptive' && guidedPlan) {
             // Mode guidé - passer à l'exercice suivant
             import('./app-guided-workout.js').then(module => {
-                module.nextGuidedExercise();
+                if (module.nextExercise) {
+                    module.nextExercise();  // ✅ Fonction correcte
+                } else if (window.nextExercise) {
+                    window.nextExercise();  // ✅ Fallback global
+                } else {
+                    console.warn('nextExercise non disponible, retour au sélecteur');
+                    showExerciseSelector();
+                }
             }).catch(error => {
                 console.error('Erreur import module guidé:', error);
                 showExerciseSelector(); // Fallback

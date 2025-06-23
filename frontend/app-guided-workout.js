@@ -174,21 +174,160 @@ function showGuidedInterface() {
 }
 
 // Fonction pour commencer l'exercice actuel
-function startCurrentExercise() {
-    const currentExercise = guidedWorkoutPlan.exercises[currentExerciseIndex];
+async function startCurrentExercise() {
+    if (!guidedWorkoutPlan || currentExerciseIndex >= guidedWorkoutPlan.exercises.length) {
+        showToast('Exercice non disponible', 'error');
+        return;
+    }
     
-    // Importer et utiliser l'interface de sets existante
-    import('./app-exercises.js').then(module => {
-        // Sélectionner l'exercice dans le système existant
-        window.selectExercise(currentExercise.exercise_id);
+    const currentExercise = guidedWorkoutPlan.exercises[currentExerciseIndex];
+    console.log('🎯 Démarrage exercice guidé:', currentExercise);
+    
+    try {
+        // Masquer l'interface guidée
+        const guidedContainer = document.querySelector('.guided-workout-container');
+        if (guidedContainer) {
+            guidedContainer.style.display = 'none';
+        }
         
-        // Pré-remplir les paramètres suggérés
-        // Note: Cette partie nécessitera une intégration avec app-sets.js
+        // Charger l'interface d'exercice avec pré-configuration
+        const exerciseModule = await import('./app-exercises.js');
         
-    }).catch(error => {
-        console.error('Erreur import exercices:', error);
+        if (exerciseModule.selectExercise) {
+            // Sélectionner l'exercice
+            exerciseModule.selectExercise(currentExercise.exercise_id);
+            
+            // Attendre que l'interface soit chargée puis pré-configurer
+            setTimeout(() => {
+                preConfigureExerciseInterface(currentExercise);
+            }, 500);
+            
+        } else {
+            throw new Error('Module exercices incomplet');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur démarrage exercice:', error);
         showToast('Erreur lors du démarrage de l\'exercice', 'error');
-    });
+        
+        // Réafficher l'interface guidée en cas d'erreur
+        const guidedContainer = document.querySelector('.guided-workout-container');
+        if (guidedContainer) {
+            guidedContainer.style.display = 'block';
+        }
+    }
+}
+
+// Pré-configurer l'interface avec les paramètres guidés
+function preConfigureExerciseInterface(exerciseData) {
+    console.log('⚙️ Pré-configuration interface:', exerciseData);
+    
+    // Afficher les objectifs guidés
+    const exerciseInfo = document.querySelector('.exercise-info');
+    if (exerciseInfo) {
+        const targetInfo = document.createElement('div');
+        targetInfo.className = 'guided-targets';
+        targetInfo.innerHTML = `
+            <strong>🎯 Objectifs :</strong> 
+            ${exerciseData.sets} séries × ${exerciseData.target_reps} reps @ ${exerciseData.suggested_weight}kg
+            <br>
+            <small>Repos : ${Math.round(exerciseData.rest_time / 60)}min entre séries</small>
+        `;
+        exerciseInfo.appendChild(targetInfo);
+    }
+    
+    // Pré-remplir le poids suggéré
+    const weightInput = document.getElementById('weightInput');
+    if (weightInput && exerciseData.suggested_weight) {
+        weightInput.value = exerciseData.suggested_weight;
+    }
+    
+    // Pré-remplir les répétitions cibles
+    const repsInput = document.getElementById('repsInput');
+    if (repsInput && exerciseData.target_reps) {
+        repsInput.value = exerciseData.target_reps;
+    }
+    
+    // Ajouter un bouton de retour vers l'interface guidée
+    addReturnToGuidedButton();
+}
+
+// Ajouter bouton retour interface guidée
+function addReturnToGuidedButton() {
+    const exerciseControls = document.querySelector('.exercise-controls');
+    if (exerciseControls && !document.getElementById('returnToGuided')) {
+        const returnButton = document.createElement('button');
+        returnButton.id = 'returnToGuided';
+        returnButton.className = 'btn btn-secondary';
+        returnButton.innerHTML = '← Retour au plan';
+        returnButton.onclick = returnToGuidedInterface;
+        
+        exerciseControls.insertBefore(returnButton, exerciseControls.firstChild);
+    }
+}
+
+// Retour à l'interface guidée
+function returnToGuidedInterface() {
+    // Masquer l'interface d'exercice
+    const exerciseArea = document.getElementById('exerciseArea');
+    if (exerciseArea) {
+        exerciseArea.innerHTML = '';
+    }
+    
+    // Réafficher l'interface guidée
+    showGuidedInterface();
+}
+
+// Navigation avec gestion des exercices terminés
+function nextGuidedExercise() {
+    if (currentExerciseIndex < guidedWorkoutPlan.exercises.length - 1) {
+        currentExerciseIndex++;
+        
+        // Sauvegarder la progression
+        localStorage.setItem('guidedWorkoutProgress', JSON.stringify({
+            currentIndex: currentExerciseIndex,
+            completedExercises: currentExerciseIndex
+        }));
+        
+        showGuidedInterface();
+        showToast(`Exercice ${currentExerciseIndex + 1}/${guidedWorkoutPlan.exercises.length}`, 'info');
+    } else {
+        // Tous les exercices terminés
+        showWorkoutCompletion();
+    }
+}
+
+// Interface de fin de séance guidée
+function showWorkoutCompletion() {
+    const container = document.getElementById('mainContent');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+            <h2>Séance adaptative terminée !</h2>
+            <p>Félicitations ! Vous avez complété tous les exercices.</p>
+            
+            <div style="margin: 2rem 0;">
+                <div class="stat-card" style="display: inline-block; margin: 0 1rem;">
+                    <h3>Exercices</h3>
+                    <p class="stat-value">${guidedWorkoutPlan.exercises.length}</p>
+                </div>
+                <div class="stat-card" style="display: inline-block; margin: 0 1rem;">
+                    <h3>Durée estimée</h3>
+                    <p class="stat-value">${guidedWorkoutPlan.estimated_duration}min</p>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="completeWorkout()" style="margin: 0.5rem;">
+                ✅ Terminer la séance
+            </button>
+            
+            <button class="btn btn-secondary" onclick="returnToGuidedInterface()" style="margin: 0.5rem;">
+                ← Revoir les exercices
+            </button>
+        </div>
+    `;
 }
 
 // Navigation entre exercices
@@ -206,7 +345,7 @@ function previousExercise() {
     }
 }
 
-// Exports globaux
+// Exports globaux corrects (noms existants)
 window.startGuidedWorkout = startGuidedWorkout;
 window.startCurrentExercise = startCurrentExercise;
 window.nextExercise = nextExercise;
@@ -216,5 +355,7 @@ window.previousExercise = previousExercise;
 export {
     startGuidedWorkout,
     showGuidedInterface,
-    startCurrentExercise
+    startCurrentExercise,
+    nextExercise,
+    previousExercise
 };
