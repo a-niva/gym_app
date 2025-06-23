@@ -902,6 +902,22 @@ class FitnessMLEngine:
             "recovery_days_recommended": 2 if risk_level == "high" else 1
         }
     
+    def calculate_weight_for_exercise(self, user: User, exercise: Exercise, reps: int) -> float:
+        """Calcule le poids pour un exercice donné (méthode manquante)"""
+        try:
+            prediction = self.predict_next_session_performance(user, exercise, 3, reps)
+            return float(prediction.get("predicted_weight", 20.0))
+        except Exception as e:
+            logger.error(f"Erreur calcul poids pour {exercise.name_fr}: {e}")
+            # Poids par défaut selon niveau
+            defaults = {
+                "beginner": 10.0, "intermediate": 20.0, "advanced": 30.0,
+                "elite": 40.0, "extreme": 50.0
+            }
+            return defaults.get(user.experience_level, 20.0)
+
+
+
 
 # ========== NOUVEAUX MODULES PHASE 2.2 ==========
 
@@ -1093,7 +1109,7 @@ class SessionBuilder:
                     "sets": 3,
                     "target_reps": 10,
                     "rest_time": 90,
-                    "predicted_weight": 0
+                    "suggested_weight": float(weight)
                 })
                 
         return session
