@@ -28,41 +28,63 @@ async def lifespan(app: FastAPI):
     # Startup
     db = SessionLocal()
     try:
-        # Check if exercises already imported
-        try:
-            exercise_count = db.query(Exercise).count()
-            logger.info(f"Exercises in DB: {exercise_count}")
+        logger.info("=== STARTUP: Import des exercices ===")
+        exercise_count = db.query(Exercise).count()
+        logger.info(f"Exercises en base: {exercise_count}")
+        
+        if exercise_count == 0:
+            json_path = os.path.join(os.path.dirname(__file__), "..", "exercises.json")
+            logger.info(f"Chemin exercises.json: {json_path}")
+            logger.info(f"Fichier existe: {os.path.exists(json_path)}")
             
-            if exercise_count == 0:
-                json_path = os.path.join(os.path.dirname(__file__), "..", "exercises.json")
-                logger.info(f"Looking for exercises.json at: {json_path}")
-                
-                if os.path.exists(json_path):
-                    logger.info("exercises.json found, importing...")
+            if os.path.exists(json_path):
+                try:
                     with open(json_path, "r", encoding="utf-8") as f:
                         exercises_data = json.load(f)
-                        logger.info(f"Loaded {len(exercises_data)} exercises from JSON")
+                        logger.info(f"JSON chargé: {len(exercises_data)} exercices")
                         
-                        for i, ex_data in enumerate(exercises_data):
+                        # Tester le premier exercice
+                        if exercises_data:
+                            first_ex = exercises_data[0]
+                            logger.info(f"Premier exercice: {first_ex.get('name_fr', 'MANQUANT')}")
+                            logger.info(f"Clés disponibles: {list(first_ex.keys())}")
+                            
+                            # Tenter de créer le premier exercice
                             try:
-                                exercise = Exercise(**ex_data)
-                                db.add(exercise)
-                                if i < 3:  # Log premiers exercices
-                                    logger.info(f"Added exercise: {ex_data.get('name_fr', 'Unknown')}")
-                            except Exception as ex_error:
-                                logger.error(f"Error adding exercise {i}: {ex_error}")
+                                test_exercise = Exercise(**first_ex)
+                                logger.info("✅ Premier exercice créé avec succès")
+                                db.add(test_exercise)
+                                db.commit()
+                                logger.info("✅ Premier exercice inséré en base")
                                 
-                        db.commit()
-                        logger.info(f"Successfully imported {len(exercises_data)} exercises")
-                else:
-                    logger.error(f"exercises.json NOT FOUND at: {json_path}")
-                    # Lister les fichiers du répertoire parent
-                    parent_dir = os.path.dirname(os.path.dirname(__file__))
-                    files = os.listdir(parent_dir)
-                    logger.error(f"Files in parent directory: {files}")
-        except Exception as import_error:
-            logger.error(f"Critical error during exercises import: {import_error}")
-            raise
+                                # Si ça marche, importer le reste
+                                for i, ex_data in enumerate(exercises_data[1:], 1):
+                                    try:
+                                        exercise = Exercise(**ex_data)
+                                        db.add(exercise)
+                                    except Exception as ex_error:
+                                        logger.error(f"❌ Erreur exercice {i}: {ex_error}")
+                                        logger.error(f"Données problématiques: {ex_data}")
+                                        
+                                db.commit()
+                                final_count = db.query(Exercise).count()
+                                logger.info(f"✅ Import terminé: {final_count} exercices en base")
+                                
+                            except Exception as creation_error:
+                                logger.error(f"❌ Erreur création premier exercice: {creation_error}")
+                                logger.error(f"Données: {first_ex}")
+                                
+                except Exception as json_error:
+                    logger.error(f"❌ Erreur chargement JSON: {json_error}")
+            else:
+                logger.error("❌ exercises.json introuvable")
+        else:
+            logger.info(f"✅ Base déjà remplie avec {exercise_count} exercices")
+            
+    except Exception as startup_error:
+        logger.error(f"❌ ERREUR CRITIQUE STARTUP: {startup_error}")
+        import traceback
+        logger.error(traceback.format_exc())
     finally:
         db.close()
     
