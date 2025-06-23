@@ -206,6 +206,7 @@ class FitnessMLEngine:
         # Si dumbbells, ajuster au poids disponible le plus proche
         if "dumbbells" in exercise.equipment and user.equipment_config:
             target_weight = base_weight * experience_mult * goal_mult / 2
+            available_weights = []  # INITIALISER TOUJOURS
             
             # Vérifier dumbbells fixes d'abord
             dumbbell_config = user.equipment_config.get("dumbbells", {})
@@ -235,8 +236,8 @@ class FitnessMLEngine:
                     closest_plate = min(available_plates, key=lambda x: abs(x - target_plate_weight))
                     return (barre_weight + closest_plate) * 2  # Paire
             
-            # Trouver le poids le plus proche
-            if available_weights:
+            # Trouver le poids le plus proche SI disponible
+            if available_weights:  # Maintenant safe !
                 closest_weight = min(available_weights, key=lambda x: abs(x - target_weight))
                 return closest_weight * 2  # Multiplié par 2 pour la paire
         
