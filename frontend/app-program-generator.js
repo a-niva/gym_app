@@ -36,7 +36,7 @@ async function showProgramGenerator() {
 }
 
 // ===== FORMULAIRE D'ENGAGEMENT =====
-function showCommitmentForm(container) {
+function showCommitmentForm(container, existingCommitment = null) {
     container.innerHTML = `
         <h2>🎯 Définir vos objectifs d'entraînement</h2>
         <p style="color: var(--gray-light); margin-bottom: 2rem;">
@@ -157,7 +157,26 @@ function showCommitmentForm(container) {
             </button>
         </form>
     `;
-    
+    // Pré-sélectionner les valeurs existantes
+        setTimeout(() => {
+            if (existingCommitment) {
+                // Pré-sélectionner la fréquence
+                const freqBtn = document.querySelector(`[data-frequency="${existingCommitment.sessions_per_week}"]`);
+                if (freqBtn) freqBtn.click();
+                
+                // Pré-sélectionner le temps
+                const timeBtn = document.querySelector(`[data-time="${existingCommitment.time_per_session}"]`);
+                if (timeBtn) timeBtn.click();
+                
+                // Pré-sélectionner les priorités musculaires
+                if (existingCommitment.focus_muscles) {
+                    Object.entries(existingCommitment.focus_muscles).forEach(([muscle, priority]) => {
+                        const select = document.querySelector(`select[name="${muscle}_priority"]`);
+                        if (select) select.value = priority;
+                    });
+                }
+            }
+        }, 100);
     // Ajouter les styles si pas déjà présents
     if (!document.getElementById('commitment-styles')) {
         const style = document.createElement('style');
@@ -429,8 +448,14 @@ function transformProgramForSaving(program, weeks, frequency) {
 
 // ===== RÉINITIALISER L'ENGAGEMENT =====
 async function resetCommitment() {
-    if (confirm('Voulez-vous modifier vos préférences d\'entraînement ?')) {
-        const container = document.getElementById('mainContent');
+    const container = document.getElementById('mainContent');
+    
+    // Récupérer les préférences existantes
+    try {
+        const commitment = await getUserCommitment(currentUser.id);
+        showCommitmentForm(container, commitment);
+    } catch (error) {
+        // Si aucune préférence n'existe, afficher le formulaire vide
         showCommitmentForm(container);
     }
 }

@@ -159,6 +159,7 @@ function showClassicDashboard(container, hasProgram) {
 }
 
 // ===== DASHBOARD ADAPTATIF =====
+// ===== DASHBOARD ADAPTATIF CORRIGÉ =====
 async function showAdaptiveDashboard(container, commitment, hasProgram) {
     // Charger les données adaptatives
     const [trajectory, targets] = await Promise.all([
@@ -197,14 +198,17 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 1.5rem;
+                flex-wrap: wrap;
+                gap: 1rem;
             ">
-                <h3 style="margin: 0;">${statusMessage}</h3>
+                <h3 style="margin: 0; flex: 1; min-width: 200px;">${statusMessage}</h3>
                 <span class="trajectory-badge" style="
                     background: ${trajectory.on_track ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'};
                     color: ${trajectory.on_track ? '#10b981' : '#f59e0b'};
                     padding: 0.5rem 1rem;
                     border-radius: 999px;
                     font-weight: 600;
+                    white-space: nowrap;
                 ">
                     ${trajectory.sessions_this_week}/${commitment.sessions_per_week} séances
                 </span>
@@ -212,47 +216,81 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
             
             ${hasProgram ? `
                 <div class="trajectory-stats" style="
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
+                    display: flex;
+                    flex-direction: column;
                     gap: 1rem;
                     margin-bottom: 1.5rem;
                 ">
-                    <div class="stat-item">
-                        <span class="stat-label" style="color: var(--gray); font-size: 0.875rem;">Régularité (30j)</span>
-                        <div class="progress-bar" style="
-                            background: rgba(255, 255, 255, 0.1);
-                            height: 8px;
-                            border-radius: 4px;
-                            overflow: hidden;
-                            margin: 0.5rem 0;
-                        ">
-                            <div class="progress-fill" style="
-                                background: #10b981;
-                                height: 100%;
-                                width: ${trajectory.consistency_score * 100}%;
-                                transition: width 0.3s;
-                            "></div>
+                    <div class="stat-item" style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 0.75rem;
+                        background: rgba(255, 255, 255, 0.03);
+                        border-radius: 8px;
+                        min-height: 60px;
+                    ">
+                        <div style="flex: 1; min-width: 0;">
+                            <span class="stat-label" style="color: var(--gray); font-size: 0.875rem; display: block;">Régularité (30j)</span>
+                            <div class="progress-bar" style="
+                                background: rgba(255, 255, 255, 0.1);
+                                height: 6px;
+                                border-radius: 3px;
+                                overflow: hidden;
+                                margin-top: 0.5rem;
+                                width: 100%;
+                            ">
+                                <div class="progress-fill" style="
+                                    background: #10b981;
+                                    height: 100%;
+                                    width: ${trajectory.consistency_score * 100}%;
+                                    transition: width 0.3s;
+                                "></div>
+                            </div>
                         </div>
-                        <span class="stat-value" style="font-weight: 600;">${Math.round(trajectory.consistency_score * 100)}%</span>
+                        <span class="stat-value" style="
+                            font-weight: 600; 
+                            margin-left: 1rem; 
+                            font-size: 1.1rem;
+                            min-width: 40px;
+                            text-align: right;
+                        ">${Math.round(trajectory.consistency_score * 100)}%</span>
                     </div>
                     
-                    <div class="stat-item">
-                        <span class="stat-label" style="color: var(--gray); font-size: 0.875rem;">Adhérence au volume</span>
-                        <div class="progress-bar" style="
-                            background: rgba(255, 255, 255, 0.1);
-                            height: 8px;
-                            border-radius: 4px;
-                            overflow: hidden;
-                            margin: 0.5rem 0;
-                        ">
-                            <div class="progress-fill" style="
-                                background: #3b82f6;
-                                height: 100%;
-                                width: ${trajectory.volume_adherence * 100}%;
-                                transition: width 0.3s;
-                            "></div>
+                    <div class="stat-item" style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 0.75rem;
+                        background: rgba(255, 255, 255, 0.03);
+                        border-radius: 8px;
+                        min-height: 60px;
+                    ">
+                        <div style="flex: 1; min-width: 0;">
+                            <span class="stat-label" style="color: var(--gray); font-size: 0.875rem; display: block;">Adhérence au volume</span>
+                            <div class="progress-bar" style="
+                                background: rgba(255, 255, 255, 0.1);
+                                height: 6px;
+                                border-radius: 3px;
+                                overflow: hidden;
+                                margin-top: 0.5rem;
+                                width: 100%;
+                            ">
+                                <div class="progress-fill" style="
+                                    background: #3b82f6;
+                                    height: 100%;
+                                    width: ${trajectory.volume_adherence * 100}%;
+                                    transition: width 0.3s;
+                                "></div>
+                            </div>
                         </div>
-                        <span class="stat-value" style="font-weight: 600;">${Math.round(trajectory.volume_adherence * 100)}%</span>
+                        <span class="stat-value" style="
+                            font-weight: 600; 
+                            margin-left: 1rem; 
+                            font-size: 1.1rem;
+                            min-width: 40px;
+                            text-align: right;
+                        ">${Math.round(trajectory.volume_adherence * 100)}%</span>
                     </div>
                 </div>
             ` : ''}
@@ -260,96 +298,148 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
             <!-- Insights personnalisés -->
             ${trajectory.insights && trajectory.insights.length > 0 ? `
                 <div class="insights-section" style="
-                    background: rgba(255, 255, 255, 0.03);
-                    padding: 1rem;
-                    border-radius: 8px;
-                    margin-bottom: 1.5rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                    margin-top: 1rem;
+                    padding-top: 1rem;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
                 ">
-                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--gray);">💡 Conseils personnalisés</h4>
-                    <ul style="margin: 0; padding-left: 1.5rem;">
-                        ${trajectory.insights.map(insight => `<li style="margin: 0.25rem 0;">${insight}</li>`).join('')}
-                    </ul>
+                    <h5 style="color: var(--gray); font-size: 0.85rem; margin: 0; margin-bottom: 0.5rem;">CONSEILS PERSONNALISÉS</h5>
+                    ${trajectory.insights.map(insight => `
+                        <div class="insight-item" style="
+                            padding: 0.75rem;
+                            background: rgba(255, 255, 255, 0.02);
+                            border-radius: 8px;
+                            font-size: 0.9rem;
+                            border-left: 3px solid #10b981;
+                        ">
+                            ${insight}
+                        </div>
+                    `).join('')}
                 </div>
             ` : ''}
         </div>
         
         <!-- Actions rapides -->
-        <div class="quick-actions" style="
-            display: flex;
+        <div style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 1rem;
-            justify-content: center;
             margin-bottom: 2rem;
         ">
-            ${!hasProgram ? `
-                <button class="btn btn-primary" onclick="showProgramGenerator()" style="flex: 1; max-width: 300px;">
-                    📋 Créer mon programme
-                </button>
-            ` : `
-                <button class="btn btn-primary" onclick="generateQuickWorkout()" style="flex: 1; max-width: 300px;">
-                    🚀 Séance rapide adaptée
-                </button>
-                <button class="btn" onclick="showProgramGenerator()" style="flex: 1; max-width: 300px;">
+            <button class="btn" onclick="generateQuickWorkout()" style="
+                background: #10b981;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                min-height: 60px;
+                border-radius: 12px;
+            ">
+                ⚡ Séance rapide adaptée
+            </button>
+            
+            ${hasProgram ? `
+                <button class="btn" onclick="showView('program')" style="
+                    background: #3b82f6;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    min-height: 60px;
+                    border-radius: 12px;
+                ">
                     📋 Modifier mon programme
                 </button>
-                <button class="btn" onclick="showView('workout')" style="
-                    background: rgba(255, 255, 255, 0.1);
+            ` : `
+                <button class="btn" onclick="showProgramGenerator()" style="
+                    background: #6366f1;
                     color: white;
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    min-height: 60px;
+                    border-radius: 12px;
                 ">
-                    💪 Séance libre
+                    🚀 Créer programme
                 </button>
             `}
-        </div>
-        ${!hasProgram ? `
-            <div style="
-                margin-top: 2rem;
-                padding: 1.5rem;
-                background: rgba(255, 255, 255, 0.05);
+            
+            <button class="btn" onclick="showView('workout')" style="
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                min-height: 60px;
                 border-radius: 12px;
-                text-align: center;
             ">
-                <h3>🎯 Pas encore de programme ?</h3>
-                <p style="margin: 1rem 0; color: var(--gray);">
-                    Créez votre programme personnalisé ou commencez par une séance libre
-                </p>
-                <button class="btn" onclick="showProgramGenerator()" style="
-                    background: #10b981;
-                    color: white;
-                    margin-bottom: 1rem;
-                ">
-                    Créer mon programme
-                </button>
-                <button class="btn btn-secondary" onclick="showView('exercises')" style="
-                    background: transparent;
-                    border: 1px solid #3b82f6;
-                    color: #3b82f6;
-                ">
-                    Séance libre
-                </button>
-            </div>
-        ` : ''}
+                💪 Séance libre
+            </button>
+        </div>
         
         <!-- État des muscles -->
-        ${hasProgram && targets && targets.length > 0 ? `
+        ${targets && targets.length > 0 ? `
             <div class="muscle-status-widget" style="
                 background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 16px;
-                padding: 2rem;
+                padding: 1.5rem;
+                margin-top: 2rem;
             ">
-                <h3 style="margin: 0 0 1.5rem 0;">État de vos muscles</h3>
+                <h3 style="margin-bottom: 1rem;">🔋 État de vos muscles</h3>
                 <div class="muscle-grid" style="
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                     gap: 1rem;
+                    margin-top: 1rem;
                 ">
-                    ${await renderMuscleStatus(targets)}
+                    ${targets.map(target => {
+                        const readiness = target.recovery_debt < 0.3 ? 'ready' : 
+                                        target.recovery_debt < 0.7 ? 'moderate' : 'tired';
+                        const emoji = readiness === 'ready' ? '💚' : 
+                                    readiness === 'moderate' ? '🟡' : '🔴';
+                        const status = readiness === 'ready' ? 'Prêt' : 
+                                     readiness === 'moderate' ? 'Moyen' : 'Fatigué';
+                        
+                        return `
+                            <div class="muscle-item ${readiness}" style="
+                                background: rgba(255, 255, 255, 0.03);
+                                border-radius: 12px;
+                                padding: 1rem;
+                                border: 2px solid ${readiness === 'ready' ? '#10b981' : 
+                                                  readiness === 'moderate' ? '#f59e0b' : '#ef4444'};
+                                transition: all 0.3s ease;
+                                text-align: center;
+                            ">
+                                <div class="muscle-header" style="
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    gap: 0.5rem;
+                                    margin-bottom: 0.75rem;
+                                ">
+                                    <span class="muscle-emoji" style="font-size: 1.5rem;">${emoji}</span>
+                                    <span class="muscle-name" style="font-weight: 600; font-size: 0.85rem;">${target.muscle_group}</span>
+                                </div>
+                                <div class="mini-progress" style="
+                                    font-size: 0.75rem;
+                                    color: var(--gray);
+                                ">${status}</div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             </div>
         ` : ''}
     `;
 }
+
 // ========== NOUVELLES FONCTIONS DASHBOARD ADAPTATIF ==========
 
 // Fonction pour afficher l'état des muscles
