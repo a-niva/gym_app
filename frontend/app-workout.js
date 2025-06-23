@@ -436,6 +436,27 @@ function updateTrainingInterface() {
         <div id="exerciseArea"></div>
     `;
     
+    // AJOUTER cette vérification après avoir créé l'interface de base :
+    const workoutType = localStorage.getItem('workoutType');
+    const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
+
+    if (currentWorkout && currentWorkout.type === 'adaptive' && guidedPlan) {
+        console.log('🎯 Mode adaptatif détecté, chargement interface guidée');
+        
+        // Importer et démarrer le module guidé
+        import('./app-guided-workout.js').then(module => {
+            const plan = JSON.parse(guidedPlan);
+            module.startGuidedWorkout(plan);
+        }).catch(error => {
+            console.error('Erreur import module guidé:', error);
+            // Fallback vers l'interface standard
+            showExerciseSelector();
+        });
+    } else {
+        // Mode libre standard
+        showExerciseSelector();
+    }
+
     // Afficher le sélecteur d'exercices
     // Vérifier le type de séance et afficher l'interface appropriée
     const workoutPlan = localStorage.getItem('adaptiveWorkoutPlan');

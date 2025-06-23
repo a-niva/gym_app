@@ -1354,20 +1354,67 @@ async function startAdaptiveWorkout() {
     }
     
     try {
-        // Importer dynamiquement pour éviter les dépendances circulaires
-        const { startWorkout } = await import('./app-workout.js');
+        console.log('🎯 Démarrage séance adaptative:', adaptiveWorkout);
         
-        // Fermer le modal
+        // ÉTAPE 1: Sauvegarder le plan adaptatif AVANT de créer la séance
+        localStorage.setItem('guidedWorkoutPlan', JSON.stringify(adaptiveWorkout));
+        localStorage.setItem('workoutType', 'adaptive');
+        
+        // ÉTAPE 2: Fermer le modal
         document.querySelector('.modal-overlay')?.remove();
         
-        // Démarrer la séance avec le type adaptive
-        await startWorkout('adaptive');
+        // ÉTAPE 3: Basculer vers la vue workout
+        showView('workout');
         
-        showToast('Séance démarrée !', 'success');
+        // ÉTAPE 4: Attendre que la vue soit chargée puis démarrer
+        setTimeout(async () => {
+            try {
+                // Vérifier s'il y a déjà une séance active
+                const activeResponse = await fetch(`/api/users/${currentUser.id}/active-workout`);
+                const activeData = await activeResponse.json();
+                
+                if (activeData.workout) {
+                    console.log('🔄 Abandon de la séance active existante');
+                    // Abandonner l'ancienne séance
+                    await fetch(`/api/workouts/${activeData.workout.id}/abandon`, {
+                        method: 'PUT'
+                    });
+                }
+                
+                // Créer une nouvelle séance avec le type adaptatif
+                const workoutResponse = await fetch('/api/workouts/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentUser.id,
+                        type: 'adaptive'  // IMPORTANT: Marquer comme adaptatif
+                    })
+                });
+                
+                if (!workoutResponse.ok) {
+                    throw new Error('Erreur création séance');
+                }
+                
+                const newWorkout = await workoutResponse.json();
+                console.log('✅ Nouvelle séance adaptative créée:', newWorkout);
+                
+                // Mettre à jour l'état global
+                setCurrentWorkout(newWorkout);
+                
+                // Démarrer le mode guidé
+                startGuidedWorkout(adaptiveWorkout);
+                
+                showToast('Séance adaptative démarrée !', 'success');
+                
+            } catch (error) {
+                console.error('Erreur démarrage séance:', error);
+                showToast('Erreur lors du démarrage', 'error');
+            }
+        }, 300);
         
     } catch (error) {
-        console.error('Error starting workout:', error);
-        showToast('Erreur lors du démarrage de la séance', 'error');
+        console.error('Erreur startAdaptiveWorkout:', error);
+        showToast('Erreur lors du démarrage', 'error');
     }
 }
 
