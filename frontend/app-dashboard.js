@@ -1,7 +1,7 @@
 // ===== MODULE TABLEAU DE BORD =====
 // Ce fichier gère l'affichage du tableau de bord et des statistiques
 // Il coordonne le chargement des données et leur affichage
-
+import { startGuidedWorkout } from './app-guided-workout.js';
 import { loadWorkoutHistory } from './app-history.js';
 import { showToast, showLoadingOverlay, hideLoadingOverlay } from './app-ui.js';
 import { 

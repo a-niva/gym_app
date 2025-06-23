@@ -760,9 +760,9 @@ class FitnessMLEngine:
         # Mapping des groupes musculaires
         muscle_mapping = {
             "Pectoraux/Triceps": ["Pectoraux", "Bras"],
-            "Dos/Biceps": ["Trapèzes", "Latéraux", "Rhomboïdes", "Biceps"],  # Dos complet
-            "Jambes": ["Jambes"],  # Retirer "Ischio-jambiers" et "Mollets" 
-            "Épaules/Abdos": ["Deltoïdes", "Abdominaux"],  # "Épaules" → "Deltoïdes"
+            "Dos/Biceps": ["Dos", "Bras"],  # CHANGÉ : Simplifié pour correspondre à la DB - ### TODO_later
+            "Jambes": ["Jambes"],
+            "Épaules/Abdos": ["Deltoïdes", "Abdominaux"],
             "Haut du corps": ["Pectoraux", "Dos", "Deltoïdes"],
             "Bas du corps": ["Jambes"],
             "Full body": ["Pectoraux", "Dos", "Jambes", "Deltoïdes"],

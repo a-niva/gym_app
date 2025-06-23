@@ -206,9 +206,9 @@ function finishExercise() {
             // Mode guidé - passer à l'exercice suivant
             import('./app-guided-workout.js').then(module => {
                 if (module.nextGuidedExercise) {
-                    module.nextGuidedExercise();  // ✅ CORRECT - Gère progression complète
+                    module.nextGuidedExercise();  // Gère progression complète
                 } else if (window.nextGuidedExercise) {
-                    window.nextGuidedExercise();  // ✅ CORRECT - Fallback global
+                    window.nextGuidedExercise();  // Fallback global
                 } else {
                     console.warn('nextGuidedExercise non disponible, retour au sélecteur');
                     showExerciseSelector();

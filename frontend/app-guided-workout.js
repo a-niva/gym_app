@@ -347,11 +347,15 @@ function previousExercise() {
 }
 
 // Exports globaux corrects (noms existants)
+window.startGuidedWorkout = startGuidedWorkout;
 window.nextGuidedExercise = nextGuidedExercise;
 window.returnToGuidedInterface = returnToGuidedInterface;
 window.preConfigureExerciseInterface = preConfigureExerciseInterface;
 window.addReturnToGuidedButton = addReturnToGuidedButton;
 window.showWorkoutCompletion = showWorkoutCompletion;
+window.previousExercise = previousExercise;
+window.nextExercise = nextExercise;
+window.startCurrentExercise = startCurrentExercise;
 
 export {
     startGuidedWorkout,
@@ -365,3 +369,4 @@ export {
     addReturnToGuidedButton,
     showWorkoutCompletion
 };
+
