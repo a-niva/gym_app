@@ -185,6 +185,7 @@ export {
     audioContext,
     isSilentMode,
     currentProgram,
+    currentAdaptiveWorkout,
     isAutoWeightEnabled,
     userCommitment,
     adaptiveTargets,
