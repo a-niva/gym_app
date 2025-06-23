@@ -114,6 +114,7 @@ export {
     showToast,
     showLoadingOverlay,
     hideLoadingOverlay,
+    showFatigueModal,
     toggleSilentMode,
     getEquipmentIcon,
     getEquipmentName,
