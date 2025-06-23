@@ -5,6 +5,7 @@
 import { currentUser } from './app-state.js';
 import { TIME_BASED_KEYWORDS } from './app-config.js';
 
+
 // ===== CALCUL DES POIDS DISPONIBLES =====
 function calculateAvailableWeights(exercise) {
     if (!currentUser || !currentUser.equipment_config) return [20, 40, 60];
@@ -77,11 +78,35 @@ function calculateAvailableWeights(exercise) {
         }
     }
     
-    // Haltères
-    if (exercise.equipment.includes('dumbbells') && config.dumbbells?.weights) {
-        config.dumbbells.weights.forEach(w => {
-            weights.add(w * 2); // Paire d'haltères
-        });
+    // Haltères (dumbbells classiques OU haltères courtes + disques)
+    if (exercise.equipment.includes('dumbbells')) {
+        // Option 1: Haltères fixes classiques
+        if (config.dumbbells?.weights?.length > 0) {
+            config.dumbbells.weights.forEach(w => {
+                weights.add(w * 2); // Paire d'haltères
+            });
+        }
+        
+        // Option 2: Haltères courtes + disques (fallback intelligent)
+        if (config.barres?.courte?.available && config.disques?.weights) {
+            const shortBarbellWeight = 2.5; // Poids d'une haltère courte
+            const basePairWeight = shortBarbellWeight * 2; // Paire vide
+            
+            // Ajouter la paire vide
+            weights.add(basePairWeight);
+            
+            // Calculer tous les poids possibles avec des disques
+            const plateWeights = Object.keys(config.disques.weights)
+                .map(w => parseFloat(w))
+                .filter(w => config.disques.weights[w] >= 2); // Au moins 2 disques par poids
+            
+            // Pour chaque combinaison de disques possibles
+            for (let totalPlateWeight = 0; totalPlateWeight <= 100; totalPlateWeight += 2.5) {
+                if (canMakePlateWeightForDumbbells(totalPlateWeight, plateWeights)) {
+                    weights.add(basePairWeight + totalPlateWeight);
+                }
+            }
+        }
     }
     
     // Kettlebells
@@ -93,6 +118,27 @@ function calculateAvailableWeights(exercise) {
     return Array.from(weights)
         .filter(w => w <= 300 && w >= 0)
         .sort((a, b) => a - b);
+}
+
+
+// Nouvelle fonction helper spécifique aux haltères courtes
+function canMakePlateWeightForDumbbells(targetPlateWeight, availablePlates) {
+    if (targetPlateWeight === 0) return true;
+    
+    // Algorithme simple : essayer de faire le poids avec les disques disponibles
+    // Chaque disque doit être utilisé en paire (un sur chaque haltère)
+    let remaining = targetPlateWeight;
+    const sortedPlates = [...availablePlates].sort((a, b) => b - a);
+    
+    for (const plate of sortedPlates) {
+        const pairWeight = plate * 2; // Paire de disques
+        const maxPairs = Math.floor(remaining / pairWeight);
+        if (maxPairs > 0) {
+            remaining -= maxPairs * pairWeight;
+        }
+    }
+    
+    return remaining === 0;
 }
 
 // ===== VALIDATION DU POIDS =====
