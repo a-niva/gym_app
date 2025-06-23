@@ -3,14 +3,21 @@ import { showToast } from './app-ui.js';
 
 let currentExerciseIndex = 0;
 let guidedWorkoutPlan = null;
-// Ensure functions are available globally for onclick handlers
-window.nextExercise = nextExercise;
-window.previousExercise = previousExercise;
-window.startCurrentExercise = startCurrentExercise;
+
+
+// Make functions available for onclick handlers in HTML
+window.nextExercise = () => nextExercise();
+window.previousExercise = () => previousExercise();
+window.startCurrentExercise = () => startCurrentExercise();
+window.completeWorkout = () => {
+    if (window.completeWorkout) {
+        window.completeWorkout();
+    }
+};
 
 
 // Point d'entrée unique pour démarrer le mode guidé
-export function startGuidedWorkout(adaptiveWorkout) {
+function startGuidedWorkout(adaptiveWorkout) {
     console.log('🎯 Démarrage mode guidé avec:', adaptiveWorkout);
     
     guidedWorkoutPlan = adaptiveWorkout;
@@ -27,7 +34,7 @@ export function startGuidedWorkout(adaptiveWorkout) {
 }
 
 // Afficher l'interface de progression guidée
-export function showGuidedInterface() {
+function showGuidedInterface() {
     // Ensure we're in the training view
     if (!document.getElementById('training-view')) {
         console.error('❌ Vue training non active');
@@ -198,7 +205,7 @@ export function showGuidedInterface() {
 }
 
 // Fonction pour commencer l'exercice actuel
-export async function startCurrentExercise() {
+async function startCurrentExercise() {
     if (!guidedWorkoutPlan || currentExerciseIndex >= guidedWorkoutPlan.exercises.length) {
         showToast('Exercice non disponible', 'error');
         return;
@@ -243,7 +250,7 @@ export async function startCurrentExercise() {
 }
 
 // Pré-configurer l'interface avec les paramètres guidés
-export function preConfigureExerciseInterface(exerciseData) {
+function preConfigureExerciseInterface(exerciseData) {
     console.log('⚙️ Pré-configuration interface:', exerciseData);
     
     // Afficher les objectifs guidés
@@ -277,7 +284,7 @@ export function preConfigureExerciseInterface(exerciseData) {
 }
 
 // Ajouter bouton retour interface guidée
-export function addReturnToGuidedButton() {
+function addReturnToGuidedButton() {
     const exerciseControls = document.querySelector('.exercise-controls');
     if (exerciseControls && !document.getElementById('returnToGuided')) {
         const returnButton = document.createElement('button');
@@ -291,7 +298,7 @@ export function addReturnToGuidedButton() {
 }
 
 // Retour à l'interface guidée
-export function returnToGuidedInterface() {
+function returnToGuidedInterface() {
     // Masquer l'interface d'exercice
     const exerciseArea = document.getElementById('exerciseArea');
     if (exerciseArea) {
@@ -303,14 +310,14 @@ export function returnToGuidedInterface() {
 }
 
 // Navigation simple entre exercices
-export function nextExercise() {
+function nextExercise() {
     if (currentExerciseIndex < guidedWorkoutPlan.exercises.length - 1) {
         currentExerciseIndex++;
         showGuidedInterface();
     }
 }
 
-export function previousExercise() {
+function previousExercise() {
     if (currentExerciseIndex > 0) {
         currentExerciseIndex--;
         showGuidedInterface();
@@ -318,7 +325,7 @@ export function previousExercise() {
 }
 
 // Navigation avec progression (appelée après fin d'exercice)
-export function nextGuidedExercise() {
+function nextGuidedExercise() {
     if (currentExerciseIndex < guidedWorkoutPlan.exercises.length - 1) {
         currentExerciseIndex++;
         
@@ -337,7 +344,7 @@ export function nextGuidedExercise() {
 }
 
 // Interface de fin de séance guidée
-export function showWorkoutCompletion() {
+function showWorkoutCompletion() {
     const container = document.getElementById('mainContent');
     if (!container) return;
     
