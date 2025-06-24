@@ -820,60 +820,7 @@ function saveSetLocally(setData) {
     }
 }
 
-// Fonction helper pour gérer le succès d'une série
-function handleSetSuccess(setData, setDuration) {
-    // Ajouter à l'historique local avec la durée
-    addSetToHistory({...setData, duration: setDuration});
-    
-    // Sauvegarder dans l'historique de la session
-    updateSessionHistory(setData);
-    
-    // Notification de succès
-    showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
-    
-    // Son de validation de série
-    if (!isSilentMode && window.playBeep) {
-        window.playBeep(800, 150);
-    }
-    
-    // Vérification fatigue toutes les 3 séries
-    if (currentSetNumber % 3 === 0) {
-        checkFatigue(currentWorkout.id).then(fatigue => {
-            if (fatigue && fatigue.risk === 'high') {
-                showToast(`⚠️ ${fatigue.message}`, 'warning');
-                showFatigueModal(fatigue);
-            }
-        }).catch(() => {
-            // Ignorer les erreurs de vérification de fatigue
-        });
-    }
-    
-    // Arrêter le timer de série
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        setTimerInterval(null);
-    }
-    
-    // Augmenter légèrement la fatigue pour la prochaine série
-    setSelectedFatigue(Math.min(5, selectedFatigue + 0.3));
 
-    // Mettre à jour le temps de repos de la série PRÉCÉDENTE
-    updatePreviousSetRestTime().catch(() => {
-        // Ignorer les erreurs de mise à jour du temps de repos
-    });
-    
-    // Afficher l'interface de repos
-    if (window.showRestInterface) {
-        window.showRestInterface({...setData, duration: setDuration});
-    }
-    
-    // Mettre à jour la distribution musculaire
-    if (window.updateMuscleDistribution) {
-        window.updateMuscleDistribution();
-    }
-}
-
-// ===== VALIDATION ET ENREGISTREMENT D'UNE SÉRIE =====
 // ===== VALIDATION ET ENREGISTREMENT D'UNE SÉRIE =====
 async function completeSet() {
     // Validation stricte des entrées
@@ -1017,27 +964,6 @@ function showGuidedExerciseCompletion(exerciseData) {
         </div>
     `;
     document.body.appendChild(modal);
-}
-
-// Fonction helper pour sauvegarder localement
-function saveSetLocally(setData) {
-    const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
-    
-    // Éviter les doublons
-    const exists = pendingSets.some(s => 
-        s.exercise_id === setData.exercise_id && 
-        s.set_number === setData.set_number &&
-        s.workout_id === setData.workout_id
-    );
-    
-    if (!exists) {
-        pendingSets.push({
-            ...setData,
-            timestamp: new Date().toISOString(),
-            syncStatus: 'pending'
-        });
-        localStorage.setItem('pendingSets', JSON.stringify(pendingSets));
-    }
 }
 
 // Fonction helper pour gérer le succès d'une série
