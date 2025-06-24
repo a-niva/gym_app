@@ -451,23 +451,88 @@ export function updateTrainingInterface() {
     const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
     const isAdaptiveType = currentWorkout.type === 'adaptive';
     
+    console.log('🎯 [DEBUG] Routage séance:', {
+        workoutType: currentWorkout.type,
+        isAdaptive: isAdaptiveType,
+        hasGuidedPlan: !!guidedPlan,
+        guidedPlanLength: guidedPlan ? JSON.parse(guidedPlan).exercises?.length : 0
+    });
+    
     if (isAdaptiveType && guidedPlan) {
-        console.log('🎯 Mode adaptatif détecté');
-        // Import direct et appel de la fonction
-        import('./app-guided-workout.js').then(module => {
-            if (module && module.startGuidedWorkout) {
-                module.startGuidedWorkout(JSON.parse(guidedPlan));
-            } else {
-                console.error('Module guidé incomplet');
-                initializeFreeMode();
+        console.log('🎯 [DEBUG] Mode adaptatif détecté, chargement interface guidée');
+        
+        try {
+            const parsedPlan = JSON.parse(guidedPlan);
+            
+            // Vérifier la validité du plan
+            if (!parsedPlan.exercises || parsedPlan.exercises.length === 0) {
+                throw new Error('Plan guidé invalide ou vide');
             }
-        }).catch(error => {
-            console.error('Erreur chargement mode guidé:', error);
-            showToast('Erreur chargement interface guidée', 'error');
-            initializeFreeMode();
-        });
+            
+            // Chargement du module guidé avec timeout
+            const modulePromise = import('./app-guided-workout.js');
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout chargement module')), 5000)
+            );
+            
+            Promise.race([modulePromise, timeoutPromise])
+                .then(module => {
+                    if (module && module.startGuidedWorkout) {
+                        console.log('✅ [SUCCESS] Module guidé chargé, démarrage interface');
+                        module.startGuidedWorkout(parsedPlan);
+                    } else if (window.startGuidedWorkout) {
+                        console.log('✅ [SUCCESS] Utilisation fonction globale startGuidedWorkout');
+                        window.startGuidedWorkout(parsedPlan);
+                    } else {
+                        throw new Error('Fonction startGuidedWorkout non disponible');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ [ERROR] Erreur chargement mode guidé:', error);
+                    showToast('Erreur chargement interface guidée, passage en mode libre', 'warning');
+                    
+                    // Fallback : mode libre avec indication
+                    initializeFreeMode(true); // true = indicate fallback
+                });
+                
+        } catch (parseError) {
+            console.error('❌ [ERROR] Erreur parsing plan guidé:', parseError);
+            showToast('Plan de séance corrompu, nettoyage et mode libre', 'warning');
+            
+            // Nettoyer le localStorage corrompu
+            localStorage.removeItem('guidedWorkoutPlan');
+            initializeFreeMode(true);
+        }
+        
+    } else if (isAdaptiveType && !guidedPlan) {
+        console.warn('⚠️ [WARNING] Séance adaptative sans plan, tentative récupération');
+        
+        // Tentative de récupération du plan depuis l'API
+        if (currentWorkout.id) {
+            showToast('Récupération du plan de séance...', 'info');
+            
+            fetch(`/api/workouts/${currentWorkout.id}/plan`)
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(plan => {
+                    console.log('✅ [SUCCESS] Plan récupéré depuis l\'API');
+                    localStorage.setItem('guidedWorkoutPlan', JSON.stringify(plan));
+                    
+                    // Relancer l'interface guidée
+                    updateTrainingInterface();
+                })
+                .catch(error => {
+                    console.error('❌ [ERROR] Impossible de récupérer le plan:', error);
+                    showToast('Plan non récupérable, passage en mode libre', 'warning');
+                    initializeFreeMode(true);
+                });
+        } else {
+            console.error('❌ [ERROR] Pas d\'ID workout pour récupération');
+            initializeFreeMode(true);
+        }
+        
     } else {
-        initializeFreeMode();
+        console.log('🎯 [DEBUG] Mode libre détecté');
+        initializeFreeMode(false);
     }
 }
 
@@ -483,38 +548,147 @@ function getWorkoutTypeLabel() {
     }
 }
 
-function initializeFreeMode() {
+function initializeFreeMode(isFallback = false) {
+    console.log('🎯 [DEBUG] Initialisation mode libre', { isFallback });
+    
+    // Afficher un avertissement si c'est un fallback
+    if (isFallback) {
+        const warningDiv = document.createElement('div');
+        warningDiv.style.cssText = `
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        `;
+        warningDiv.innerHTML = `
+            ⚠️ <strong>Mode libre activé</strong><br>
+            <small>L'interface guidée n'a pas pu se charger</small>
+        `;
+        
+        const container = document.getElementById('workoutInterface');
+        if (container) {
+            container.insertBefore(warningDiv, container.querySelector('#exerciseArea'));
+        }
+        
+        // Auto-masquer après 5 secondes
+        setTimeout(() => {
+            if (warningDiv.parentNode) {
+                warningDiv.style.transition = 'opacity 0.5s';
+                warningDiv.style.opacity = '0';
+                setTimeout(() => warningDiv.remove(), 500);
+            }
+        }, 5000);
+    }
+    
     // Charger l'interface de sélection d'exercices standard
     if (typeof window.showExerciseSelector === 'function') {
+        console.log('✅ [SUCCESS] Utilisation showExerciseSelector global');
         window.showExerciseSelector();
     } else {
+        console.log('🔄 [LOADING] Import module exercices...');
+        
         // Import de secours si la fonction n'est pas disponible
-        import('./app-exercises.js').then(module => {
-            if (module.showExerciseSelector) {
-                module.showExerciseSelector();
-            } else {
-                console.error('❌ Interface exercices non disponible');
-                showToast('Erreur interface exercices', 'error');
-            }
-        }).catch(error => {
-            console.error('❌ Erreur import module exercices:', error);
-            showFallbackInterface();
-        });
+        import('./app-exercises.js')
+            .then(module => {
+                if (module.showExerciseSelector) {
+                    console.log('✅ [SUCCESS] Module exercices importé');
+                    module.showExerciseSelector();
+                } else {
+                    throw new Error('showExerciseSelector non trouvé dans le module');
+                }
+            })
+            .catch(error => {
+                console.error('❌ [ERROR] Erreur import module exercices:', error);
+                showFallbackInterface(isFallback);
+            });
     }
 }
 
-function showFallbackInterface() {
+function showFallbackInterface(wasFallback = false) {
+    console.log('🚨 [EMERGENCY] Affichage interface de secours');
+    
     const exerciseArea = document.getElementById('exerciseArea');
     if (exerciseArea) {
         exerciseArea.innerHTML = `
-            <div style="text-align: center; padding: 2rem;">
-                <h3>⚠️ Erreur de chargement</h3>
-                <p>L'interface n'a pas pu se charger correctement.</p>
-                <button class="btn btn-primary" onclick="location.reload()">
-                    🔄 Recharger la page
-                </button>
+            <div style="
+                background: linear-gradient(135deg, #dc2626, #b91c1c);
+                color: white;
+                padding: 2rem;
+                border-radius: 12px;
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            ">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                <h3>Erreur de chargement</h3>
+                <p style="margin: 1rem 0; opacity: 0.9;">
+                    ${wasFallback ? 
+                        'L\'interface d\'exercices n\'a pas pu se charger correctement.' :
+                        'L\'interface n\'a pas pu se charger correctement.'
+                    }
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="location.reload()" style="
+                        background: rgba(255, 255, 255, 0.2);
+                        border: 1px solid rgba(255, 255, 255, 0.3);
+                        color: white;
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        border: none;
+                    ">
+                        🔄 Recharger la page
+                    </button>
+                    <button class="btn btn-secondary" onclick="completeWorkout()" style="
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.3);
+                        color: white;
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        border: none;
+                    ">
+                        ✅ Terminer séance
+                    </button>
+                    <button class="btn btn-secondary" onclick="showView('dashboard')" style="
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.3);
+                        color: white;
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        border: none;
+                    ">
+                        📊 Dashboard
+                    </button>
+                </div>
+                
+                <details style="margin-top: 1.5rem; text-align: left;">
+                    <summary style="cursor: pointer; color: rgba(255, 255, 255, 0.8);">
+                        🔧 Informations techniques
+                    </summary>
+                    <div style="
+                        background: rgba(0, 0, 0, 0.3);
+                        padding: 1rem;
+                        border-radius: 8px;
+                        margin-top: 0.5rem;
+                        font-family: monospace;
+                        font-size: 0.8rem;
+                    ">
+                        Workout ID: ${currentWorkout?.id || 'N/A'}<br>
+                        Type: ${currentWorkout?.type || 'N/A'}<br>
+                        Status: ${currentWorkout?.status || 'N/A'}<br>
+                        Plan guidé: ${localStorage.getItem('guidedWorkoutPlan') ? 'Présent' : 'Absent'}<br>
+                        Timestamp: ${new Date().toISOString()}
+                    </div>
+                </details>
             </div>
         `;
+    } else {
+        // Dernier recours absolu
+        alert('Erreur critique : Interface non disponible.\nVeuillez recharger la page.');
     }
 }
 

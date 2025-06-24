@@ -746,6 +746,162 @@ class FitnessMLEngine:
                 program.extend(week_program)
             
             return program
+    
+    def generate_adaptive_workout(self, user: User, time_available: int = 60) -> Dict[str, Any]:
+        """
+        Génère une séance adaptative intelligente basée sur l'état actuel de l'utilisateur
+        """
+        logger.info(f"=== GÉNÉRATION SÉANCE ADAPTATIVE USER {user.id} ===")
+        logger.info(f"Temps disponible: {time_available} minutes")
+        logger.info(f"Équipement: {user.equipment_config}")
+        
+        try:
+            # 1. Analyser l'état de récupération
+            recovery_tracker = RecoveryTracker(self.db)
+            volume_optimizer = VolumeOptimizer(self.db)
+            session_builder = SessionBuilder(self.db)
+            
+            # 2. Déterminer quels muscles entraîner
+            muscle_readiness = {}
+            all_muscles = ["Pectoraux", "Dos", "Deltoïdes", "Jambes", "Bras", "Abdominaux"]
+            
+            for muscle in all_muscles:
+                readiness = recovery_tracker.get_muscle_readiness(muscle, user)
+                muscle_readiness[muscle] = readiness
+                logger.info(f"Readiness {muscle}: {readiness:.2f}")
+            
+            # 3. Sélectionner les muscles prioritaires
+            volume_deficits = volume_optimizer.get_volume_deficit(user)
+            
+            # Combiner readiness et deficits pour prioriser
+            muscle_priorities = {}
+            for muscle in all_muscles:
+                readiness = muscle_readiness.get(muscle, 0.5)
+                deficit = volume_deficits.get(muscle, 0.0)
+                
+                # Muscle prêt + en retard = priorité élevée
+                priority = readiness + (deficit * 2)  # Deficit compte double
+                muscle_priorities[muscle] = priority
+            
+            # Trier par priorité et prendre les 2-3 meilleurs
+            sorted_muscles = sorted(muscle_priorities.items(), key=lambda x: x[1], reverse=True)
+            
+            if time_available <= 30:
+                target_muscles = [sorted_muscles[0][0]]  # 1 muscle seulement
+            elif time_available <= 45:
+                target_muscles = [m[0] for m in sorted_muscles[:2]]  # 2 muscles
+            else:
+                target_muscles = [m[0] for m in sorted_muscles[:3]]  # 3 muscles max
+            
+            logger.info(f"Muscles sélectionnés: {target_muscles}")
+            
+            # 4. Construire la séance
+            session_exercises = session_builder.build_session(
+                muscles=target_muscles,
+                time_budget=time_available,
+                user=user,
+                constraints={}
+            )
+            
+            if not session_exercises:
+                logger.error("❌ Aucun exercice généré par le SessionBuilder")
+                raise ValueError("Impossible de générer des exercices pour cette configuration")
+            
+            # 5. Estimer la durée totale
+            estimated_duration = self._estimate_session_duration(session_exercises, time_available)
+            
+            # 6. Préparer la réponse
+            result = {
+                "muscles": target_muscles,
+                "exercises": session_exercises,
+                "estimated_duration": estimated_duration,
+                "readiness_scores": muscle_readiness,
+                "session_metadata": {
+                    "muscle_priorities": dict(sorted_muscles[:5]),
+                    "volume_deficits": volume_deficits,
+                    "generation_timestamp": datetime.utcnow().isoformat()
+                }
+            }
+            
+            logger.info(f"✅ Séance générée: {len(session_exercises)} exercices, {estimated_duration}min")
+            return result
+            
+        except Exception as e:
+            logger.error(f"❌ Erreur génération séance adaptative: {str(e)}", exc_info=True)
+            # Fallback simple
+            return self._generate_fallback_workout(user, time_available)
+    
+    def _estimate_session_duration(self, exercises: List[Dict], max_time: int) -> int:
+        """Estime la durée réelle de la séance"""
+        total_duration = 0
+        
+        for exercise in exercises:
+            # Temps par série (effort + repos)
+            sets = exercise.get('sets', 3)
+            rest_time = exercise.get('rest_time', 90)
+            effort_time = 30  # Estimation du temps d'effort par série
+            
+            exercise_duration = sets * (effort_time + rest_time)
+            total_duration += exercise_duration
+        
+        # Ajouter temps de transition entre exercices
+        transition_time = (len(exercises) - 1) * 60  # 1 min entre exercices
+        total_duration += transition_time
+        
+        # Convertir en minutes et limiter au temps disponible
+        estimated_minutes = min(total_duration // 60, max_time)
+        
+        return max(15, estimated_minutes)  # Minimum 15 minutes
+    
+    def _generate_fallback_workout(self, user: User, time_available: int) -> Dict[str, Any]:
+        """Génère une séance de secours simple en cas d'erreur"""
+        logger.warning("🚨 Génération séance de secours")
+        
+        # Exercices de base compatibles avec la plupart des équipements
+        fallback_exercises = []
+        
+        try:
+            # Récupérer quelques exercices de base depuis la DB
+            basic_exercises = self.db.query(Exercise).filter(
+                Exercise.body_part.in_(["Pectoraux", "Dos", "Jambes"])
+            ).limit(3).all()
+            
+            for i, exercise in enumerate(basic_exercises):
+                fallback_exercises.append({
+                    "exercise_id": exercise.id,
+                    "exercise_name": exercise.name_fr or f"Exercice {exercise.id}",
+                    "body_part": exercise.body_part,
+                    "sets": 3,
+                    "target_reps": "8-12",
+                    "suggested_weight": None,
+                    "rest_time": 90,
+                    "order_index": i + 1
+                })
+        
+        except Exception as e:
+            logger.error(f"❌ Erreur génération fallback: {e}")
+            # Fallback du fallback
+            fallback_exercises = [{
+                "exercise_id": 1,
+                "exercise_name": "Exercice au poids du corps",
+                "body_part": "Général",
+                "sets": 3,
+                "target_reps": "10-15",
+                "suggested_weight": None,
+                "rest_time": 60,
+                "order_index": 1
+            }]
+        
+        return {
+            "muscles": ["Général"],
+            "exercises": fallback_exercises,
+            "estimated_duration": min(time_available, 30),
+            "readiness_scores": {"Général": 0.5},
+            "session_metadata": {
+                "fallback": True,
+                "reason": "Erreur de génération normale"
+            }
+        }
 
     def _select_exercises_for_day(
         self,

@@ -12,7 +12,7 @@ from backend.ml_engine import RecoveryTracker, VolumeOptimizer, SessionBuilder, 
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
-
+logging.basicConfig(level=logging.INFO)
 
 router = APIRouter()
 
@@ -165,69 +165,88 @@ async def get_trajectory_analysis(user_id: int, db: Session = Depends(get_db)):
     
     return analysis
 
-@router.post("/api/users/{user_id}/adaptive-workout")  # URL corrigée
+@router.post("/api/users/{user_id}/adaptive-workout")
 async def generate_adaptive_workout(
     user_id: int,
-    request: dict,  # Changé pour accepter le JSON
+    time_available: int = 60,
     db: Session = Depends(get_db)
 ):
-    """Générer une séance adaptative basée sur l'état actuel"""
+    """Génère une séance adaptative intelligente basée sur les besoins actuels"""
+    logger.info(f"🎯 [API] Demande séance adaptative user {user_id}, temps: {time_available}min")
+    
+    # Validation utilisateur
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
+        logger.error(f"❌ [API] Utilisateur {user_id} non trouvé")
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Extraire le temps du request
-    time_available = int(request.get("time_available", 60))
+    # Validation configuration équipement
+    if not user.equipment_config:
+        logger.error(f"❌ [API] Configuration équipement manquante pour user {user_id}")
+        raise HTTPException(status_code=400, detail="Configuration d'équipement requise")
     
-    # Analyser l'état actuel
-    recovery_tracker = RecoveryTracker(db)
-    volume_optimizer = VolumeOptimizer(db)
-    session_builder = SessionBuilder(db)
+    # Validation temps
+    if time_available < 15 or time_available > 180:
+        logger.warning(f"⚠️ [API] Temps invalide {time_available}min, ajustement à 60min")
+        time_available = 60
     
-    # Déterminer quels muscles entraîner
-    muscle_readiness = {}
-    volume_deficits = volume_optimizer.get_volume_deficit(user)
-    
-    for muscle in ["Pectoraux", "Dos", "Deltoïdes", "Jambes", "Bras", "Abdominaux"]:
-        readiness = recovery_tracker.get_muscle_readiness(muscle, user)
-        deficit = volume_deficits.get(muscle, 0)
+    try:
+        # APPEL DE LA LOGIQUE MÉTIER
+        ml_engine = FitnessMLEngine(db)
+        workout_data = ml_engine.generate_adaptive_workout(user, time_available)
         
-        # Score combiné (récupération + besoin de volume)
-        priority_score = readiness * 0.4 + deficit * 0.6
-        muscle_readiness[muscle] = priority_score
+        # Validation de la réponse
+        if not workout_data:
+            logger.error(f"❌ [API] Aucune séance générée par le ML engine")
+            raise HTTPException(status_code=500, detail="Impossible de générer une séance")
+        
+        if not workout_data.get('exercises') or len(workout_data['exercises']) == 0:
+            logger.error(f"❌ [API] Aucun exercice dans la séance générée")
+            raise HTTPException(status_code=500, detail="Aucun exercice compatible trouvé")
+        
+        # Enrichissement pour l'API (ajout métadonnées HTTP)
+        response_data = {
+            **workout_data,
+            "session_type": "adaptive",
+            "generated_at": datetime.utcnow().isoformat(),
+            "total_exercises": len(workout_data['exercises']),
+            "api_version": "1.0"
+        }
+        
+        logger.info(f"✅ [API] Séance générée avec succès: {len(workout_data['exercises'])} exercices")
+        return response_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ [API] Erreur génération séance: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erreur interne: {str(e)}")
+
+
+@router.get("/api/workouts/{workout_id}/plan")
+async def get_workout_plan(workout_id: int, db: Session = Depends(get_db)):
+    """Récupère le plan d'une séance adaptative"""
+    logger.info(f"🔍 [DEBUG] Récupération plan pour workout {workout_id}")
     
-    # Sélectionner les 2-3 meilleurs muscles
-    sorted_muscles = sorted(muscle_readiness.items(), key=lambda x: x[1], reverse=True)
-    selected_muscles = [m[0] for m in sorted_muscles[:3] if m[1] > 0.3]
+    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    if not workout:
+        logger.error(f"❌ [ERROR] Workout {workout_id} non trouvé")
+        raise HTTPException(status_code=404, detail="Workout not found")
     
-    if not selected_muscles:
-        # Fallback : prendre les plus reposés
-        selected_muscles = [m[0] for m in sorted_muscles[:2]]
+    if workout.type != "adaptive":
+        logger.error(f"❌ [ERROR] Workout {workout_id} n'est pas adaptatif (type: {workout.type})")
+        raise HTTPException(status_code=400, detail="Workout is not adaptive type")
     
-    # Construire la séance
-    workout = session_builder.build_session(
-        muscles=selected_muscles,
-        time_budget=int(time_available),  # Forcer int
-        user=user
-    )
-    
-    # Calculer la durée avec vérification
-    if workout and len(workout) > 0:
-        # Temps par série (30s) + repos, multiplié par le nombre de séries
-        estimated_duration = sum(
-            ex.get("sets", 3) * (30 + ex.get("rest_time", 90)) 
-            for ex in workout
-        ) / 60
+    # Pour l'instant, retourner le plan depuis metadata ou regenerer
+    # TODO: Implémenter stockage du plan en DB si nécessaire
+    if hasattr(workout, 'metadata') and workout.metadata:
+        return workout.metadata
     else:
-        # Estimation par défaut basée sur le temps demandé
-        estimated_duration = time_available * 0.8  # 80% du temps disponible
-        
-    return {
-        "muscles": selected_muscles,
-        "exercises": workout,
-        "estimated_duration": int(max(1, estimated_duration)),  # Au minimum 1 minute
-        "readiness_scores": {m: round(s, 2) for m, s in muscle_readiness.items()}
-    }
+        logger.warning(f"⚠️ [WARNING] Plan non stocké pour workout {workout_id}, régénération...")
+        # Fallback: régénérer le plan (non idéal)
+        raise HTTPException(status_code=404, detail="Workout plan not found")
+
+    
 
 @router.post("/api/workouts/{workout_id}/complete-adaptive")
 async def complete_adaptive_workout(
