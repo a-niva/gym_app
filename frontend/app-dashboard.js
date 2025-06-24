@@ -1404,7 +1404,9 @@ async function startAdaptiveWorkout() {
                 setCurrentWorkout(newWorkout);
                 
                 // Démarrer le mode guidé
-                startGuidedWorkout(adaptiveWorkout);
+                setTimeout(() => {
+                    startGuidedWorkout(adaptiveWorkout);
+                }, 500);
                 
                 showToast('Séance adaptative démarrée !', 'success');
                 

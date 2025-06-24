@@ -370,8 +370,15 @@ def delete_workout_history(user_id: int, db: Session = Depends(get_db)):
         """), {"user_id": user_id})
         
         # Puis les workouts
-        count = db.query(Workout).filter(Workout.user_id == user_id).count()
-        db.execute(text("DELETE FROM workouts WHERE user_id = :user_id"), {"user_id": user_id})
+        count = db.query(Workout).filter(
+            Workout.user_id == user_id,
+            Workout.status.in_(["completed", "abandoned"])
+        ).count()
+        db.execute(text("""
+            DELETE FROM workouts 
+            WHERE user_id = :user_id 
+            AND status IN ('completed', 'abandoned')
+        """), {"user_id": user_id})
         
         db.commit()
         
@@ -566,7 +573,7 @@ def activate_program(program_id: int, db: Session = Depends(get_db)):
     return {"message": "Program activated"}
 
 @app.get("/api/workouts/{workout_id}/status")
-def get_workout_status(workout_id: int, db: Session = Depends(get_db)):
+async def get_workout_status(workout_id: int, db: Session = Depends(get_db)):
     workout = db.query(Workout).filter(Workout.id == workout_id).first()
     if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
