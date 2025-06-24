@@ -51,8 +51,7 @@ export const BODY_PART_COLORS = {
     'Deltoïdes': '#ec4899',      // Rose
     'Dos': '#ef4444',            // Rouge
     'Abdominaux': '#f97316',     // Orange
-    'Jambes': '#eab308',     // Jaune
-    'Dos': '#ef4444',       // Cyan
+    'Jambes': '#eab308'     // Jaune
 };
 
 // Mapping des couleurs hexadécimales vers des noms

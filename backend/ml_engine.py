@@ -570,16 +570,21 @@ class FitnessMLEngine:
                         available_equipment.append("barre_olympique")
                     elif barre_type == "ez":
                         available_equipment.append("barre_ez")
-                    
-                    # Équivalence barre courte = dumbbells (si paire + disques)
-                    if (barre_type == "courte" and barre_config.get("count", 0) >= 2 and 
-                        config.get("disques", {}).get("available", False)):
-                        logger.info("Barres courtes en paire + disques détectées - ajout équivalence dumbbells")
-                        available_equipment.append("dumbbells")
 
-            # Haltères
+            # Haltères fixes
             if config.get("dumbbells", {}).get("available", False):
                 available_equipment.append("dumbbells")
+
+            # Équivalence : 2 barres courtes + disques = dumbbells
+            # IMPORTANT : Vérifier cette équivalence APRÈS avoir vérifié les haltères fixes
+            barres_courtes = config.get("barres", {}).get("courte", {})
+            has_disques = config.get("disques", {}).get("available", False)
+            if (barres_courtes.get("available", False) and 
+                barres_courtes.get("count", 0) >= 2 and 
+                has_disques and 
+                "dumbbells" not in available_equipment):  # Éviter les doublons
+                available_equipment.append("dumbbells")
+                logger.info("✅ Équivalence appliquée: 2 barres courtes + disques = dumbbells")
                 
             # Poids du corps toujours disponible
             available_equipment.append("poids_du_corps")
@@ -1145,9 +1150,13 @@ class SessionBuilder:
             ).all()
             
             # Filtrer par équipement disponible (GARDER votre code)
+            # Filtrer par équipement disponible
             available_exercises = []
             for ex in exercises:
-                if self._check_equipment_availability(ex, user):
+                is_compatible = self._check_equipment_availability(ex, user)
+                if ex.equipment and "dumbbells" in ex.equipment:
+                    logger.info(f"🏋️ {ex.name_fr}: dumbbells requis, compatible={is_compatible}")
+                if is_compatible:
                     available_exercises.append(ex)
             
             if not available_exercises:

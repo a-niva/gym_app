@@ -93,28 +93,6 @@ function updateHistoryDisplay() {
     }
 }
 
-// ===== CHARGEMENT DE L'HISTORIQUE DES SÉANCES =====
-async function loadWorkoutHistory() {
-    if (!currentUser) return;
-    
-    let retries = 0;
-    const maxRetries = 3;
-    
-    while (retries < maxRetries) {
-        try {
-            const history = await getWorkoutHistory(currentUser.id);
-            if (history) {
-                displayWorkoutHistory(history);
-                return;
-            }
-        } catch (error) {
-            console.error(`Erreur chargement historique (tentative ${retries + 1}):`, error);
-        }
-        retries++;
-        await new Promise(resolve => setTimeout(resolve, 500));
-    }
-}
-
 // ===== AFFICHAGE DE L'HISTORIQUE DES SÉANCES =====
 function displayWorkoutHistory(history) {
     const container = document.getElementById('workoutHistory');
@@ -145,6 +123,28 @@ function displayWorkoutHistory(history) {
             </div>
         </div>
     `).join('');
+}
+
+// ===== CHARGEMENT DE L'HISTORIQUE DES SÉANCES =====
+async function loadWorkoutHistory() {
+    if (!currentUser) return;
+    
+    let retries = 0;
+    const maxRetries = 3;
+    
+    while (retries < maxRetries) {
+        try {
+            const history = await getWorkoutHistory(currentUser.id);
+            if (history) {
+                displayWorkoutHistory(history);
+                return;
+            }
+        } catch (error) {
+            console.error(`Erreur chargement historique (tentative ${retries + 1}):`, error);
+        }
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
 }
 
 // ===== MISE À JOUR DE LA DISTRIBUTION MUSCULAIRE =====
