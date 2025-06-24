@@ -12,7 +12,7 @@ from backend.models import Base, User, Exercise, Workout, Set, Program, ProgramD
 from backend.routes import router
 from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate, ProgramCreate, ProgramResponse
 from backend.ml_engine import FitnessMLEngine, SessionBuilder
-
+from fastapi.responses import FileResponse
 import json
 import os
 import logging
@@ -1286,15 +1286,23 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-    
 
-# Static files
-#app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 # Static files - Ajuster le chemin selon l'environnement
 import os
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
-if os.path.exists(frontend_path):
-    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
-else:
-    # Fallback si on est dans une structure différente
-    app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+
+# Route pour les fichiers JavaScript avec Content-Type correct
+@app.get("/{filename:path}")
+async def serve_spa(filename: str):
+    file_path = os.path.join(frontend_path, filename)
+    
+    # Si c'est un fichier JS, le servir avec le bon Content-Type
+    if filename.endswith('.js') and os.path.exists(file_path):
+        return FileResponse(file_path, media_type='application/javascript')
+    
+    # Si c'est un autre fichier statique existant
+    if os.path.exists(file_path) and not os.path.isdir(file_path):
+        return FileResponse(file_path)
+    
+    # Sinon, renvoyer index.html pour le routage SPA
+    return FileResponse(os.path.join(frontend_path, "index.html"))
