@@ -1,6 +1,7 @@
 // ===== MODULE SÉANCE GUIDÉE ADAPTATIVE =====
 import { showToast } from './app-ui.js';
 import { showView } from './app-navigation.js';
+import { allExercises, currentSetNumber } from './app-state.js';
 
 let currentExerciseIndex = 0;
 let guidedWorkoutPlan = null;
@@ -348,6 +349,7 @@ function showGuidedWorkoutError(message) {
 }
 
 // Fonction pour commencer l'exercice actuel
+// Fonction pour commencer l'exercice actuel
 async function startCurrentExercise() {
     if (!guidedWorkoutPlan || currentExerciseIndex >= guidedWorkoutPlan.exercises.length) {
         showToast('Exercice non disponible', 'error');
@@ -364,6 +366,18 @@ async function startCurrentExercise() {
             guidedContainer.style.display = 'none';
         }
         
+        // S'assurer que le conteneur exercice existe et est visible
+        const exerciseArea = document.getElementById('exerciseArea');
+        if (!exerciseArea) {
+            console.error('❌ exerciseArea introuvable');
+            showToast('Erreur d\'affichage', 'error');
+            return;
+        }
+        
+        // Nettoyer le conteneur et le rendre visible
+        exerciseArea.innerHTML = '';
+        exerciseArea.style.display = 'block';
+        
         // Charger l'interface d'exercice avec pré-configuration
         const exerciseModule = await import('./app-exercises.js');
         
@@ -374,6 +388,23 @@ async function startCurrentExercise() {
             // Attendre que l'interface soit chargée puis pré-configurer
             setTimeout(() => {
                 preConfigureExerciseInterface(currentExercise);
+                
+                // S'assurer que l'interface de saisie est visible
+                const setInterface = document.querySelector('.set-interface');
+                if (setInterface) {
+                    setInterface.style.display = 'block';
+                } else {
+                    console.warn('⚠️ Interface de saisie non trouvée');
+                    // Forcer l'affichage de l'interface de saisie
+                    import('./app-sets.js').then(setsModule => {
+                        if (setsModule.showSetInput) {
+                            const exercise = allExercises.find(ex => ex.id === currentExercise.exercise_id);
+                            if (exercise) {
+                                setsModule.showSetInput(exercise);
+                            }
+                        }
+                    });
+                }
             }, 500);
             
         } else {
@@ -519,20 +550,114 @@ function showWorkoutCompletion() {
     `;
 }
 
-// ===== EXPORTS GLOBAUX POUR ACCESSIBILITÉ =====
-window.startGuidedWorkout = startGuidedWorkout;
-window.showGuidedInterface = showGuidedInterface;
-window.showGuidedWorkoutError = showGuidedWorkoutError;
-window.nextGuidedExercise = nextGuidedExercise;
 
-// ===== EXPORTS MODULE =====
+// Passer l'exercice actuel
+function skipCurrentExercise() {
+    if (!guidedWorkoutPlan || currentExerciseIndex >= guidedWorkoutPlan.exercises.length) {
+        return;
+    }
+    
+    const currentExercise = guidedWorkoutPlan.exercises[currentExerciseIndex];
+    showToast(`Exercice "${currentExercise.exercise_name}" passé`, 'info');
+    
+    // Marquer comme passé dans l'historique
+    addToSessionHistory('exercise_skipped', {
+        exerciseId: currentExercise.exercise_id,
+        exerciseName: currentExercise.exercise_name,
+        reason: 'user_skip'
+    });
+    
+    nextGuidedExercise();
+}
+
+// Terminer la séance plus tôt
+function finishWorkoutEarly() {
+    if (!confirm('Terminer la séance maintenant ? Les exercices restants seront ignorés.')) {
+        return;
+    }
+    
+    showToast('Séance terminée plus tôt', 'info');
+    
+    // Marquer les exercices restants comme non faits
+    for (let i = currentExerciseIndex; i < guidedWorkoutPlan.exercises.length; i++) {
+        const exercise = guidedWorkoutPlan.exercises[i];
+        addToSessionHistory('exercise_skipped', {
+            exerciseId: exercise.exercise_id,
+            exerciseName: exercise.exercise_name,
+            reason: 'early_finish'
+        });
+    }
+    
+    showWorkoutCompletion();
+}
+
+function showGuidedExerciseCompletion(exerciseData) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal guided-completion-modal">
+            <h3>Exercice "${exerciseData.exercise_name}" terminé !</h3>
+            <p>Objectif : ${exerciseData.sets} séries - Réalisé : ${currentSetNumber}</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="nextGuidedExercise()">
+                    Exercice suivant
+                </button>
+                <button class="btn btn-secondary" onclick="continueCurrentExercise()">
+                    Faire une série de plus
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function continueCurrentExercise() {
+    document.querySelector('.guided-completion-modal')?.parentElement?.remove();
+    // L'utilisateur peut continuer l'exercice normalement
+}
+
+function handleGuidedTimers() {
+    // S'assurer que les timers fonctionnent normalement en mode guidé
+    // Aucune modification spéciale nécessaire, les timers standards fonctionnent
+    
+    // Mais nettoyer si on change d'exercice en mode guidé
+    if (window.timerInterval) {
+        clearInterval(window.timerInterval);
+        window.timerInterval = null;
+    }
+    if (window.restTimerInterval) {
+        clearInterval(window.restTimerInterval);
+        window.restTimerInterval = null;
+    }
+}
+
+function addToSessionHistory(type, data) {
+    const history = JSON.parse(localStorage.getItem('currentSessionHistory') || '[]');
+    history.push({
+        type,
+        data,
+        timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('currentSessionHistory', JSON.stringify(history));
+}
+
+// ===== EXPORTS GLOBAUX POUR ACCESSIBILITÉ =====
+// Exposer les fonctions globalement pour onclick handlers
+window.nextExercise = () => nextExercise();
+window.previousExercise = () => previousExercise();
+window.startCurrentExercise = () => startCurrentExercise();
+window.nextGuidedExercise = nextGuidedExercise;
+window.startGuidedWorkout = startGuidedWorkout;
+window.returnToGuidedInterface = returnToGuidedInterface;
+window.skipCurrentExercise = skipCurrentExercise;
+window.finishWorkoutEarly = finishWorkoutEarly;
+
+// Export pour les autres modules (UNE SEULE FOIS)
 export {
     startGuidedWorkout,
-    showGuidedInterface,
-    showGuidedWorkoutError,
     nextGuidedExercise,
-    nextExercise,
-    previousExercise,
-    startCurrentExercise,
-    returnToGuidedInterface
+    showGuidedInterface,
+    returnToGuidedInterface,
+    skipCurrentExercise,
+    finishWorkoutEarly
 };

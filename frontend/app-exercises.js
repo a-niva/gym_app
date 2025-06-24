@@ -204,19 +204,21 @@ function finishExercise() {
         const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
         if (currentWorkout.type === 'adaptive' && guidedPlan) {
             // Mode guidé - passer à l'exercice suivant
-            import('./app-guided-workout.js').then(module => {
-                if (module.nextGuidedExercise) {
-                    module.nextGuidedExercise();  // Gère progression complète
-                } else if (window.nextGuidedExercise) {
-                    window.nextGuidedExercise();  // Fallback global
-                } else {
-                    console.warn('nextGuidedExercise non disponible, retour au sélecteur');
+            if (window.nextGuidedExercise) {
+                window.nextGuidedExercise();
+            } else {
+                import('./app-guided-workout.js').then(module => {
+                    if (module.nextGuidedExercise) {
+                        module.nextGuidedExercise();
+                    } else {
+                        console.warn('nextGuidedExercise non disponible');
+                        showExerciseSelector();
+                    }
+                }).catch(error => {
+                    console.error('Erreur import module guidé:', error);
                     showExerciseSelector();
-                }
-            }).catch(error => {
-                console.error('Erreur import module guidé:', error);
-                showExerciseSelector(); // Fallback
-            });
+                });
+            }
         } else {
             // Mode libre - afficher le sélecteur
             showExerciseSelector();

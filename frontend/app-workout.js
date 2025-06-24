@@ -211,6 +211,17 @@ export function startWorkoutMonitoring() {
 export async function pauseWorkout() {
     if (!currentWorkout) return;
     
+    // Sauvegarder l'état du plan guidé si applicable
+    const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
+    if (currentWorkout.type === 'adaptive' && guidedPlan) {
+        const guidedState = {
+            plan: guidedPlan,
+            currentIndex: window.currentExerciseIndex || 0,
+            progress: localStorage.getItem('guidedWorkoutProgress')
+        };
+        localStorage.setItem('pausedGuidedState', JSON.stringify(guidedState));
+    }
+    
     const result = await pauseWorkoutAPI(currentWorkout.id);
     
     if (result) {
@@ -229,7 +240,8 @@ export async function pauseWorkout() {
     }
 }
 
-// ===== REPRISE DE LA SÉANCE =====
+
+// REPRISE - Restaurer l'état guidé
 export async function resumeWorkout() {
     if (!currentWorkout) return;
     
@@ -238,6 +250,17 @@ export async function resumeWorkout() {
     if (result) {
         currentWorkout.status = 'started';
         currentWorkout.paused_at = null;
+        
+        // Restaurer l'état guidé si applicable
+        const pausedGuidedState = localStorage.getItem('pausedGuidedState');
+        if (currentWorkout.type === 'adaptive' && pausedGuidedState) {
+            const guidedState = JSON.parse(pausedGuidedState);
+            localStorage.setItem('guidedWorkoutPlan', guidedState.plan);
+            if (guidedState.progress) {
+                localStorage.setItem('guidedWorkoutProgress', guidedState.progress);
+            }
+            localStorage.removeItem('pausedGuidedState');
+        }
         
         localStorage.setItem('currentWorkout', JSON.stringify(currentWorkout));
         showToast('Séance reprise', 'success');
@@ -319,10 +342,21 @@ export function cleanupWorkout() {
     clearSessionHistory();
     localStorage.removeItem('currentSessionHistory');
 
-    // Nettoyer les données de séance guidée
+    // Nettoyage COMPLET des données guidées
     localStorage.removeItem('guidedWorkoutPlan');
-    localStorage.removeItem('guidedWorkoutProgress');
+    localStorage.removeItem('guidedWorkoutProgress'); 
+    localStorage.removeItem('pausedGuidedState');
     localStorage.removeItem('workoutType');
+    localStorage.removeItem('currentSessionHistory');
+    localStorage.removeItem('guidedExerciseCompletion');
+    
+    // Reset variables globales
+    if (window.currentExerciseIndex !== undefined) {
+        window.currentExerciseIndex = 0;
+    }
+    if (window.guidedWorkoutPlan) {
+        window.guidedWorkoutPlan = null;
+    }
 }
 
 // ===== GESTION DES ACTIONS FATIGUE =====
@@ -405,7 +439,7 @@ export async function syncInterExerciseRests() {
 export function updateTrainingInterface() {
     const container = document.getElementById('workoutInterface');
     if (!container || !currentWorkout) return;
-    
+
     const isPaused = currentWorkout.status === 'paused';
     
     // Interface de base commune
@@ -459,80 +493,81 @@ export function updateTrainingInterface() {
     });
     
     if (isAdaptiveType && guidedPlan) {
-        console.log('🎯 [DEBUG] Mode adaptatif détecté, chargement interface guidée');
+        console.log('🎯 Mode guidé détecté');
         
-        try {
-            const parsedPlan = JSON.parse(guidedPlan);
-            
-            // Vérifier la validité du plan
-            if (!parsedPlan.exercises || parsedPlan.exercises.length === 0) {
-                throw new Error('Plan guidé invalide ou vide');
-            }
-            
-            // Chargement du module guidé avec timeout
-            const modulePromise = import('./app-guided-workout.js');
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout chargement module')), 5000)
-            );
-            
-            Promise.race([modulePromise, timeoutPromise])
-                .then(module => {
-                    if (module && module.startGuidedWorkout) {
-                        console.log('✅ [SUCCESS] Module guidé chargé, démarrage interface');
-                        module.startGuidedWorkout(parsedPlan);
-                    } else if (window.startGuidedWorkout) {
-                        console.log('✅ [SUCCESS] Utilisation fonction globale startGuidedWorkout');
-                        window.startGuidedWorkout(parsedPlan);
-                    } else {
-                        throw new Error('Fonction startGuidedWorkout non disponible');
+        // Restaurer l'index si disponible
+        const progress = JSON.parse(localStorage.getItem('guidedWorkoutProgress') || '{}');
+        if (progress.currentIndex !== undefined && window.currentExerciseIndex !== undefined) {
+            window.currentExerciseIndex = progress.currentIndex;
+        }
+        
+        // Charger l'interface guidée
+        setTimeout(() => {
+            if (window.showGuidedInterface) {
+                window.showGuidedInterface();
+            } else {
+                import('./app-guided-workout.js').then(module => {
+                    if (module.showGuidedInterface) {
+                        module.showGuidedInterface();
                     }
-                })
-                .catch(error => {
-                    console.error('❌ [ERROR] Erreur chargement mode guidé:', error);
-                    showToast('Erreur chargement interface guidée, passage en mode libre', 'warning');
-                    
-                    // Fallback : mode libre avec indication
-                    initializeFreeMode(true); // true = indicate fallback
+                }).catch(error => {
+                    console.error('Erreur chargement interface guidée:', error);
+                    showFallbackInterface('Erreur chargement mode guidé');
                 });
-                
-        } catch (parseError) {
-            console.error('❌ [ERROR] Erreur parsing plan guidé:', parseError);
-            showToast('Plan de séance corrompu, nettoyage et mode libre', 'warning');
-            
-            // Nettoyer le localStorage corrompu
-            localStorage.removeItem('guidedWorkoutPlan');
-            initializeFreeMode(true);
-        }
-        
-    } else if (isAdaptiveType && !guidedPlan) {
-        console.warn('⚠️ [WARNING] Séance adaptative sans plan, tentative récupération');
-        
-        // Tentative de récupération du plan depuis l'API
-        if (currentWorkout.id) {
-            showToast('Récupération du plan de séance...', 'info');
-            
-            fetch(`/api/workouts/${currentWorkout.id}/plan`)
-                .then(response => response.ok ? response.json() : Promise.reject(response))
-                .then(plan => {
-                    console.log('✅ [SUCCESS] Plan récupéré depuis l\'API');
-                    localStorage.setItem('guidedWorkoutPlan', JSON.stringify(plan));
-                    
-                    // Relancer l'interface guidée
-                    updateTrainingInterface();
-                })
-                .catch(error => {
-                    console.error('❌ [ERROR] Impossible de récupérer le plan:', error);
-                    showToast('Plan non récupérable, passage en mode libre', 'warning');
-                    initializeFreeMode(true);
-                });
-        } else {
-            console.error('❌ [ERROR] Pas d\'ID workout pour récupération');
-            initializeFreeMode(true);
-        }
-        
+            }
+        }, 100);
     } else {
-        console.log('🎯 [DEBUG] Mode libre détecté');
-        initializeFreeMode(false);
+        // Mode libre standard
+        console.log('📝 Mode libre détecté');
+        setTimeout(() => {
+            if (window.showExerciseSelector) {
+                window.showExerciseSelector();
+            } else {
+                import('./app-exercises.js').then(module => {
+                    if (module.showExerciseSelector) {
+                        module.showExerciseSelector();
+                    }
+                }).catch(error => {
+                    console.error('Erreur chargement sélecteur exercices:', error);
+                    showFallbackInterface('Erreur chargement sélecteur');
+                });
+            }
+        }, 100);
+    }
+    
+    // Démarrer la surveillance automatique
+    startWorkoutMonitoring();
+}
+
+// Fonction helper pour obtenir le label du type de séance
+function getWorkoutTypeLabel() {
+    if (!currentWorkout) return 'Inconnue';
+    
+    switch(currentWorkout.type) {
+        case 'adaptive': return 'Adaptative';
+        case 'free': return 'Libre';
+        case 'program': return 'Programme';
+        default: return 'Standard';
+    }
+}
+
+// Interface de fallback en cas d'erreur
+function showFallbackInterface(errorMessage) {
+    const exerciseArea = document.getElementById('exerciseArea');
+    if (exerciseArea) {
+        exerciseArea.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--color-error);">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
+                <h3>Erreur de chargement</h3>
+                <p>${errorMessage}</p>
+                <button class="btn btn-primary" onclick="location.reload()">
+                    🔄 Recharger la page
+                </button>
+                <button class="btn btn-secondary" onclick="showView('dashboard')">
+                    📊 Retour Dashboard
+                </button>
+            </div>
+        `;
     }
 }
 

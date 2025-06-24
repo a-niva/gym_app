@@ -874,6 +874,7 @@ function handleSetSuccess(setData, setDuration) {
 }
 
 // ===== VALIDATION ET ENREGISTREMENT D'UNE SÉRIE =====
+// ===== VALIDATION ET ENREGISTREMENT D'UNE SÉRIE =====
 async function completeSet() {
     // Validation stricte des entrées
     const weightInput = document.getElementById('setWeight');
@@ -884,76 +885,70 @@ async function completeSet() {
         return;
     }
     
-    const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
+    const setDuration = setStartTime ? 
+        Math.floor((new Date() - setStartTime) / 1000) : 0;
     
-    // Récupérer et valider les valeurs
-    let weight = parseFloat(weightInput.value);
+    const weight = parseFloat(weightInput.value);
     const reps = parseInt(repsInput.value);
     
-    // Validation stricte
-    if (isNaN(weight)) weight = 0;
-    if (isNaN(reps) || reps <= 0) {
-        showToast('Veuillez indiquer un nombre de répétitions valide', 'error');
+    // Validation des valeurs
+    if (isNaN(weight) || weight < 0) {
+        showToast('Poids invalide', 'error');
+        weightInput.focus();
         return;
     }
     
-    // Pour les exercices au poids du corps, ajuster si nécessaire
-    const isBodyweight = currentExercise.equipment.includes('poids_du_corps');
-    const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
-        currentExercise.name_fr.toLowerCase().includes(keyword)
-    );
-    
-    // Validation adaptée au type d'exercice
-    if (!isTimeBased && weight === 0 && !isBodyweight) {
-        showToast('Veuillez indiquer un poids', 'error');
+    if (isNaN(reps) || reps < 0) {
+        showToast('Répétitions invalides', 'error');
+        repsInput.focus();
         return;
     }
     
-    // Limites raisonnables
-    if (weight > 500) {
-        showToast('Le poids semble incorrect (max 500kg)', 'error');
+    if (selectedFatigue < 1 || selectedFatigue > 5) {
+        showToast('Veuillez indiquer votre niveau de fatigue', 'error');
         return;
     }
     
-    if (!isTimeBased && reps > 100) {
-        showToast('Le nombre de répétitions semble incorrect (max 100)', 'error');
+    if (selectedEffort < 1 || selectedEffort > 5) {
+        showToast('Veuillez indiquer votre effort perçu', 'error');
         return;
     }
     
-    if (isTimeBased && reps > 600) {
-        showToast('La durée semble incorrecte (max 10 minutes)', 'error');
+    // Validation équipement si applicable
+    const validationResult = validateWeight(weight);
+    if (!validationResult.isValid) {
+        showToast(validationResult.message, 'error');
         return;
     }
     
-    // Préparer les données
+    // Préparation des données de la série
     const setData = {
         workout_id: currentWorkout.id,
         exercise_id: currentExercise.id,
         set_number: currentSetNumber,
-        target_reps: currentTargetReps,
+        target_reps: parseInt(currentTargetReps) || reps,
         actual_reps: reps,
-        weight: weight, // Pour bodyweight, c'est le poids du lest (0 = sans lest)
-        rest_time: 0,
-        fatigue_level: selectedFatigue * 2,
-        perceived_exertion: selectedEffort * 2,
-        skipped: false,
-        // Ajouter des métadonnées pour clarifier
-        is_bodyweight: isBodyweight,
-        is_time_based: isTimeBased,
-        body_weight: isBodyweight ? currentUser.weight : null,
-        total_weight: isBodyweight ? (currentUser.weight + weight) : weight
+        weight: weight,
+        rest_time: 0, // Sera mis à jour plus tard
+        fatigue_level: Math.round(selectedFatigue),
+        perceived_exertion: selectedEffort,
+        timestamp: new Date().toISOString(),
+        duration: setDuration
     };
     
+    // Sauvegarder l'ID pour la mise à jour du temps de repos
+    localStorage.setItem('lastCompletedSetId', `pending_${Date.now()}`);
+    setLastSetEndTime(new Date());
+    
+    // Tentative d'enregistrement
     try {
         const result = await createSet(setData);
         
-        if (result) {
-            // Stocker l'ID pour mise à jour ultérieure du temps de repos
-            console.log('DEBUG - Stockage lastCompletedSetId:', result.id);
-            localStorage.setItem('lastCompletedSetId', result.id);
-            window.lastCompletedSetId = result.id;  // Pour usage immédiat
+        if (result && result.id) {
+            // Mise à jour de l'ID réel
+            localStorage.setItem('lastCompletedSetId', result.id.toString());
             
-            // Supprimer cette série des données en attente si elle y était
+            // Nettoyer les séries en attente pour éviter les doublons
             const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
             const filteredPending = pendingSets.filter(s => 
                 !(s.exercise_id === setData.exercise_id && 
@@ -976,6 +971,128 @@ async function completeSet() {
         handleSetSuccess(setData, setDuration);
         
         showToast('Série sauvegardée localement (hors-ligne)', 'warning');
+    }
+    
+    // GESTION SPÉCIFIQUE DU MODE GUIDÉ
+    const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
+    if (currentWorkout?.type === 'adaptive' && guidedPlan) {
+        // Mettre à jour la progression du plan guidé
+        const progress = JSON.parse(localStorage.getItem('guidedWorkoutProgress') || '{}');
+        progress.completedSets = (progress.completedSets || 0) + 1;
+        progress.currentExerciseCompletedSets = currentSetNumber;
+        progress.lastSetTimestamp = new Date().toISOString();
+        localStorage.setItem('guidedWorkoutProgress', JSON.stringify(progress));
+        
+        // Vérifier si l'exercice est terminé selon le plan
+        const plan = JSON.parse(guidedPlan);
+        const currentExerciseIndex = window.currentExerciseIndex || 0;
+        const currentExerciseData = plan.exercises[currentExerciseIndex];
+        
+        if (currentExerciseData && currentSetNumber >= currentExerciseData.sets) {
+            // Proposer de terminer l'exercice ou continuer
+            setTimeout(() => {
+                showGuidedExerciseCompletion(currentExerciseData);
+            }, 1000); // Laisser le temps au repos de s'afficher
+        }
+    }
+}
+
+// Fonction helper pour la complétion d'exercice en mode guidé
+function showGuidedExerciseCompletion(exerciseData) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal guided-completion-modal">
+            <h3>🎯 Exercice "${exerciseData.exercise_name}" terminé !</h3>
+            <p><strong>Objectif :</strong> ${exerciseData.sets} séries</p>
+            <p><strong>Réalisé :</strong> ${currentSetNumber} séries</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="document.querySelector('.modal-overlay').remove(); if(window.nextGuidedExercise) window.nextGuidedExercise();">
+                    ➡️ Exercice suivant
+                </button>
+                <button class="btn btn-secondary" onclick="document.querySelector('.modal-overlay').remove();">
+                    ➕ Série supplémentaire
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Fonction helper pour sauvegarder localement
+function saveSetLocally(setData) {
+    const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
+    
+    // Éviter les doublons
+    const exists = pendingSets.some(s => 
+        s.exercise_id === setData.exercise_id && 
+        s.set_number === setData.set_number &&
+        s.workout_id === setData.workout_id
+    );
+    
+    if (!exists) {
+        pendingSets.push({
+            ...setData,
+            timestamp: new Date().toISOString(),
+            syncStatus: 'pending'
+        });
+        localStorage.setItem('pendingSets', JSON.stringify(pendingSets));
+    }
+}
+
+// Fonction helper pour gérer le succès d'une série
+function handleSetSuccess(setData, setDuration) {
+    // Ajouter à l'historique local avec la durée
+    addSetToHistory({...setData, duration: setDuration});
+    
+    // Sauvegarder dans l'historique de la session
+    updateSessionHistory(setData);
+    
+    // Notification de succès
+    showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
+    
+    // Son de validation de série
+    if (!isSilentMode && window.playBeep) {
+        window.playBeep(800, 150);
+    }
+    
+    // Vérification fatigue toutes les 3 séries
+    if (currentSetNumber % 3 === 0) {
+        checkFatigue(currentWorkout.id).then(fatigue => {
+            if (fatigue && fatigue.risk === 'high') {
+                showToast(`⚠️ ${fatigue.message}`, 'warning');
+                showFatigueModal(fatigue);
+            }
+        }).catch(() => {
+            // Ignorer les erreurs de vérification de fatigue
+        });
+    }
+    
+    // Arrêter le timer de série
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        setTimerInterval(null);
+    }
+    
+    // Augmenter légèrement la fatigue pour la prochaine série
+    setSelectedFatigue(Math.min(5, selectedFatigue + 0.3));
+
+    // Mettre à jour le temps de repos de la série PRÉCÉDENTE
+    updatePreviousSetRestTime().catch(() => {
+        // Ignorer les erreurs de mise à jour du temps de repos
+    });
+    
+    // Incrémenter le numéro de série
+    incrementSetNumber();
+    
+    // Afficher l'interface de repos
+    if (window.showRestInterface) {
+        window.showRestInterface({...setData, duration: setDuration});
+    }
+    
+    // Mettre à jour la distribution musculaire
+    if (window.updateMuscleDistribution) {
+        window.updateMuscleDistribution();
     }
 }
 

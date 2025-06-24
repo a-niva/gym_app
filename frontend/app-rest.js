@@ -256,7 +256,8 @@ function skipRestPeriod() {
 
 // ===== CHANGER D'EXERCICE PENDANT LE REPOS =====
 function finishExerciseDuringRest() {
-    const restDuration = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
+    const restDuration = lastSetEndTime ? 
+        Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
     const lastSetId = localStorage.getItem('lastCompletedSetId');
     
     if (lastSetId && restDuration > 0) {
@@ -264,7 +265,6 @@ function finishExerciseDuringRest() {
             console.error('Failed to update rest time:', err)
         );
         
-        // Ajouter le temps de repos à l'historique avant de changer d'exercice
         addRestToHistory(restDuration);
     }
     
@@ -273,7 +273,11 @@ function finishExerciseDuringRest() {
         setRestTimerInterval(null);
     }
     
-    if (window.finishExercise) {
+    // CORRECTION : Vérifier le mode guidé
+    const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
+    if (currentWorkout?.type === 'adaptive' && guidedPlan && window.nextGuidedExercise) {
+        window.nextGuidedExercise();
+    } else if (window.finishExercise) {
         window.finishExercise();
     }
 }
