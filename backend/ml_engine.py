@@ -1133,7 +1133,7 @@ class SessionBuilder:
         constraints = constraints or {}
         
         # MODIFIER cette ligne pour limiter les muscles traités :
-        for muscle in muscles[:2]:  # Max 2 groupes musculaires pour rester raisonnable
+        for muscle in muscles[:3]:  # Max 2 groupes musculaires pour rester raisonnable
             # Vérifier si on a déjà atteint le max d'exercices
             if len(session) >= max_total_exercises:
                 logger.info(f"Max exercises ({max_total_exercises}) atteint, arrêt de l'ajout")
