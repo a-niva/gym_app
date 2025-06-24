@@ -175,6 +175,8 @@ function nextStep() {
 
 // ===== CONFIGURATION DÉTAILLÉE DE L'ÉQUIPEMENT =====
 function generateDetailedEquipmentConfig() {
+    const saved = localStorage.getItem('tempEquipmentConfig');
+    if (saved) Object.assign(equipmentConfig, JSON.parse(saved));
     const container = document.getElementById('detailedEquipmentConfig');
     
     let html = `
@@ -531,6 +533,7 @@ function updateEquipmentStatus(type) {
     statusEl.style.color = isConfigured ? '#10b981' : '#94a3b8';
     
     updateProgressIndicator();
+    localStorage.setItem('tempEquipmentConfig', JSON.stringify(equipmentConfig));
 }
 
 function updateProgressIndicator() {

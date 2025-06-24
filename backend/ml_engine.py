@@ -154,6 +154,7 @@ class FitnessMLEngine:
         """
         Estime le poids initial pour un nouvel exercice
         """
+        available_weights = []
         # Poids de base selon le type d'exercice et le poids corporel
         body_weight = self._get_user_weight(user)
         
@@ -1611,7 +1612,7 @@ class RealTimeAdapter:
             
             if exercise:
                 muscle = exercise.body_part
-                volume = set_item.actual_reps
+                volume = set_item.actual_reps * set_item.weight
                 
                 if muscle in volume_by_muscle:
                     volume_by_muscle[muscle] += volume

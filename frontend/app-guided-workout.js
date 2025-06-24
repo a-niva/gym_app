@@ -31,20 +31,14 @@ function startGuidedWorkout(adaptiveWorkout) {
 
 // Afficher l'interface de progression guidée
 function showGuidedInterface() {
-    // Ensure we're in the training view
-    if (!document.getElementById('training')) {
-        console.error('❌ Vue training non active');
-        showView('training');
-        setTimeout(() => showGuidedInterface(), 100);
-        return;
-    }
     // Chercher d'abord dans training-view, sinon dans workout
-    let container = document.querySelector('#training #mainContent');
+    let container = document.getElementById('mainContent');
     if (!container) {
-        container = document.querySelector('#workout #mainContent');
+        container = document.querySelector('#workoutInterface #mainContent');
     }
     if (!container) {
-        container = document.getElementById('mainContent');
+        console.error('❌ Container mainContent introuvable');
+        return;
     }
     
     if (!container || !guidedWorkoutPlan) {
