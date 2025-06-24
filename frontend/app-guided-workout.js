@@ -19,14 +19,26 @@ function startGuidedWorkout(adaptiveWorkout) {
     guidedWorkoutPlan = adaptiveWorkout;
     currentExerciseIndex = 0;
     
-    // Cacher l'interface standard
+    // CORRECTION 1: Assurer navigation vers training
+    console.log('🔄 [DEBUG] Navigation forcée vers training');
+    if (window.showView) {
+        window.showView('training');
+        console.log('✅ [SUCCESS] Navigation vers training effectuée');
+    } else {
+        console.error('❌ [ERROR] showView non disponible');
+    }
+    
+    // Attendre que la navigation soit complète avant de créer l'interface
+    setTimeout(() => {
+        console.log('🎯 [DEBUG] Training view active, création interface guidée');
+        showGuidedInterface();
+    }, 300);
+    
+    // Cacher l'interface standard si elle existe
     const standardInterface = document.getElementById('exerciseSelection');
     if (standardInterface) {
         standardInterface.style.display = 'none';
     }
-    
-    // Afficher l'interface guidée
-    showGuidedInterface();
 }
 
 // Afficher l'interface de progression guidée
@@ -35,12 +47,36 @@ function showGuidedInterface() {
     console.log('🎯 [DEBUG] guidedWorkoutPlan disponible:', !!guidedWorkoutPlan);
     console.log('🎯 [DEBUG] currentExerciseIndex:', currentExerciseIndex);
     
+    // DIAGNOSTIC DÉTAILLÉ DE LA VUE ACTIVE
+    console.log('🔍 [DIAGNOSTIC] Vue active:', document.querySelector('.view.active')?.id || 'AUCUNE');
+    console.log('🔍 [DIAGNOSTIC] Training view existe:', !!document.getElementById('training'));
+    console.log('🔍 [DIAGNOSTIC] Training view active:', document.getElementById('training')?.classList.contains('active'));
+    console.log('🔍 [DIAGNOSTIC] WorkoutInterface existe:', !!document.getElementById('workoutInterface'));
+    console.log('🔍 [DIAGNOSTIC] WorkoutInterface visible:', 
+        document.getElementById('workoutInterface')?.style.display !== 'none' &&
+        document.getElementById('workoutInterface')?.offsetHeight > 0
+    );
+    
     // Vérification préalable du plan
     if (!guidedWorkoutPlan || !guidedWorkoutPlan.exercises || guidedWorkoutPlan.exercises.length === 0) {
         console.error('❌ [ERROR] Plan de séance guidée manquant ou vide');
         showToast('Erreur : Plan de séance non disponible', 'error');
         showGuidedWorkoutError('Plan de séance non disponible');
         return;
+    }
+    
+    // VÉRIFICATION QUE NOUS SOMMES SUR LA BONNE VUE
+    const trainingView = document.getElementById('training');
+    if (!trainingView || !trainingView.classList.contains('active')) {
+        console.error('❌ [ERROR] Vue training non active, force navigation');
+        if (window.showView) {
+            window.showView('training');
+            // Réessayer après navigation
+            setTimeout(() => showGuidedInterface(), 200);
+            return;
+        } else {
+            console.error('❌ [ERROR] Impossible de naviguer vers training');
+        }
     }
     
     // Recherche exhaustive du container avec diagnostic détaillé
@@ -58,6 +94,7 @@ function showGuidedInterface() {
             // Créer mainContent s'il n'existe pas dans workoutInterface
             container = document.createElement('div');
             container.id = 'mainContent';
+            container.style.cssText = 'width: 100%; min-height: 400px; padding: 1rem;';
             workoutInterface.appendChild(container);
             console.log('🎯 [DEBUG] mainContent créé dans workoutInterface');
         }
@@ -80,25 +117,24 @@ function showGuidedInterface() {
     
     // 4. Fallback : créer dans le body si rien trouvé
     if (!container) {
-        console.warn('⚠️ [WARNING] Aucun container trouvé, création forcée');
+        console.warn('⚠️ [WARNING] Aucun container trouvé, création forcée dans training');
         
-        // Essayer de créer dans workoutInterface s'il existe
-        if (workoutInterface) {
+        const trainingView = document.getElementById('training');
+        if (trainingView) {
             container = document.createElement('div');
             container.id = 'mainContent';
-            container.style.width = '100%';
-            container.style.minHeight = '400px';
-            workoutInterface.appendChild(container);
-            console.log('🎯 [DEBUG] Container créé de force dans workoutInterface');
+            container.style.cssText = 'width: 100%; min-height: 400px; padding: 1rem;';
+            trainingView.appendChild(container);
+            console.log('🎯 [DEBUG] Container créé de force dans training view');
         } else {
-            // Dernière chance : créer une interface de fortune
-            showGuidedWorkoutError('Interface non disponible - Redirection dashboard');
+            console.error('❌ [ERROR] Training view non trouvée');
+            showGuidedWorkoutError('Vue training non disponible');
             return;
         }
     }
     
     console.log('✅ [SUCCESS] Container trouvé/créé, rendu de l\'interface guidée');
-    
+  
     // Vérification finale des données nécessaires
     if (currentExerciseIndex >= guidedWorkoutPlan.exercises.length) {
         console.error('❌ [ERROR] Index exercice invalide:', currentExerciseIndex, '/', guidedWorkoutPlan.exercises.length);

@@ -1366,7 +1366,7 @@ async function startAdaptiveWorkout() {
         document.querySelector('.modal-overlay')?.remove();
         
         // ÉTAPE 3: Basculer vers la vue workout
-        showView('workout');
+        showView('training');
         
         // ÉTAPE 4: Attendre que la vue soit chargée puis démarrer
         setTimeout(async () => {

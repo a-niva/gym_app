@@ -214,6 +214,48 @@ async def generate_adaptive_workout(
         }
         
         logger.info(f"✅ [API] Séance générée avec succès: {len(workout_data['exercises'])} exercices")
+        logger.info(f"🔍 [VALIDATION] Validation finale de {len(validated_exercises)} exercices")
+        
+        for i, exercise in enumerate(validated_exercises):
+            logger.info(f"🔍 [VALIDATION] Exercice {i+1}:")
+            logger.info(f"  - Nom: '{exercise.get('exercise_name', 'MANQUANT')}'")
+            logger.info(f"  - ID: {exercise.get('exercise_id', 'MANQUANT')}")
+            logger.info(f"  - Body part: '{exercise.get('body_part', 'MANQUANT')}'")
+            logger.info(f"  - Sets: {exercise.get('sets', 'MANQUANT')}")
+            logger.info(f"  - Target reps: '{exercise.get('target_reps', 'MANQUANT')}'")
+            logger.info(f"  - Suggested weight: {exercise.get('suggested_weight', 'MANQUANT')}")
+            
+            # Vérifications critiques avec correction automatique
+            if not exercise.get('exercise_name') or exercise['exercise_name'] in ['None', '', None]:
+                logger.error(f"❌ [CRITICAL] Exercice {i+1} sans nom valide, correction appliquée")
+                exercise['exercise_name'] = f"Exercice #{exercise.get('exercise_id', i+1)}"
+                
+            if not exercise.get('exercise_id'):
+                logger.error(f"❌ [CRITICAL] Exercice {i+1} sans ID valide")
+                
+            if not exercise.get('sets') or exercise.get('sets') <= 0:
+                logger.warning(f"⚠️ [WARNING] Sets invalides pour exercice {i+1}, correction à 3")
+                exercise['sets'] = 3
+                
+            if not exercise.get('target_reps'):
+                logger.warning(f"⚠️ [WARNING] Target reps manquant pour exercice {i+1}, correction à '8-12'")
+                exercise['target_reps'] = '8-12'
+        
+        # Validation de la structure finale
+        if not response_data.get('muscles') or len(response_data['muscles']) == 0:
+            logger.error(f"❌ [CRITICAL] Aucun muscle dans la réponse")
+            raise HTTPException(status_code=500, detail="Structure de réponse invalide: muscles manquants")
+            
+        if not response_data.get('exercises') or len(response_data['exercises']) == 0:
+            logger.error(f"❌ [CRITICAL] Aucun exercice dans la réponse finale")
+            raise HTTPException(status_code=500, detail="Structure de réponse invalide: exercices manquants")
+        
+        logger.info(f"✅ [SUCCESS] Validation complète réussie:")
+        logger.info(f"  - {len(response_data['exercises'])} exercices validés")
+        logger.info(f"  - Muscles ciblés: {response_data['muscles']}")
+        logger.info(f"  - Durée estimée: {response_data['estimated_duration']}min")
+        logger.info(f"🎯 [DEBUG] Structure finale validée, envoi au frontend")
+        
         return response_data
         
     except HTTPException:
