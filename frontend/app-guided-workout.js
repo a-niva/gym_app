@@ -10,11 +10,6 @@ let guidedWorkoutPlan = null;
 window.nextExercise = () => nextExercise();
 window.previousExercise = () => previousExercise();
 window.startCurrentExercise = () => startCurrentExercise();
-window.completeWorkout = () => {
-    if (window.completeWorkout) {
-        window.completeWorkout();
-    }
-};
 
 
 // Point d'entrée unique pour démarrer le mode guidé

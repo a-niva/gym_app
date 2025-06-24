@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from backend.database import engine, get_db, SessionLocal
 from backend.models import Base, User, Exercise, Workout, Set, Program, ProgramDay, ProgramExercise
-from backend.routes import router as ml_router, router
+from backend.routes import router
 from backend.schemas import UserCreate, UserResponse, WorkoutCreate, SetCreate, ExerciseResponse, SetRestTimeUpdate, ProgramCreate, ProgramResponse
 from backend.ml_engine import FitnessMLEngine, SessionBuilder
 
@@ -93,7 +93,6 @@ async def lifespan(app: FastAPI):
     # Shutdown (nothing to do)
 
 app = FastAPI(title="Gym Coach API", lifespan=lifespan)
-app.include_router(ml_router)
 app.include_router(router)
 
 # CORS for local network access
