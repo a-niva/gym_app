@@ -539,17 +539,6 @@ export function updateTrainingInterface() {
     startWorkoutMonitoring();
 }
 
-// Fonction helper pour obtenir le label du type de séance
-function getWorkoutTypeLabel() {
-    if (!currentWorkout) return 'Inconnue';
-    
-    switch(currentWorkout.type) {
-        case 'adaptive': return 'Adaptative';
-        case 'free': return 'Libre';
-        case 'program': return 'Programme';
-        default: return 'Standard';
-    }
-}
 
 // Interface de fallback en cas d'erreur
 function showFallbackInterface(errorMessage) {
