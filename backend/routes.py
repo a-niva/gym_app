@@ -207,7 +207,7 @@ async def generate_adaptive_workout(
     # Construire la séance
     workout = session_builder.build_session(
         muscles=selected_muscles,
-        time_budget=int(time_available) * 60,  # Forcer int
+        time_budget=int(time_available),  # Forcer int
         user=user
     )
     
