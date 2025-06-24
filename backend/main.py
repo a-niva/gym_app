@@ -1288,7 +1288,6 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 
 # Static files - Ajuster le chemin selon l'environnement
-import os
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
 
 # Route pour les fichiers JavaScript avec Content-Type correct
