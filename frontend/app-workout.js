@@ -540,26 +540,6 @@ export function updateTrainingInterface() {
 }
 
 
-// Interface de fallback en cas d'erreur
-function showFallbackInterface(errorMessage) {
-    const exerciseArea = document.getElementById('exerciseArea');
-    if (exerciseArea) {
-        exerciseArea.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: var(--color-error);">
-                <div style="font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
-                <h3>Erreur de chargement</h3>
-                <p>${errorMessage}</p>
-                <button class="btn btn-primary" onclick="location.reload()">
-                    🔄 Recharger la page
-                </button>
-                <button class="btn btn-secondary" onclick="showView('dashboard')">
-                    📊 Retour Dashboard
-                </button>
-            </div>
-        `;
-    }
-}
-
 // ===== FONCTIONS HELPERS =====
 function getWorkoutTypeLabel() {
     if (!currentWorkout) return 'Inconnue';
