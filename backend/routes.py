@@ -214,9 +214,9 @@ async def generate_adaptive_workout(
         }
         
         logger.info(f"✅ [API] Séance générée avec succès: {len(workout_data['exercises'])} exercices")
-        logger.info(f"🔍 [VALIDATION] Validation finale de {len(validated_exercises)} exercices")
+        logger.info(f"🔍 [VALIDATION] Validation finale de {len(workout_data['exercises'])} exercices")
         
-        for i, exercise in enumerate(validated_exercises):
+        for i, exercise in enumerate(workout_data['exercises']):
             logger.info(f"🔍 [VALIDATION] Exercice {i+1}:")
             logger.info(f"  - Nom: '{exercise.get('exercise_name', 'MANQUANT')}'")
             logger.info(f"  - ID: {exercise.get('exercise_id', 'MANQUANT')}")
