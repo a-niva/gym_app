@@ -159,6 +159,8 @@ function showGuidedInterface() {
     }
     
     const currentExercise = guidedWorkoutPlan.exercises[currentExerciseIndex];
+    // Marquer qu'on est en mode guidé pour l'interface
+    window.isGuidedMode = true;
     const totalExercises = guidedWorkoutPlan.exercises.length;
     const progressPercent = ((currentExerciseIndex) / totalExercises) * 100;
     

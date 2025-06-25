@@ -2633,6 +2633,19 @@ select.form-input {
     flex-shrink: 0;
 }
 
+/* Forcer la visibilité des boutons dans les séances adaptées */
+.barbell-viz .weight-btn,
+.barbell-card-integrated .weight-btn {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Animation de scintillement pour séance adaptée */
+.weight-btn.suggest-pulse {
+    animation: pulse-glow 2s ease-in-out infinite !important;
+}
+
 .weight-btn:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.3);
@@ -3119,4 +3132,67 @@ select.form-input {
     padding: 0.75rem;
     margin-bottom: 0.5rem;
     border-radius: var(--radius);
+}
+
+/* Contrôles d'exercice adaptatifs */
+.exercise-controls-adaptive {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Bouton large principal */
+.btn-large {
+    padding: 1rem 2rem !important;
+    font-size: 1.1rem !important;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+/* Bouton outline */
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Bouton texte discret */
+.btn-text {
+    background: transparent;
+    border: none;
+    color: var(--gray-light);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    transition: all 0.2s ease;
+}
+
+.btn-text:hover {
+    color: white;
+}
+
+/* Adaptation mobile */
+@media (min-width: 768px) {
+    .exercise-controls-adaptive {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
 }

@@ -272,7 +272,7 @@ async function showSetInput() {
                             ${isBodyweight ? 
                                 `<span class="weight-info">Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}</span>` :
                                 usesBarbell ?
-                                `<div id="barbell-visualization" class="barbell-viz"></div>` :
+                                `<div id="barbell-visualization" class="barbell-viz">${createSimplifiedWeightInterface(defaultWeight)}</div>` :
                                 availableWeights.length > 0 ? 
                                 `<span class="weight-info">Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg</span>` : 
                                 '<span class="weight-info">Aucun poids configuré</span>'}
@@ -338,11 +338,11 @@ async function showSetInput() {
             </div>
             
             <div class="set-actions">
-                <button class="btn btn-primary" onclick="completeSet()">
-                    ✓ Valider la série
-                </button>
-                <button class="btn btn-secondary" onclick="skipSet()">
-                    ⚫ Passer le repos
+                <button class="btn btn-primary btn-large" onclick="completeSet()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Valider la série
                 </button>
             </div>
             
@@ -350,8 +350,17 @@ async function showSetInput() {
                 ${savedHistory}
             </div>
             
-            <div class="exercise-controls">
-                <button class="btn btn-secondary" onclick="finishExercise()">
+            <div class="exercise-controls-adaptive">
+                ${isGuidedMode ? `
+                    <button class="btn btn-outline" onclick="returnToGuidedInterface()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Retour au plan
+                    </button>
+                ` : ''}
+                
+                <button class="btn btn-text" onclick="finishExercise()">
                     Terminer cet exercice
                 </button>
             </div>
@@ -427,17 +436,12 @@ async function showSetInput() {
     
     attachWeightChangeListeners();
     
-    // CORRECTION : Forcer la mise à jour pour les exercices avec barre
-    setTimeout(() => {
-        const container = document.getElementById('barbell-visualization');
-        if (container && currentExercise.equipment.some(eq => 
-            eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
-        )) {
-            if (window.updateBarbellVisualization) {
-                window.updateBarbellVisualization();
-            }
-        }
-    }, 100);
+    const barbellContainer = document.getElementById('barbell-visualization');
+    if (barbellContainer && currentExercise.equipment.some(eq => 
+        eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
+    )) {
+        updateBarbellVisualization();
+    }
     
     // Forcer la mise à jour des suggestions visuelles après un court délai
     setTimeout(() => {
@@ -454,6 +458,11 @@ function updateBarbellVisualization() {
     if (!weightInput) return;
     
     const totalWeight = parseFloat(weightInput.value) || 0;
+    // Vérifier si l'interface est déjà présente
+    if (!container.querySelector('.barbell-card-integrated') && !container.querySelector('.barbell-visualization')) {
+        container.innerHTML = createSimplifiedWeightInterface(totalWeight);
+        return;
+    }
     
     // TOUJOURS afficher l'interface avec boutons
     if (currentExercise.equipment.some(eq => 
@@ -602,6 +611,10 @@ function createBarbellHTML(barWeight, platesPerSide) {
 }
 
 function createSimplifiedWeightInterface(totalWeight) {
+    // S'assurer que adjustWeightToNext est globalement accessible
+    if (!window.adjustWeightToNext) {
+        window.adjustWeightToNext = adjustWeightToNext;
+    }
     return `
         <div class="barbell-card-integrated">
             <div class="weight-control-row">

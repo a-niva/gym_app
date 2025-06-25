@@ -5,6 +5,7 @@
 import {
     currentExercise,
     currentUser,
+    currentWorkout,
     lastSetEndTime,
     setLastSetEndTime,
     restTimerInterval,
@@ -43,8 +44,11 @@ function showRestInterface(setData) {
             <div class="rest-info">
                 Série ${setData.set_number} terminée : ${formatSetDisplay(setData)}
             </div>
-            <button class="btn btn-secondary btn-skip-rest" onclick="skipRestPeriod()">
-                ⏭️ Passer le repos
+            <button class="btn btn-outline btn-skip-rest" onclick="skipRestPeriod()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                </svg>
+                Passer le repos
             </button>
         </div>
         
