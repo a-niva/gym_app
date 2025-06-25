@@ -1357,62 +1357,115 @@ async function startAdaptiveWorkout() {
     try {
         console.log('🎯 Démarrage séance adaptative:', adaptiveWorkout);
         
-        // ÉTAPE 1: Sauvegarder le plan adaptatif AVANT de créer la séance
+        // ÉTAPE 1: Vérifier et gérer les sessions actives
+        try {
+            const activeResponse = await fetch(`/api/users/${currentUser.id}/active-workout`);
+            const activeData = await activeResponse.json();
+            
+            if (activeData.workout && activeData.workout.id) {
+                console.log('🔄 Session active trouvée:', activeData.workout);
+                
+                // Demander confirmation avant d'abandonner
+                const confirmAbandon = confirm(
+                    `Une séance est déjà en cours (ID: ${activeData.workout.id}).\n\n` +
+                    `Voulez-vous l'abandonner pour démarrer la nouvelle séance ?`
+                );
+                
+                if (!confirmAbandon) {
+                    showToast('Séance annulée - Terminez d\'abord la séance en cours', 'info');
+                    return;
+                }
+                
+                // Abandonner l'ancienne séance
+                const abandonResponse = await fetch(`/api/workouts/${activeData.workout.id}/abandon`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!abandonResponse.ok) {
+                    console.error('Erreur abandon séance:', await abandonResponse.text());
+                    showToast('Impossible d\'abandonner la séance active', 'error');
+                    return;
+                }
+                
+                console.log('✅ Ancienne séance abandonnée');
+                
+                // Nettoyer le localStorage
+                localStorage.removeItem('currentWorkout');
+                localStorage.removeItem('guidedWorkoutPlan');
+                localStorage.removeItem('guidedWorkoutProgress');
+            }
+        } catch (error) {
+            console.error('Erreur vérification session active:', error);
+            // Continuer même si la vérification échoue
+        }
+        
+        // ÉTAPE 2: Sauvegarder le plan adaptatif
         localStorage.setItem('guidedWorkoutPlan', JSON.stringify(adaptiveWorkout));
         localStorage.setItem('workoutType', 'adaptive');
         localStorage.removeItem('adaptiveWorkoutPlan');
         
-        // ÉTAPE 2: Fermer le modal
+        // ÉTAPE 3: Fermer le modal
         document.querySelector('.modal-overlay')?.remove();
         
-        // ÉTAPE 3: Basculer vers la vue workout
+        // ÉTAPE 4: Basculer vers la vue workout
         showView('training');
         
-        // ÉTAPE 4: Attendre que la vue soit chargée puis démarrer
+        // ÉTAPE 5: Démarrer la séance après un court délai
         setTimeout(async () => {
             try {
-                // Vérifier s'il y a déjà une séance active
-                const activeResponse = await fetch(`/api/users/${currentUser.id}/active-workout`);
-                const activeData = await activeResponse.json();
-                
-                if (activeData.workout) {
-                    console.log('🔄 Abandon de la séance active existante');
-                    // Abandonner l'ancienne séance
-                    await fetch(`/api/workouts/${activeData.workout.id}/abandon`, {
-                        method: 'PUT'
-                    });
-                }
-                
-                // Créer une nouvelle séance avec le type adaptatif
-                const workoutResponse = await fetch('/api/workouts/', {
+                // Créer la nouvelle séance
+                const response = await fetch('/api/workouts/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({
                         user_id: currentUser.id,
-                        type: 'adaptive'  // IMPORTANT: Marquer comme adaptatif
+                        type: 'adaptive'
                     })
                 });
                 
-                if (!workoutResponse.ok) {
-                    throw new Error('Erreur création séance');
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erreur création séance');
                 }
                 
-                const newWorkout = await workoutResponse.json();
+                const newWorkout = await response.json();
                 console.log('✅ Nouvelle séance adaptative créée:', newWorkout);
                 
-                // Mettre à jour l'état global
+                // Sauvegarder dans le state
                 setCurrentWorkout(newWorkout);
+                localStorage.setItem('currentWorkout', JSON.stringify(newWorkout));
                 
                 // Démarrer le mode guidé
-                setTimeout(() => {
-                    startGuidedWorkout(adaptiveWorkout);
-                }, 500);
+                if (window.startGuidedWorkout) {
+                    window.startGuidedWorkout(adaptiveWorkout);
+                } else {
+                    import('./app-guided-workout.js').then(module => {
+                        module.startGuidedWorkout(adaptiveWorkout);
+                    });
+                }
                 
                 showToast('Séance adaptative démarrée !', 'success');
                 
             } catch (error) {
                 console.error('Erreur démarrage séance:', error);
-                showToast('Erreur lors du démarrage', 'error');
+                
+                // Gestion d'erreur spécifique pour session active
+                if (error.message && error.message.includes('Session active existante')) {
+                    showToast(
+                        'Une séance est toujours active. Rechargez la page et réessayez.', 
+                        'error'
+                    );
+                } else {
+                    showToast('Erreur lors du démarrage: ' + error.message, 'error');
+                }
+                
+                // Retour au dashboard en cas d'erreur
+                showView('dashboard');
             }
         }, 300);
         
