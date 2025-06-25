@@ -444,6 +444,11 @@ async function showSetInput() {
     }, 500);
     
     attachWeightChangeListeners();
+    setTimeout(() => {
+        if (currentExercise.equipment.some(eq => eq.includes('barbell'))) {
+            updateBarbellVisualization();
+        }
+    }, 50);
     
     // Forcer la mise à jour des suggestions visuelles après un court délai
     setTimeout(() => {
@@ -942,10 +947,13 @@ async function completeSet() {
         const currentExerciseData = plan.exercises[currentExerciseIndex];
         
         if (currentExerciseData && currentSetNumber >= currentExerciseData.sets) {
-            // Proposer de terminer l'exercice ou continuer
-            setTimeout(() => {
-                showGuidedExerciseCompletion(currentExerciseData);
-            }, 1000); // Laisser le temps au repos de s'afficher
+            // Afficher immédiatement la modal, pas après le repos
+            showGuidedExerciseCompletion(currentExerciseData);
+            
+            // Empêcher l'affichage du repos normal
+            if (window.restTimerInterval) {
+                clearInterval(window.restTimerInterval);
+            }
         }
     }
 }
@@ -1013,9 +1021,6 @@ function handleSetSuccess(setData, setDuration) {
     updatePreviousSetRestTime().catch(() => {
         // Ignorer les erreurs de mise à jour du temps de repos
     });
-    
-    // Incrémenter le numéro de série
-    incrementSetNumber();
     
     // Afficher l'interface de repos
     if (window.showRestInterface) {
@@ -1129,5 +1134,4 @@ window.adjustReps = adjustReps;
 window.validateWeightInput = validateWeightInput;
 window.completeSet = completeSet;
 window.skipSet = skipSet;
-
-// Export pour les autres modules (pas d'export pour ce module car toutes les fonctions sont globales)
+window.showGuidedExerciseCompletion = showGuidedExerciseCompletion;
