@@ -480,28 +480,52 @@ function updateBarbellVisualization() {
     
     const totalWeight = parseFloat(weightInput.value) || 0;
     
-    if (!currentExercise) {
+    if (!currentExercise || !currentUser) {
         container.innerHTML = createSimplifiedWeightInterface(totalWeight);
         return;
     }
     
-    // Déterminer si l'exercice utilise une barre
+    // Déterminer si l'exercice utilise une barre OU des haltères (qui peuvent être des barres courtes)
     const usesBarbell = currentExercise.equipment.some(eq => 
         eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
     );
     
-    // Pour les exercices avec barre ET disques configurés
-    if (usesBarbell && currentUser?.equipment_config?.disques?.weights && 
+    const usesDumbbells = currentExercise.equipment.includes('dumbbells');
+    
+    // Vérifier si on a l'équivalence barres courtes pour les dumbbells
+    const hasShortBarbellEquivalence = usesDumbbells && 
+        currentUser.equipment_config?.barres?.courte?.available &&
+        currentUser.equipment_config?.barres?.courte?.count >= 2 &&
+        currentUser.equipment_config?.disques?.available;
+    
+    // Pour les exercices avec barre OU avec équivalence dumbbells
+    if ((usesBarbell || hasShortBarbellEquivalence) && 
+        currentUser?.equipment_config?.disques?.weights && 
         Object.keys(currentUser.equipment_config.disques.weights).length > 0) {
         
-        const barWeight = getBarWeightForExercise(currentExercise);
-        const platesWeight = totalWeight - barWeight;
+        let barWeight, platesWeight;
+        
+        if (hasShortBarbellEquivalence) {
+            // Cas des barres courtes (paire)
+            barWeight = 2.5 * 2; // Paire de barres courtes
+            platesWeight = totalWeight - barWeight;
+        } else {
+            // Cas des barres classiques
+            barWeight = getBarWeightForExercise(currentExercise);
+            platesWeight = totalWeight - barWeight;
+        }
         
         if (platesWeight >= 0) {
             const platesPerSide = calculateOptimalPlateDistribution(platesWeight / 2);
-            container.innerHTML = createBarbellHTML(barWeight, platesPerSide);
+            
+            if (hasShortBarbellEquivalence) {
+                // Affichage spécial pour paire d'haltères courtes
+                container.innerHTML = createDumbbellPairHTML(2.5, platesPerSide);
+            } else {
+                container.innerHTML = createBarbellHTML(barWeight, platesPerSide);
+            }
         } else {
-            container.innerHTML = createSimplifiedWeightInterface(barWeight);
+            container.innerHTML = createSimplifiedWeightInterface(totalWeight);
         }
     } else {
         // Pour tous les autres cas : afficher l'interface simplifiée avec boutons
@@ -513,6 +537,7 @@ function updateBarbellVisualization() {
         updateWeightSuggestionVisual();
     }, 50);
 }
+
 function getBarWeightForExercise(exercise) {
     if (!currentUser?.equipment_config) return 20;
     const config = currentUser.equipment_config;
@@ -613,6 +638,87 @@ function createBarbellHTML(barWeight, platesPerSide) {
             
             <div class="barbell-detail">
                 ${platesPerSide.map(p => `${p.count}×${p.weight}kg`).join(' + ')} par côté
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+function createDumbbellPairHTML(barbellWeightEach, platesPerSide) {
+    const totalPlatesWeight = platesPerSide.reduce((sum, p) => sum + (p.weight * p.count * 2), 0);
+    const totalWeight = (barbellWeightEach * 2) + totalPlatesWeight;
+    
+    let html = `
+        <div class="barbell-card-integrated">
+            <div class="weight-control-row">
+                <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeightToNext(-1)">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    </svg>
+                </button>
+                
+                <div class="barbell-total-integrated">${totalWeight}<span class="weight-unit">kg</span></div>
+                
+                <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeightToNext(1)">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="dumbbell-pair-visualization">
+                <div class="dumbbell-unit">
+                    <span class="dumbbell-label">Haltère 1:</span>
+                    <div class="barbell-plates-visualization">
+    `;
+    
+    // Première haltère
+    platesPerSide.slice().reverse().forEach(plate => {
+        for (let i = 0; i < plate.count; i++) {
+            html += `<div class="plate-integrated left" data-weight="${plate.weight}">${plate.weight}</div>`;
+        }
+    });
+    
+    html += `<div class="bar-integrated short">${barbellWeightEach}</div>`;
+    
+    platesPerSide.forEach(plate => {
+        for (let i = 0; i < plate.count; i++) {
+            html += `<div class="plate-integrated right" data-weight="${plate.weight}">${plate.weight}</div>`;
+        }
+    });
+    
+    html += `
+                    </div>
+                </div>
+                
+                <div class="dumbbell-unit">
+                    <span class="dumbbell-label">Haltère 2:</span>
+                    <div class="barbell-plates-visualization">
+    `;
+    
+    // Deuxième haltère (identique)
+    platesPerSide.slice().reverse().forEach(plate => {
+        for (let i = 0; i < plate.count; i++) {
+            html += `<div class="plate-integrated left" data-weight="${plate.weight}">${plate.weight}</div>`;
+        }
+    });
+    
+    html += `<div class="bar-integrated short">${barbellWeightEach}</div>`;
+    
+    platesPerSide.forEach(plate => {
+        for (let i = 0; i < plate.count; i++) {
+            html += `<div class="plate-integrated right" data-weight="${plate.weight}">${plate.weight}</div>`;
+        }
+    });
+    
+    html += `
+                    </div>
+                </div>
+            </div>
+            
+            <div class="barbell-detail">
+                Paire: ${barbellWeightEach}kg × 2 barres + ${platesPerSide.map(p => `${p.count}×${p.weight}kg`).join(' + ')} par haltère
             </div>
         </div>
     `;
