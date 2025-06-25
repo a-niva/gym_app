@@ -248,32 +248,32 @@ async function showSetInput() {
             ` : ''}
             <div class="set-timer">Durée: <span id="setTimer">0:00</span></div>
             
-            <div class="set-input-grid-vertical">
+            <div class="set-input-grid">
                 ${!(isTimeBased && isBodyweight) ? `
                     <div class="input-group">
                         <label>${weightLabel}</label>
-                        <input type="hidden" id="setWeight" value="${defaultWeight}">
-                            <div class="weight-info">
-                                ${isBodyweight ? 
-                                    `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
-                                    usesBarbell ?
-                                    `<div id="barbell-visualization" class="barbell-viz"></div>` :
-                                    availableWeights.length > 0 ? 
-                                    `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
-                                    'Aucun poids configuré'}
+                        <div class="weight-selector">
+                            <input type="hidden" id="setWeight" value="${defaultWeight}">
+                            ${isBodyweight ? 
+                                `<span class="weight-info">Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}</span>` :
+                                usesBarbell ?
+                                `<div id="barbell-visualization" class="barbell-viz"></div>` :
+                                availableWeights.length > 0 ? 
+                                `<span class="weight-info">Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg</span>` : 
+                                '<span class="weight-info">Aucun poids configuré</span>'}
+                        </div>
+                        <div class="weight-suggestion-line">
+                            <div id="weightSuggestion" class="suggestion-hint">
+                                ${mlSuggestion ? `💡 Suggestion ML : ${mlSuggestion}kg${mlSuggestion !== defaultWeight ? ` (${mlSuggestion > defaultWeight ? '+' : ''}${(mlSuggestion - defaultWeight).toFixed(1)}kg)` : ''}` : ''}
                             </div>
-                            <div class="weight-suggestion-line">
-                                <div id="weightSuggestion" class="suggestion-hint">
-                                    ${mlSuggestion ? `💡 Suggestion ML : ${mlSuggestion}kg${mlSuggestion !== defaultWeight ? ` (${mlSuggestion > defaultWeight ? '+' : ''}${(mlSuggestion - defaultWeight).toFixed(1)}kg)` : ''}` : ''}
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="autoWeightToggle" 
-                                        ${isAutoWeightEnabled ? 'checked' : ''} 
-                                        onchange="toggleAutoWeight(this.checked)">
-                                    <span class="toggle-slider"></span>
-                                    <span class="toggle-label">Auto</span>
-                                </label>
-                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="autoWeightToggle" 
+                                    ${isAutoWeightEnabled ? 'checked' : ''} 
+                                    onchange="toggleAutoWeight(this.checked)">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Auto</span>
+                            </label>
+                        </div>
                     </div>
                 ` : '<input type="hidden" id="setWeight" value="0">'}
                 
@@ -296,24 +296,28 @@ async function showSetInput() {
                         </div>
                     ` : ''}
                 </div>
-                
-                <div class="input-group">
-                    <label>Fatigue musculaire</label>
-                    <div class="fatigue-selector">
-                        ${[1,2,3,4,5].map(i => `
-                            <button class="fatigue-level ${selectedFatigue === i ? 'selected' : ''}" 
-                                    onclick="selectFatigue(${i})">${'😊😐😓😰😵'.charAt(i-1)}</button>
-                        `).join('')}
+            </div>
+            
+            <div class="effort-selectors">
+                <div class="selector-group">
+                    <label>Fatigue</label>
+                    <div class="emoji-selector" id="fatigueSelector">
+                        <span class="emoji-option ${selectedFatigue === 1 ? 'selected' : ''}" data-value="1" onclick="selectFatigue(1)">😄</span>
+                        <span class="emoji-option ${selectedFatigue === 2 ? 'selected' : ''}" data-value="2" onclick="selectFatigue(2)">🙂</span>
+                        <span class="emoji-option ${selectedFatigue === 3 ? 'selected' : ''}" data-value="3" onclick="selectFatigue(3)">😐</span>
+                        <span class="emoji-option ${selectedFatigue === 4 ? 'selected' : ''}" data-value="4" onclick="selectFatigue(4)">😓</span>
+                        <span class="emoji-option ${selectedFatigue === 5 ? 'selected' : ''}" data-value="5" onclick="selectFatigue(5)">😵</span>
                     </div>
                 </div>
                 
-                <div class="input-group">
+                <div class="selector-group">
                     <label>Effort perçu</label>
-                    <div class="effort-selector">
-                        ${[1,2,3,4,5].map(i => `
-                            <button class="effort-level ${selectedEffort === i ? 'selected' : ''}" 
-                                    onclick="selectEffort(${i})">${['💪','💪💪','🔥','🔥🔥','🌋'][i-1]}</button>
-                        `).join('')}
+                    <div class="emoji-selector" id="effortSelector">
+                        <span class="emoji-option ${selectedEffort === 1 ? 'selected' : ''}" data-value="1" onclick="selectEffort(1)">🚶</span>
+                        <span class="emoji-option ${selectedEffort === 2 ? 'selected' : ''}" data-value="2" onclick="selectEffort(2)">🏃</span>
+                        <span class="emoji-option ${selectedEffort === 3 ? 'selected' : ''}" data-value="3" onclick="selectEffort(3)">🏋️</span>
+                        <span class="emoji-option ${selectedEffort === 4 ? 'selected' : ''}" data-value="4" onclick="selectEffort(4)">🔥</span>
+                        <span class="emoji-option ${selectedEffort === 5 ? 'selected' : ''}" data-value="5" onclick="selectEffort(5)">🌋</span>
                     </div>
                 </div>
             </div>
@@ -371,7 +375,8 @@ async function showSetInput() {
     
     // Démarrer les timers
     startTimers();
-    
+    setSetStartTime(new Date());
+
     // Gérer le clavier virtuel sur mobile
     const handleViewportChange = () => {
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -429,9 +434,18 @@ function updateBarbellVisualization() {
     if (!container) return;
     
     const weightInput = document.getElementById('setWeight');
-    if (!weightInput) return; // Vérifier que l'input existe
+    if (!weightInput) return;
     
     const totalWeight = parseFloat(weightInput.value) || 0;
+    
+    // TOUJOURS afficher l'interface avec boutons
+    if (currentExercise.equipment.some(eq => 
+        eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
+    )) {
+        // Forcer l'affichage de l'interface même sans config disques
+        container.innerHTML = createSimplifiedWeightInterface(totalWeight);
+        return;
+    }
     
     // Si pas de poids valide, ne pas afficher d'erreur
     if (totalWeight === 0 && !currentExercise.equipment.includes('poids_du_corps')) {
@@ -699,7 +713,7 @@ function adjustWeightToNext(direction) {
     const input = document.getElementById('setWeight');
     const currentWeight = parseFloat(input.value) || 0;
     
-    // Utiliser la fonction d'app-equipment qui calcule TOUS les poids possibles
+    // Utiliser la fonction d'ajustement
     const availableWeights = calculateAvailableWeights(currentExercise);
     
     if (availableWeights.length === 0) {
@@ -726,6 +740,13 @@ function adjustWeightToNext(direction) {
     
     if (newIndex >= 0 && newIndex < availableWeights.length) {
         input.value = availableWeights[newIndex];
+        
+        // AJOUTER : Mettre à jour l'affichage du poids
+        const totalDisplay = document.querySelector('.barbell-total-integrated');
+        if (totalDisplay) {
+            totalDisplay.innerHTML = `${availableWeights[newIndex]}<span class="weight-unit">kg</span>`;
+        }
+        
         updateBarbellVisualization();
         updateWeightSuggestionVisual();
     }
