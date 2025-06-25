@@ -162,12 +162,13 @@ function selectExercise(exerciseId) {
 }
 
 // ===== FIN D'UN EXERCICE =====
+// ===== FIN D'UN EXERCICE =====
 function finishExercise() {
     // Nettoyer l'ID de la dernière série (exercice terminé)
     localStorage.removeItem('lastCompletedSetId');
     // Capturer le temps de fin de l'exercice
     setLastExerciseEndTime(new Date());
-    
+   
     // Arrêter les timers
     if (window.timerInterval) {
         clearInterval(window.timerInterval);
@@ -177,7 +178,7 @@ function finishExercise() {
         clearInterval(window.restTimerInterval);
         window.setRestTimerInterval && window.setRestTimerInterval(null);
     }
-    
+   
     // Sauvegarder l'historique de l'exercice
     if (currentExercise && currentSetNumber > 1) {
         const exerciseHistory = {
@@ -190,7 +191,7 @@ function finishExercise() {
         workoutHistory.push(exerciseHistory);
         localStorage.setItem('currentWorkoutHistory', JSON.stringify(workoutHistory));
     }
-    
+   
     // Réinitialiser
     setCurrentExercise(null);
     setCurrentSetNumber(1);
@@ -198,8 +199,21 @@ function finishExercise() {
     setLastSetEndTime(null);
     setSelectedFatigue(3);
     setSelectedEffort(3);
+   
+    // VÉRIFIER D'ABORD si on est en mode guidé avec exerciseArea marqué
+    const exerciseArea = document.getElementById('exerciseArea');
+    if (exerciseArea && exerciseArea.getAttribute('data-guided-mode') === 'true') {
+        // Nettoyer l'attribut
+        exerciseArea.removeAttribute('data-guided-mode');
+       
+        // Retourner à l'interface guidée au lieu du sélecteur normal
+        if (window.returnToGuidedInterface) {
+            window.returnToGuidedInterface();
+            return; // IMPORTANT : sortir ici pour ne pas exécuter le code suivant
+        }
+    }
     
-    // Vérifier le mode de séance et afficher l'interface appropriée
+    // ENSUITE vérifier le mode de séance normal
     if (currentWorkout && currentWorkout.status === 'started') {
         const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
         if (currentWorkout.type === 'adaptive' && guidedPlan) {

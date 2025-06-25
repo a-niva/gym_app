@@ -349,7 +349,6 @@ function showGuidedWorkoutError(message) {
 }
 
 // Fonction pour commencer l'exercice actuel
-// Fonction pour commencer l'exercice actuel
 async function startCurrentExercise() {
     if (!guidedWorkoutPlan || currentExerciseIndex >= guidedWorkoutPlan.exercises.length) {
         showToast('Exercice non disponible', 'error');
@@ -367,11 +366,29 @@ async function startCurrentExercise() {
         }
         
         // S'assurer que le conteneur exercice existe et est visible
-        const exerciseArea = document.getElementById('exerciseArea');
+        let exerciseArea = document.getElementById('exerciseArea');
         if (!exerciseArea) {
-            console.error('❌ exerciseArea introuvable');
-            showToast('Erreur d\'affichage', 'error');
-            return;
+            console.log('⚠️ exerciseArea introuvable, création dans workoutInterface');
+            
+            // Créer exerciseArea dans le workoutInterface
+            const workoutInterface = document.getElementById('workoutInterface');
+            if (!workoutInterface) {
+                console.error('❌ workoutInterface introuvable');
+                showToast('Erreur d\'affichage', 'error');
+                return;
+            }
+            
+            exerciseArea = document.createElement('div');
+            exerciseArea.id = 'exerciseArea';
+            exerciseArea.style.cssText = 'width: 100%; min-height: 400px; padding: 1rem;';
+            
+            // Masquer mainContent s'il existe
+            const mainContent = workoutInterface.querySelector('#mainContent');
+            if (mainContent) {
+                mainContent.style.display = 'none';
+            }
+            
+            workoutInterface.appendChild(exerciseArea);
         }
         
         // Nettoyer le conteneur et le rendre visible
@@ -426,7 +443,12 @@ async function startCurrentExercise() {
 // Pré-configurer l'interface avec les paramètres guidés
 function preConfigureExerciseInterface(exerciseData) {
     console.log('⚙️ Pré-configuration interface:', exerciseData);
-    
+    if (window.currentWorkout && window.currentWorkout.type === 'adaptive') {
+        const exerciseArea = document.getElementById('exerciseArea');
+        if (exerciseArea) {
+            exerciseArea.setAttribute('data-guided-mode', 'true');
+        }
+    }
     // Afficher les objectifs guidés
     const exerciseInfo = document.querySelector('.exercise-info');
     if (exerciseInfo) {
@@ -477,6 +499,16 @@ function returnToGuidedInterface() {
     const exerciseArea = document.getElementById('exerciseArea');
     if (exerciseArea) {
         exerciseArea.innerHTML = '';
+        exerciseArea.style.display = 'none';
+    }
+    
+    // Réafficher mainContent s'il était masqué
+    const workoutInterface = document.getElementById('workoutInterface');
+    if (workoutInterface) {
+        const mainContent = workoutInterface.querySelector('#mainContent');
+        if (mainContent) {
+            mainContent.style.display = 'block';
+        }
     }
     
     // Réafficher l'interface guidée
