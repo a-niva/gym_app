@@ -84,6 +84,14 @@ async function updateWeightSuggestionVisual() {
             increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
         }
     }
+
+    // Ajouter après les classList.add (ligne ~75)
+    if (decreaseBtn && decreaseBtn.classList.contains('suggest-pulse')) {
+        decreaseBtn.offsetHeight; // Force reflow
+    }
+    if (increaseBtn && increaseBtn.classList.contains('suggest-pulse')) {
+        increaseBtn.offsetHeight; // Force reflow
+    }
     
     // Mettre à jour le texte de suggestion
     if (suggestionDiv && mlSuggestion) {
@@ -166,6 +174,13 @@ async function showSetInput() {
                     if (adjustments?.adjustments) {
                         mlSuggestion = adjustments.adjustments.suggested_weight;
                         mlRepsSuggestion = adjustments.adjustments.suggested_reps;
+                        // Ajouter une transformation
+                        if (mlRepsSuggestion && typeof mlRepsSuggestion === 'number') {
+                            mlRepsSuggestion = {
+                                optimal: mlRepsSuggestion,
+                                confidence: adjustments.adjustments.rep_confidence || 0.5
+                            };
+                        }
                         
                         // Stocker globalement pour updateWeightSuggestionVisual
                         window.currentMLSuggestion = mlSuggestion;
@@ -205,7 +220,7 @@ async function showSetInput() {
     } else if (isBodyweight) {
         defaultWeight = 0; // Poids additionnel, pas le poids total
     } else if (exerciseType === 'weighted') {
-        const suggestion = await getSuggestedWeight(currentExercise.id);
+        const suggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
         defaultWeight = suggestion || calculateSuggestedWeight(currentExercise, availableWeights);
     }
     
@@ -283,7 +298,7 @@ async function showSetInput() {
                         <button onclick="adjustReps(${isTimeBased ? -5 : -1})" 
                                 class="btn-adjust ${mlRepsSuggestion && mlRepsSuggestion.optimal < defaultReps ? 'suggest-decrease' : ''}"
                                 id="repsDecreaseBtn">-</button>
-                        <input type="number" id="setReps" value="${mlRepsSuggestion ? mlRepsSuggestion.optimal : defaultReps}" 
+                        <input type="number" id="setReps" value="${mlRepsSuggestion && mlRepsSuggestion.optimal ? mlRepsSuggestion.optimal : defaultReps}" 
                             min="1" max="${isTimeBased ? 300 : 50}" class="reps-display">
                         <button onclick="adjustReps(${isTimeBased ? 5 : 1})" 
                                 class="btn-adjust ${mlRepsSuggestion && mlRepsSuggestion.optimal > defaultReps ? 'suggest-increase' : ''}"
@@ -291,7 +306,7 @@ async function showSetInput() {
                     </div>
                     ${mlRepsSuggestion ? `
                         <div class="suggestion-info" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--primary);">
-                            💡 ML suggère : ${mlRepsSuggestion.optimal} reps 
+                            💡 ML suggère : ${mlRepsSuggestion && mlRepsSuggestion.optimal ? mlRepsSuggestion.optimal : 'calcul en cours...'} reps
                             ${mlRepsSuggestion.confidence > 0.7 ? '(confiance élevée)' : ''}
                         </div>
                     ` : ''}
@@ -418,7 +433,9 @@ async function showSetInput() {
         if (container && currentExercise.equipment.some(eq => 
             eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
         )) {
-            updateBarbellVisualization();
+            if (window.updateBarbellVisualization) {
+                window.updateBarbellVisualization();
+            }
         }
     }, 100);
     
@@ -602,10 +619,6 @@ function createSimplifiedWeightInterface(totalWeight) {
                     </svg>
                 </button>
             </div>
-            
-            <div class="barbell-detail" style="color: var(--warning); margin-top: 10px;">
-                ⚠️ Configurez vos disques dans votre profil pour voir la répartition
-            </div>
         </div>
     `;
 }
@@ -752,6 +765,8 @@ function adjustWeightToNext(direction) {
     }
 }
 
+window.adjustWeightToNext = adjustWeightToNext;
+
 function adjustReps(delta) {
     const input = document.getElementById('setReps');
     const newValue = parseInt(input.value) + delta;
@@ -792,6 +807,8 @@ function validateWeightInput() {
         }
     }
 }
+
+window.adjustReps = adjustReps;
 
 // ===== HELPERS POUR LA GESTION DES SETS =====
 
@@ -1146,9 +1163,8 @@ function updateSessionHistory(setData) {
 window.showSetInput = showSetInput;
 window.selectFatigue = selectFatigue;
 window.selectEffort = selectEffort;
-window.adjustWeightToNext = adjustWeightToNext;
-window.adjustReps = adjustReps;
 window.validateWeightInput = validateWeightInput;
 window.completeSet = completeSet;
 window.skipSet = skipSet;
 window.showGuidedExerciseCompletion = showGuidedExerciseCompletion;
+window.updateBarbellVisualization = updateBarbellVisualization;

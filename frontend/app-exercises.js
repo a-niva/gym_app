@@ -162,7 +162,6 @@ function selectExercise(exerciseId) {
 }
 
 // ===== FIN D'UN EXERCICE =====
-// ===== FIN D'UN EXERCICE =====
 function finishExercise() {
     // Nettoyer l'ID de la dernière série (exercice terminé)
     localStorage.removeItem('lastCompletedSetId');
@@ -218,20 +217,11 @@ function finishExercise() {
         const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
         if (currentWorkout.type === 'adaptive' && guidedPlan) {
             // Mode guidé - passer à l'exercice suivant
-            if (window.nextGuidedExercise) {
+            if (typeof window.nextGuidedExercise === 'function') {
                 window.nextGuidedExercise();
             } else {
-                import('./app-guided-workout.js').then(module => {
-                    if (module.nextGuidedExercise) {
-                        module.nextGuidedExercise();
-                    } else {
-                        console.warn('nextGuidedExercise non disponible');
-                        showExerciseSelector();
-                    }
-                }).catch(error => {
-                    console.error('Erreur import module guidé:', error);
-                    showExerciseSelector();
-                });
+                console.warn('nextGuidedExercise non disponible, retour au sélecteur');
+                showExerciseSelector();
             }
         } else {
             // Mode libre - afficher le sélecteur
