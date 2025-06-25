@@ -53,7 +53,13 @@ async function updateWeightSuggestionVisual() {
     
     const decreaseBtn = document.getElementById('weightDecreaseBtn');
     const increaseBtn = document.getElementById('weightIncreaseBtn');
-    
+
+    // Vérifier que les boutons existent avant de les manipuler
+    if (!decreaseBtn || !increaseBtn) {
+        console.warn('Boutons de poids non trouvés dans updateWeightSuggestionVisual');
+        return;
+    }
+        
     // Retirer les classes existantes
     if (decreaseBtn) {
         decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
@@ -238,6 +244,8 @@ async function showSetInput() {
     const defaultReps = isGuidedMode && targetReps && currentSetNumber === 1 ? 
         (typeof targetReps === 'string' ? parseInt(targetReps.split('-')[0]) : targetReps) : 
         (isTimeBased ? 30 : currentTargetReps);
+    // S'assurer que adjustWeightToNext est globalement accessible AVANT de créer le HTML
+    window.adjustWeightToNext = adjustWeightToNext;
     
     container.innerHTML = `
         <div class="current-exercise">
@@ -271,11 +279,8 @@ async function showSetInput() {
                             <input type="hidden" id="setWeight" value="${defaultWeight}">
                             ${isBodyweight ? 
                                 `<span class="weight-info">Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}</span>` :
-                                usesBarbell ?
-                                `<div id="barbell-visualization" class="barbell-viz">${createSimplifiedWeightInterface(defaultWeight)}</div>` :
-                                availableWeights.length > 0 ? 
-                                `<span class="weight-info">Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg</span>` : 
-                                '<span class="weight-info">Aucun poids configuré</span>'}
+                                // Toujours afficher l'interface avec boutons pour les exercices avec poids
+                                `<div id="barbell-visualization" class="barbell-viz">${createSimplifiedWeightInterface(defaultWeight)}</div>`}
                         </div>
                         <div class="weight-suggestion-line">
                             <div id="weightSuggestion" class="suggestion-hint">
@@ -400,6 +405,15 @@ async function showSetInput() {
     // Démarrer les timers
     startTimers();
     setSetStartTime(new Date());
+    // Mettre à jour la visualisation après création du DOM
+    setTimeout(() => {
+        if (window.updateBarbellVisualization) {
+            window.updateBarbellVisualization();
+        }
+        if (window.updateWeightSuggestionVisual) {
+            window.updateWeightSuggestionVisual();
+        }
+    }, 100);
 
     // Gérer le clavier virtuel sur mobile
     const handleViewportChange = () => {
@@ -452,23 +466,29 @@ async function showSetInput() {
 // ===== VISUALISATION DE LA BARRE =====
 function updateBarbellVisualization() {
     const container = document.getElementById('barbell-visualization');
-    if (!container) return;
+    if (!container) {
+        console.warn('Container barbell-visualization non trouvé');
+        return;
+    }
     
     const weightInput = document.getElementById('setWeight');
     if (!weightInput) return;
     
     const totalWeight = parseFloat(weightInput.value) || 0;
-    // Vérifier si l'interface est déjà présente
-    if (!container.querySelector('.barbell-card-integrated') && !container.querySelector('.barbell-visualization')) {
+    
+    // AJOUT : Créer l'interface même pour les exercices sans équipement configuré
+    if (!currentExercise) {
         container.innerHTML = createSimplifiedWeightInterface(totalWeight);
         return;
     }
     
-    // TOUJOURS afficher l'interface avec boutons
-    if (currentExercise.equipment.some(eq => 
+    // TOUJOURS afficher l'interface avec boutons, même sans barre
+    const usesBarbell = currentExercise.equipment.some(eq => 
         eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
-    )) {
-        // Forcer l'affichage de l'interface même sans config disques
+    );
+    
+    if (!usesBarbell) {
+        // Pour les exercices sans barre (haltères, etc.), afficher l'interface simplifiée
         container.innerHTML = createSimplifiedWeightInterface(totalWeight);
         return;
     }
