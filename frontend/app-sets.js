@@ -146,7 +146,7 @@ async function showSetInput() {
             // Vérifier que le lastCompletedSetId correspond au workout actuel
             if (lastSet.workout_id === currentWorkout.id) {
                 try {
-                    const remainingSets = (currentExercise.sets_reps?.[0]?.sets || 3) - currentSetNumber + 1;
+                    const remainingSets = (currentExercise.sets_reps?.find(sr => sr.level === currentUser?.experience_level)?.sets || 3) - currentSetNumber + 1;
                     
                     console.log('DEBUG - Appel getWorkoutAdjustments avec:', {
                         workoutId: currentWorkout.id,
@@ -154,7 +154,7 @@ async function showSetInput() {
                         remainingSets: remainingSets,
                         exerciseId: currentExercise.id
                     });
-                    
+
                     adjustments = await getWorkoutAdjustments(
                         currentWorkout.id,
                         lastCompletedSetId,
@@ -163,111 +163,55 @@ async function showSetInput() {
                     
                     console.log('DEBUG - Réponse adjustments:', adjustments);
                     
-                    if (adjustments && adjustments.adjustments) {
-                        if (adjustments.adjustments.suggested_reps) {
-                            mlRepsSuggestion = {
-                                optimal: adjustments.adjustments.suggested_reps,
-                                min: adjustments.adjustments.rep_range?.min || adjustments.adjustments.suggested_reps - 2,
-                                max: adjustments.adjustments.rep_range?.max || adjustments.adjustments.suggested_reps + 2,
-                                confidence: adjustments.adjustments.rep_confidence || 0.5
-                            };
-                        }
+                    if (adjustments?.adjustments) {
+                        mlSuggestion = adjustments.adjustments.suggested_weight;
+                        mlRepsSuggestion = adjustments.adjustments.suggested_reps;
                         
-                        // AJOUT : Afficher les recommandations
-                        if (adjustments.recommendations && adjustments.recommendations.length > 0) {
-                            const firstRecommendation = adjustments.recommendations[0];
-                            showToast(`💡 ${firstRecommendation}`, 'info');
+                        // Stocker globalement pour updateWeightSuggestionVisual
+                        window.currentMLSuggestion = mlSuggestion;
+                        
+                        // Si auto-ajustement actif, utiliser la suggestion ML
+                        if (isAutoWeightEnabled && mlSuggestion) {
+                            // On appliquera plus tard après avoir créé le DOM
                         }
                     }
                 } catch (error) {
-                    console.error('DEBUG - Erreur getWorkoutAdjustments:', error);
-                    localStorage.removeItem('lastCompletedSetId');
+                    console.error('Erreur récupération ML suggestions:', error);
+                    adjustmentsError = error;
                 }
-            } else {
-                console.log('DEBUG - lastCompletedSetId ne correspond pas au workout actuel, nettoyage');
-                localStorage.removeItem('lastCompletedSetId');
             }
-        } else {
-            console.log('DEBUG - Pas d\'historique pour cet exercice, nettoyage lastCompletedSetId');
-            localStorage.removeItem('lastCompletedSetId');
         }
     }
-    
-    setSetStartTime(new Date());
-    setLastSetEndTime(null);
     
     // Déterminer le type d'exercice
-    const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
-        currentExercise.name_fr.toLowerCase().includes(keyword)
+    const exerciseType = getExerciseType(currentExercise);
+    const isTimeBased = exerciseType === 'time_based';
+    const isBodyweight = exerciseType === 'bodyweight' || exerciseType === 'weighted_bodyweight';
+    
+    // CORRECTION : Forcer la détection des exercices avec barre
+    const usesBarbell = currentExercise.equipment.some(eq => 
+        eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
     );
-    const isBodyweight = currentExercise.equipment.includes('poids_du_corps');
     
-    // Calculer les poids disponibles pour cet exercice
-    let availableWeights = calculateAvailableWeights(currentExercise);
+    // Obtenir les poids disponibles selon l'équipement
+    const availableWeights = calculateAvailableWeights(currentExercise);
     
-    // Toujours obtenir la suggestion ML (indépendamment du toggle)
-    try {
-        mlSuggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
-    } catch (error) {
-        console.warn('Impossible de récupérer la suggestion ML:', error);
-    }
-
-    // Si pas de suggestion ML, utiliser le calcul local
-    if (!mlSuggestion && mlSuggestion !== 0) {
-        mlSuggestion = calculateSuggestedWeight(currentExercise);
-    }
-    
-    // AJOUT : Appliquer le multiplicateur de poids APRÈS avoir obtenu mlSuggestion
-    if (adjustments && adjustments.adjustments && adjustments.adjustments.weight_multiplier && mlSuggestion) {
-        mlSuggestion = Math.round(mlSuggestion * adjustments.adjustments.weight_multiplier);
-        console.log('DEBUG - Nouvelle suggestion de poids ajustée:', mlSuggestion);
-    }
-
-    // CORRECTION : Vérifier que la suggestion ML n'est pas inférieure au poids de la barre
-    if (mlSuggestion && currentExercise.equipment.some(eq => eq.includes('barbell'))) {
-        const barWeight = getBarWeightForExercise(currentExercise);
-        if (mlSuggestion < barWeight) {
-            console.warn(`Suggestion ML (${mlSuggestion}kg) inférieure au poids de la barre (${barWeight}kg). Ajustement à ${barWeight}kg`);
-            mlSuggestion = barWeight;
-        }
-    }
-
-    // NOUVEAU : En mode guidé, privilégier le poids suggéré du plan
-    if (isGuidedMode && suggestedWeight) {
-        // Si on a un poids suggéré par le plan guidé et pas de ML ou si c'est la première série
-        if (!mlSuggestion || currentSetNumber === 1) {
-            mlSuggestion = suggestedWeight;
-        }
-    }
-
-    // Stocker globalement pour référence
-    window.currentMLRepsSuggestion = mlRepsSuggestion;
-    window.currentMLSuggestion = mlSuggestion;
-    
-    // Le reste de votre code reste identique...
-    // Déterminer le poids à afficher dans l'input
+    // Déterminer le poids par défaut
     let defaultWeight = 0;
-    
-    if (isAutoWeightEnabled && mlSuggestion) {
+    if (isGuidedMode && suggestedWeight && currentSetNumber === 1) {
+        defaultWeight = suggestedWeight;
+    } else if (mlSuggestion && isAutoWeightEnabled) {
         defaultWeight = mlSuggestion;
-    } else {
-        const previousSetHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
-        const lastSetForExercise = previousSetHistory
-            .filter(h => h.exerciseId === currentExercise.id)
-            .flatMap(h => h.sets || [])
-            .slice(-1)[0];
-        
-        if (lastSetForExercise) {
-            defaultWeight = lastSetForExercise.weight;
-        } else if (availableWeights.length > 0) {
-            defaultWeight = availableWeights[Math.floor(availableWeights.length / 2)];
-        } else {
-            defaultWeight = 20;
-        }
+    } else if (isBodyweight) {
+        defaultWeight = 0; // Poids additionnel, pas le poids total
+    } else if (exerciseType === 'weighted') {
+        const suggestion = await getSuggestedWeight(currentExercise.id);
+        defaultWeight = suggestion || calculateSuggestedWeight(currentExercise, availableWeights);
     }
     
-    // Adapter les labels selon le type d'exercice
-    const weightLabel = isBodyweight && !isTimeBased ? 
+    const weightLabel = isBodyweight ? 
+        isTimeBased ? 
+        'Charge additionnelle (kg)' : 
         'Charge additionnelle (kg)' : 
         isTimeBased ? 
         'Charge additionnelle (kg)' : 
@@ -312,7 +256,7 @@ async function showSetInput() {
                             <div class="weight-info">
                                 ${isBodyweight ? 
                                     `Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}` :
-                                    currentExercise.equipment.some(eq => eq.includes('barbell')) ?
+                                    usesBarbell ?
                                     `<div id="barbell-visualization" class="barbell-viz"></div>` :
                                     availableWeights.length > 0 ? 
                                     `Poids disponibles: ${availableWeights.slice(0, 5).join(', ')}${availableWeights.length > 5 ? '...' : ''} kg` : 
@@ -348,30 +292,28 @@ async function showSetInput() {
                     ${mlRepsSuggestion ? `
                         <div class="suggestion-info" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--primary);">
                             💡 ML suggère : ${mlRepsSuggestion.optimal} reps 
-                            ${mlRepsSuggestion.confidence > 0.7 ? '(haute confiance)' : ''}
+                            ${mlRepsSuggestion.confidence > 0.7 ? '(confiance élevée)' : ''}
                         </div>
                     ` : ''}
                 </div>
                 
-                <div class="selector-group">
-                    <label>Fatigue</label>
-                    <div class="emoji-selector" id="fatigueSelector">
-                        <span class="emoji-option" data-value="1" onclick="selectFatigue(1)">😄</span>
-                        <span class="emoji-option" data-value="2" onclick="selectFatigue(2)">🙂</span>
-                        <span class="emoji-option ${selectedFatigue === 3 ? 'selected' : ''}" data-value="3" onclick="selectFatigue(3)">😐</span>
-                        <span class="emoji-option" data-value="4" onclick="selectFatigue(4)">😓</span>
-                        <span class="emoji-option" data-value="5" onclick="selectFatigue(5)">😵</span>
+                <div class="input-group">
+                    <label>Fatigue musculaire</label>
+                    <div class="fatigue-selector">
+                        ${[1,2,3,4,5].map(i => `
+                            <button class="fatigue-level ${selectedFatigue === i ? 'selected' : ''}" 
+                                    onclick="selectFatigue(${i})">${'😊😐😓😰😵'.charAt(i-1)}</button>
+                        `).join('')}
                     </div>
                 </div>
                 
-                <div class="selector-group">
+                <div class="input-group">
                     <label>Effort perçu</label>
-                    <div class="emoji-selector" id="effortSelector">
-                        <span class="emoji-option" data-value="1" onclick="selectEffort(1)">🚶</span>
-                        <span class="emoji-option" data-value="2" onclick="selectEffort(2)">🏃</span>
-                        <span class="emoji-option ${selectedEffort === 3 ? 'selected' : ''}" data-value="3" onclick="selectEffort(3)">🏋️</span>
-                        <span class="emoji-option" data-value="4" onclick="selectEffort(4)">🔥</span>
-                        <span class="emoji-option" data-value="5" onclick="selectEffort(5)">🌋</span>
+                    <div class="effort-selector">
+                        ${[1,2,3,4,5].map(i => `
+                            <button class="effort-level ${selectedEffort === i ? 'selected' : ''}" 
+                                    onclick="selectEffort(${i})">${['💪','💪💪','🔥','🔥🔥','🌋'][i-1]}</button>
+                        `).join('')}
                     </div>
                 </div>
             </div>
@@ -380,37 +322,57 @@ async function showSetInput() {
                 <button class="btn btn-primary" onclick="completeSet()">
                     ✓ Valider la série
                 </button>
-                <button class="btn btn-secondary btn-sm" onclick="skipSet()">
-                    ⏭️ Passer
+                <button class="btn btn-secondary" onclick="skipSet()">
+                    ⚫ Passer le repos
+                </button>
+            </div>
+            
+            <div id="previousSets" class="previous-sets">
+                ${savedHistory}
+            </div>
+            
+            <div class="exercise-controls">
+                <button class="btn btn-secondary" onclick="finishExercise()">
+                    Terminer cet exercice
                 </button>
             </div>
         </div>
-        
-        <div id="previousSets" class="previous-sets">${savedHistory}</div>
-        
-        <button class="btn btn-secondary" onclick="finishExercise()">
-            Terminer cet exercice
-        </button>
     `;
     
+    // Si c'est un exercice au poids du corps, ajouter les boutons manuellement
+    if (isBodyweight && !isTimeBased) {
+        const weightInfo = container.querySelector('.weight-info');
+        if (weightInfo) {
+            const userWeight = currentUser?.weight || 75;
+            weightInfo.innerHTML = `
+                <div class="bodyweight-selector">
+                    <div class="weight-control-row">
+                        <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeightToNext(-1)">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                            </svg>
+                        </button>
+                        
+                        <div class="weight-display">
+                            <span class="bodyweight-label">Poids corps: ${userWeight}kg</span>
+                            <span class="additional-weight">+ <span id="additionalWeightDisplay">0</span>kg</span>
+                        </div>
+                        
+                        <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeightToNext(1)">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Démarrer les timers
     startTimers();
     
-    // Restaurer les valeurs de fatigue et effort sélectionnées
-    selectFatigue(Math.round(selectedFatigue));
-    selectEffort(selectedEffort);
-    
-    // Gestion des suggestions de poids basées sur l'historique
-    loadWeightSuggestion();
-    
-    // Scroll automatique vers les inputs sur mobile
-    setTimeout(() => {
-        const setTracker = document.querySelector('.set-tracker');
-        if (setTracker && window.innerWidth <= 768) {
-            setTracker.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }, 100);
-    
-    // Gérer le redimensionnement du viewport (clavier virtuel)
+    // Gérer le clavier virtuel sur mobile
     const handleViewportChange = () => {
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const isKeyboardOpen = viewportHeight < window.screen.height * 0.75;
@@ -444,11 +406,16 @@ async function showSetInput() {
     }, 500);
     
     attachWeightChangeListeners();
+    
+    // CORRECTION : Forcer la mise à jour pour les exercices avec barre
     setTimeout(() => {
-        if (currentExercise.equipment.some(eq => eq.includes('barbell'))) {
+        const container = document.getElementById('barbell-visualization');
+        if (container && currentExercise.equipment.some(eq => 
+            eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
+        )) {
             updateBarbellVisualization();
         }
-    }, 50);
+    }, 100);
     
     // Forcer la mise à jour des suggestions visuelles après un court délai
     setTimeout(() => {
@@ -962,12 +929,41 @@ async function completeSet() {
 function showGuidedExerciseCompletion(exerciseData) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
+    
+    // AJOUTER CES STYLES CSS INLINE
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    `;
+    
     modal.innerHTML = `
-        <div class="modal guided-completion-modal">
+        <div class="modal guided-completion-modal" style="
+            background: var(--dark-lighter);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        ">
             <h3>🎯 Exercice "${exerciseData.exercise_name}" terminé !</h3>
             <p><strong>Objectif :</strong> ${exerciseData.sets} séries</p>
             <p><strong>Réalisé :</strong> ${currentSetNumber} séries</p>
-            <div class="modal-actions">
+            <div class="modal-actions" style="
+                display: flex;
+                gap: 1rem;
+                margin-top: 1.5rem;
+                justify-content: center;
+            ">
                 <button class="btn btn-primary" onclick="document.querySelector('.modal-overlay').remove(); if(window.nextGuidedExercise) window.nextGuidedExercise();">
                     ➡️ Exercice suivant
                 </button>
