@@ -58,11 +58,25 @@ function showGuidedInterface() {
         document.getElementById('workoutInterface')?.offsetHeight > 0
     );
     
+    // Tentative de récupération du plan si manquant
+    if (!guidedWorkoutPlan) {
+        const savedPlan = localStorage.getItem('guidedWorkoutPlan');
+        if (savedPlan) {
+            guidedWorkoutPlan = JSON.parse(savedPlan);
+            console.log('✅ Plan récupéré depuis localStorage');
+        }
+    }
+    
     // Vérification préalable du plan
     if (!guidedWorkoutPlan || !guidedWorkoutPlan.exercises || guidedWorkoutPlan.exercises.length === 0) {
         console.error('❌ [ERROR] Plan de séance guidée manquant ou vide');
-        showToast('Erreur : Plan de séance non disponible', 'error');
-        showGuidedWorkoutError('Plan de séance non disponible');
+        
+        // AJOUT: Proposer de retourner au dashboard ou d'abandonner
+        if (confirm('Plan de séance non disponible. Voulez-vous abandonner cette séance ?')) {
+            if (window.abandonWorkout) {
+                window.abandonWorkout();
+            }
+        }
         return;
     }
     

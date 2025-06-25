@@ -1760,6 +1760,42 @@ async function getLastWorkoutDate() {
     }
 }
 
+async function forceDeleteAllWorkouts() {
+    if (!confirm('⚠️ ATTENTION: Ceci supprimera TOUTES les séances, y compris celle en cours. Continuer ?')) {
+        return;
+    }
+    
+    try {
+        // Nettoyer localStorage d'abord
+        localStorage.removeItem('currentWorkout');
+        localStorage.removeItem('guidedWorkoutPlan');
+        localStorage.removeItem('guidedWorkoutProgress');
+        localStorage.removeItem('workoutType');
+        localStorage.removeItem('currentSessionHistory');
+        
+        // Appeler l'API de suppression
+        const response = await fetch(`/api/users/${currentUser.id}/workout-history`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression');
+        }
+        
+        const result = await response.json();
+        showToast(`${result.deleted_workouts} séances supprimées`, 'success');
+        
+        // Recharger la page pour un état propre
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Erreur suppression forcée:', error);
+        showToast('Erreur lors de la suppression', 'error');
+    }
+}
+
 // ===== AFFICHER LES AJUSTEMENTS DE PROGRAMME =====
 async function showProgramAdjustments() {
     // Pour l'instant, rediriger vers le générateur
@@ -1831,6 +1867,7 @@ window.startAdaptiveWorkout = startAdaptiveWorkout;
 window.modifyAdaptiveWorkout = modifyAdaptiveWorkout;
 window.showExerciseAlternatives = showExerciseAlternatives;
 window.replaceExercise = replaceExercise;
+window.forceDeleteAllWorkouts = forceDeleteAllWorkouts;
 
 // Export pour les autres modules
 export {

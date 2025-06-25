@@ -120,47 +120,25 @@ export async function checkActiveWorkout() {
     if (!currentUser) return null;
     
     try {
-        // D'abord vérifier localStorage
-        const savedWorkout = localStorage.getItem('currentWorkout');
-        if (savedWorkout) {
-            const workout = JSON.parse(savedWorkout);
-            
-            // Vérifier que c'est bien pour cet utilisateur
-            if (workout.user_id === currentUser.id && workout.status !== 'completed') {
-                // Vérifier avec le serveur que la session existe toujours
-                const serverWorkout = await getWorkoutStatus(workout.id);
-                if (serverWorkout && (serverWorkout.status === 'started' || serverWorkout.status === 'paused')) {
-                    setCurrentWorkout(serverWorkout);
-                    startWorkoutMonitoring();
-                    syncPendingSets();
-                    
-                    // Récupérer l'historique de session si disponible
-                    const savedHistory = localStorage.getItem('currentSessionHistory');
-                    if (savedHistory) {
-                        const history = JSON.parse(savedHistory);
-                        history.forEach(entry => {
-                            if (window.addToSessionHistory) {
-                                window.addToSessionHistory(entry.type, entry.data);
-                            }
-                        });
-                    }
-                    
-                    syncInterExerciseRests();
-                    return serverWorkout;
-                }
-            }
-            
-            // Si pas valide, nettoyer
-            localStorage.removeItem('currentWorkout');
-        }
-        
-        // Vérifier côté serveur
+        // Vérifier le serveur
         const activeWorkout = await getActiveWorkout(currentUser.id);
         if (activeWorkout) {
             setCurrentWorkout(activeWorkout);
             localStorage.setItem('currentWorkout', JSON.stringify(activeWorkout));
             startWorkoutMonitoring();
             syncPendingSets();
+            
+            // AJOUT: Récupérer le plan guidé si c'est une séance adaptative
+            if (activeWorkout.type === 'adaptive') {
+                const savedPlan = localStorage.getItem('guidedWorkoutPlan');
+                if (!savedPlan) {
+                    // Si pas de plan sauvegardé, essayer de le récupérer depuis le workout
+                    const adaptiveData = getCurrentAdaptiveWorkout();
+                    if (adaptiveData) {
+                        localStorage.setItem('guidedWorkoutPlan', JSON.stringify(adaptiveData));
+                    }
+                }
+            }
             
             // Récupérer l'historique de session si disponible
             const savedHistory = localStorage.getItem('currentSessionHistory');
@@ -179,10 +157,10 @@ export async function checkActiveWorkout() {
         console.error('Erreur vérification workout actif:', error);
     }
     
-    // Si on arrive ici, il n'y a pas de session active
-    // Nettoyer le localStorage pour éviter des incohérences futures
+    // Nettoyer si pas de session active
     localStorage.removeItem('currentWorkout');
     localStorage.removeItem('currentSessionHistory');
+    localStorage.removeItem('guidedWorkoutPlan');
     return null;
 }
 

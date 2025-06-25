@@ -357,7 +357,6 @@ def delete_workout_history(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     
     try:
-        # Utiliser SQL brut pour éviter les problèmes de contraintes
         from sqlalchemy import text
         
         # Supprimer d'abord les sets
@@ -368,16 +367,15 @@ def delete_workout_history(user_id: int, db: Session = Depends(get_db)):
             )
         """), {"user_id": user_id})
         
-        # Puis les workouts
+        # MODIFICATION: Supprimer TOUTES les workouts (y compris actives)
         count = db.query(Workout).filter(
-            Workout.user_id == user_id,
-            Workout.status.in_(["completed", "abandoned"])
-        ).count()
+            Workout.user_id == user_id
+        ).count()  # Retirer la condition sur le status
+        
         db.execute(text("""
             DELETE FROM workouts 
-            WHERE user_id = :user_id 
-            AND status IN ('completed', 'abandoned')
-        """), {"user_id": user_id})
+            WHERE user_id = :user_id
+        """), {"user_id": user_id})  # Retirer la condition AND status IN
         
         db.commit()
         
