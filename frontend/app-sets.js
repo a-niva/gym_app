@@ -463,7 +463,8 @@ function updateBarbellVisualization() {
     
     // Si pas de poids valide, ne pas afficher d'erreur
     if (totalWeight === 0 && !currentExercise.equipment.includes('poids_du_corps')) {
-        container.innerHTML = '<div class="barbell-info">Sélectionnez un poids</div>';
+        // Toujours afficher l'interface avec boutons, même si le poids est 0
+        container.innerHTML = createSimplifiedWeightInterface(0);
         return;
     }
     
@@ -629,11 +630,13 @@ function attachWeightChangeListeners() {
     if (weightInput) {
         // Mettre à jour à chaque changement
         weightInput.addEventListener('input', updateBarbellVisualization);
-        // Mise à jour initiale
-        updateBarbellVisualization();
         
-        // Mettre à jour le scintillement après un court délai pour s'assurer que les boutons sont dans le DOM
+        // NOUVEAU : S'assurer que la mise à jour initiale se fait même si la valeur est déjà présente
         setTimeout(() => {
+            // Forcer la mise à jour si une valeur existe
+            if (weightInput.value && parseFloat(weightInput.value) > 0) {
+                updateBarbellVisualization();
+            }
             updateWeightSuggestionVisual();
         }, 100);
     }
@@ -832,10 +835,9 @@ async function completeSet() {
         return;
     }
     
-    const setDuration = setStartTime ? 
-        Math.floor((new Date() - setStartTime) / 1000) : 0;
+    const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
     
-    const weight = parseFloat(weightInput.value);
+    let weight = parseFloat(weightInput.value);  // Changé en 'let' au lieu de 'const'
     const reps = parseInt(repsInput.value);
     
     // Validation des valeurs
@@ -861,11 +863,15 @@ async function completeSet() {
         return;
     }
     
-    // Validation équipement si applicable
-    const validationResult = validateWeight(weight);
-    if (!validationResult.isValid) {
-        showToast(validationResult.message, 'error');
-        return;
+    // Validation équipement si applicable (NOUVEAU CODE ICI)
+    if (!isWeightPossible(currentExercise, weight)) {
+        const validated = validateWeight(currentExercise, weight);
+        if (validated !== weight) {
+            showToast(`Poids ajusté à ${validated}kg (le plus proche possible)`, 'warning');
+            weightInput.value = validated;
+            // Mettre à jour la variable weight avec la valeur validée
+            weight = validated;
+        }
     }
     
     // Préparation des données de la série
@@ -875,8 +881,8 @@ async function completeSet() {
         set_number: currentSetNumber,
         target_reps: parseInt(currentTargetReps) || reps,
         actual_reps: reps,
-        weight: weight,
-        rest_time: 0, // Sera mis à jour plus tard
+        weight: weight,  // Utilisera le poids validé si ajusté
+        rest_time: 0,
         fatigue_level: Math.round(selectedFatigue),
         perceived_exertion: selectedEffort,
         timestamp: new Date().toISOString(),

@@ -467,6 +467,19 @@ function preConfigureExerciseInterface(exerciseData) {
     const weightInput = document.getElementById('weightInput');
     if (weightInput && exerciseData.suggested_weight) {
         weightInput.value = exerciseData.suggested_weight;
+        
+        // NOUVEAU : Forcer la mise à jour de la visualisation
+        // Attendre que le DOM soit prêt puis déclencher la mise à jour
+        setTimeout(() => {
+            // Déclencher manuellement l'événement input pour mettre à jour la visualisation
+            const event = new Event('input', { bubbles: true });
+            weightInput.dispatchEvent(event);
+            
+            // S'assurer que la fonction est appelée directement aussi
+            if (window.updateBarbellVisualization) {
+                window.updateBarbellVisualization();
+            }
+        }, 100);
     }
     
     // Pré-remplir les répétitions cibles
