@@ -2634,11 +2634,21 @@ select.form-input {
 }
 
 /* Forcer la visibilité des boutons dans les séances adaptées */
-.barbell-viz .weight-btn,
-.barbell-card-integrated .weight-btn {
+.weight-btn, .weight-btn {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
+}
+
+.barbell-viz {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.barbell-viz .barbell-card-integrated {
+    width: 100%;
+    max-width: 400px;
 }
 
 /* Animation de scintillement pour séance adaptée */

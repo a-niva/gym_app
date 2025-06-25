@@ -279,20 +279,20 @@ async function showSetInput() {
                             <input type="hidden" id="setWeight" value="${defaultWeight}">
                             ${isBodyweight ? 
                                 `<span class="weight-info">Poids du corps: ${currentUser?.weight || 75}kg${availableWeights.length > 1 ? ' • Lest disponible: ' + availableWeights.filter(w => w > 0).join(', ') + 'kg' : ''}</span>` :
-                                // Toujours afficher l'interface avec boutons pour les exercices avec poids
-                                `<div id="barbell-visualization" class="barbell-viz">${createSimplifiedWeightInterface(defaultWeight)}</div>`}
+                                `<div id="barbell-visualization" class="barbell-viz"></div>`}
                         </div>
                         <div class="weight-suggestion-line">
                             <div id="weightSuggestion" class="suggestion-hint">
                                 ${mlSuggestion ? `💡 Suggestion ML : ${mlSuggestion}kg${mlSuggestion !== defaultWeight ? ` (${mlSuggestion > defaultWeight ? '+' : ''}${(mlSuggestion - defaultWeight).toFixed(1)}kg)` : ''}` : ''}
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="autoWeightToggle" 
-                                    ${isAutoWeightEnabled ? 'checked' : ''} 
-                                    onchange="toggleAutoWeight(this.checked)">
-                                <span class="toggle-slider"></span>
-                                <span class="toggle-label">Auto</span>
-                            </label>
+                            ${mlSuggestion ? `
+                                <label class="toggle-switch">
+                                    <input type="checkbox" ${isAutoWeightEnabled ? 'checked' : ''} 
+                                        onchange="toggleAutoWeight(this.checked)">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">Auto</span>
+                                </label>
+                            ` : ''}
                         </div>
                     </div>
                 ` : '<input type="hidden" id="setWeight" value="0">'}
@@ -405,6 +405,13 @@ async function showSetInput() {
     // Démarrer les timers
     startTimers();
     setSetStartTime(new Date());
+    // Forcer la mise à jour de la visualisation pour tous les exercices avec poids
+    if (!isBodyweight && !isTimeBased) {
+        setTimeout(() => {
+            updateBarbellVisualization();
+            updateWeightSuggestionVisual();
+        }, 100);
+    }
     // Mettre à jour la visualisation après création du DOM
     setTimeout(() => {
         if (window.updateBarbellVisualization) {
@@ -466,63 +473,46 @@ async function showSetInput() {
 // ===== VISUALISATION DE LA BARRE =====
 function updateBarbellVisualization() {
     const container = document.getElementById('barbell-visualization');
-    if (!container) {
-        console.warn('Container barbell-visualization non trouvé');
-        return;
-    }
+    if (!container) return;
     
     const weightInput = document.getElementById('setWeight');
     if (!weightInput) return;
     
     const totalWeight = parseFloat(weightInput.value) || 0;
     
-    // AJOUT : Créer l'interface même pour les exercices sans équipement configuré
     if (!currentExercise) {
         container.innerHTML = createSimplifiedWeightInterface(totalWeight);
         return;
     }
     
-    // TOUJOURS afficher l'interface avec boutons, même sans barre
+    // Déterminer si l'exercice utilise une barre
     const usesBarbell = currentExercise.equipment.some(eq => 
         eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
     );
     
-    if (!usesBarbell) {
-        // Pour les exercices sans barre (haltères, etc.), afficher l'interface simplifiée
+    // Pour les exercices avec barre ET disques configurés
+    if (usesBarbell && currentUser?.equipment_config?.disques?.weights && 
+        Object.keys(currentUser.equipment_config.disques.weights).length > 0) {
+        
+        const barWeight = getBarWeightForExercise(currentExercise);
+        const platesWeight = totalWeight - barWeight;
+        
+        if (platesWeight >= 0) {
+            const platesPerSide = calculateOptimalPlateDistribution(platesWeight / 2);
+            container.innerHTML = createBarbellHTML(barWeight, platesPerSide);
+        } else {
+            container.innerHTML = createSimplifiedWeightInterface(barWeight);
+        }
+    } else {
+        // Pour tous les autres cas : afficher l'interface simplifiée avec boutons
         container.innerHTML = createSimplifiedWeightInterface(totalWeight);
-        return;
     }
     
-    // Si pas de poids valide, ne pas afficher d'erreur
-    if (totalWeight === 0 && !currentExercise.equipment.includes('poids_du_corps')) {
-        // Toujours afficher l'interface avec boutons, même si le poids est 0
-        container.innerHTML = createSimplifiedWeightInterface(0);
-        return;
-    }
-    
-    // Déterminer le poids de la barre
-    const barWeight = getBarWeightForExercise(currentExercise);
-    const platesWeight = totalWeight - barWeight;
-    
-    if (platesWeight < 0) {
-        // Afficher l'interface quand même, mais avec juste la barre
-        container.innerHTML = createSimplifiedWeightInterface(barWeight);
-        return;
-    }
-    
-    // Calculer la distribution optimale des disques
-    const platesPerSide = calculateOptimalPlateDistribution(platesWeight / 2);
-
-    // Si pas de disques configurés, afficher une interface simplifiée
-    if (!currentUser?.equipment_config?.disques?.weights || Object.keys(currentUser.equipment_config.disques.weights).length === 0) {
-        container.innerHTML = createSimplifiedWeightInterface(totalWeight);
-        return;
-    }
-
-    // Créer la visualisation normale
-    container.innerHTML = createBarbellHTML(barWeight, platesPerSide);
+    // Réappliquer les suggestions visuelles après mise à jour du DOM
+    setTimeout(() => {
+        updateWeightSuggestionVisual();
+    }, 50);
 }
-
 function getBarWeightForExercise(exercise) {
     if (!currentUser?.equipment_config) return 20;
     const config = currentUser.equipment_config;
@@ -1140,18 +1130,20 @@ async function skipSet() {
 function toggleAutoWeight(enabled) {
     setIsAutoWeightEnabled(enabled);
     
+    const mlSuggestion = window.currentMLSuggestion;
+    
     if (!enabled) {
         showToast('Ajustement automatique désactivé', 'info');
-        updateWeightSuggestionVisual();  // REMPLACER le commentaire
     } else {
         showToast('Ajustement automatique activé', 'info');
-        const mlSuggestion = window.currentMLSuggestion;
         if (mlSuggestion) {
             document.getElementById('setWeight').value = mlSuggestion;
             updateBarbellVisualization();
         }
-        updateWeightSuggestionVisual();  // AJOUTER ICI AUSSI
     }
+    
+    // Toujours mettre à jour le visuel
+    updateWeightSuggestionVisual();
 }
 
 window.toggleAutoWeight = toggleAutoWeight;
