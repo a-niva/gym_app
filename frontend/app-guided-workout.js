@@ -570,8 +570,12 @@ function nextGuidedExercise() {
             completedExercises: currentExerciseIndex
         }));
         
+        // Afficher la nouvelle interface
         showGuidedInterface();
-        showToast(`Exercice ${currentExerciseIndex + 1}/${guidedWorkoutPlan.exercises.length}`, 'info');
+        
+        // Notification avec le nom de l'exercice suivant
+        const nextExercise = guidedWorkoutPlan.exercises[currentExerciseIndex];
+        showToast(`➡️ ${nextExercise.exercise_name} (${currentExerciseIndex + 1}/${guidedWorkoutPlan.exercises.length})`, 'info');
     } else {
         // Tous les exercices terminés
         showWorkoutCompletion();
@@ -650,26 +654,6 @@ function finishWorkoutEarly() {
     }
     
     showWorkoutCompletion();
-}
-
-function showGuidedExerciseCompletion(exerciseData) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal guided-completion-modal">
-            <h3>Exercice "${exerciseData.exercise_name}" terminé !</h3>
-            <p>Objectif : ${exerciseData.sets} séries - Réalisé : ${currentSetNumber}</p>
-            <div class="modal-actions">
-                <button class="btn btn-primary" onclick="nextGuidedExercise()">
-                    Exercice suivant
-                </button>
-                <button class="btn btn-secondary" onclick="continueCurrentExercise()">
-                    Faire une série de plus
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
 }
 
 function continueCurrentExercise() {

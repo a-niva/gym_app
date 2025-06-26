@@ -1157,7 +1157,23 @@ function showGuidedExerciseCompletion(exerciseData) {
                 margin-top: 1.5rem;
                 justify-content: center;
             ">
-                <button class="btn btn-primary" onclick="document.querySelector('.modal-overlay').remove(); if(window.nextGuidedExercise) window.nextGuidedExercise();">
+                <button class="btn btn-primary" onclick="
+                    // Fermer la modal
+                    document.querySelector('.modal-overlay').remove(); 
+                    // Nettoyer l'interface d'exercice
+                    const exerciseArea = document.getElementById('exerciseArea');
+                    if (exerciseArea) {
+                        exerciseArea.innerHTML = '';
+                        exerciseArea.style.display = 'none';
+                    }
+                    // Réafficher mainContent
+                    const mainContent = document.getElementById('mainContent');
+                    if (mainContent) {
+                        mainContent.style.display = 'block';
+                    }
+                    // Passer à l'exercice suivant
+                    if(window.nextGuidedExercise) window.nextGuidedExercise();
+                ">
                     ➡️ Exercice suivant
                 </button>
                 <button class="btn btn-secondary" onclick="document.querySelector('.modal-overlay').remove();">
