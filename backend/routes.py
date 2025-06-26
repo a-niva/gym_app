@@ -190,6 +190,16 @@ async def generate_adaptive_workout(
     db: Session = Depends(get_db)
 ):
     """Génère une séance adaptative intelligente basée sur les besoins actuels"""
+    logger.info("=== DEBUT generate_adaptive_workout ===")
+    try:
+        ml_engine = FitnessMLEngine(db)
+        logger.info("✅ FitnessMLEngine créé")
+        workout_data = ml_engine.generate_adaptive_workout(user, time_available)
+    except Exception as e:
+        logger.error(f"❌ ERREUR EXACTE: {type(e).__name__}: {str(e)}")
+        logger.error(f"❌ TRACEBACK:", exc_info=True)
+        raise
+
     logger.info(f"🎯 [API] Demande séance adaptative user {user_id}, temps: {time_available}min")
     
     # Validation utilisateur
