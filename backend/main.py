@@ -435,13 +435,27 @@ def update_adaptive_targets_volume(user_id: int, db: Session):
         Workout.status == "completed"
     ).group_by(Exercise.body_part).all()
     
-    # Mettre à jour chaque target
+    # CORRECTION : Réinitialiser TOUS les targets, pas seulement ceux travaillés
+    all_targets = db.query(AdaptiveTargets).filter(
+        AdaptiveTargets.user_id == user_id
+    ).all()
+
+    # D'abord, mettre tous les volumes à 0
+    for target in all_targets:
+        target.current_volume = 0.0
+
+    # CORRECTION : Réinitialiser TOUS les targets d'abord
+    all_targets = db.query(AdaptiveTargets).filter(
+        AdaptiveTargets.user_id == user_id
+    ).all()
+
+    # Mettre tous les volumes à 0 (important pour les muscles non travaillés)
+    for target in all_targets:
+        target.current_volume = 0.0
+
+    # Puis mettre à jour uniquement ceux qui ont du volume
     for muscle, volume in volume_by_muscle:
-        target = db.query(AdaptiveTargets).filter(
-            AdaptiveTargets.user_id == user_id,
-            AdaptiveTargets.muscle_group == muscle
-        ).first()
-        
+        target = next((t for t in all_targets if t.muscle_group == muscle), None)
         if target:
             target.current_volume = float(volume or 0)
             target.last_trained = datetime.utcnow()
@@ -1227,6 +1241,26 @@ def init_adaptive_targets(user_id: int, db: Session = Depends(get_db)):
     db.commit()
     update_adaptive_targets_volume(user_id, db)
     return {"status": "initialized"}
+
+@app.post("/api/users/{user_id}/reset-adaptive-volumes")
+def reset_adaptive_volumes(user_id: int, db: Session = Depends(get_db)):
+    """Reset et recalcule les volumes adaptatifs"""
+    from backend.models import AdaptiveTargets
+    
+    # Réinitialiser tous les volumes à 0
+    targets = db.query(AdaptiveTargets).filter(
+        AdaptiveTargets.user_id == user_id
+    ).all()
+    
+    for target in targets:
+        target.current_volume = 0.0
+    
+    db.commit()
+    
+    # Recalculer proprement
+    update_adaptive_targets_volume(user_id, db)
+    
+    return {"status": "volumes_reset", "targets_updated": len(targets)}
 
 @app.delete("/api/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):

@@ -1232,7 +1232,15 @@ class VolumeOptimizer:
             elif focus_level == "never":
                 exp_mult *= 0.3  # Minimum vital pour éviter les blessures
         
-        return int(base_volume * exp_mult)
+            realistic_volumes = {
+                "force": 4000,      # Moins de volume, charges lourdes
+                "hypertrophie": 6000,   # Volume modéré-élevé
+                "endurance": 8000,   # Volume élevé, charges légères
+                "général": 5000      # Équilibré
+            }
+
+            base_volume = realistic_volumes.get(primary_goal, 5000)
+            return int(base_volume * exp_mult)
     
     def get_volume_deficit(self, user: User) -> Dict[str, float]:
         """Retourne les muscles en retard sur leur volume cible"""

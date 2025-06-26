@@ -266,9 +266,25 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                 row-gap: 2rem;
             ">
                 ${targets.map((target, index) => {
-                    const percentage = target.target_volume > 0 
+                    // S'assurer que le pourcentage reste raisonnable
+                    let percentage = target.target_volume > 0 
                         ? Math.round((target.current_volume / target.target_volume) * 100)
                         : 0;
+
+                    // Protection contre les valeurs aberrantes
+                    if (percentage > 150) {
+                        console.warn(`Pourcentage aberrant pour ${target.muscle_group}: ${percentage}%`);
+                        percentage = 100; // Plafonner visuellement
+                    }
+
+                    // AJOUT: Log pour debugger si nécessaire
+                    if (percentage > 100) {
+                        console.warn(`Pourcentage anormal pour ${target.muscle_group}:`, {
+                            current: target.current_volume,
+                            target: target.target_volume,
+                            percentage: percentage
+                        });
+                    }
                     
                     // Gradients uniques par muscle
                     const gradients = {
@@ -359,7 +375,7 @@ async function showAdaptiveDashboard(container, commitment, hasProgram) {
                                     -webkit-text-fill-color: transparent;
                                     background-clip: text;
                                 ">
-                                    ${percentage}%
+                                    ${Math.min(100, percentage)}%
                                 </div>
                             </div>
                             

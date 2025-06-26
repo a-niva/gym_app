@@ -398,10 +398,11 @@ async function startCurrentExercise() {
             exerciseArea.id = 'exerciseArea';
             exerciseArea.style.cssText = 'width: 100%; min-height: 400px; padding: 1rem;';
             
-            // Masquer mainContent s'il existe
+            // Masquer mainContent s'il existe ET vider son contenu
             const mainContent = workoutInterface.querySelector('#mainContent');
             if (mainContent) {
                 mainContent.style.display = 'none';
+                mainContent.innerHTML = ''; // NOUVEAU : vider le contenu pour éviter la zone vide
             }
             
             workoutInterface.appendChild(exerciseArea);
@@ -479,8 +480,8 @@ function preConfigureExerciseInterface(exerciseData) {
         exerciseInfo.appendChild(targetInfo);
     }
     
-    // Pré-remplir le poids suggéré
-    const weightInput = document.getElementById('weightInput');
+    // Pré-remplir le poids suggéré - CORRECTION: utiliser le bon ID
+    const weightInput = document.getElementById('setWeight'); // CHANGEMENT: weightInput -> setWeight
     if (weightInput && exerciseData.suggested_weight) {
         weightInput.value = exerciseData.suggested_weight;
         
@@ -498,8 +499,8 @@ function preConfigureExerciseInterface(exerciseData) {
         }, 100);
     }
     
-    // Pré-remplir les répétitions cibles
-    const repsInput = document.getElementById('repsInput');
+    // Pré-remplir les répétitions cibles - CORRECTION: utiliser le bon ID
+    const repsInput = document.getElementById('setReps'); // CHANGEMENT: repsInput -> setReps
     if (repsInput && exerciseData.target_reps) {
         repsInput.value = exerciseData.target_reps;
     }

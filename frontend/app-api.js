@@ -563,6 +563,29 @@ async function getAdaptiveTargets(userId) {
         if (!response.ok) throw new Error('Failed to get adaptive targets');
         
         const data = await response.json();
+        
+        // NOUVEAU : Détecter et corriger les valeurs aberrantes
+        const hasAberrantValues = data.some(t => 
+            t.target_volume > 0 && t.current_volume / t.target_volume > 10
+        );
+        
+        if (hasAberrantValues) {
+            console.warn('Valeurs aberrantes détectées dans adaptive targets, reset...');
+            
+            // Appeler le reset
+            await fetch(`${API_BASE_URL}/users/${userId}/reset-adaptive-volumes`, {
+                method: 'POST'
+            });
+            
+            // Recharger les données propres
+            const cleanResponse = await fetch(`${API_BASE_URL}/users/${userId}/adaptive-targets`);
+            if (cleanResponse.ok) {
+                const cleanData = await cleanResponse.json();
+                setAdaptiveTargets(cleanData);
+                return cleanData;
+            }
+        }
+        
         setAdaptiveTargets(data);
         return data;
     } catch (error) {
