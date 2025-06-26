@@ -81,6 +81,51 @@ class FitnessMLEngine:
         
         return (n * sum_xy - sum_x * sum_y) / denominator
     
+    def get_user_available_equipment(self, user: User) -> List[str]:
+        """Centralise la logique de détection d'équipement"""
+        if not user.equipment_config:
+            return ["poids_du_corps"]
+        
+        config = user.equipment_config
+        available_equipment = ["poids_du_corps"]  # Toujours disponible
+        
+        # Barres
+        for barre_type, barre_config in config.get("barres", {}).items():
+            if barre_config.get("available", False):
+                if barre_type in ["olympique", "courte"]:
+                    available_equipment.append("barre_olympique")
+                elif barre_type == "ez":
+                    available_equipment.append("barre_ez")
+        
+        # Haltères
+        if config.get("halteres", {}).get("available", False):
+            available_equipment.append("halteres")
+        
+        # Équivalence barres courtes = haltères si paire + disques
+        barres_courtes = config.get("barres", {}).get("courte", {})
+        if (barres_courtes.get("available", False) and 
+            barres_courtes.get("count", 0) >= 2 and 
+            config.get("disques", {}).get("available", False) and
+            "halteres" not in available_equipment):
+            available_equipment.append("halteres")
+        
+        # Banc
+        if config.get("banc", {}).get("available", False):
+            available_equipment.append("banc_plat")
+            if config["banc"].get("inclinable_haut", False):
+                available_equipment.append("banc_inclinable")
+        
+        # Élastiques
+        if config.get("elastiques", {}).get("available", False):
+            available_equipment.append("elastiques")
+        
+        # Autres
+        autres = config.get("autres", {})
+        if autres.get("barre_traction", {}).get("available", False):
+            available_equipment.append("barre_traction")
+        
+        return available_equipment
+
     def calculate_starting_weight(self, user: User, exercise: Exercise) -> float:
         """
         Calcule le poids de départ pour un exercice basé sur:
@@ -116,39 +161,6 @@ class FitnessMLEngine:
         else:
             # Estimation initiale basée sur le niveau et le type d'exercice
             return self._estimate_initial_weight(user, exercise)
-    
-    def predict_next_session_performance(
-        self,
-        user: User,
-        exercise: Exercise,
-        target_sets: int,
-        target_reps: int
-    ) -> Dict:
-        """
-        Prédit la performance pour la prochaine session
-        """
-        # Récupérer l'historique récent
-        history = self.db.query(Set).join(Workout).filter(
-            Workout.user_id == user.id,
-            Set.exercise_id == exercise.id,
-            Set.skipped == False
-        ).order_by(Set.completed_at.desc()).limit(5).all()
-        
-        if history:
-            # Utiliser le dernier poids comme base
-            predicted_weight = history[0].weight
-            
-            # Ajuster selon la performance récente
-            if history[0].actual_reps >= history[0].target_reps:
-                predicted_weight *= 1.025  # Augmentation de 2.5%
-        else:
-            # Pas d'historique, utiliser le calcul de départ
-            predicted_weight = self.calculate_starting_weight(user, exercise)
-        
-        return {
-            "predicted_weight": round(predicted_weight, 2),
-            "confidence": "high" if len(history) >= 3 else "low"
-        }
 
     def _estimate_initial_weight(self, user: User, exercise: Exercise) -> float:
         """
@@ -368,7 +380,7 @@ class FitnessMLEngine:
             exercise=self.db.query(Exercise).filter(
                 Exercise.id == current_set.exercise_id
             ).first(),
-            current_fatigue=current_set.fatigue_level / 2,  # Normaliser sur 5
+            current_fatigue=round(current_set.fatigue_level / 2),  # Convertir échelle 1-10 vers 1-5
             recent_performance=recent_sets,
             remaining_sets=remaining_sets
         )
@@ -1111,42 +1123,38 @@ class FitnessMLEngine:
         }
     
     def calculate_weight_for_exercise(self, user: User, exercise: Exercise, reps: int) -> float:
-        """Calcule le poids pour un exercice donné avec gestion d'erreur robuste"""
+        """Calcule le poids suggéré avec gestion d'erreur robuste"""
         try:
-            # Validation des paramètres d'entrée
             if not user or not exercise:
                 logger.warning("Paramètres invalides pour calculate_weight_for_exercise")
-                return 20.0
-                
+                return self._get_default_weight_for_exercise(exercise)
+            
             prediction = self.predict_next_session_performance(user, exercise, 3, reps)
+            weight = prediction.get("predicted_weight", 0)
             
-            # Validation du résultat
-            if not prediction or "predicted_weight" not in prediction:
-                logger.warning(f"Prédiction invalide pour {exercise.name_fr}")
+            # Validation du poids
+            if 0 < weight <= 500:
+                return weight
+            else:
+                logger.info(f"Poids hors limites ({weight}kg) pour {exercise.name_fr}, utilisation du poids de départ")
                 return self.calculate_starting_weight(user, exercise)
                 
-            weight = float(prediction.get("predicted_weight", 20.0))
-            
-            # Validation du poids (doit être positif et raisonnable)
-            if weight <= 0 or weight > 500:
-                logger.warning(f"Poids invalide {weight} pour {exercise.name_fr}")
-                return self.calculate_starting_weight(user, exercise)
-                
-            return weight
-            
         except Exception as e:
-            logger.error(f"Exception dans calculate_weight_for_exercise pour {exercise.name_fr}: {e}")
-            # Fallback vers calculate_starting_weight
-            try:
-                return self.calculate_starting_weight(user, exercise)
-            except Exception as e2:
-                logger.error(f"Erreur fallback calculate_starting_weight: {e2}")
-                # Dernier recours : poids par défaut selon niveau
-                defaults = {
-                    "débutant": 10.0, "intermédiaire": 20.0, "avancé": 30.0,
-                    "élite": 40.0, "extrême": 50.0
-                }
-                return defaults.get(user.experience_level, 20.0)
+            logger.error(f"Erreur calculate_weight pour {exercise.name_fr}: {str(e)}", exc_info=True)
+            # Fallback simple basé sur le type d'exercice
+            return self._get_default_weight_for_exercise(exercise)
+
+    def _get_default_weight_for_exercise(self, exercise: Exercise) -> float:
+        """Retourne un poids par défaut sécurisé selon le type d'exercice"""
+        defaults = {
+            "Pectoraux": 40.0,
+            "Dos": 50.0,
+            "Jambes": 60.0,
+            "Deltoïdes": 20.0,
+            "Bras": 15.0,
+            "Abdominaux": 0.0
+        }
+        return defaults.get(exercise.body_part, 20.0)
 
 # ========== NOUVEAUX MODULES PHASE 2.2 ==========
 
@@ -1270,19 +1278,19 @@ class SessionBuilder:
         """Construction d'une séance optimisée avec limitation intelligente"""
 
         # AJOUTER au début (après les logs existants) :
-        # Calculer le nombre max d'exercices selon le temps disponible
+        # Adapter le nombre d'exercices au temps disponible
         if time_budget <= 30:
-            max_total_exercises = 2
-            max_per_muscle = 1
-        elif time_budget <= 45:
             max_total_exercises = 3
-            max_per_muscle = 2  # Max 2 exercices par muscle
-        elif time_budget <= 60:
+            max_per_muscle = 2
+        elif time_budget <= 45:
             max_total_exercises = 4
             max_per_muscle = 2
-        else:
+        elif time_budget <= 60:
             max_total_exercises = 5
             max_per_muscle = 2
+        else:
+            max_total_exercises = 8
+            max_per_muscle = 3
 
         logger.info(f"Time budget: {time_budget}min -> Max {max_total_exercises} exercises total, {max_per_muscle} per muscle")
 
@@ -1435,63 +1443,24 @@ class SessionBuilder:
                 })
                 
         return session 
+    
     def _check_equipment_availability(self, exercise: Exercise, user: User) -> bool:
         """Vérifie si l'équipement nécessaire est disponible"""
         if not exercise.equipment:
             return True
         
-        # Utiliser la même logique que get_available_exercises de FitnessMLEngine
-        config = user.equipment_config or {}
-        available_equipment = []
-        
-        # Barres
-        for barre_type, barre_config in config.get("barres", {}).items():
-            if barre_config.get("available", False):
-                if barre_type in ["olympique", "courte"]:
-                    available_equipment.append("barre_olympique")
-                elif barre_type == "ez":
-                    available_equipment.append("barre_ez")
-                    
-                # Équivalence barre courte = dumbbells (si paire + disques)
-                if (barre_type == "courte" and barre_config.get("count", 0) >= 2 and 
-                    config.get("disques", {}).get("available", False)):
-                    available_equipment.append("dumbbells")
-
-        # Haltères
-        if config.get("dumbbells", {}).get("available", False):
-            available_equipment.append("dumbbells")
-            
-        # Poids du corps toujours disponible
-        available_equipment.append("poids_du_corps")
-        
-        # Banc
-        if config.get("banc", {}).get("available", False):
-            available_equipment.append("banc_plat")
-            if config["banc"].get("inclinable_haut", False):
-                available_equipment.append("banc_inclinable")
-            if config["banc"].get("inclinable_bas", False):
-                available_equipment.append("banc_declinable")
-
-        # Élastiques
-        if config.get("elastiques", {}).get("available", False):
-            available_equipment.append("elastiques")
-
-        # Autres équipements
-        autres = config.get("autres", {})
-        if autres.get("kettlebell", {}).get("available", False):
-            available_equipment.append("kettlebell")
-        if autres.get("barre_traction", {}).get("available", False):
-            available_equipment.append("barre_traction")
-        
-        # Vérifier compatibilité
+        available_equipment = self.get_user_available_equipment(user)
         exercise_equipment = exercise.equipment or []
-        compatible = not exercise_equipment or any(eq in available_equipment for eq in exercise_equipment)
         
-        # LOG POUR DEBUG
-        if not compatible:
-            logger.warning(f"❌ Exercice {exercise.name_fr} incompatible - Demande: {exercise_equipment}, Disponible: {available_equipment}")
+        # Note: "halteres" dans exercises.json = "dumbbells" dans le code
+        exercise_equipment_normalized = []
+        for eq in exercise_equipment:
+            if eq == "dumbbells":
+                exercise_equipment_normalized.append("halteres")
+            else:
+                exercise_equipment_normalized.append(eq)
         
-        return compatible
+        return any(eq in available_equipment for eq in exercise_equipment_normalized)
     
     def _select_best_exercises(self, exercises: List[Exercise], 
                              user: User, muscle: str, max_exercises: int = 2) -> List[Exercise]:
