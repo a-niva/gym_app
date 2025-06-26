@@ -80,8 +80,12 @@ async function updateWeightSuggestionVisual() {
         }
     }
     
-    // Animation des boutons seulement si auto désactivé
-    if (!isAutoWeightEnabled && mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1) {
+    // Animation des boutons selon le contexte
+    const isAdaptiveWorkout = currentWorkout && currentWorkout.type === 'adaptive';
+    const shouldAnimate = mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1 && 
+                        (isAdaptiveWorkout || !isAutoWeightEnabled);
+
+    if (shouldAnimate) {
         if (mlSuggestion < currentWeight && decreaseBtn) {
             // Le poids suggéré est INFÉRIEUR, donc suggérer une DIMINUTION
             decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
@@ -246,7 +250,7 @@ async function showSetInput() {
         (isTimeBased ? 30 : currentTargetReps);
     // S'assurer que adjustWeightToNext est globalement accessible AVANT de créer le HTML
     window.adjustWeightToNext = adjustWeightToNext;
-    
+
     container.innerHTML = `
         <div class="current-exercise">
             <h2>${currentExercise.name_fr}</h2>
@@ -285,14 +289,12 @@ async function showSetInput() {
                             <div id="weightSuggestion" class="suggestion-hint">
                                 ${mlSuggestion ? `💡 Suggestion ML : ${mlSuggestion}kg${mlSuggestion !== defaultWeight ? ` (${mlSuggestion > defaultWeight ? '+' : ''}${(mlSuggestion - defaultWeight).toFixed(1)}kg)` : ''}` : ''}
                             </div>
-                            ${mlSuggestion ? `
                                 <label class="toggle-switch">
                                     <input type="checkbox" ${isAutoWeightEnabled ? 'checked' : ''} 
                                         onchange="toggleAutoWeight(this.checked)">
                                     <span class="toggle-slider"></span>
                                     <span class="toggle-label">Auto</span>
                                 </label>
-                            ` : ''}
                         </div>
                     </div>
                 ` : '<input type="hidden" id="setWeight" value="0">'}
@@ -883,14 +885,17 @@ function adjustWeightToNext(direction) {
     if (newIndex >= 0 && newIndex < availableWeights.length) {
         input.value = availableWeights[newIndex];
         
-        // AJOUTER : Mettre à jour l'affichage du poids
+        // Mettre à jour l'affichage du poids total
         const totalDisplay = document.querySelector('.barbell-total-integrated');
         if (totalDisplay) {
             totalDisplay.innerHTML = `${availableWeights[newIndex]}<span class="weight-unit">kg</span>`;
         }
         
-        updateBarbellVisualization();
-        updateWeightSuggestionVisual();
+        // Force la reconstruction complète de la visualisation pour les barres
+        setTimeout(() => {
+            updateBarbellVisualization();
+            updateWeightSuggestionVisual();
+        }, 10);
     }
 }
 
