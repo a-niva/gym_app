@@ -16,6 +16,7 @@ from fastapi.responses import FileResponse
 import json
 import os
 import logging
+from backend.ml_engine import VolumeOptimizer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -170,11 +171,14 @@ def get_exercise_alternatives(exercise_id: int, user_id: int, db: Session = Depe
     
     # Filtrer par équipement disponible (utiliser la même logique que SessionBuilder)
     ml_engine = FitnessMLEngine(db)
-    session_builder = SessionBuilder(db)
-    
+    # Pas besoin de session_builder ici !
+
     compatible_alternatives = []
     for alt in all_alternatives:
-        if session_builder._check_equipment_availability(alt, user):
+        # Utiliser ml_engine au lieu de session_builder
+        available_equipment = ml_engine.get_user_available_equipment(user)
+        exercise_equipment = alt.equipment or []
+        if not exercise_equipment or any(eq in available_equipment for eq in exercise_equipment):
             compatible_alternatives.append(alt)
     
     # Limiter à 8 alternatives max, triées par niveau de compatibilité
@@ -1220,10 +1224,18 @@ def init_adaptive_targets(user_id: int, db: Session = Depends(get_db)):
             AdaptiveTargets.muscle_group == muscle
         ).first()
         if not existing:
+            # Calculer le volume optimal avec VolumeOptimizer
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                volume_optimizer = VolumeOptimizer(db)
+                optimal_volume = volume_optimizer.calculate_optimal_volume(user, muscle)
+            else:
+                optimal_volume = 5000.0  # Valeur par défaut raisonnable
+
             target = AdaptiveTargets(
                 user_id=user_id,
                 muscle_group=muscle,
-                target_volume=100.0,
+                target_volume=float(optimal_volume),  # Utiliser le volume calculé
                 current_volume=0.0,
                 recovery_debt=0.0,
                 adaptation_rate=1.0

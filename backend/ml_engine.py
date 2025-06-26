@@ -82,49 +82,8 @@ class FitnessMLEngine:
         return (n * sum_xy - sum_x * sum_y) / denominator
     
     def get_user_available_equipment(self, user: User) -> List[str]:
-        """Centralise la logique de détection d'équipement"""
-        if not user.equipment_config:
-            return ["poids_du_corps"]
-        
-        config = user.equipment_config
-        available_equipment = ["poids_du_corps"]  # Toujours disponible
-        
-        # Barres
-        for barre_type, barre_config in config.get("barres", {}).items():
-            if barre_config.get("available", False):
-                if barre_type in ["olympique", "courte"]:
-                    available_equipment.append("barre_olympique")
-                elif barre_type == "ez":
-                    available_equipment.append("barre_ez")
-        
-        # Haltères
-        if config.get("dumbbells", {}).get("available", False):
-            available_equipment.append("dumbbells")
-
-        # Équivalence barres courtes = haltères si paire + disques
-        barres_courtes = config.get("barres", {}).get("courte", {})
-        if (barres_courtes.get("available", False) and 
-            barres_courtes.get("count", 0) >= 2 and 
-            config.get("disques", {}).get("available", False) and
-            "dumbbells" not in available_equipment):
-            available_equipment.append("dumbbells")
-        
-        # Banc
-        if config.get("banc", {}).get("available", False):
-            available_equipment.append("banc_plat")
-            if config["banc"].get("inclinable_haut", False):
-                available_equipment.append("banc_inclinable")
-        
-        # Élastiques
-        if config.get("elastiques", {}).get("available", False):
-            available_equipment.append("elastiques")
-        
-        # Autres
-        autres = config.get("autres", {})
-        if autres.get("barre_traction", {}).get("available", False):
-            available_equipment.append("barre_traction")
-        
-        return available_equipment
+        """Délègue à ml_engine pour obtenir l'équipement disponible"""
+        return self.ml_engine.get_user_available_equipment(user)
 
     def calculate_starting_weight(self, user: User, exercise: Exercise) -> float:
         """
@@ -1321,7 +1280,7 @@ class VolumeOptimizer:
         
         deficits = {}
         for target in targets:
-            if target.target_volume > 0:
+            if target.target_volume and target.target_volume > 0:  # Vérifier None d'abord
                 deficit = (target.target_volume - target.current_volume) / target.target_volume
                 if deficit > 0.2:  # Plus de 20% de retard
                     deficits[target.muscle_group] = deficit
@@ -1787,7 +1746,7 @@ class ProgressionAnalyzer:
         
         adherences = []
         for target in targets:
-            if target.target_volume > 0:
+            if target.target_volume and target.target_volume > 0:  # Vérifier None d'abord
                 adherence = min(1.0, target.current_volume / target.target_volume)
                 adherences.append(adherence)
         
