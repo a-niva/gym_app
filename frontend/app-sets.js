@@ -82,16 +82,16 @@ async function updateWeightSuggestionVisual() {
     
     // Animation des boutons selon le contexte
     const isAdaptiveWorkout = currentWorkout && currentWorkout.type === 'adaptive';
-    const shouldAnimate = mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1 && 
-                        (isAdaptiveWorkout || !isAutoWeightEnabled);
 
-    if (shouldAnimate) {
-        if (mlSuggestion < currentWeight && decreaseBtn) {
-            // Le poids suggéré est INFÉRIEUR, donc suggérer une DIMINUTION
-            decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
-        } else if (mlSuggestion > currentWeight && increaseBtn) {
-            // Le poids suggéré est SUPÉRIEUR, donc suggérer une AUGMENTATION
-            increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
+    // Pour les séances adaptatives, toujours animer si différence
+    // Pour les autres, animer seulement si auto désactivé
+    if (mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1) {
+        if (isAdaptiveWorkout || !isAutoWeightEnabled) {
+            if (mlSuggestion < currentWeight && decreaseBtn) {
+                decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
+            } else if (mlSuggestion > currentWeight && increaseBtn) {
+                increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
+            }
         }
     }
 
@@ -208,6 +208,23 @@ async function showSetInput() {
         }
     }
     
+    // Déterminer le type d'exercice
+    // Pour les séances adaptatives, utiliser les suggestions du plan guidé
+    // si on n'a pas de suggestions ML (première série)
+    if (isGuidedMode && !mlSuggestion && suggestedWeight && currentSetNumber === 1) {
+        mlSuggestion = suggestedWeight;
+        window.currentMLSuggestion = mlSuggestion;
+        console.log('📊 Utilisation suggestion guidée comme ML:', mlSuggestion);
+    }
+
+    if (isGuidedMode && !mlRepsSuggestion && targetReps && currentSetNumber === 1) {
+        mlRepsSuggestion = {
+            optimal: typeof targetReps === 'string' ? parseInt(targetReps.split('-')[0]) : targetReps,
+            confidence: 0.8
+        };
+        console.log('📊 Utilisation reps guidées comme ML:', mlRepsSuggestion);
+    }
+
     // Déterminer le type d'exercice
     const exerciseType = getExerciseType(currentExercise);
     const isTimeBased = exerciseType === 'time_based';
@@ -468,6 +485,10 @@ async function showSetInput() {
     
     // Forcer la mise à jour des suggestions visuelles après un court délai
     setTimeout(() => {
+        // S'assurer que la suggestion ML est bien définie avant l'update visuel
+        if (window.currentMLSuggestion === undefined && mlSuggestion) {
+            window.currentMLSuggestion = mlSuggestion;
+        }
         updateWeightSuggestionVisual();
     }, 100);
 }
