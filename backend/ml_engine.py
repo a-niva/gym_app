@@ -1295,6 +1295,10 @@ class SessionBuilder:
         self.db = db
         self.ml_engine = FitnessMLEngine(db)  # Réutiliser l'existant
 
+    def get_user_available_equipment(self, user: User) -> List[str]:
+        """Délègue à ml_engine pour obtenir l'équipement disponible"""
+        return self.ml_engine.get_user_available_equipment(user)
+
     def build_session(self, muscles: List[str], time_budget: int, 
                     user: User, constraints: Dict = None) -> List[Dict]:
         """Construction d'une séance optimisée avec limitation intelligente"""
