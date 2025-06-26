@@ -6,7 +6,6 @@ from typing import List, Dict, Any
 from datetime import datetime, timedelta
 from backend.models import User, Exercise, Workout, Set, AdaptiveTargets, ProgramExercise, UserCommitment
 import logging
-import random
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1329,6 +1328,8 @@ class SessionBuilder:
                 is_compatible = self._check_equipment_availability(ex, user)
                 if ex.equipment and "dumbbells" in ex.equipment:
                     logger.info(f"🏋️ {ex.name_fr}: dumbbells requis, compatible={is_compatible}")
+                
+                # AJOUTER CES LIGNES
                 if is_compatible:
                     available_exercises.append(ex)
             
@@ -1463,9 +1464,11 @@ class SessionBuilder:
         return any(eq in available_equipment for eq in exercise_equipment_normalized)
     
     def _select_best_exercises(self, exercises: List[Exercise], 
-                             user: User, muscle: str, max_exercises: int = 2) -> List[Exercise]:
+                            user: User, muscle: str, max_exercises: int = 2) -> List[Exercise]:
         """Sélectionne les meilleurs exercices selon plusieurs critères"""
-        # Prioriser par niveau d'expérience
+        from datetime import datetime, timedelta
+        
+        # 1. Filtrer par niveau d'expérience approprié
         suitable_exercises = [
             ex for ex in exercises 
             if self._is_suitable_level(ex.level, user.experience_level)
@@ -1474,9 +1477,120 @@ class SessionBuilder:
         if not suitable_exercises:
             suitable_exercises = exercises
         
-        # Pour l'instant, prendre les premiers
-        # TODO: Améliorer avec historique, variété, préférences
-        return suitable_exercises[:max_exercises]
+        # 2. Analyser l'historique récent (derniers 14 jours)
+        recent_date = datetime.utcnow() - timedelta(days=14)
+        recent_sets = self.db.query(Set).join(Workout).filter(
+            Workout.user_id == user.id,
+            Workout.completed_at >= recent_date,
+            Set.exercise_id.in_([ex.id for ex in suitable_exercises])
+        ).all()
+        
+        # Calculer la fréquence d'utilisation récente par exercice
+        exercise_frequency = {}
+        exercise_performance = {}
+        
+        for set_record in recent_sets:
+            ex_id = set_record.exercise_id
+            
+            # Fréquence
+            exercise_frequency[ex_id] = exercise_frequency.get(ex_id, 0) + 1
+            
+            # Performance moyenne (ratio reps réalisées/cibles)
+            if ex_id not in exercise_performance:
+                exercise_performance[ex_id] = []
+            if set_record.target_reps > 0:
+                performance_ratio = set_record.actual_reps / set_record.target_reps
+                exercise_performance[ex_id].append(performance_ratio)
+        
+        # 3. Calculer un score pour chaque exercice
+        scored_exercises = []
+        
+        for exercise in suitable_exercises:
+            score = 0
+            
+            # Bonus pour variété (moins utilisé récemment = meilleur score)
+            frequency = exercise_frequency.get(exercise.id, 0)
+            if frequency == 0:
+                score += 30  # Jamais fait récemment
+            elif frequency <= 2:
+                score += 20  # Peu utilisé
+            elif frequency <= 5:
+                score += 10  # Modérément utilisé
+            # Pas de bonus si très fréquent
+            
+            # Bonus pour bonne performance historique
+            if exercise.id in exercise_performance:
+                avg_performance = sum(exercise_performance[exercise.id]) / len(exercise_performance[exercise.id])
+                if avg_performance >= 1.0:  # Atteint ou dépasse les objectifs
+                    score += 15
+                elif avg_performance >= 0.9:  # Proche des objectifs
+                    score += 10
+            else:
+                # Pas d'historique = neutre, léger bonus pour découverte
+                score += 5
+            
+            # Bonus selon le type d'exercice et les objectifs
+            primary_goal = user.goals[0] if user.goals else "hypertrophie"
+            
+            # Exercices composés (multi-articulaires) favorisés
+            if exercise.fatigue_profile and exercise.fatigue_profile.get("compound_movement"):
+                if primary_goal in ["force", "hypertrophie"]:
+                    score += 20
+                else:
+                    score += 10
+            
+            # Ajustement selon la complexité technique
+            skill_complexity = exercise.progression_metadata.get("skill_complexity", 3) if exercise.progression_metadata else 3
+            exp_level_num = {"débutant": 1, "intermédiaire": 2, "avancé": 3, "élite": 4, "extrême": 5}.get(user.experience_level, 2)
+            
+            # Favoriser les exercices adaptés au niveau technique
+            if abs(skill_complexity - exp_level_num) <= 1:
+                score += 10
+            elif skill_complexity > exp_level_num + 2:
+                score -= 20  # Trop complexe
+            
+            # Pénalité pour zones à risque si l'utilisateur a des antécédents
+            # (À implémenter si vous ajoutez un système de blessures)
+            
+            scored_exercises.append((exercise, score))
+        
+        # 4. Trier par score et diversifier la sélection
+        scored_exercises.sort(key=lambda x: x[1], reverse=True)
+        
+        selected = []
+        selected_equipment_types = set()
+        
+        for exercise, score in scored_exercises:
+            if len(selected) >= max_exercises:
+                break
+            
+            # Diversifier les types d'équipement si possible
+            equipment_type = exercise.equipment[0] if exercise.equipment else "poids_du_corps"
+            
+            # Si on a déjà 2 exercices avec le même équipement, essayer de varier
+            if len(selected) > 0 and equipment_type in selected_equipment_types and len(scored_exercises) > max_exercises:
+                # Chercher une alternative avec un équipement différent dans les 5 prochains
+                for alt_exercise, alt_score in scored_exercises[len(selected):len(selected)+5]:
+                    alt_equipment = alt_exercise.equipment[0] if alt_exercise.equipment else "poids_du_corps"
+                    if alt_equipment not in selected_equipment_types and alt_score > score * 0.8:  # Score proche
+                        selected.append(alt_exercise)
+                        selected_equipment_types.add(alt_equipment)
+                        break
+                else:
+                    # Pas d'alternative valable, prendre l'exercice original
+                    selected.append(exercise)
+                    selected_equipment_types.add(equipment_type)
+            else:
+                selected.append(exercise)
+                selected_equipment_types.add(equipment_type)
+        
+        # 5. Log pour debug
+        logger.info(f"Sélection pour {muscle}:")
+        for i, ex in enumerate(selected):
+            freq = exercise_frequency.get(ex.id, 0)
+            logger.info(f"  {i+1}. {ex.name_fr} (utilisé {freq}x récemment)")
+        
+        return selected
     
     def _is_suitable_level(self, exercise_level: str, user_level: str) -> bool:
         """Vérifie si l'exercice convient au niveau de l'utilisateur"""
