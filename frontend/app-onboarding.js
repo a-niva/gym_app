@@ -128,7 +128,7 @@ function nextStep() {
     if (currentStepEl && currentStepEl.id === 'step3') {
         // Vérifier si l'équipement sélectionné nécessite une configuration détaillée
         const needsDetailedConfig = selectedEquipment.some(eq => 
-            ['halteres', 'barbell', 'elastiques', 'kettlebell', 'bench'].includes(eq)
+            ['dumbbells', 'barbell', 'elastiques', 'kettlebell', 'bench'].includes(eq)
         );
         
         if (needsDetailedConfig) {
@@ -204,7 +204,7 @@ function generateDetailedEquipmentConfig() {
     
     // Afficher les panneaux de configuration pour chaque équipement sélectionné
     selectedEquipment.forEach(eq => {
-        if (eq === 'halteres' || eq === 'barbell' || eq === 'elastiques' || eq === 'kettlebell' || eq === 'bench') {
+        if (eq === 'dumbbells' || eq === 'barbell' || eq === 'elastiques' || eq === 'kettlebell' || eq === 'bench') {
             showConfigPanel(eq);
         }
     });
@@ -220,7 +220,7 @@ function showConfigPanel(equipmentType) {
         case 'barbell':
             panel.innerHTML = createBarbellPanel();
             break;
-        case 'halteres':
+        case 'dumbbells':
             panel.innerHTML = createDumbbellsPanel();
             break;
         case 'elastiques':
@@ -419,7 +419,7 @@ function updateDumbbellWeight(weight, count) {
     } else {
         delete equipmentConfig.dumbbells[weight];
     }
-    updateEquipmentStatus('halteres');
+    updateEquipmentStatus('dumbbells');
 }
 
 function updateKettlebellWeight(weight, count) {
@@ -505,7 +505,7 @@ function updateEquipmentStatus(type) {
     let isConfigured = false;
     
     switch(type) {
-        case 'halteres':
+        case 'dumbbells':
             isConfigured = Object.keys(equipmentConfig.dumbbells).length > 0;
             break;
         case 'barbell':
@@ -558,7 +558,7 @@ function validateDetailedConfig() {
     let isValid = true;
     let errors = [];
     
-    if (selectedEquipment.includes('halteres')) {
+    if (selectedEquipment.includes('dumbbells')) {
         const dumbellCount = Object.keys(equipmentConfig.dumbbells).length;
         if (dumbellCount === 0) {
             errors.push('Veuillez ajouter au moins un poids d\'haltère');
@@ -664,7 +664,7 @@ function updateProfileSummary() {
         summaryHTML += `<strong>${getEquipmentName(eq)}</strong>`;
         
         switch(eq) {
-            case 'halteres':
+            case 'dumbbells':
                 const dumbbellWeights = Object.keys(equipmentConfig.dumbbells).filter(w => equipmentConfig.dumbbells[w] > 0);
                 if (dumbbellWeights.length > 0) {
                     summaryHTML += `<div class="equipment-detail">Poids: ${dumbbellWeights.join(', ')}kg</div>`;

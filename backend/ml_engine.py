@@ -97,15 +97,15 @@ class FitnessMLEngine:
                     available_equipment.append("barre_ez")
         
         # Haltères
-        if config.get("halteres", {}).get("available", False):
+        if config.get("dumbbells", {}).get("available", False):
             available_equipment.append("dumbbells")
-        
+
         # Équivalence barres courtes = haltères si paire + disques
         barres_courtes = config.get("barres", {}).get("courte", {})
         if (barres_courtes.get("available", False) and 
             barres_courtes.get("count", 0) >= 2 and 
             config.get("disques", {}).get("available", False) and
-            "halteres" not in available_equipment):
+            "dumbbells" not in available_equipment):
             available_equipment.append("dumbbells")
         
         # Banc
@@ -320,10 +320,10 @@ class FitnessMLEngine:
             
             # Arrondir au poids disponible le plus proche
             if (user.equipment_config and 
-                user.equipment_config.get("halteres", {}).get("weights") and 
-                "halteres" in exercise.equipment):
+                user.equipment_config.get("dumbbells", {}).get("weights") and 
+                "dumbbells" in exercise.equipment):
                 target_per_dumbbell = next_weight / 2
-                available = sorted(user.equipment_config["halteres"]["weights"])
+                available = sorted(user.equipment_config["dumbbells"]["weights"])
                 if available:
                     closest = min(available, key=lambda x: abs(x - target_per_dumbbell))
                     next_weight = closest * 2
@@ -872,10 +872,19 @@ class FitnessMLEngine:
         fallback_exercises = []
         
         try:
-            # Récupérer quelques exercices de base depuis la DB
-            basic_exercises = self.db.query(Exercise).filter(
+            # Récupérer quelques exercices de base COMPATIBLES depuis la DB
+            session_builder = SessionBuilder(self.db)
+            all_exercises = self.db.query(Exercise).filter(
                 Exercise.body_part.in_(["Pectoraux", "Dos", "Jambes"])
-            ).limit(3).all()
+            ).all()
+
+            # Filtrer par équipement disponible
+            basic_exercises = []
+            for ex in all_exercises:
+                if session_builder._check_equipment_availability(ex, user):
+                    basic_exercises.append(ex)
+                    if len(basic_exercises) >= 3:
+                        break
             
             for i, exercise in enumerate(basic_exercises):
                 fallback_exercises.append({

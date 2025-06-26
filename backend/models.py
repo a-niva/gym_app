@@ -30,7 +30,7 @@ class Exercise(Base):
     id = Column(Integer, primary_key=True, index=True)
     name_fr = Column(String, nullable=False)
     name_eng = Column(String, nullable=False)
-    equipment = Column(JSON)  # ["barre_olympique", "halteres"]
+    equipment = Column(JSON)  # ["barre_olympique"]
     level = Column(String)
     body_part = Column(String)
     sets_reps = Column(JSON)
