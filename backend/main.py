@@ -444,15 +444,6 @@ def update_adaptive_targets_volume(user_id: int, db: Session):
     for target in all_targets:
         target.current_volume = 0.0
 
-    # CORRECTION : Réinitialiser TOUS les targets d'abord
-    all_targets = db.query(AdaptiveTargets).filter(
-        AdaptiveTargets.user_id == user_id
-    ).all()
-
-    # Mettre tous les volumes à 0 (important pour les muscles non travaillés)
-    for target in all_targets:
-        target.current_volume = 0.0
-
     # Puis mettre à jour uniquement ceux qui ont du volume
     for muscle, volume in volume_by_muscle:
         target = next((t for t in all_targets if t.muscle_group == muscle), None)
