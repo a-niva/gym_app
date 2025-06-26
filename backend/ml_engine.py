@@ -98,7 +98,7 @@ class FitnessMLEngine:
         
         # Haltères
         if config.get("halteres", {}).get("available", False):
-            available_equipment.append("halteres")
+            available_equipment.append("dumbbells")
         
         # Équivalence barres courtes = haltères si paire + disques
         barres_courtes = config.get("barres", {}).get("courte", {})
@@ -1459,15 +1459,7 @@ class SessionBuilder:
         available_equipment = self.get_user_available_equipment(user)
         exercise_equipment = exercise.equipment or []
         
-        # Note: "halteres" dans exercises.json = "dumbbells" dans le code
-        exercise_equipment_normalized = []
-        for eq in exercise_equipment:
-            if eq == "dumbbells":
-                exercise_equipment_normalized.append("halteres")
-            else:
-                exercise_equipment_normalized.append(eq)
-        
-        return any(eq in available_equipment for eq in exercise_equipment_normalized)
+        return any(eq in available_equipment for eq in exercise_equipment)
     
     def _select_best_exercises(self, exercises: List[Exercise], 
                             user: User, muscle: str, max_exercises: int = 2) -> List[Exercise]:
