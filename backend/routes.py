@@ -149,7 +149,7 @@ async def get_user_commitment(user_id: int, db: Session = Depends(get_db)):
     
     return commitment
 
-@app.get("/api/users/{user_id}/adaptive-targets", response_model=List[AdaptiveTargetsResponse])
+@router.get("/api/users/{user_id}/adaptive-targets", response_model=List[AdaptiveTargetsResponse])
 def get_adaptive_targets(user_id: int, db: Session = Depends(get_db)):
     """Récupérer les objectifs adaptatifs"""
     targets = db.query(AdaptiveTargets).filter(
