@@ -254,7 +254,7 @@ class UserCommitmentResponse(BaseModel):
 class AdaptiveTargetsResponse(BaseModel):
     id: int
     muscle_group: str
-    target_volume: float
+    target_volume: Optional[float] = 0.0  # Accepter None avec défaut 0.0
     current_volume: float
     recovery_debt: float
     last_trained: Optional[datetime]

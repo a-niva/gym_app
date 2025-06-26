@@ -1268,7 +1268,9 @@ class VolumeOptimizer:
             }
 
             base_volume = realistic_volumes.get(primary_goal, 5000)
-            return int(base_volume * exp_mult)
+            result = int(base_volume * exp_mult)
+            # S'assurer qu'on ne retourne jamais None ou 0
+            return max(1000, result) if result else 5000
     
     def get_volume_deficit(self, user: User) -> Dict[str, float]:
         """Retourne les muscles en retard sur leur volume cible"""

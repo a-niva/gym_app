@@ -118,12 +118,17 @@ async def create_user_commitment(
         ).first()
         
         if not target:
+            # Calculer le volume optimal ou utiliser une valeur par défaut
+            optimal_volume = volume_optimizer.calculate_optimal_volume(user, muscle)
+            if optimal_volume is None or optimal_volume <= 0:
+                optimal_volume = 5000.0  # Valeur par défaut raisonnable
+            
             target = AdaptiveTargets(
                 user_id=user_id,
                 muscle_group=muscle,
-                target_volume=volume_optimizer.calculate_optimal_volume(user, muscle),
-                current_volume=0,
-                recovery_debt=0,
+                target_volume=float(optimal_volume),
+                current_volume=0.0,
+                recovery_debt=0.0,
                 adaptation_rate=1.0
             )
             db.add(target)
@@ -144,12 +149,25 @@ async def get_user_commitment(user_id: int, db: Session = Depends(get_db)):
     
     return commitment
 
-@router.get("/api/users/{user_id}/adaptive-targets", response_model=List[AdaptiveTargetsResponse])
-async def get_adaptive_targets(user_id: int, db: Session = Depends(get_db)):
+@app.get("/api/users/{user_id}/adaptive-targets", response_model=List[AdaptiveTargetsResponse])
+def get_adaptive_targets(user_id: int, db: Session = Depends(get_db)):
     """Récupérer les objectifs adaptatifs"""
     targets = db.query(AdaptiveTargets).filter(
         AdaptiveTargets.user_id == user_id
     ).all()
+    
+    # NOUVEAU : Corriger les valeurs None à la volée
+    for target in targets:
+        if target.target_volume is None or target.target_volume <= 0:
+            # Calculer une valeur par défaut
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                volume_optimizer = VolumeOptimizer(db)
+                optimal_volume = volume_optimizer.calculate_optimal_volume(user, target.muscle_group)
+                target.target_volume = float(optimal_volume) if optimal_volume else 5000.0
+            else:
+                target.target_volume = 5000.0
+            db.commit()
     
     return targets
 
@@ -348,33 +366,3 @@ async def get_program_adjustments(
     except Exception as e:
         logger.error(f"Error getting adjustments: {str(e)}")
         raise HTTPException(status_code=500, detail="Analysis failed")
-
-@router.post("/api/users/{user_id}/init-adaptive-targets")
-async def initialize_adaptive_targets(
-    user_id: int,
-    db: Session = Depends(get_db)
-):
-    """Initialise les targets adaptatifs pour un utilisateur"""
-    # Vérifier si déjà existants
-    existing = db.query(AdaptiveTargets).filter(
-        AdaptiveTargets.user_id == user_id
-    ).first()
-    
-    if existing:
-        return {"status": "already_initialized"}
-    
-    # Créer les targets pour chaque muscle
-    muscles = ["Pectoraux", "Dos", "Deltoïdes", "Jambes", "Bras", "Abdominaux"]
-    for muscle in muscles:
-        target = AdaptiveTargets(
-            user_id=user_id,
-            muscle_group=muscle,
-            target_volume=1000.0,  # Volume de base
-            current_volume=0.0,
-            recovery_debt=0.0,
-            adaptation_rate=1.0
-        )
-        db.add(target)
-    
-    db.commit()
-    return {"status": "initialized"}
