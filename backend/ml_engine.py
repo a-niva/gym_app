@@ -106,7 +106,7 @@ class FitnessMLEngine:
             barres_courtes.get("count", 0) >= 2 and 
             config.get("disques", {}).get("available", False) and
             "halteres" not in available_equipment):
-            available_equipment.append("halteres")
+            available_equipment.append("dumbbells")
         
         # Banc
         if config.get("banc", {}).get("available", False):
@@ -1421,10 +1421,16 @@ class SessionBuilder:
 
         # GARDER votre fallback ultime :
         if not session and muscles:
-            # Fallback : prendre n'importe quel exercice disponible
-            fallback_exercise = self.db.query(Exercise).filter(
+            # Fallback : prendre n'importe quel exercice COMPATIBLE
+            all_muscle_exercises = self.db.query(Exercise).filter(
                 Exercise.body_part.in_(muscles)
-            ).first()
+            ).all()
+            
+            # Filtrer par équipement disponible
+            for fallback_exercise in all_muscle_exercises:
+                if self._check_equipment_availability(fallback_exercise, user):
+                    # Utiliser cet exercice compatible
+                    break
             
             if fallback_exercise:
                 try:
