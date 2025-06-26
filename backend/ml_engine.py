@@ -60,8 +60,45 @@ class FitnessMLEngine:
         }
     
     def get_user_available_equipment(self, user: User) -> List[str]:
-        """Délègue à ml_engine pour obtenir l'équipement disponible"""
-        return self.ml_engine.get_user_available_equipment(user)
+        if not user.equipment_config:
+            return []
+
+        config = user.equipment_config
+        available_equipment = []
+
+        # Poids du corps toujours disponible  
+        available_equipment.append("poids_du_corps")
+
+        # Barres
+        for barre_type, barre_config in config.get("barres", {}).items():
+            if barre_config.get("available", False):
+                if barre_type in ["olympique", "courte"]:
+                    available_equipment.append("barre_olympique")
+                elif barre_type == "ez":
+                    available_equipment.append("barre_ez")
+
+        # Haltères fixes
+        if config.get("dumbbells", {}).get("available", False):
+            available_equipment.append("dumbbells")
+
+        # Équivalence : 2 barres courtes + disques = dumbbells
+        barres_courtes = config.get("barres", {}).get("courte", {})
+        has_disques = config.get("disques", {}).get("available", False)
+        if (barres_courtes.get("available", False) and 
+            barres_courtes.get("count", 0) >= 2 and 
+            has_disques and 
+            "dumbbells" not in available_equipment):
+            available_equipment.append("dumbbells")
+
+        # Banc
+        if config.get("banc", {}).get("available", False):
+            available_equipment.append("banc_plat")
+
+        # Autres équipements
+        if config.get("autres", {}).get("barre_traction", {}).get("available", False):
+            available_equipment.append("barre_traction")
+
+        return available_equipment
     
     def _mean(self, values):
         """Calcule la moyenne d'une liste de valeurs"""
