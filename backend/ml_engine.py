@@ -58,7 +58,11 @@ class FitnessMLEngine:
             4: 0.85,   # Très fatigué - réduire significativement
             5: 0.75    # Épuisé - réduire fortement
         }
-
+    
+    def get_user_available_equipment(self, user: User) -> List[str]:
+        """Délègue à ml_engine pour obtenir l'équipement disponible"""
+        return self.ml_engine.get_user_available_equipment(user)
+    
     def _mean(self, values):
         """Calcule la moyenne d'une liste de valeurs"""
         return sum(values) / len(values) if values else 0
@@ -80,10 +84,6 @@ class FitnessMLEngine:
             return 0
         
         return (n * sum_xy - sum_x * sum_y) / denominator
-    
-    def get_user_available_equipment(self, user: User) -> List[str]:
-        """Délègue à ml_engine pour obtenir l'équipement disponible"""
-        return self.ml_engine.get_user_available_equipment(user)
 
     def calculate_starting_weight(self, user: User, exercise: Exercise) -> float:
         """
@@ -880,39 +880,39 @@ class FitnessMLEngine:
         """Génère une séance de secours simple en cas d'erreur"""
         logger.warning("🚨 Génération séance de secours")
         
-        # Exercices de base compatibles avec la plupart des équipements
         fallback_exercises = []
         
-        try:
-            # Récupérer quelques exercices de base COMPATIBLES depuis la DB
-            session_builder = SessionBuilder(self.db)
-            all_exercises = self.db.query(Exercise).filter(
-                Exercise.body_part.in_(["Pectoraux", "Dos", "Jambes"])
-            ).all()
-
-            # Filtrer par équipement disponible
-            basic_exercises = []
-            for ex in all_exercises:
-                if session_builder._check_equipment_availability(ex, user):
-                    basic_exercises.append(ex)
-                    if len(basic_exercises) >= 3:
-                        break
-            
-            for i, exercise in enumerate(basic_exercises):
-                fallback_exercises.append({
-                    "exercise_id": exercise.id,
-                    "exercise_name": exercise.name_fr or f"Exercice {exercise.id}",
-                    "body_part": exercise.body_part,
-                    "sets": 3,
-                    "target_reps": "8-12",
-                    "suggested_weight": None,
-                    "rest_time": 90,
-                    "order_index": i + 1
-                })
+        # Récupérer DIRECTEMENT les exercices sans passer par SessionBuilder
+        available_equipment = self.get_user_available_equipment(user)
         
-        except Exception as e:
-            logger.error(f"❌ Erreur génération fallback: {e}")
-            # Fallback du fallback
+        # Sélectionner des exercices de base pour chaque muscle principal
+        muscles_cibles = ["Pectoraux", "Dos", "Jambes"]
+        
+        for muscle in muscles_cibles:
+            exercises = self.db.query(Exercise).filter(
+                Exercise.body_part == muscle
+            ).all()
+            
+            # Filtrer par équipement disponible SANS SessionBuilder
+            for ex in exercises:
+                if not ex.equipment or any(eq in available_equipment for eq in ex.equipment):
+                    fallback_exercises.append({
+                        "exercise_id": ex.id,
+                        "exercise_name": ex.name_fr,
+                        "body_part": ex.body_part,
+                        "sets": 3,
+                        "target_reps": "8-12",
+                        "suggested_weight": 20.0,
+                        "rest_time": 90,
+                        "order_index": len(fallback_exercises) + 1
+                    })
+                    break  # Un exercice par muscle
+            
+            if len(fallback_exercises) >= 3:
+                break
+        
+        # Si toujours rien, alors seulement là on met le poids du corps
+        if not fallback_exercises:
             fallback_exercises = [{
                 "exercise_id": 1,
                 "exercise_name": "Exercice au poids du corps",
@@ -925,13 +925,13 @@ class FitnessMLEngine:
             }]
         
         return {
-            "muscles": ["Général"],
+            "muscles": list(set(ex["body_part"] for ex in fallback_exercises)),
             "exercises": fallback_exercises,
             "estimated_duration": min(time_available, 30),
-            "readiness_scores": {"Général": 0.5},
+            "readiness_scores": {m: 0.5 for m in muscles_cibles},
             "session_metadata": {
                 "fallback": True,
-                "reason": "Erreur de génération normale"
+                "reason": "Erreur de génération normale - Mode dégradé"
             }
         }
 
@@ -1479,7 +1479,7 @@ class SessionBuilder:
         if not exercise.equipment:
             return True
         
-        available_equipment = self.get_user_available_equipment(user)
+        available_equipment = self.ml_engine.get_user_available_equipment(user)
         exercise_equipment = exercise.equipment or []
         
         return any(eq in available_equipment for eq in exercise_equipment)
