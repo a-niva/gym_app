@@ -1455,7 +1455,10 @@ class SessionBuilder:
             
             # Filtrer par équipement disponible
             for fallback_exercise in all_muscle_exercises:
-                if self._check_equipment_availability(fallback_exercise, user):
+                # Vérifier directement l'équipement sans passer par la méthode
+                available_equipment = self.get_user_available_equipment(user)
+                exercise_equipment = fallback_exercise.equipment or []
+                if not exercise_equipment or any(eq in available_equipment for eq in exercise_equipment):
                     # Utiliser cet exercice compatible
                     break
             
