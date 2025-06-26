@@ -327,6 +327,22 @@ export function cleanupWorkout() {
     localStorage.removeItem('workoutType');
     localStorage.removeItem('currentSessionHistory');
     localStorage.removeItem('guidedExerciseCompletion');
+    // Nettoyer les données ML adaptatives
+    localStorage.removeItem('lastCompletedBodyPart');
+
+    // Nettoyer tous les poids ML sauvegardés
+    const workoutId = currentWorkout?.id;
+    if (workoutId) {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(`mlWeight_`) && key.endsWith(`_${workoutId}`)) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log('DEBUG - Nettoyage ML:', keysToRemove.length, 'clés supprimées');
+    }
     
     // Reset variables globales
     if (window.currentExerciseIndex !== undefined) {

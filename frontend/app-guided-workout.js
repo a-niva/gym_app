@@ -398,12 +398,12 @@ async function startCurrentExercise() {
             exerciseArea.id = 'exerciseArea';
             exerciseArea.style.cssText = 'width: 100%; min-height: 400px; padding: 1rem;';
             
-            // Masquer mainContent s'il existe ET vider son contenu
-            const mainContent = workoutInterface.querySelector('#mainContent');
-            if (mainContent) {
-                mainContent.style.display = 'none';
-                mainContent.innerHTML = ''; // NOUVEAU : vider le contenu pour éviter la zone vide
-            }
+        // Masquer mainContent temporairement
+        const mainContent = workoutInterface.querySelector('#mainContent');
+        if (mainContent) {
+            mainContent.style.display = 'none';
+            // Ne pas vider ici - garder le contenu pour le retour
+        }
             
             workoutInterface.appendChild(exerciseArea);
         }
@@ -525,20 +525,22 @@ function addReturnToGuidedButton() {
 
 // Retour à l'interface guidée
 function returnToGuidedInterface() {
-    // Masquer l'interface d'exercice
-    const exerciseArea = document.getElementById('exerciseArea');
-    if (exerciseArea) {
-        exerciseArea.innerHTML = '';
-        exerciseArea.style.display = 'none';
-    }
     
-    // Réafficher mainContent s'il était masqué
+    // Nettoyer et réafficher mainContent
     const workoutInterface = document.getElementById('workoutInterface');
     if (workoutInterface) {
         const mainContent = workoutInterface.querySelector('#mainContent');
         if (mainContent) {
+            mainContent.innerHTML = ''; // Vider avant de régénérer
             mainContent.style.display = 'block';
         }
+    }
+
+    // Nettoyer aussi exerciseArea s'il existe
+    const exerciseArea = document.getElementById('exerciseArea');
+    if (exerciseArea) {
+        exerciseArea.innerHTML = '';
+        exerciseArea.style.display = 'none';
     }
     
     // Réafficher l'interface guidée

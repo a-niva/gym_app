@@ -45,6 +45,9 @@ import {
 import { TIME_BASED_KEYWORDS } from './app-config.js';
 import { addToSessionHistory } from './app-history.js';
 
+// Exposer globalement les fonctions critiques dès le chargement du module
+window.adjustWeightToNext = adjustWeightToNext;
+window.adjustReps = adjustReps;
 
 // ===== MISE À JOUR VISUELLE DES SUGGESTIONS =====
 async function updateWeightSuggestionVisual() {
@@ -151,18 +154,30 @@ async function showSetInput() {
         guidedRestTime = params.restTime;
     }
 
-    // Récupérer les suggestions ML uniquement si on a une série valide pour cet exercice
-    if (currentSetNumber > 1 && currentWorkout && lastCompletedSetId) {
-        // Vérifier que la dernière série appartient bien à cet exercice ET ce workout
-        const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
-        const currentExerciseHistory = sessionHistory.find(h => h.exerciseId === currentExercise.id);
+    // Gestion des ajustements ML pour séances adaptatives
+    if (currentWorkout && currentWorkout.type === 'adaptive' && lastCompletedSetId) {
+        // Récupérer la partie du corps du dernier exercice complété
+        const lastBodyPart = localStorage.getItem('lastCompletedBodyPart');
+        const currentBodyPart = currentExercise.body_part;
         
-        // Si on a bien des séries pour CET exercice dans CE workout
-        if (currentExerciseHistory && currentExerciseHistory.sets && currentExerciseHistory.sets.length > 0) {
-            const lastSet = currentExerciseHistory.sets[currentExerciseHistory.sets.length - 1];
+        console.log('DEBUG - ML Check:', {
+            lastBodyPart: lastBodyPart,
+            currentBodyPart: currentBodyPart,
+            shouldRecalculate: !lastBodyPart || lastBodyPart !== currentBodyPart
+        });
+        
+        // Condition : recalculer uniquement si changement de partie du corps
+        if (!lastBodyPart || lastBodyPart !== currentBodyPart) {
+            // Changement de partie du corps - appeler ML
+            console.log('DEBUG - Changement de partie du corps, appel ML');
             
-            // Vérifier que le lastCompletedSetId correspond au workout actuel
-            if (lastSet.workout_id === currentWorkout.id) {
+            // Vérifier qu'on a bien une série de CE workout
+            const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+            const hasValidSets = sessionHistory.some(h => 
+                h.sets && h.sets.length > 0 && h.sets[0].workout_id === currentWorkout.id
+            );
+            
+            if (hasValidSets) {
                 try {
                     const remainingSets = (currentExercise.sets_reps?.find(sr => sr.level === currentUser?.experience_level)?.sets || 3) - currentSetNumber + 1;
                     
@@ -182,22 +197,23 @@ async function showSetInput() {
                     console.log('DEBUG - Réponse adjustments:', adjustments);
                     
                     if (adjustments?.adjustments) {
-                        mlSuggestion = adjustments.adjustments.suggested_weight;
-                        mlRepsSuggestion = adjustments.adjustments.suggested_reps;
-                        // Ajouter une transformation
-                        if (mlRepsSuggestion && typeof mlRepsSuggestion === 'number') {
-                            mlRepsSuggestion = {
-                                optimal: mlRepsSuggestion,
-                                confidence: adjustments.adjustments.rep_confidence || 0.5
-                            };
+                        // Sauvegarder le poids ML pour cette partie du corps
+                        const mlWeight = adjustments.adjustments.suggested_weight;
+                        if (mlWeight) {
+                            localStorage.setItem(`mlWeight_${currentBodyPart}_${currentWorkout.id}`, mlWeight.toString());
+                            mlSuggestion = mlWeight;
+                            console.log('DEBUG - Poids ML sauvegardé pour', currentBodyPart, ':', mlWeight);
                         }
                         
-                        // Stocker globalement pour updateWeightSuggestionVisual
-                        window.currentMLSuggestion = mlSuggestion;
-                        
-                        // Si auto-ajustement actif, utiliser la suggestion ML
-                        if (isAutoWeightEnabled && mlSuggestion) {
-                            // On appliquera plus tard après avoir créé le DOM
+                        // Gérer aussi les reps si disponibles
+                        if (adjustments.adjustments.suggested_reps) {
+                            mlRepsSuggestion = adjustments.adjustments.suggested_reps;
+                            if (typeof mlRepsSuggestion === 'number') {
+                                mlRepsSuggestion = {
+                                    optimal: mlRepsSuggestion,
+                                    confidence: adjustments.adjustments.rep_confidence || 0.5
+                                };
+                            }
                         }
                     }
                 } catch (error) {
@@ -205,7 +221,17 @@ async function showSetInput() {
                     adjustmentsError = error;
                 }
             }
+        } else {
+            // Même partie du corps - réutiliser le poids sauvegardé
+            const savedMLWeight = localStorage.getItem(`mlWeight_${currentBodyPart}_${currentWorkout.id}`);
+            if (savedMLWeight) {
+                mlSuggestion = parseFloat(savedMLWeight);
+                console.log('DEBUG - Réutilisation poids ML pour', currentBodyPart, ':', mlSuggestion);
+            }
         }
+        
+        // Toujours stocker globalement pour updateWeightSuggestionVisual
+        window.currentMLSuggestion = mlSuggestion;
     }
     
     // Déterminer le type d'exercice
@@ -238,17 +264,24 @@ async function showSetInput() {
     // Obtenir les poids disponibles selon l'équipement
     const availableWeights = calculateAvailableWeights(currentExercise);
     
-    // Déterminer le poids par défaut
+    // Déterminer le poids par défaut selon l'état du toggle
     let defaultWeight = 0;
-    if (isGuidedMode && suggestedWeight && currentSetNumber === 1) {
-        defaultWeight = suggestedWeight;
-    } else if (mlSuggestion && isAutoWeightEnabled) {
+
+    if (isBodyweight) {
+        defaultWeight = 0; // Poids additionnel
+    } else if (isAutoWeightEnabled && mlSuggestion) {
+        // Toggle activé : utiliser ML
         defaultWeight = mlSuggestion;
-    } else if (isBodyweight) {
-        defaultWeight = 0; // Poids additionnel, pas le poids total
-    } else if (exerciseType === 'weighted') {
-        const suggestion = await getSuggestedWeight(currentUser.id, currentExercise.id);
-        defaultWeight = suggestion || calculateSuggestedWeight(currentExercise, availableWeights);
+    } else {
+        // Toggle désactivé ou pas de ML : utiliser dernier poids ou poids de base
+        const lastWeight = await getSuggestedWeight(currentUser.id, currentExercise.id);
+        const baseWeight = currentExercise.base_weight || calculateSuggestedWeight(currentExercise, availableWeights);
+        defaultWeight = lastWeight || baseWeight || 0;
+        
+        // En mode guidé première série, utiliser suggestion guidée
+        if (isGuidedMode && suggestedWeight && currentSetNumber === 1) {
+            defaultWeight = suggestedWeight;
+        }
     }
     
     const weightLabel = isBodyweight ? 
@@ -265,8 +298,7 @@ async function showSetInput() {
     const defaultReps = isGuidedMode && targetReps && currentSetNumber === 1 ? 
         (typeof targetReps === 'string' ? parseInt(targetReps.split('-')[0]) : targetReps) : 
         (isTimeBased ? 30 : currentTargetReps);
-    // S'assurer que adjustWeightToNext est globalement accessible AVANT de créer le HTML
-    window.adjustWeightToNext = adjustWeightToNext;
+
 
     container.innerHTML = `
         <div class="current-exercise">
@@ -1192,6 +1224,11 @@ function handleSetSuccess(setData, setDuration) {
     
     // Sauvegarder dans l'historique de la session
     updateSessionHistory(setData);
+    // Sauvegarder la partie du corps actuelle pour le ML adaptatif
+    if (currentExercise && currentExercise.body_part && currentWorkout?.type === 'adaptive') {
+        localStorage.setItem('lastCompletedBodyPart', currentExercise.body_part);
+        console.log('DEBUG - Partie du corps sauvegardée après série:', currentExercise.body_part);
+    }
     
     // Notification de succès
     showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
@@ -1279,18 +1316,29 @@ function toggleAutoWeight(enabled) {
     setIsAutoWeightEnabled(enabled);
     
     const mlSuggestion = window.currentMLSuggestion;
+    const weightInput = document.getElementById('setWeight');
     
     if (!enabled) {
         showToast('Ajustement automatique désactivé', 'info');
+        
+        // Revenir au poids de base/dernier poids
+        if (weightInput && currentExercise) {
+            getSuggestedWeight(currentUser.id, currentExercise.id).then(lastWeight => {
+                const baseWeight = currentExercise.base_weight || 
+                    calculateSuggestedWeight(currentExercise);
+                weightInput.value = lastWeight || baseWeight || 0;
+                updateBarbellVisualization();
+            });
+        }
     } else {
         showToast('Ajustement automatique activé', 'info');
-        if (mlSuggestion) {
-            document.getElementById('setWeight').value = mlSuggestion;
+        if (mlSuggestion && weightInput) {
+            weightInput.value = mlSuggestion;
             updateBarbellVisualization();
         }
     }
     
-    // Toujours mettre à jour le visuel
+    // Mettre à jour le visuel
     updateWeightSuggestionVisual();
 }
 
