@@ -1,165 +1,181 @@
 // ===== GESTIONNAIRE D'ÉQUIPEMENT =====
+// Version refactorisée - Architecture simplifiée
 // Ce fichier centralise tous les calculs liés à l'équipement et aux poids disponibles
-// Il détermine quels poids sont accessibles pour chaque type d'exercice
 
 import { currentUser } from './app-state.js';
 import { TIME_BASED_KEYWORDS } from './app-config.js';
 import { showToast } from './app-ui.js';
 
-// ===== CALCUL DES POIDS DISPONIBLES =====
+// ===== CALCUL DES POIDS DISPONIBLES - FONCTION PRINCIPALE =====
 function calculateAvailableWeights(exercise) {
-    if (!currentUser || !currentUser.equipment_config) return [20, 40, 60];
+    if (!exercise || !currentUser?.equipment_config) {
+        return [0]; // Fallback de sécurité
+    }
     
     const config = currentUser.equipment_config;
-    let weights = new Set();
-    
-    // Déterminer si c'est un exercice temporel
-    const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
-        exercise.name_fr.toLowerCase().includes(keyword)
-    );
+    const weights = new Set();
     
     // Exercices au poids du corps
     if (exercise.equipment.includes('poids_du_corps')) {
-        // Pour les exercices temporels, seulement l'option sans poids
-        if (isTimeBased) {
-            return [0];
-        }
+        weights.add(0); // Sans charge
         
-        // Poids du corps de base
-        const bodyWeight = currentUser.weight || 75;
-        
-        // Commencer avec l'option sans charge (0 = poids du corps seul)
-        weights.add(0);
-        
-        // Si l'utilisateur a des lests, ajouter les options avec charge additionnelle
-        if (config.autres?.lest_corps?.weights?.length > 0) {
-            // Pour chaque lest disponible, ajouter l'option
-            config.autres.lest_corps.weights.forEach(lestWeight => {
-                weights.add(lestWeight); // Stocker juste le poids du lest
+        // Ajouter les charges supplémentaires si disponibles
+        if (config.disques?.weights) {
+            Object.entries(config.disques.weights).forEach(([weight, count]) => {
+                const w = parseFloat(weight);
+                if (count >= 1) {
+                    weights.add(w);
+                    weights.add(w * 2); // Combinaisons
+                    if (count >= 2) weights.add(w * 3);
+                    if (count >= 3) weights.add(w * 4);
+                }
             });
         }
         
-        // Retourner les poids triés
         return Array.from(weights).sort((a, b) => a - b);
     }
     
-    // Barres + disques
-    if (exercise.equipment.some(eq => eq.includes('barbell'))) {
-        let barWeight = 0;
-        
-        if (exercise.equipment.includes('barre_olympique')) {
-            if (config.barres?.olympique?.available) barWeight = 20;
-            else if (config.barres?.courte?.available) barWeight = 2.5;
-        } else if (exercise.equipment.includes('barre_ez')) {
-            if (config.barres?.ez?.available) barWeight = 10;
-        }
-        
-        if (barWeight > 0) {
-            weights.add(barWeight);
-
-            // Calculer uniquement les poids VRAIMENT possibles avec les disques disponibles
-            if (config.disques?.weights && Object.keys(config.disques.weights).length > 0) {
-                const possibleWeights = calculateAllPossibleBarWeights(barWeight, config.disques.weights);
-                
-                // Si on a plus de 3 options, exclure la barre seule pour éviter les sauts bizarres
-                if (possibleWeights.length > 3) {
-                    possibleWeights.forEach(w => {
-                        if (w !== barWeight || possibleWeights.length === 1) {
-                            weights.add(w);
-                        }
-                    });
-                } else {
-                    possibleWeights.forEach(w => weights.add(w));
-                }
-            } else {
-                // Pas de disques, seulement la barre
-                weights.add(barWeight);
-            }
-        }
+    // Haltères (dumbbells)
+    if (exercise.equipment.includes('dumbbells')) {
+        return calculateDumbbellWeights(config);
     }
     
-    // Haltères (dumbbells classiques OU haltères courtes + disques)
-    if (exercise.equipment.includes('dumbbells')) {
-        // Option 1: Haltères fixes classiques
-        if (config.dumbbells?.weights?.length > 0) {
-            config.dumbbells.weights.forEach(w => {
-                weights.add(w * 2); // Paire d'haltères
-            });
-        }
-        
-        // Option 2: Haltères courtes + disques (fallback intelligent)
-        if (config.barres?.courte?.available && config.disques?.weights) {
-            const shortBarbellWeight = 2.5; // Poids d'une haltère courte
-            const basePairWeight = shortBarbellWeight * 2; // Paire vide
-            
-            // Ajouter la paire vide
-            weights.add(basePairWeight);
-            
-            // Calculer tous les poids possibles avec des disques
-            const plateWeights = Object.keys(config.disques.weights)
-                .map(w => parseFloat(w))
-                .filter(w => config.disques.weights[w] >= 2); // Au moins 2 disques par poids
-            
-            // Pour chaque combinaison de disques possibles
-            for (let totalPlateWeight = 0; totalPlateWeight <= 100; totalPlateWeight += 2.5) {
-                if (canMakePlateWeightForDumbbells(totalPlateWeight, plateWeights)) {
-                    weights.add(basePairWeight + totalPlateWeight);
-                }
-            }
-        }
+    // Barres (olympique, EZ, etc.)
+    if (exercise.equipment.some(eq => eq.includes('barre') || eq.includes('barbell'))) {
+        return calculateBarbellWeights(exercise, config);
     }
     
     // Kettlebells
-    if (exercise.equipment.includes('kettlebell') && config.autres?.kettlebell?.weights) {
-        config.autres.kettlebell.weights.forEach(w => weights.add(w));
+    if (exercise.equipment.includes('kettlebell')) {
+        return calculateKettlebellWeights(config);
     }
     
-    // Filtrer et trier
-    return Array.from(weights)
-        .filter(w => w <= 300 && w >= 0)
-        .sort((a, b) => a - b);
+    // Défaut
+    return [0];
 }
 
+// ===== CALCULS SPÉCIALISÉS PAR TYPE D'ÉQUIPEMENT =====
 
-// Nouvelle fonction helper spécifique aux haltères courtes
-function canMakePlateWeightForDumbbells(targetPlateWeight, availablePlates) {
-    if (targetPlateWeight === 0) return true;
+function calculateDumbbellWeights(config) {
+    const weights = new Set();
     
-    // Algorithme simple : essayer de faire le poids avec les disques disponibles
-    // Chaque disque doit être utilisé en paire (un sur chaque haltère)
-    let remaining = targetPlateWeight;
-    const sortedPlates = [...availablePlates].sort((a, b) => b - a);
+    // Option 1: Haltères fixes classiques
+    if (config.dumbbells?.weights && config.dumbbells.weights.length > 0) {
+        config.dumbbells.weights.forEach(weight => {
+            weights.add(weight * 2); // Paire d'haltères
+        });
+    }
     
-    for (const plate of sortedPlates) {
-        const pairWeight = plate * 2; // Paire de disques
-        const maxPairs = Math.floor(remaining / pairWeight);
-        if (maxPairs > 0) {
-            remaining -= maxPairs * pairWeight;
+    // Option 2: Barres courtes + disques (fallback intelligent)
+    if (config.barres?.courte?.available && 
+        config.barres.courte.count >= 2 && 
+        config.disques?.weights) {
+        
+        const shortBarbellWeight = 2.5 * 2; // Paire de barres courtes (5kg total)
+        weights.add(shortBarbellWeight); // Barres seules
+        
+        // Ajouter toutes les combinaisons avec disques
+        const plateWeights = Object.entries(config.disques.weights)
+            .filter(([weight, count]) => count >= 2) // Au moins 2 disques (1 par haltère)
+            .map(([weight, count]) => ({
+                weight: parseFloat(weight),
+                maxPairs: Math.floor(count / 2)
+            }));
+        
+        // Générer toutes les combinaisons possibles
+        for (let totalPlateWeight = 0; totalPlateWeight <= 100; totalPlateWeight += 0.5) {
+            if (canMakePlateWeight(totalPlateWeight, plateWeights)) {
+                weights.add(shortBarbellWeight + totalPlateWeight);
+            }
         }
     }
     
-    return remaining === 0;
+    return Array.from(weights).sort((a, b) => a - b);
 }
 
-// ===== VALIDATION DU POIDS =====
+function calculateBarbellWeights(exercise, config) {
+    const weights = new Set();
+    
+    // Déterminer le poids de la barre
+    let barWeight = 0;
+    if (exercise.equipment.includes('barre_olympique')) {
+        if (config.barres?.olympique?.available) barWeight = 20;
+        else if (config.barres?.courte?.available) barWeight = 2.5;
+    } else if (exercise.equipment.includes('barre_ez')) {
+        if (config.barres?.ez?.available) barWeight = 10;
+    }
+    
+    if (barWeight === 0) return [0]; // Pas de barre disponible
+    
+    weights.add(barWeight); // Barre seule
+    
+    // Ajouter toutes les combinaisons avec disques
+    if (config.disques?.weights) {
+        const plateWeights = Object.entries(config.disques.weights)
+            .filter(([weight, count]) => count >= 2) // Au moins 2 disques (1 par côté)
+            .map(([weight, count]) => ({
+                weight: parseFloat(weight),
+                maxPairs: Math.floor(count / 2)
+            }));
+        
+        // Générer toutes les combinaisons possibles (par côté)
+        for (let totalPlateWeightPerSide = 0; totalPlateWeightPerSide <= 200; totalPlateWeightPerSide += 0.5) {
+            if (canMakePlateWeight(totalPlateWeightPerSide, plateWeights)) {
+                weights.add(barWeight + (totalPlateWeightPerSide * 2)); // x2 car des deux côtés
+            }
+        }
+    }
+    
+    return Array.from(weights).sort((a, b) => a - b);
+}
+
+function calculateKettlebellWeights(config) {
+    if (!config.autres?.kettlebell?.weights) return [0];
+    
+    return config.autres.kettlebell.weights
+        .slice() // Copie pour ne pas modifier l'original
+        .sort((a, b) => a - b);
+}
+
+// ===== FONCTION HELPER POUR LES COMBINAISONS DE DISQUES =====
+function canMakePlateWeight(targetWeight, plateWeights) {
+    if (targetWeight === 0) return true;
+    
+    // Algorithme glouton simple pour vérifier si on peut atteindre le poids
+    let remaining = targetWeight;
+    const usedPlates = plateWeights.map(p => ({ ...p, used: 0 }));
+    
+    // Trier par poids décroissant
+    usedPlates.sort((a, b) => b.weight - a.weight);
+    
+    for (const plate of usedPlates) {
+        while (remaining >= plate.weight && plate.used < plate.maxPairs) {
+            remaining -= plate.weight;
+            plate.used++;
+        }
+        
+        if (Math.abs(remaining) < 0.1) return true; // Tolérance pour les arrondis
+    }
+    
+    return Math.abs(remaining) < 0.1;
+}
+
+// ===== VALIDATION ET CORRECTION DES POIDS =====
+
 function validateWeight(exercise, weight) {
     const availableWeights = calculateAvailableWeights(exercise);
     
     if (availableWeights.length > 0 && !availableWeights.includes(weight)) {
-        // Trouver le poids disponible le plus proche
         const closest = getClosestPossibleWeight(exercise, weight);
         
-        // Vérifier si c'est vraiment réalisable
         if (!isWeightPossible(exercise, closest)) {
-            // Message plus informatif
-            const availableWeights = calculateAvailableWeights(exercise);
             const nearbyOptions = availableWeights
                 .filter(w => Math.abs(w - weight) <= 10)
                 .slice(0, 3)
                 .join(', ');
 
             showToast(
-                `⚠️ ${weight}kg impossible avec vos disques. Suggestion : ${closest}kg${nearbyOptions ? ` (autres options : ${nearbyOptions}kg)` : ''}`, 
+                `⚠️ ${weight}kg impossible. Suggestion : ${closest}kg${nearbyOptions ? ` (autres : ${nearbyOptions}kg)` : ''}`, 
                 'warning'
             );
         }
@@ -170,8 +186,7 @@ function validateWeight(exercise, weight) {
     return weight;
 }
 
-// ===== OBTENIR LE POIDS POSSIBLE LE PLUS PROCHE =====
-export function getClosestPossibleWeight(exercise, targetWeight) {
+function getClosestPossibleWeight(exercise, targetWeight) {
     const availableWeights = calculateAvailableWeights(exercise);
     
     if (availableWeights.length === 0) {
@@ -179,178 +194,24 @@ export function getClosestPossibleWeight(exercise, targetWeight) {
     }
     
     // Si le poids exact existe, parfait
-    if (availableWeights.includes(targetWeight)) {
+    if (availableWeights.some(w => Math.abs(w - targetWeight) < 0.1)) {
         return targetWeight;
     }
     
-    // Trouver les options au-dessus et en-dessous
-    let bestLower = null;
-    let bestHigher = null;
-    
-    for (const weight of availableWeights) {
-        if (weight < targetWeight && (bestLower === null || weight > bestLower)) {
-            bestLower = weight;
-        } else if (weight > targetWeight && (bestHigher === null || weight < bestHigher)) {
-            bestHigher = weight;
-        }
-    }
-    
-    // Logique de sélection intelligente
-    if (bestLower !== null && bestHigher !== null) {
-        const lowerDiff = targetWeight - bestLower;
-        const higherDiff = bestHigher - targetWeight;
-        
-        // Préférer le poids inférieur sauf si :
-        // - La différence est > 5kg ET le poids supérieur est plus proche
-        // - Le poids inférieur est < 50% du poids cible
-        if (bestLower < targetWeight * 0.5) {
-            return bestHigher;
-        }
-        
-        return (lowerDiff <= 5 || lowerDiff <= higherDiff) ? bestLower : bestHigher;
-    }
-    
-    // Si on n'a qu'une option
-    return bestLower || bestHigher || availableWeights[0];
+    // Trouver le plus proche
+    return availableWeights.reduce((closest, current) => 
+        Math.abs(current - targetWeight) < Math.abs(closest - targetWeight) ? current : closest
+    );
 }
 
-// ===== VÉRIFIER SI UN POIDS EST RÉALISABLE =====
-export function isWeightPossible(exercise, weight, config) {
-    const equipmentConfig = config || currentUser?.equipment_config;
-    if (!equipmentConfig) return true; // Pas de validation sans config
-    
-    // Pour barres + disques
-    if (exercise.equipment.some(eq => eq.includes('barbell'))) {
-        // Vérifier qu'on a une barre
-        const hasBarbell = Object.values(equipmentConfig.barres || {})
-            .some(b => b.available && b.count > 0);
-        
-        if (!hasBarbell) return false;
-        
-        // Calculer si on peut atteindre ce poids avec les disques disponibles
-        const barWeight = getBarWeight(exercise, equipmentConfig);
-        const targetPlateWeight = weight - barWeight;
-        
-        if (targetPlateWeight < 0) return false; // Poids demandé < poids de la barre
-        if (targetPlateWeight === 0) return true; // Juste la barre
-        
-        // Vérifier si on peut faire cette combinaison avec les disques
-        return canMakePlateWeightOptimal(targetPlateWeight / 2, equipmentConfig.disques?.weights || {});
-    }
-    
-    // Pour haltères et kettlebells, vérifier directement
+function isWeightPossible(exercise, weight) {
     const availableWeights = calculateAvailableWeights(exercise);
-    return availableWeights.includes(weight);
-}
-
-// ===== FONCTIONS HELPER PRIVÉES =====
-function getBarWeight(exercise, config) {
-    if (exercise.equipment.includes('barre_olympique')) {
-        if (config.barres?.olympique?.available) return 20;
-        if (config.barres?.courte?.available) return 2.5;
-    } else if (exercise.equipment.includes('barre_ez')) {
-        if (config.barres?.ez?.available) return 10;
-    }
-    return 0;
-}
-
-// ===== CALCUL INTELLIGENT DES POIDS POSSIBLES =====
-function calculateAllPossibleBarWeights(barWeight, availablePlates) {
-    // Si pas de disques, retourner seulement la barre
-    if (!availablePlates || Object.keys(availablePlates).length === 0) {
-        return [barWeight];
-    }
-    
-    // Créer un inventaire des disques disponibles par côté
-    const platesInventory = [];
-    Object.entries(availablePlates).forEach(([weight, count]) => {
-        const w = parseFloat(weight);
-        const c = parseInt(count);
-        if (c > 0) {
-            // Nombre de disques disponibles par côté
-            const perSide = Math.floor(c / 2);
-            if (perSide > 0) {
-                platesInventory.push({ weight: w, count: perSide });
-            }
-        }
-    });
-    
-    if (platesInventory.length === 0) {
-        return [barWeight];
-    }
-    
-    // Utiliser un Set pour éviter les doublons
-    const possibleWeightsPerSide = new Set([0]); // Commencer avec 0 (juste la barre)
-    
-    // Pour chaque type de disque
-    for (const plate of platesInventory) {
-        const currentWeights = Array.from(possibleWeightsPerSide);
-        
-        // Pour chaque poids existant
-        for (const baseWeight of currentWeights) {
-            // Essayer d'ajouter 1, 2, 3... disques de ce type
-            for (let i = 1; i <= plate.count; i++) {
-                const newWeight = baseWeight + (plate.weight * i);
-                
-                // Limite raisonnable
-                if (newWeight <= 200) {
-                    possibleWeightsPerSide.add(newWeight);
-                }
-            }
-        }
-    }
-    
-    // Convertir en poids total et trier
-    const allWeights = Array.from(possibleWeightsPerSide)
-        .map(perSide => barWeight + (perSide * 2))
-        .sort((a, b) => a - b);
-    
-    // Filtrer la barre seule si on a beaucoup d'autres options
-    if (allWeights.length > 10 && barWeight >= 10) {
-        return allWeights.filter(w => w !== barWeight);
-    }
-    
-    return allWeights;
-}
-
-// ===== VÉRIFICATION OPTIMALE SI UN POIDS EST POSSIBLE =====
-function canMakePlateWeightOptimal(targetPerSide, availablePlates) {
-    // Si le poids cible est 0, c'est toujours possible
-    if (targetPerSide === 0) return true;
-    
-    // Créer liste des disques utilisables (par paires)
-    const usablePlates = [];
-    Object.entries(availablePlates).forEach(([weight, count]) => {
-        const w = parseFloat(weight);
-        const c = parseInt(count);
-        const pairs = Math.floor(c / 2);
-        for (let i = 0; i < pairs; i++) {
-            usablePlates.push(w);
-        }
-    });
-    
-    if (usablePlates.length === 0) return false;
-    
-    // Programmation dynamique : peut-on atteindre exactement targetPerSide ?
-    const dp = new Array(Math.floor(targetPerSide) + 1).fill(false);
-    dp[0] = true;
-    
-    for (const plate of usablePlates) {
-        // Parcourir en sens inverse pour ne pas réutiliser le même disque
-        for (let weight = targetPerSide; weight >= plate; weight--) {
-            if (dp[Math.floor(weight - plate)]) {
-                dp[Math.floor(weight)] = true;
-            }
-        }
-    }
-    
-    // Vérifier avec tolérance pour les arrondis
-    return dp[Math.floor(targetPerSide)] || 
-           (targetPerSide % 1 !== 0 && dp[Math.floor(targetPerSide + 0.5)]);
+    return availableWeights.some(w => Math.abs(w - weight) < 0.1);
 }
 
 // ===== FILTRAGE DES EXERCICES PAR ÉQUIPEMENT =====
-export function filterExercisesByEquipment(exercises) {
+
+function filterExercisesByEquipment(exercises) {
     const config = currentUser?.equipment_config;
     if (!config) return exercises;
     
@@ -358,67 +219,71 @@ export function filterExercisesByEquipment(exercises) {
         const required = exercise.equipment || [];
         if (required.length === 0) return true; // Bodyweight
         
-        // AJOUTER CE BLOC - Vérifier si on a des barres courtes qui peuvent remplacer les haltères
-        const hasShortBarbells = config.barres?.courte?.available && 
-                                config.barres?.courte?.count >= 2;
-        
         // Vérifier si on a AU MOINS UN équipement requis (logique OR)
-        return required.some(eq => {
-            // Si l'exercice demande des dumbbells et qu'on a des barres courtes, c'est OK
-            if (eq === 'dumbbells' && hasShortBarbells) {
-                return true;
-            }
-
-            // Sinon, vérifier normalement
-            switch(eq) {
-                case 'poids_du_corps':
-                    return true;
-                case 'dumbbells':
-                    // Vérifier dumbbells fixes OU équivalence barres courtes + disques
-                    const hasDumbbells = config.dumbbells?.available && 
-                        config.dumbbells?.weights?.length > 0;
-                    const hasEquivalence = config.barres?.courte?.available && 
-                        config.barres?.courte?.count >= 2 && 
-                        config.disques?.available && 
-                        Object.keys(config.disques?.weights || {}).length > 0;
-                    return hasDumbbells || hasEquivalence;
-                case 'barre_olympique':
-                    return config.barres?.olympique?.available || 
-                        config.barres?.courte?.available;
-                case 'barre_ez':
-                    return config.barres?.ez?.available;
-                case 'banc_plat':
-                    return config.banc?.available;
-                case 'banc_inclinable':
-                    return config.banc?.available && config.banc?.inclinable_haut;
-                case 'banc_declinable':
-                    return config.banc?.available && config.banc?.inclinable_bas;
-                case 'poulies':
-                    return false; // Pas dans la config actuelle
-                case 'elastiques':  // Alias pour compatibilité
-                    return config.elastiques?.available && 
-                        config.elastiques?.bands?.length > 0;
-                case 'barre_traction':
-                    return config.autres?.barre_traction?.available;
-                case 'kettlebell':
-                    return config.autres?.kettlebell?.available &&
-                        config.autres?.kettlebell?.weights?.length > 0;
-                case 'disques':
-                    return config.disques?.available && 
-                        Object.keys(config.disques?.weights || {}).length > 0;
-                case 'machine_convergente':
-                case 'machine_pectoraux':
-                case 'machine_developpe':
-                    return false; // Machines non gérées actuellement
-                default:
-                    console.warn(`Équipement non géré: ${eq}`);
-                    return false;
-            }
-        });
+        return required.some(eq => hasEquipment(eq, config));
     });
 }
 
-// ===== DÉTERMINATION DU TYPE D'EXERCICE =====
+function hasEquipment(equipmentType, config) {
+    switch(equipmentType) {
+        case 'poids_du_corps':
+            return true;
+            
+        case 'dumbbells':
+            // Haltères fixes OU équivalence barres courtes + disques
+            const hasDumbbells = config.dumbbells?.weights?.length > 0;
+            const hasEquivalence = config.barres?.courte?.available && 
+                                 config.barres?.courte?.count >= 2 && 
+                                 config.disques?.weights &&
+                                 Object.keys(config.disques.weights).length > 0;
+            return hasDumbbells || hasEquivalence;
+            
+        case 'barre_olympique':
+            return config.barres?.olympique?.available || 
+                   config.barres?.courte?.available;
+                   
+        case 'barre_ez':
+            return config.barres?.ez?.available;
+            
+        case 'banc_plat':
+            return config.banc?.available;
+            
+        case 'banc_inclinable':
+            return config.banc?.available && config.banc?.inclinable;
+            
+        case 'banc_declinable':
+            return config.banc?.available && config.banc?.declinable;
+            
+        case 'kettlebell':
+            return config.autres?.kettlebell?.available &&
+                   config.autres?.kettlebell?.weights?.length > 0;
+                   
+        case 'disques':
+            return config.disques?.available && 
+                   Object.keys(config.disques?.weights || {}).length > 0;
+                   
+        case 'barre_traction':
+            return config.autres?.barre_traction?.available;
+            
+        case 'elastiques':
+            return config.elastiques?.available && 
+                   config.elastiques?.bands?.length > 0;
+                   
+        // Équipements non supportés
+        case 'poulies':
+        case 'machine_convergente':
+        case 'machine_pectoraux':
+        case 'machine_developpe':
+            return false;
+            
+        default:
+            console.warn(`Équipement non géré: ${equipmentType}`);
+            return false;
+    }
+}
+
+// ===== FONCTIONS UTILITAIRES =====
+
 function getExerciseType(exercise) {
     const isTimeBased = TIME_BASED_KEYWORDS.some(keyword => 
         exercise.name_fr.toLowerCase().includes(keyword)
@@ -429,70 +294,43 @@ function getExerciseType(exercise) {
     if (isTimeBased) {
         return 'time_based';
     } else if (isBodyweight) {
-        return exercise.equipment.some(eq => eq.includes('lest')) ? 
-            'bodyweight_weighted' : 'bodyweight_pure';
+        // Vérifier si l'exercice peut être lesté
+        const canBeWeighted = exercise.equipment.some(eq => 
+            eq.includes('lest') || eq.includes('disque')
+        );
+        return canBeWeighted ? 'weighted_bodyweight' : 'bodyweight';
     } else {
         return 'weighted';
     }
 }
 
-// ===== CALCUL DU POIDS SUGGÉRÉ =====
-function calculateSuggestedWeight(exercise, lastSet = null) {
-    const availableWeights = calculateAvailableWeights(exercise);
+function calculateSuggestedWeight(exercise, availableWeights = null) {
+    const weights = availableWeights || calculateAvailableWeights(exercise);
     
-    if (availableWeights.length === 0) {
-        return 20; // Valeur par défaut
-    }
-    
-    // Si on a une série précédente
-    if (lastSet) {
-        let adjustedWeight;
-        
-        // Ajustement basé sur la fatigue et les performances
-        if (lastSet.fatigue_level >= 8) {
-            adjustedWeight = Math.max(0, lastSet.weight * 0.9);
-        } else if (lastSet.actual_reps > lastSet.target_reps + 2) {
-            adjustedWeight = lastSet.weight + 2.5;
-        } else {
-            adjustedWeight = lastSet.weight;
-        }
-        
-        // Arrondir au poids disponible le plus proche
-        return availableWeights.reduce((prev, curr) => 
-            Math.abs(curr - adjustedWeight) < Math.abs(prev - adjustedWeight) ? curr : prev
-        );
-    }
-    
-    // Sinon, prendre un poids au milieu de la gamme
-    const exerciseType = getExerciseType(exercise);
-    
-    // Exercices au poids du corps
-    if (exercise.equipment.includes('poids_du_corps')) {
-        // Pour les exercices temporels, pas de poids
-        if (getExerciseType(exercise) === 'time_based') {
-            return 0;
-        }
-        
-        // Pour les exercices bodyweight, commencer sans charge additionnelle
+    if (weights.length === 0) {
         return 0;
     }
-
-// Si on arrive ici, prendre un poids au milieu de la gamme disponible
-return availableWeights[Math.floor(availableWeights.length / 2)] || 20;
+    
+    // Exercices au poids du corps : commencer sans charge
+    if (exercise.equipment.includes('poids_du_corps')) {
+        return 0;
+    }
+    
+    // Pour les autres exercices, prendre un poids au milieu de la gamme
+    const middleIndex = Math.floor(weights.length / 2);
+    return weights[middleIndex] || 0;
 }
 
-// ===== FORMATAGE DE L'AFFICHAGE DU POIDS =====
 function formatWeightDisplay(weight, exercise) {
     const exerciseType = getExerciseType(exercise);
     const userWeight = currentUser?.weight || 75;
     
     if (exerciseType === 'time_based' && weight === 0) {
         return 'Sans charge';
-    } else if (exerciseType === 'bodyweight_pure' || exerciseType === 'bodyweight_weighted') {
+    } else if (exerciseType === 'bodyweight' || exerciseType === 'weighted_bodyweight') {
         if (weight === 0) {
             return `Poids du corps (${userWeight}kg)`;
         } else {
-            // Pour bodyweight, weight représente le lest ajouté
             const totalWeight = userWeight + weight;
             return `${totalWeight}kg (corps ${userWeight}kg + lest ${weight}kg)`;
         }
@@ -501,11 +339,54 @@ function formatWeightDisplay(weight, exercise) {
     }
 }
 
-// Export pour les autres modules
+// ===== API COMPATIBILITY LAYER =====
+// Ces fonctions seront remplacées par les appels API quand le backend sera prêt
+
+async function getAvailableWeightsFromAPI(userId, exerciseType) {
+    try {
+        const response = await fetch(`/api/users/${userId}/available-weights/${exerciseType}`);
+        if (response.ok) {
+            const data = await response.json();
+            return data.weights || [];
+        }
+    } catch (error) {
+        console.warn('API non disponible, fallback local:', error);
+    }
+    
+    // Fallback vers calcul local
+    // Cette partie sera supprimée quand l'API sera stable
+    return null; // Signal pour utiliser calculateAvailableWeights
+}
+
+async function getEquipmentSetupFromAPI(userId, exerciseType, weight) {
+    try {
+        const response = await fetch(`/api/users/${userId}/equipment-setup/${exerciseType}/${weight}`);
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (error) {
+        console.warn('API setup non disponible, fallback local:', error);
+    }
+    
+    // Fallback vers affichage simple
+    return null;
+}
+
+// ===== EXPORTS =====
 export {
+    // Fonctions principales
     calculateAvailableWeights,
     validateWeight,
     getExerciseType,
     calculateSuggestedWeight,
-    formatWeightDisplay
+    formatWeightDisplay,
+    
+    // Fonctions utilitaires
+    getClosestPossibleWeight,
+    isWeightPossible,
+    filterExercisesByEquipment,
+    
+    // API compatibility (seront supprimées plus tard)
+    getAvailableWeightsFromAPI,
+    getEquipmentSetupFromAPI
 };

@@ -1,6 +1,6 @@
 // ===== GESTIONNAIRE D'EXERCICES =====
+// Version refactorisée - Architecture simplifiée
 // Ce fichier gère la sélection et l'affichage des exercices
-// Il filtre les exercices disponibles selon l'équipement de l'utilisateur
 
 import {
     currentUser,
@@ -24,6 +24,7 @@ import {
 import { filterExercisesByEquipment } from './app-equipment.js';
 import { createRestPeriod } from './app-api.js';
 import { addToSessionHistory } from './app-history.js';
+import { showToast } from './app-ui.js'; // CORRECTION: Import manquant ajouté
 
 // ===== AFFICHAGE DU SÉLECTEUR D'EXERCICES =====
 function showExerciseSelector() {
@@ -32,44 +33,85 @@ function showExerciseSelector() {
 
     // Validation de la configuration d'équipement
     if (!currentUser?.equipment_config) {
-        container.innerHTML = '<p style="color: var(--gray-light);">Configuration d\'équipement requise</p>';
+        container.innerHTML = createNoEquipmentMessage();
         return;
     }
     
-    // Filtrer les exercices disponibles selon l'équipement
+    // Filtrer et grouper les exercices
     const availableExercises = filterExercisesByEquipment(allExercises);
+    const grouped = groupExercisesByBodyPart(availableExercises);
     
-    // Grouper par partie du corps
+    container.innerHTML = createExerciseSelectorHTML(grouped);
+}
+
+// ===== FONCTIONS UTILITAIRES =====
+
+function createNoEquipmentMessage() {
+    return `
+        <div class="no-equipment-message">
+            <div class="message-icon">⚙️</div>
+            <h3>Configuration d'équipement requise</h3>
+            <p>Veuillez configurer votre équipement pour voir les exercices disponibles.</p>
+            <button class="btn btn-primary" onclick="showView('settings')">
+                ⚙️ Configurer l'équipement
+            </button>
+        </div>
+    `;
+}
+
+function groupExercisesByBodyPart(exercises) {
     const grouped = {};
-    availableExercises.forEach(ex => {
-        if (!grouped[ex.body_part]) grouped[ex.body_part] = [];
+    exercises.forEach(ex => {
+        if (!grouped[ex.body_part]) {
+            grouped[ex.body_part] = [];
+        }
         grouped[ex.body_part].push(ex);
     });
-    
-    container.innerHTML = `
+    return grouped;
+}
+
+function createExerciseSelectorHTML(grouped) {
+    return `
         <div class="exercise-selector">
-            <h3>Sélectionner un exercice</h3>
-            <input type="text" id="exerciseSearch" placeholder="Rechercher..." 
-                   onkeyup="filterExerciseList()" class="form-input">
+            <div class="selector-header">
+                <h3>Sélectionner un exercice</h3>
+                <input type="text" id="exerciseSearch" 
+                       placeholder="Rechercher..." 
+                       onkeyup="filterExerciseList()" 
+                       class="form-input">
+            </div>
             
             <div id="exerciseListSelector" class="exercise-list-selector">
-                ${Object.entries(grouped).map(([part, exercises]) => `
-                    <div class="exercise-group">
-                        <h4>${part}</h4>
-                        ${exercises.map(ex => `
-                            <div class="exercise-option" onclick="selectExercise(${ex.id})">
-                                <div class="exercise-name">${ex.name_fr}</div>
-                                <div class="exercise-equipment">${ex.equipment.join(', ')}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `).join('')}
+                ${createExerciseGroups(grouped)}
             </div>
         </div>
     `;
 }
 
-// ===== FILTRAGE DE LA LISTE D'EXERCICES =====
+function createExerciseGroups(grouped) {
+    return Object.entries(grouped).map(([part, exercises]) => `
+        <div class="exercise-group">
+            <h4 class="group-title">${part}</h4>
+            <div class="exercise-list">
+                ${exercises.map(exercise => createExerciseOption(exercise)).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+function createExerciseOption(exercise) {
+    return `
+        <div class="exercise-option" onclick="selectExercise(${exercise.id})">
+            <div class="exercise-main">
+                <div class="exercise-name">${exercise.name_fr}</div>
+                <div class="exercise-level">${exercise.level}</div>
+            </div>
+            <div class="exercise-equipment">${exercise.equipment.join(', ')}</div>
+        </div>
+    `;
+}
+
+// ===== FILTRAGE DE LA LISTE =====
 function filterExerciseList() {
     const searchInput = document.getElementById('exerciseSearch');
     if (!searchInput) return;
@@ -81,14 +123,12 @@ function filterExerciseList() {
         const exercises = group.querySelectorAll('.exercise-option');
         let hasVisible = false;
         
-        exercises.forEach(ex => {
-            const name = ex.querySelector('.exercise-name').textContent.toLowerCase();
-            if (name.includes(searchTerm)) {
-                ex.style.display = 'block';
-                hasVisible = true;
-            } else {
-                ex.style.display = 'none';
-            }
+        exercises.forEach(exerciseElement => {
+            const name = exerciseElement.querySelector('.exercise-name').textContent.toLowerCase();
+            const isVisible = name.includes(searchTerm);
+            
+            exerciseElement.style.display = isVisible ? 'block' : 'none';
+            if (isVisible) hasVisible = true;
         });
         
         group.style.display = hasVisible ? 'block' : 'none';
@@ -97,150 +137,208 @@ function filterExerciseList() {
 
 // ===== SÉLECTION D'UN EXERCICE =====
 function selectExercise(exerciseId) {
-    // Calculer le repos inter-exercices si applicable
-    if (lastExerciseEndTime) {
-        const restTime = Math.floor((new Date() - lastExerciseEndTime) / 1000);
-        setInterExerciseRestTime(restTime);
-        
-        if (restTime > 10) {
-            // Ajouter le repos inter-exercices à l'historique
-            addToSessionHistory('rest', {
-                duration: restTime,
-                type: 'inter_exercise'
-            });
-            
-            const restData = {
-                workout_id: currentWorkout.id,
-                rest_type: 'inter_exercise',
-                duration: restTime,
-                timestamp: new Date().toISOString()
-            };
-            
-            const interExerciseRests = JSON.parse(localStorage.getItem('interExerciseRests') || '[]');
-            interExerciseRests.push(restData);
-            localStorage.setItem('interExerciseRests', JSON.stringify(interExerciseRests));
-            
-            createRestPeriod(restData).catch(err => 
-                console.error('Erreur sync repos inter-exercices:', err)
-            );
-        }
-        
-        setLastExerciseEndTime(null);
+    const exercise = allExercises.find(ex => ex.id === exerciseId);
+    if (!exercise) {
+        console.error('Exercice non trouvé:', exerciseId);
+        return;
     }
     
-    const exercise = allExercises.find(ex => ex.id === exerciseId);
-    if (!exercise) return;
+    // Gérer le repos inter-exercices
+    handleInterExerciseRest();
     
+    // Configurer l'exercice
+    setupExercise(exercise);
+    
+    // Afficher l'interface de saisie
+    if (window.showSetInput) {
+        window.showSetInput();
+    }
+}
+
+function handleInterExerciseRest() {
+    if (!lastExerciseEndTime) return;
+    
+    const restTime = Math.floor((new Date() - lastExerciseEndTime) / 1000);
+    setInterExerciseRestTime(restTime);
+    
+    if (restTime > 10) {
+        // Enregistrer le repos inter-exercices
+        const restData = {
+            workout_id: currentWorkout.id,
+            rest_type: 'inter_exercise',
+            duration: restTime,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Historique local
+        addToSessionHistory('rest', {
+            duration: restTime,
+            type: 'inter_exercise'
+        });
+        
+        // Sauvegarde locale pour sync
+        const interExerciseRests = JSON.parse(localStorage.getItem('interExerciseRests') || '[]');
+        interExerciseRests.push(restData);
+        localStorage.setItem('interExerciseRests', JSON.stringify(interExerciseRests));
+        
+        // Sync avec le serveur
+        createRestPeriod(restData).catch(err => 
+            console.error('Erreur sync repos inter-exercices:', err)
+        );
+    }
+    
+    setLastExerciseEndTime(null);
+}
+
+function setupExercise(exercise) {
     setCurrentExercise(exercise);
-    // Nettoyer l'ID de la dernière série complétée (nouveau exercice)
+    setCurrentSetNumber(1);
+    
+    // Nettoyer les données de la série précédente
     localStorage.removeItem('lastCompletedSetId');
     
-    // Ajouter le changement d'exercice à l'historique
+    // Historique du changement d'exercice
     addToSessionHistory('exercise_change', {
         exerciseId: exercise.id,
         exerciseName: exercise.name_fr,
         bodyPart: exercise.body_part
     });
     
-    setCurrentSetNumber(1);
-    
-    // Déterminer les répétitions cibles selon le niveau de l'utilisateur
-    if (currentUser && exercise.sets_reps) {
-        const userLevel = currentUser.experience_level;
-        const levelConfig = exercise.sets_reps.find(sr => sr.level === userLevel);
-        if (levelConfig) {
-            setCurrentTargetReps(levelConfig.reps);
-        } else {
-            setCurrentTargetReps(10);
-        }
+    // Configurer les répétitions cibles
+    setTargetRepsForUser(exercise);
+}
+
+function setTargetRepsForUser(exercise) {
+    if (!currentUser?.experience_level || !exercise.sets_reps) {
+        setCurrentTargetReps(10); // Valeur par défaut
+        return;
     }
     
-    // Afficher l'interface de saisie des séries
-    if (window.showSetInput) {
-        window.showSetInput();
+    const userLevel = currentUser.experience_level;
+    const levelConfig = exercise.sets_reps.find(sr => sr.level === userLevel);
+    
+    if (levelConfig) {
+        setCurrentTargetReps(levelConfig.reps);
+    } else {
+        setCurrentTargetReps(10);
     }
 }
 
 // ===== FIN D'UN EXERCICE =====
 function finishExercise() {
-    // Nettoyer l'ID de la dernière série (exercice terminé)
+    // Nettoyer les données d'exercice
+    cleanupExerciseData();
+    
+    // Arrêter tous les timers
+    stopAllTimers();
+    
+    // Sauvegarder l'historique
+    saveExerciseHistory();
+    
+    // Réinitialiser l'état
+    resetExerciseState();
+    
+    // Déterminer la prochaine interface à afficher
+    handlePostExerciseNavigation();
+}
+
+function cleanupExerciseData() {
     localStorage.removeItem('lastCompletedSetId');
-    // Capturer le temps de fin de l'exercice
     setLastExerciseEndTime(new Date());
-   
-    // Arrêter les timers
+}
+
+function stopAllTimers() {
     if (window.timerInterval) {
         clearInterval(window.timerInterval);
-        window.setTimerInterval && window.setTimerInterval(null);
+        if (window.setTimerInterval) {
+            window.setTimerInterval(null);
+        }
     }
+    
     if (window.restTimerInterval) {
         clearInterval(window.restTimerInterval);
-        window.setRestTimerInterval && window.setRestTimerInterval(null);
+        if (window.setRestTimerInterval) {
+            window.setRestTimerInterval(null);
+        }
     }
-   
-    // Sauvegarder l'historique de l'exercice
-    if (currentExercise && currentSetNumber > 1) {
-        const exerciseHistory = {
-            exerciseId: currentExercise.id,
-            exerciseName: currentExercise.name_fr,
-            totalSets: currentSetNumber - 1,
-            timestamp: new Date().toISOString()
-        };
-        const workoutHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
-        workoutHistory.push(exerciseHistory);
-        localStorage.setItem('currentWorkoutHistory', JSON.stringify(workoutHistory));
-    }
-   
-    // Réinitialiser
+}
+
+function saveExerciseHistory() {
+    if (!currentExercise || currentSetNumber <= 1) return;
+    
+    const exerciseHistory = {
+        exerciseId: currentExercise.id,
+        exerciseName: currentExercise.name_fr,
+        totalSets: currentSetNumber - 1,
+        timestamp: new Date().toISOString()
+    };
+    
+    const workoutHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+    workoutHistory.push(exerciseHistory);
+    localStorage.setItem('currentWorkoutHistory', JSON.stringify(workoutHistory));
+}
+
+function resetExerciseState() {
     setCurrentExercise(null);
     setCurrentSetNumber(1);
     setSetStartTime(null);
     setLastSetEndTime(null);
     setSelectedFatigue(3);
     setSelectedEffort(3);
-   
-    // VÉRIFIER D'ABORD si on est en mode guidé avec exerciseArea marqué
+}
+
+function handlePostExerciseNavigation() {
+    // Vérifier d'abord si on est en mode guidé via l'attribut data
     const exerciseArea = document.getElementById('exerciseArea');
-    if (exerciseArea && exerciseArea.getAttribute('data-guided-mode') === 'true') {
-        // Nettoyer l'attribut
+    if (exerciseArea?.getAttribute('data-guided-mode') === 'true') {
         exerciseArea.removeAttribute('data-guided-mode');
-       
-        // Retourner à l'interface guidée au lieu du sélecteur normal
+        
         if (window.returnToGuidedInterface) {
             window.returnToGuidedInterface();
-            return; // IMPORTANT : sortir ici pour ne pas exécuter le code suivant
+            return;
         }
     }
     
-    // ENSUITE vérifier le mode de séance normal
-    if (currentWorkout && currentWorkout.status === 'started') {
-        const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
-        if (currentWorkout.type === 'adaptive' && guidedPlan) {
-            // Mode guidé - passer à l'exercice suivant
-            if (typeof window.nextGuidedExercise === 'function') {
-                window.nextGuidedExercise();
-            } else {
-                console.warn('nextGuidedExercise non disponible, retour au sélecteur');
-                showExerciseSelector();
-            }
+    // Ensuite vérifier le type de séance
+    if (currentWorkout?.status === 'started') {
+        if (isGuidedWorkout()) {
+            handleGuidedWorkoutNavigation();
         } else {
-            // Mode libre - afficher le sélecteur
             showExerciseSelector();
         }
+    } else {
+        showExerciseSelector();
     }
 }
 
-// ===== AFFICHAGE DES DÉTAILS D'UN EXERCICE =====
-function showExerciseDetail(exerciseId) {
-    const exercise = allExercises.find(e => e.id === exerciseId);
-    if (!exercise) return;
-    
-    // Afficher les détails de l'exercice dans une modal
-    console.log('Détails exercice:', exercise);
-    // TODO: Implémenter la modal de détails
+function isGuidedWorkout() {
+    return currentWorkout?.type === 'adaptive' && 
+           localStorage.getItem('guidedWorkoutPlan');
 }
 
-// ===== EXPORT GLOBAL =====
+function handleGuidedWorkoutNavigation() {
+    if (typeof window.nextGuidedExercise === 'function') {
+        window.nextGuidedExercise();
+    } else {
+        console.warn('nextGuidedExercise non disponible, retour au sélecteur');
+        showExerciseSelector();
+    }
+}
+
+// ===== DÉTAILS D'EXERCICE =====
+function showExerciseDetail(exerciseId) {
+    const exercise = allExercises.find(e => e.id === exerciseId);
+    if (!exercise) {
+        console.error('Exercice non trouvé pour détails:', exerciseId);
+        return;
+    }
+    
+    // TODO: Implémenter la modal de détails d'exercice
+    console.log('Détails exercice:', exercise);
+    showToast(`Détails pour ${exercise.name_fr}`, 'info');
+}
+
+// ===== EXPORTS GLOBAUX =====
 window.showExerciseSelector = showExerciseSelector;
 window.filterExerciseList = filterExerciseList;
 window.selectExercise = selectExercise;

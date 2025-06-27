@@ -1,7 +1,8 @@
 // ===== GESTIONNAIRE DE SÉRIES =====
+// Version refactorisée - Architecture simplifiée
 // Ce fichier gère l'exécution et l'enregistrement des séries
-// Il contient toute la logique de l'interface de saisie et de validation
 
+// ===== IMPORTS ET SETUP =====
 import {
     currentUser,
     currentWorkout,
@@ -45,76 +46,197 @@ import {
 import { TIME_BASED_KEYWORDS } from './app-config.js';
 import { addToSessionHistory } from './app-history.js';
 
-// Exposer globalement les fonctions critiques dès le chargement du module
-window.adjustWeightToNext = adjustWeightToNext;
-window.adjustReps = adjustReps;
+// ===== VARIABLES GLOBALES - NOUVEAU SYSTÈME =====
+let currentAvailableWeights = [];
+let currentWeightIndex = 0;
 
-// ===== MISE À JOUR VISUELLE DES SUGGESTIONS =====
-async function updateWeightSuggestionVisual() {
-    const mlSuggestion = window.currentMLSuggestion;
-    const currentWeight = parseFloat(document.getElementById('setWeight').value);
-    
-    const decreaseBtn = document.getElementById('weightDecreaseBtn');
-    const increaseBtn = document.getElementById('weightIncreaseBtn');
+// ===== INTERFACE POIDS SIMPLIFIÉE =====
 
-    // Vérifier que les boutons existent avant de les manipuler
-    if (!decreaseBtn || !increaseBtn) {
-        console.warn('Boutons de poids non trouvés dans updateWeightSuggestionVisual');
-        return;
-    }
-        
-    // Retirer les classes existantes
-    if (decreaseBtn) {
-        decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
-    }
-    if (increaseBtn) {
-        increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
-    }
-    
-    // NOUVEAU : Gérer l'aspect visuel du texte de suggestion
-    const suggestionDiv = document.getElementById('weightSuggestion');
-    if (suggestionDiv) {
-        if (!isAutoWeightEnabled) {
-            suggestionDiv.style.opacity = '0.5';
-            suggestionDiv.style.textDecoration = 'line-through';
-        } else {
-            suggestionDiv.style.opacity = '1';
-            suggestionDiv.style.textDecoration = 'none';
+async function loadAvailableWeights(exerciseType) {
+    try {
+        // TENTATIVE d'appel API (nouveau système)
+        const response = await fetch(`/api/users/${currentUser.id}/available-weights/${exerciseType}`);
+        if (response.ok) {
+            const data = await response.json();
+            currentAvailableWeights = data.weights || [];
+            return currentAvailableWeights;
         }
+    } catch (error) {
+        console.warn('Endpoint non disponible, fallback ancien système:', error);
     }
     
-    // Animation des boutons selon le contexte
-    const isAdaptiveWorkout = currentWorkout && currentWorkout.type === 'adaptive';
+    // FALLBACK : utiliser l'ancien système
+    currentAvailableWeights = calculateAvailableWeights(currentExercise);
+    return currentAvailableWeights;
+}
 
-    // Pour les séances adaptatives, toujours animer si différence
-    // Pour les autres, animer seulement si auto désactivé
-    if (mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1) {
-        if (isAdaptiveWorkout || !isAutoWeightEnabled) {
-            if (mlSuggestion < currentWeight && decreaseBtn) {
-                decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
-            } else if (mlSuggestion > currentWeight && increaseBtn) {
-                increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
+async function createWeightInterface(exerciseType, currentWeight) {
+    // Charger les poids disponibles
+    await loadAvailableWeights(exerciseType);
+    
+    // Trouver l'index du poids actuel
+    currentWeightIndex = currentAvailableWeights.findIndex(w => Math.abs(w - currentWeight) < 0.1);
+    if (currentWeightIndex === -1) {
+        currentWeightIndex = 0;
+    }
+    
+    // Interface unique pour tous les types
+    return `
+        <div class="weight-interface">
+            <div class="weight-control-row">
+                <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeight(-1)" 
+                        ${currentWeightIndex <= 0 ? 'disabled' : ''}>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    </svg>
+                </button>
+                
+                <div class="weight-display" id="currentWeightDisplay">
+                    ${currentWeight}<span class="weight-unit">kg</span>
+                </div>
+                
+                <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeight(1)"
+                        ${currentWeightIndex >= currentAvailableWeights.length - 1 ? 'disabled' : ''}>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="equipmentVisualization">
+                ${await getEquipmentVisualization(exerciseType, currentWeight)}
+            </div>
+        </div>
+    `;
+}
+
+async function getEquipmentVisualization(exerciseType, weight) {
+    try {
+        // TENTATIVE d'appel API (nouveau système)
+        const response = await fetch(`/api/users/${currentUser.id}/equipment-setup/${exerciseType}/${weight}`);
+        if (response.ok) {
+            const setup = await response.json();
+            
+            if (setup.type === 'fixed_dumbbells') {
+                return `
+                    <div class="dumbbell-visualization">
+                        <div class="dumbbell-pair">
+                            <div class="dumbbell">${setup.weight_each}kg</div>
+                            <div class="dumbbell">${setup.weight_each}kg</div>
+                        </div>
+                        <div class="setup-description">2 haltères de ${setup.weight_each}kg</div>
+                    </div>
+                `;
+            }
+            
+            if (setup.type === 'short_barbells') {
+                return `
+                    <div class="short-barbells-visualization">
+                        ${setup.plates_per_dumbbell.map(plate => 
+                            `<div class="plate-group">${plate.count}×${plate.weight}kg</div>`
+                        ).join(' + ')}
+                        <div class="setup-description">
+                            2 barres courtes (${setup.bar_weight_each}kg chacune) + disques
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (setup.type === 'barbell') {
+                return `
+                    <div class="barbell-visualization">
+                        <div class="barbell-setup">
+                            Barre ${setup.bar_weight}kg + 
+                            ${setup.plates_per_side.map(plate => 
+                                `${plate.count}×${plate.weight}kg`
+                            ).join(' + ')} par côté
+                        </div>
+                    </div>
+                `;
             }
         }
-    }
-
-    // Ajouter après les classList.add (ligne ~75)
-    if (decreaseBtn && decreaseBtn.classList.contains('suggest-pulse')) {
-        decreaseBtn.offsetHeight; // Force reflow
-    }
-    if (increaseBtn && increaseBtn.classList.contains('suggest-pulse')) {
-        increaseBtn.offsetHeight; // Force reflow
+    } catch (error) {
+        console.warn('Endpoint visualisation non disponible, fallback simple:', error);
     }
     
-    // Mettre à jour le texte de suggestion
-    if (suggestionDiv && mlSuggestion) {
-        const diff = mlSuggestion - currentWeight;
-        const sign = diff > 0 ? '+' : '';
-        suggestionDiv.innerHTML = `💡 Suggestion ML : ${mlSuggestion}kg${Math.abs(diff) > 0.1 ? ` (${sign}${diff.toFixed(1)}kg)` : ''}`;
+    // FALLBACK : affichage simple selon le type
+    if (exerciseType === 'dumbbells') {
+        return `<div class="simple-equipment">Haltères: ${weight}kg total</div>`;
+    } else if (exerciseType === 'barbell') {
+        return `<div class="simple-equipment">Barre + disques: ${weight}kg total</div>`;
+    } else if (exerciseType === 'ez_curl') {
+        return `<div class="simple-equipment">Barre EZ + disques: ${weight}kg total</div>`;
+    }
+    
+    return `<div class="simple-equipment">${weight}kg</div>`;
+}
+
+function adjustWeight(direction) {
+    const newIndex = currentWeightIndex + direction;
+    
+    if (newIndex >= 0 && newIndex < currentAvailableWeights.length) {
+        currentWeightIndex = newIndex;
+        const newWeight = currentAvailableWeights[newIndex];
+        
+        // Mettre à jour l'input caché
+        const weightInput = document.getElementById('setWeight');
+        if (weightInput) {
+            weightInput.value = newWeight;
+        }
+        
+        // Mettre à jour l'affichage
+        const display = document.getElementById('currentWeightDisplay');
+        if (display) {
+            display.innerHTML = `${newWeight}<span class="weight-unit">kg</span>`;
+        }
+        
+        // Mettre à jour les boutons
+        updateWeightButtons();
+        
+        // Mettre à jour la visualisation
+        updateEquipmentVisualization();
+        
+        // Mettre à jour les suggestions visuelles
+        updateWeightSuggestionVisual();
     }
 }
 
-// ===== AFFICHAGE DE L'INTERFACE DE SAISIE =====
+function updateWeightButtons() {
+    const decreaseBtn = document.getElementById('weightDecreaseBtn');
+    const increaseBtn = document.getElementById('weightIncreaseBtn');
+    
+    if (decreaseBtn) {
+        decreaseBtn.disabled = currentWeightIndex <= 0;
+    }
+    if (increaseBtn) {
+        increaseBtn.disabled = currentWeightIndex >= currentAvailableWeights.length - 1;
+    }
+}
+
+async function updateEquipmentVisualization() {
+    const container = document.getElementById('equipmentVisualization');
+    if (container && currentAvailableWeights[currentWeightIndex]) {
+        const exerciseType = getExerciseTypeFromExercise(currentExercise);
+        const weight = currentAvailableWeights[currentWeightIndex];
+        container.innerHTML = await getEquipmentVisualization(exerciseType, weight);
+    }
+}
+
+function getExerciseTypeFromExercise(exercise) {
+    if (exercise.equipment.includes('dumbbells')) {
+        return 'dumbbells';
+    }
+    if (exercise.equipment.includes('barre_ez') || exercise.equipment.includes('curl')) {
+        return 'ez_curl';
+    }
+    if (exercise.equipment.some(eq => eq.includes('barre') || eq.includes('barbell'))) {
+        return 'barbell';
+    }
+    return 'bodyweight';
+}
+
+// ===== FONCTIONS PRINCIPALES =====
+
 async function showSetInput() {
     const container = document.getElementById('exerciseArea');
     if (!container) return;
@@ -129,7 +251,6 @@ async function showSetInput() {
     const existingHistory = document.getElementById('previousSets');
     const savedHistory = existingHistory ? existingHistory.innerHTML : '';
     const lastCompletedSetId = localStorage.getItem('lastCompletedSetId');
-    console.log('DEBUG - lastCompletedSetId récupéré:', lastCompletedSetId);
 
     // DÉCLARATION DE TOUTES LES VARIABLES ICI
     let mlRepsSuggestion = null;
@@ -156,7 +277,6 @@ async function showSetInput() {
 
     // Gestion des ajustements ML pour séances adaptatives
     if (currentWorkout && currentWorkout.type === 'adaptive' && lastCompletedSetId) {
-        // Récupérer la partie du corps du dernier exercice complété
         const lastBodyPart = localStorage.getItem('lastCompletedBodyPart');
         const currentBodyPart = currentExercise.body_part;
         
@@ -166,12 +286,9 @@ async function showSetInput() {
             shouldRecalculate: !lastBodyPart || lastBodyPart !== currentBodyPart
         });
         
-        // Condition : recalculer uniquement si changement de partie du corps
         if (!lastBodyPart || lastBodyPart !== currentBodyPart) {
-            // Changement de partie du corps - appeler ML
             console.log('DEBUG - Changement de partie du corps, appel ML');
             
-            // Vérifier qu'on a bien une série de CE workout
             const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
             const hasValidSets = sessionHistory.some(h => 
                 h.sets && h.sets.length > 0 && h.sets[0].workout_id === currentWorkout.id
@@ -181,31 +298,19 @@ async function showSetInput() {
                 try {
                     const remainingSets = (currentExercise.sets_reps?.find(sr => sr.level === currentUser?.experience_level)?.sets || 3) - currentSetNumber + 1;
                     
-                    console.log('DEBUG - Appel getWorkoutAdjustments avec:', {
-                        workoutId: currentWorkout.id,
-                        setId: lastCompletedSetId,
-                        remainingSets: remainingSets,
-                        exerciseId: currentExercise.id
-                    });
-
                     adjustments = await getWorkoutAdjustments(
                         currentWorkout.id,
                         lastCompletedSetId,
                         remainingSets
                     );
                     
-                    console.log('DEBUG - Réponse adjustments:', adjustments);
-                    
                     if (adjustments?.adjustments) {
-                        // Sauvegarder le poids ML pour cette partie du corps
                         const mlWeight = adjustments.adjustments.suggested_weight;
                         if (mlWeight) {
                             localStorage.setItem(`mlWeight_${currentBodyPart}_${currentWorkout.id}`, mlWeight.toString());
                             mlSuggestion = mlWeight;
-                            console.log('DEBUG - Poids ML sauvegardé pour', currentBodyPart, ':', mlWeight);
                         }
                         
-                        // Gérer aussi les reps si disponibles
                         if (adjustments.adjustments.suggested_reps) {
                             mlRepsSuggestion = adjustments.adjustments.suggested_reps;
                             if (typeof mlRepsSuggestion === 'number') {
@@ -222,7 +327,6 @@ async function showSetInput() {
                 }
             }
         } else {
-            // Même partie du corps - réutiliser le poids sauvegardé
             const savedMLWeight = localStorage.getItem(`mlWeight_${currentBodyPart}_${currentWorkout.id}`);
             if (savedMLWeight) {
                 mlSuggestion = parseFloat(savedMLWeight);
@@ -230,17 +334,13 @@ async function showSetInput() {
             }
         }
         
-        // Toujours stocker globalement pour updateWeightSuggestionVisual
         window.currentMLSuggestion = mlSuggestion;
     }
     
-    // Déterminer le type d'exercice
-    // Pour les séances adaptatives, utiliser les suggestions du plan guidé
-    // si on n'a pas de suggestions ML (première série)
+    // Pour les séances adaptatives, utiliser les suggestions du plan guidé si pas de ML
     if (isGuidedMode && !mlSuggestion && suggestedWeight && currentSetNumber === 1) {
         mlSuggestion = suggestedWeight;
         window.currentMLSuggestion = mlSuggestion;
-        console.log('📊 Utilisation suggestion guidée comme ML:', mlSuggestion);
     }
 
     if (isGuidedMode && !mlRepsSuggestion && targetReps && currentSetNumber === 1) {
@@ -248,18 +348,12 @@ async function showSetInput() {
             optimal: typeof targetReps === 'string' ? parseInt(targetReps.split('-')[0]) : targetReps,
             confidence: 0.8
         };
-        console.log('📊 Utilisation reps guidées comme ML:', mlRepsSuggestion);
     }
 
     // Déterminer le type d'exercice
     const exerciseType = getExerciseType(currentExercise);
     const isTimeBased = exerciseType === 'time_based';
     const isBodyweight = exerciseType === 'bodyweight' || exerciseType === 'weighted_bodyweight';
-    
-    // CORRECTION : Forcer la détection des exercices avec barre
-    const usesBarbell = currentExercise.equipment.some(eq => 
-        eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
-    );
     
     // Obtenir les poids disponibles selon l'équipement
     const availableWeights = calculateAvailableWeights(currentExercise);
@@ -270,23 +364,18 @@ async function showSetInput() {
     if (isBodyweight) {
         defaultWeight = 0; // Poids additionnel
     } else if (isAutoWeightEnabled && mlSuggestion) {
-        // Toggle activé : utiliser ML
         defaultWeight = mlSuggestion;
     } else {
-        // Toggle désactivé ou pas de ML : utiliser dernier poids ou poids de base
         const lastWeight = await getSuggestedWeight(currentUser.id, currentExercise.id);
         const baseWeight = currentExercise.base_weight || calculateSuggestedWeight(currentExercise, availableWeights);
         defaultWeight = lastWeight || baseWeight || 0;
         
-        // En mode guidé première série, utiliser suggestion guidée
         if (isGuidedMode && suggestedWeight && currentSetNumber === 1) {
             defaultWeight = suggestedWeight;
         }
     }
     
     const weightLabel = isBodyweight ? 
-        isTimeBased ? 
-        'Charge additionnelle (kg)' : 
         'Charge additionnelle (kg)' : 
         isTimeBased ? 
         'Charge additionnelle (kg)' : 
@@ -294,11 +383,9 @@ async function showSetInput() {
     
     const repsLabel = isTimeBased ? 'Durée (secondes)' : 'Répétitions';
     
-    // NOUVEAU : En mode guidé, utiliser les répétitions cibles comme valeur par défaut
     const defaultReps = isGuidedMode && targetReps && currentSetNumber === 1 ? 
         (typeof targetReps === 'string' ? parseInt(targetReps.split('-')[0]) : targetReps) : 
         (isTimeBased ? 30 : currentTargetReps);
-
 
     container.innerHTML = `
         <div class="current-exercise">
@@ -431,7 +518,7 @@ async function showSetInput() {
             weightInfo.innerHTML = `
                 <div class="bodyweight-selector">
                     <div class="weight-control-row">
-                        <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeightToNext(-1)">
+                        <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeight(-1)">
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                             </svg>
@@ -442,7 +529,7 @@ async function showSetInput() {
                             <span class="additional-weight">+ <span id="additionalWeightDisplay">0</span>kg</span>
                         </div>
                         
-                        <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeightToNext(1)">
+                        <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeight(1)">
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
@@ -456,22 +543,14 @@ async function showSetInput() {
     // Démarrer les timers
     startTimers();
     setSetStartTime(new Date());
-    // Forcer la mise à jour de la visualisation pour tous les exercices avec poids
-    if (!isBodyweight && !isTimeBased) {
-        setTimeout(() => {
-            updateBarbellVisualization();
-            updateWeightSuggestionVisual();
-        }, 100);
-    }
+    
     // Mettre à jour la visualisation après création du DOM
     setTimeout(() => {
-        if (window.updateBarbellVisualization) {
-            window.updateBarbellVisualization();
+        if (!isBodyweight && !isTimeBased) {
+            updateBarbellVisualization();
         }
-        if (window.updateWeightSuggestionVisual) {
-            window.updateWeightSuggestionVisual();
-        }
-    }, 100);
+        updateWeightSuggestionVisual();
+    }, 150);
 
     // Gérer le clavier virtuel sur mobile
     const handleViewportChange = () => {
@@ -482,7 +561,6 @@ async function showSetInput() {
         if (setTracker) {
             if (isKeyboardOpen) {
                 setTracker.style.paddingBottom = '260px';
-                // Scroll vers l'input actif
                 const activeElement = document.activeElement;
                 if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'SELECT')) {
                     setTimeout(() => {
@@ -500,528 +578,94 @@ async function showSetInput() {
     } else {
         window.addEventListener('resize', handleViewportChange);
     }
-    
-    // Mettre à jour les suggestions visuelles après un court délai
-    setTimeout(() => {
-        updateWeightSuggestionVisual();
-    }, 500);
-    
-    attachWeightChangeListeners();
-    
-    const barbellContainer = document.getElementById('barbell-visualization');
-    if (barbellContainer && currentExercise.equipment.some(eq => 
-        eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
-    )) {
-        updateBarbellVisualization();
-    }
-    
-    // Forcer la mise à jour des suggestions visuelles après un court délai
-    setTimeout(() => {
-        // S'assurer que la suggestion ML est bien définie avant l'update visuel
-        if (window.currentMLSuggestion === undefined && mlSuggestion) {
-            window.currentMLSuggestion = mlSuggestion;
-        }
-        updateWeightSuggestionVisual();
-    }, 100);
 }
 
-// ===== VISUALISATION DE LA BARRE =====
-function updateBarbellVisualization() {
+async function updateBarbellVisualization() {
     const container = document.getElementById('barbell-visualization');
-    if (!container) return;
+    if (!container || !currentExercise) return;
+    
+    const exerciseType = getExerciseType(currentExercise);
+    if (exerciseType === 'bodyweight') return;
     
     const weightInput = document.getElementById('setWeight');
-    if (!weightInput) return;
+    const currentWeight = parseFloat(weightInput?.value) || 0;
     
-    const totalWeight = parseFloat(weightInput.value) || 0;
+    try {
+        const exerciseTypeForAPI = getExerciseTypeFromExercise(currentExercise);
+        container.innerHTML = await createWeightInterface(exerciseTypeForAPI, currentWeight);
+    } catch (error) {
+        console.error('Erreur interface poids:', error);
+        // Fallback vers interface simple
+        container.innerHTML = `
+            <div class="weight-control-row">
+                <button class="weight-btn decrease" onclick="adjustWeight(-1)">-</button>
+                <div class="weight-display">${currentWeight}<span class="weight-unit">kg</span></div>
+                <button class="weight-btn increase" onclick="adjustWeight(1)">+</button>
+            </div>
+        `;
+    }
+}
+
+function updateWeightSuggestionVisual() {
+    const mlSuggestion = window.currentMLSuggestion;
+    const currentWeight = parseFloat(document.getElementById('setWeight')?.value || 0);
     
-    if (!currentExercise || !currentUser) {
-        container.innerHTML = createSimplifiedWeightInterface(totalWeight);
+    const decreaseBtn = document.getElementById('weightDecreaseBtn');
+    const increaseBtn = document.getElementById('weightIncreaseBtn');
+
+    // Vérifier que les boutons existent avant de les manipuler
+    if (!decreaseBtn || !increaseBtn) {
+        console.warn('Boutons de poids non trouvés dans updateWeightSuggestionVisual');
         return;
     }
-    
-    // Déterminer si l'exercice utilise une barre OU des haltères (qui peuvent être des barres courtes)
-    const usesBarbell = currentExercise.equipment.some(eq => 
-        eq.includes('barre') || eq.includes('barbell') || eq.includes('bar')
-    );
-    
-    const usesDumbbells = currentExercise.equipment.includes('dumbbells');
-    
-    // Vérifier si on a l'équivalence barres courtes pour les dumbbells
-    const hasShortBarbellEquivalence = usesDumbbells && 
-        currentUser.equipment_config?.barres?.courte?.available &&
-        currentUser.equipment_config?.barres?.courte?.count >= 2 &&
-        currentUser.equipment_config?.disques?.available;
-    
-    // Pour les exercices avec barre OU avec équivalence dumbbells
-    if ((usesBarbell || hasShortBarbellEquivalence) && 
-        currentUser?.equipment_config?.disques?.weights && 
-        Object.keys(currentUser.equipment_config.disques.weights).length > 0) {
         
-        let barWeight, platesWeight;
-        
-        if (hasShortBarbellEquivalence) {
-            // Cas des barres courtes (paire)
-            barWeight = 2.5 * 2; // Paire de barres courtes
-            platesWeight = totalWeight - barWeight;
+    // Retirer les classes existantes
+    decreaseBtn.classList.remove('suggest-decrease', 'suggest-pulse');
+    increaseBtn.classList.remove('suggest-increase', 'suggest-pulse');
+    
+    // Gérer l'aspect visuel du texte de suggestion
+    const suggestionDiv = document.getElementById('weightSuggestion');
+    if (suggestionDiv) {
+        if (!isAutoWeightEnabled) {
+            suggestionDiv.style.opacity = '0.5';
+            suggestionDiv.style.textDecoration = 'line-through';
         } else {
-            // Cas des barres classiques
-            barWeight = getBarWeightForExercise(currentExercise);
-            platesWeight = totalWeight - barWeight;
-        }
-        
-        if (platesWeight >= 0) {
-            const platesPerSide = calculateOptimalPlateDistribution(platesWeight / 2);
-            
-            if (hasShortBarbellEquivalence) {
-                // Affichage spécial pour paire d'haltères courtes
-                container.innerHTML = createDumbbellPairHTML(2.5, platesPerSide);
-            } else {
-                container.innerHTML = createBarbellHTML(barWeight, platesPerSide);
-            }
-        } else {
-            container.innerHTML = createSimplifiedWeightInterface(totalWeight);
-        }
-    } else {
-        // Pour tous les autres cas : afficher l'interface simplifiée avec boutons
-        container.innerHTML = createSimplifiedWeightInterface(totalWeight);
-    }
-    
-    // Réappliquer les suggestions visuelles après mise à jour du DOM
-    setTimeout(() => {
-        updateWeightSuggestionVisual();
-    }, 50);
-}
-
-function getBarWeightForExercise(exercise) {
-    if (!currentUser?.equipment_config) return 20;
-    const config = currentUser.equipment_config;
-    
-    if (exercise.equipment.includes('barre_olympique')) {
-        if (config.barres?.olympique?.available) return 20;
-        if (config.barres?.courte?.available) return 2.5;
-    } else if (exercise.equipment.includes('barre_ez')) {
-        if (config.barres?.ez?.available) return 10;
-    }
-    return 20;
-}
-
-function calculateOptimalPlateDistribution(targetPerSide) {
-    if (!currentUser?.equipment_config?.disques?.weights) {
-    console.warn('Aucune configuration de disques trouvée pour l\'utilisateur');
-    return [];
-    }
-    
-    const availablePlates = currentUser.equipment_config.disques.weights;
-    const result = [];
-    let remaining = targetPerSide;
-    
-    // Trier les disques par poids décroissant
-    const sortedPlates = Object.entries(availablePlates)
-        .filter(([w, count]) => count > 0)
-        .map(([w, count]) => ({weight: parseFloat(w), count: Math.floor(count / 2)}))
-        .sort((a, b) => b.weight - a.weight);
-    
-    // Algorithme glouton optimisé
-    for (const plate of sortedPlates) {
-        while (remaining >= plate.weight && plate.count > 0) {
-            const used = result.find(p => p.weight === plate.weight);
-            if (used) {
-                used.count++;
-            } else {
-                result.push({weight: plate.weight, count: 1});
-            }
-            remaining -= plate.weight;
-            plate.count--;
+            suggestionDiv.style.opacity = '1';
+            suggestionDiv.style.textDecoration = 'none';
         }
     }
     
-    // Si on n'a pas pu faire le poids exact, retourner la meilleure approximation
-    if (remaining > 0.1) {
-        return [{weight: 0, count: 0, error: true}];
-    }
-    
-    return result;
-}
+    // Animation des boutons selon le contexte
+    const isAdaptiveWorkout = currentWorkout && currentWorkout.type === 'adaptive';
 
-function createBarbellHTML(barWeight, platesPerSide) {
-    // Calculer le poids total
-    const totalPlatesWeight = platesPerSide.reduce((sum, p) => sum + (p.weight * p.count * 2), 0);
-    const totalWeight = barWeight + totalPlatesWeight;
-    
-    // Créer le HTML avec le nouveau layout
-    let html = `
-        <div class="barbell-card-integrated">
-            <div class="weight-control-row">
-                <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeightToNext(-1)">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                    </svg>
-                </button>
-                
-                <div class="barbell-total-integrated">${totalWeight}<span class="weight-unit">kg</span></div>
-                
-                <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeightToNext(1)">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="barbell-plates-visualization">
-    `;
-    
-    // Disques côté gauche (ordre inversé pour la symétrie)
-    platesPerSide.slice().reverse().forEach(plate => {
-        for (let i = 0; i < plate.count; i++) {
-            html += `<div class="plate-integrated left" data-weight="${plate.weight}">${plate.weight}</div>`;
-        }
-    });
-    
-    // Barre centrale
-    html += `<div class="bar-integrated">${barWeight}</div>`;
-    
-    // Disques côté droit
-    platesPerSide.forEach(plate => {
-        for (let i = 0; i < plate.count; i++) {
-            html += `<div class="plate-integrated right" data-weight="${plate.weight}">${plate.weight}</div>`;
-        }
-    });
-    
-    html += `
-            </div>
-            
-            <div class="barbell-detail">
-                ${platesPerSide.map(p => `${p.count}×${p.weight}kg`).join(' + ')} par côté
-            </div>
-        </div>
-    `;
-    
-    return html;
-}
-
-function createDumbbellPairHTML(barbellWeightEach, platesPerSide) {
-    const totalPlatesWeight = platesPerSide.reduce((sum, p) => sum + (p.weight * p.count * 2), 0);
-    const totalWeight = (barbellWeightEach * 2) + totalPlatesWeight;
-    
-    let html = `
-        <div class="barbell-card-integrated">
-            <div class="weight-control-row">
-                <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeightToNext(-1)">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                    </svg>
-                </button>
-                
-                <div class="barbell-total-integrated">${totalWeight}<span class="weight-unit">kg</span></div>
-                
-                <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeightToNext(1)">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="dumbbell-pair-visualization">
-                <div class="dumbbell-unit">
-                    <span class="dumbbell-label">Haltère 1:</span>
-                    <div class="barbell-plates-visualization">
-    `;
-    
-    // Première haltère
-    platesPerSide.slice().reverse().forEach(plate => {
-        for (let i = 0; i < plate.count; i++) {
-            html += `<div class="plate-integrated left" data-weight="${plate.weight}">${plate.weight}</div>`;
-        }
-    });
-    
-    html += `<div class="bar-integrated short">${barbellWeightEach}</div>`;
-    
-    platesPerSide.forEach(plate => {
-        for (let i = 0; i < plate.count; i++) {
-            html += `<div class="plate-integrated right" data-weight="${plate.weight}">${plate.weight}</div>`;
-        }
-    });
-    
-    html += `
-                    </div>
-                </div>
-                
-                <div class="dumbbell-unit">
-                    <span class="dumbbell-label">Haltère 2:</span>
-                    <div class="barbell-plates-visualization">
-    `;
-    
-    // Deuxième haltère (identique)
-    platesPerSide.slice().reverse().forEach(plate => {
-        for (let i = 0; i < plate.count; i++) {
-            html += `<div class="plate-integrated left" data-weight="${plate.weight}">${plate.weight}</div>`;
-        }
-    });
-    
-    html += `<div class="bar-integrated short">${barbellWeightEach}</div>`;
-    
-    platesPerSide.forEach(plate => {
-        for (let i = 0; i < plate.count; i++) {
-            html += `<div class="plate-integrated right" data-weight="${plate.weight}">${plate.weight}</div>`;
-        }
-    });
-    
-    html += `
-                    </div>
-                </div>
-            </div>
-            
-            <div class="barbell-detail">
-                Paire: ${barbellWeightEach}kg × 2 barres + ${platesPerSide.map(p => `${p.count}×${p.weight}kg`).join(' + ')} par haltère
-            </div>
-        </div>
-    `;
-    
-    return html;
-}
-
-function createSimplifiedWeightInterface(totalWeight) {
-    // S'assurer que adjustWeightToNext est globalement accessible
-    if (!window.adjustWeightToNext) {
-        window.adjustWeightToNext = adjustWeightToNext;
-    }
-    return `
-        <div class="barbell-card-integrated">
-            <div class="weight-control-row">
-                <button class="weight-btn decrease" id="weightDecreaseBtn" onclick="adjustWeightToNext(-1)">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                    </svg>
-                </button>
-                
-                <div class="barbell-total-integrated">${totalWeight}<span class="weight-unit">kg</span></div>
-                
-                <button class="weight-btn increase" id="weightIncreaseBtn" onclick="adjustWeightToNext(1)">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-// Ajouter un listener pour mettre à jour la visualisation
-function attachWeightChangeListeners() {
-    const weightInput = document.getElementById('setWeight');
-    if (weightInput) {
-        // Mettre à jour à chaque changement
-        weightInput.addEventListener('input', updateBarbellVisualization);
-        
-        // NOUVEAU : S'assurer que la mise à jour initiale se fait même si la valeur est déjà présente
-        setTimeout(() => {
-            // Forcer la mise à jour si une valeur existe
-            if (weightInput.value && parseFloat(weightInput.value) > 0) {
-                updateBarbellVisualization();
-            }
-            updateWeightSuggestionVisual();
-        }, 100);
-    }
-}
-
-// ===== CHARGEMENT DES SUGGESTIONS DE POIDS =====
-async function loadWeightSuggestion() {
-    // Cette fonction ne fait plus rien si appelée directement
-    // Les suggestions sont maintenant gérées dans showSetInput()
-    return;
-}
-
-// ===== GESTION DES TIMERS =====
-function startTimers() {
-    // Nettoyer l'ancien timer avant d'en créer un nouveau
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        setTimerInterval(null);
-    }
-    
-    const interval = setInterval(() => {
-        // Vérifier que le document est visible et que l'élément existe
-        if (document.hidden || !document.getElementById('setTimer')) {
-            clearInterval(interval);
-            setTimerInterval(null);
-            return;
-        }
-        
-        // Timer de série UNIQUEMENT
-        if (setStartTime) {
-            const elapsed = Math.floor((new Date() - setStartTime) / 1000);
-            const minutes = Math.floor(elapsed / 60);
-            const seconds = elapsed % 60;
-            const setTimer = document.getElementById('setTimer');
-            if (setTimer) {
-                setTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
-        }
-    }, 1000);
-    
-    setTimerInterval(interval);
-    
-    // Nettoyer automatiquement si la page devient invisible
-    const handleVisibilityChange = () => {
-        if (document.hidden && timerInterval) {
-            clearInterval(timerInterval);
-            setTimerInterval(null);
-        }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Retourner une fonction de nettoyage
-    return () => {
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            setTimerInterval(null);
-        }
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-}
-
-// ===== SÉLECTION DE LA FATIGUE ET DE L'EFFORT =====
-function selectFatigue(value) {
-    setSelectedFatigue(value);
-    document.querySelectorAll('#fatigueSelector .emoji-option').forEach(el => {
-        el.classList.remove('selected');
-    });
-    const selectedEl = document.querySelector(`#fatigueSelector .emoji-option[data-value="${value}"]`);
-    if (selectedEl) {
-        selectedEl.classList.add('selected');
-    }
-}
-
-function selectEffort(value) {
-    setSelectedEffort(value);
-    document.querySelectorAll('#effortSelector .emoji-option').forEach(el => {
-        el.classList.remove('selected');
-    });
-    const selectedEl = document.querySelector(`#effortSelector .emoji-option[data-value="${value}"]`);
-    if (selectedEl) {
-        selectedEl.classList.add('selected');
-    }
-}
-
-// ===== AJUSTEMENT DES POIDS ET RÉPÉTITIONS =====
-function adjustWeightToNext(direction) {
-    const input = document.getElementById('setWeight');
-    const currentWeight = parseFloat(input.value) || 0;
-    
-    // Utiliser la fonction d'ajustement
-    const availableWeights = calculateAvailableWeights(currentExercise);
-    
-    if (availableWeights.length === 0) {
-        return;
-    }
-    
-    // Trouver l'index actuel
-    let currentIndex = availableWeights.findIndex(w => Math.abs(w - currentWeight) < 0.1);
-    
-    if (currentIndex === -1) {
-        // Trouver le plus proche
-        let minDiff = Infinity;
-        for (let i = 0; i < availableWeights.length; i++) {
-            const diff = Math.abs(availableWeights[i] - currentWeight);
-            if (diff < minDiff) {
-                minDiff = diff;
-                currentIndex = i;
+    if (mlSuggestion && Math.abs(mlSuggestion - currentWeight) > 0.1) {
+        if (isAdaptiveWorkout || !isAutoWeightEnabled) {
+            if (mlSuggestion < currentWeight) {
+                decreaseBtn.classList.add('suggest-decrease', 'suggest-pulse');
+            } else if (mlSuggestion > currentWeight) {
+                increaseBtn.classList.add('suggest-increase', 'suggest-pulse');
             }
         }
     }
+
+    // Force reflow pour l'animation
+    if (decreaseBtn.classList.contains('suggest-pulse')) {
+        decreaseBtn.offsetHeight;
+    }
+    if (increaseBtn.classList.contains('suggest-pulse')) {
+        increaseBtn.offsetHeight;
+    }
     
-    // Naviguer dans la liste
-    const newIndex = currentIndex + direction;
-    
-    if (newIndex >= 0 && newIndex < availableWeights.length) {
-        input.value = availableWeights[newIndex];
-        
-        // Mettre à jour l'affichage du poids total
-        const totalDisplay = document.querySelector('.barbell-total-integrated');
-        if (totalDisplay) {
-            totalDisplay.innerHTML = `${availableWeights[newIndex]}<span class="weight-unit">kg</span>`;
-        }
-        
-        // Force la reconstruction complète de la visualisation pour les barres
-        setTimeout(() => {
-            updateBarbellVisualization();
-            updateWeightSuggestionVisual();
-        }, 10);
+    // Mettre à jour le texte de suggestion
+    if (suggestionDiv && mlSuggestion) {
+        const diff = mlSuggestion - currentWeight;
+        const sign = diff > 0 ? '+' : '';
+        suggestionDiv.innerHTML = `💡 Suggestion ML : ${mlSuggestion}kg${Math.abs(diff) > 0.1 ? ` (${sign}${diff.toFixed(1)}kg)` : ''}`;
     }
 }
 
-window.adjustWeightToNext = adjustWeightToNext;
+// ===== GESTION DES SETS =====
 
-function adjustReps(delta) {
-    const input = document.getElementById('setReps');
-    const newValue = parseInt(input.value) + delta;
-    if (newValue > 0) input.value = newValue;
-}
-
-// ===== VALIDATION DU POIDS SAISI =====
-function validateWeightInput() {
-    const weightInput = document.getElementById('setWeight');
-    const currentWeight = parseFloat(weightInput.value);
-    
-    if (isNaN(currentWeight)) return;
-    
-    const validated = validateWeight(currentExercise, currentWeight);
-    
-    if (validated !== currentWeight) {
-        weightInput.value = validated;
-        
-        // Message explicatif si le poids n'est pas possible
-        if (!isWeightPossible(currentExercise, currentWeight)) {
-            let availableWeights = calculateAvailableWeights(currentExercise);  
-            // Pour les exercices avec barbell, filtrer les poids inférieurs à la barre
-            if (currentExercise.equipment.some(eq => eq.includes('barbell'))) {
-                const barWeight = getBarWeightForExercise(currentExercise);
-                const filteredWeights = availableWeights.filter(w => w >= barWeight);
-                if (filteredWeights.length > 0) {
-                    availableWeights = filteredWeights;  
-                }
-            }
-            const nearbyWeights = availableWeights
-                .filter(w => Math.abs(w - currentWeight) <= 10)
-                .slice(0, 5);
-            
-            showToast(
-                `Poids ${currentWeight}kg impossible. Alternatives : ${nearbyWeights.join(', ')}kg`,
-                'warning'
-            );
-        }
-    }
-}
-
-window.adjustReps = adjustReps;
-
-// ===== HELPERS POUR LA GESTION DES SETS =====
-
-// Fonction helper pour sauvegarder localement
-function saveSetLocally(setData) {
-    const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
-    
-    // Éviter les doublons
-    const exists = pendingSets.some(s => 
-        s.exercise_id === setData.exercise_id && 
-        s.set_number === setData.set_number &&
-        s.workout_id === setData.workout_id
-    );
-    
-    if (!exists) {
-        pendingSets.push({
-            ...setData,
-            timestamp: new Date().toISOString(),
-            syncStatus: 'pending'
-        });
-        localStorage.setItem('pendingSets', JSON.stringify(pendingSets));
-    }
-}
-
-
-// ===== VALIDATION ET ENREGISTREMENT D'UNE SÉRIE =====
 async function completeSet() {
     // Validation stricte des entrées
     const weightInput = document.getElementById('setWeight');
@@ -1034,7 +678,7 @@ async function completeSet() {
     
     const setDuration = setStartTime ? Math.floor((new Date() - setStartTime) / 1000) : 0;
     
-    let weight = parseFloat(weightInput.value);  // Changé en 'let' au lieu de 'const'
+    let weight = parseFloat(weightInput.value);
     const reps = parseInt(repsInput.value);
     
     // Validation des valeurs
@@ -1060,13 +704,12 @@ async function completeSet() {
         return;
     }
     
-    // Validation équipement si applicable (NOUVEAU CODE ICI)
+    // Validation équipement si applicable
     if (!isWeightPossible(currentExercise, weight)) {
         const validated = validateWeight(currentExercise, weight);
         if (validated !== weight) {
             showToast(`Poids ajusté à ${validated}kg (le plus proche possible)`, 'warning');
             weightInput.value = validated;
-            // Mettre à jour la variable weight avec la valeur validée
             weight = validated;
         }
     }
@@ -1078,7 +721,7 @@ async function completeSet() {
         set_number: currentSetNumber,
         target_reps: parseInt(currentTargetReps) || reps,
         actual_reps: reps,
-        weight: weight,  // Utilisera le poids validé si ajusté
+        weight: weight,
         rest_time: 0,
         fatigue_level: Math.round(selectedFatigue),
         perceived_exertion: selectedEffort,
@@ -1095,7 +738,6 @@ async function completeSet() {
         const result = await createSet(setData);
         
         if (result && result.id) {
-            // Mise à jour de l'ID réel
             localStorage.setItem('lastCompletedSetId', result.id.toString());
             
             // Nettoyer les séries en attente pour éviter les doublons
@@ -1116,33 +758,26 @@ async function completeSet() {
         
         // Sauvegarder localement en mode hors-ligne
         saveSetLocally(setData);
-        
-        // Continuer malgré l'erreur
         handleSetSuccess(setData, setDuration);
-        
         showToast('Série sauvegardée localement (hors-ligne)', 'warning');
     }
     
     // GESTION SPÉCIFIQUE DU MODE GUIDÉ
     const guidedPlan = localStorage.getItem('guidedWorkoutPlan');
     if (currentWorkout?.type === 'adaptive' && guidedPlan) {
-        // Mettre à jour la progression du plan guidé
         const progress = JSON.parse(localStorage.getItem('guidedWorkoutProgress') || '{}');
         progress.completedSets = (progress.completedSets || 0) + 1;
         progress.currentExerciseCompletedSets = currentSetNumber;
         progress.lastSetTimestamp = new Date().toISOString();
         localStorage.setItem('guidedWorkoutProgress', JSON.stringify(progress));
         
-        // Vérifier si l'exercice est terminé selon le plan
         const plan = JSON.parse(guidedPlan);
         const currentExerciseIndex = window.currentExerciseIndex || 0;
         const currentExerciseData = plan.exercises[currentExerciseIndex];
         
         if (currentExerciseData && currentSetNumber >= currentExerciseData.sets) {
-            // Afficher immédiatement la modal, pas après le repos
             showGuidedExerciseCompletion(currentExerciseData);
             
-            // Empêcher l'affichage du repos normal
             if (window.restTimerInterval) {
                 clearInterval(window.restTimerInterval);
             }
@@ -1150,12 +785,193 @@ async function completeSet() {
     }
 }
 
-// Fonction helper pour la complétion d'exercice en mode guidé
+function selectFatigue(value) {
+    setSelectedFatigue(value);
+    document.querySelectorAll('#fatigueSelector .emoji-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    const selectedEl = document.querySelector(`#fatigueSelector .emoji-option[data-value="${value}"]`);
+    if (selectedEl) {
+        selectedEl.classList.add('selected');
+    }
+}
+
+function selectEffort(value) {
+    setSelectedEffort(value);
+    document.querySelectorAll('#effortSelector .emoji-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    const selectedEl = document.querySelector(`#effortSelector .emoji-option[data-value="${value}"]`);
+    if (selectedEl) {
+        selectedEl.classList.add('selected');
+    }
+}
+
+async function skipSet() {
+    const setData = {
+        workout_id: currentWorkout.id,
+        exercise_id: currentExercise.id,
+        set_number: currentSetNumber,
+        target_reps: 0,
+        actual_reps: 0,
+        weight: 0,
+        rest_time: 0,
+        fatigue_level: 0,
+        perceived_exertion: 0,
+        skipped: true
+    };
+    
+    const result = await createSet(setData);
+    
+    if (result) {
+        showToast('Série passée', 'info');
+        incrementSetNumber();
+        showSetInput();
+    }
+}
+
+// ===== HELPERS ET UTILITAIRES =====
+
+function adjustReps(delta) {
+    const input = document.getElementById('setReps');
+    const newValue = parseInt(input.value) + delta;
+    if (newValue > 0) input.value = newValue;
+}
+
+function toggleAutoWeight(enabled) {
+    setIsAutoWeightEnabled(enabled);
+    
+    const mlSuggestion = window.currentMLSuggestion;
+    const weightInput = document.getElementById('setWeight');
+    
+    if (!enabled) {
+        showToast('Ajustement automatique désactivé', 'info');
+        
+        if (weightInput && currentExercise) {
+            getSuggestedWeight(currentUser.id, currentExercise.id).then(lastWeight => {
+                const baseWeight = currentExercise.base_weight || 
+                    calculateSuggestedWeight(currentExercise);
+                weightInput.value = lastWeight || baseWeight || 0;
+                updateBarbellVisualization();
+            });
+        }
+    } else {
+        showToast('Ajustement automatique activé', 'info');
+        if (mlSuggestion && weightInput) {
+            weightInput.value = mlSuggestion;
+            updateBarbellVisualization();
+        }
+    }
+    
+    updateWeightSuggestionVisual();
+}
+
+function saveSetLocally(setData) {
+    const pendingSets = JSON.parse(localStorage.getItem('pendingSets') || '[]');
+    
+    const exists = pendingSets.some(s => 
+        s.exercise_id === setData.exercise_id && 
+        s.set_number === setData.set_number &&
+        s.workout_id === setData.workout_id
+    );
+    
+    if (!exists) {
+        pendingSets.push({
+            ...setData,
+            timestamp: new Date().toISOString(),
+            syncStatus: 'pending'
+        });
+        localStorage.setItem('pendingSets', JSON.stringify(pendingSets));
+    }
+}
+
+function handleSetSuccess(setData, setDuration) {
+    addSetToHistory({...setData, duration: setDuration});
+    updateSessionHistory(setData);
+    
+    if (currentExercise && currentExercise.body_part && currentWorkout?.type === 'adaptive') {
+        localStorage.setItem('lastCompletedBodyPart', currentExercise.body_part);
+    }
+    
+    showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
+    
+    if (!isSilentMode && window.playBeep) {
+        window.playBeep(800, 150);
+    }
+    
+    if (currentSetNumber % 3 === 0) {
+        checkFatigue(currentWorkout.id).then(fatigue => {
+            if (fatigue && fatigue.risk === 'high') {
+                showToast(`⚠️ ${fatigue.message}`, 'warning');
+                showFatigueModal(fatigue);
+            }
+        }).catch(() => {});
+    }
+    
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        setTimerInterval(null);
+    }
+    
+    setSelectedFatigue(Math.min(5, selectedFatigue + 0.3));
+
+    updatePreviousSetRestTime().catch(() => {});
+    
+    if (window.showRestInterface) {
+        window.showRestInterface({...setData, duration: setDuration});
+    }
+    
+    if (window.updateMuscleDistribution) {
+        window.updateMuscleDistribution();
+    }
+}
+
+async function updatePreviousSetRestTime() {
+    if (currentSetNumber > 1) {
+        const previousSetId = localStorage.getItem('lastCompletedSetId');
+        const restTime = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
+        
+        if (previousSetId && restTime > 0) {
+            await updateSetRestTime(previousSetId, restTime);
+        }
+    }
+}
+
+function addSetToHistory(setData) {
+    const enrichedData = {
+        ...setData,
+        bodyPart: currentExercise.body_part,
+        exerciseName: currentExercise.name_fr
+    };
+    
+    addToSessionHistory('set', enrichedData);
+}
+
+function updateSessionHistory(setData) {
+    const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
+    
+    let exerciseEntry = sessionHistory.find(h => h.exerciseId === currentExercise.id);
+    
+    if (!exerciseEntry) {
+        exerciseEntry = {
+            exerciseId: currentExercise.id,
+            exerciseName: currentExercise.name_fr,
+            sets: [],
+            timestamp: new Date().toISOString()
+        };
+        sessionHistory.push(exerciseEntry);
+    }
+    
+    exerciseEntry.sets.push(setData);
+    exerciseEntry.totalSets = exerciseEntry.sets.length;
+    
+    localStorage.setItem('currentWorkoutHistory', JSON.stringify(sessionHistory));
+}
+
 function showGuidedExerciseCompletion(exerciseData) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     
-    // AJOUTER CES STYLES CSS INLINE
     modal.style.cssText = `
         position: fixed;
         top: 0;
@@ -1190,20 +1006,16 @@ function showGuidedExerciseCompletion(exerciseData) {
                 justify-content: center;
             ">
                 <button class="btn btn-primary" onclick="
-                    // Fermer la modal
                     document.querySelector('.modal-overlay').remove(); 
-                    // Nettoyer l'interface d'exercice
                     const exerciseArea = document.getElementById('exerciseArea');
                     if (exerciseArea) {
                         exerciseArea.innerHTML = '';
                         exerciseArea.style.display = 'none';
                     }
-                    // Réafficher mainContent
                     const mainContent = document.getElementById('mainContent');
                     if (mainContent) {
                         mainContent.style.display = 'block';
                     }
-                    // Passer à l'exercice suivant
                     if(window.nextGuidedExercise) window.nextGuidedExercise();
                 ">
                     ➡️ Exercice suivant
@@ -1217,175 +1029,63 @@ function showGuidedExerciseCompletion(exerciseData) {
     document.body.appendChild(modal);
 }
 
-// Fonction helper pour gérer le succès d'une série
-function handleSetSuccess(setData, setDuration) {
-    // Ajouter à l'historique local avec la durée
-    addSetToHistory({...setData, duration: setDuration});
-    
-    // Sauvegarder dans l'historique de la session
-    updateSessionHistory(setData);
-    // Sauvegarder la partie du corps actuelle pour le ML adaptatif
-    if (currentExercise && currentExercise.body_part && currentWorkout?.type === 'adaptive') {
-        localStorage.setItem('lastCompletedBodyPart', currentExercise.body_part);
-        console.log('DEBUG - Partie du corps sauvegardée après série:', currentExercise.body_part);
-    }
-    
-    // Notification de succès
-    showToast(`Série ${currentSetNumber} enregistrée ! (${setDuration}s)`, 'success');
-    
-    // Son de validation de série
-    if (!isSilentMode && window.playBeep) {
-        window.playBeep(800, 150);
-    }
-    
-    // Vérification fatigue toutes les 3 séries
-    if (currentSetNumber % 3 === 0) {
-        checkFatigue(currentWorkout.id).then(fatigue => {
-            if (fatigue && fatigue.risk === 'high') {
-                showToast(`⚠️ ${fatigue.message}`, 'warning');
-                showFatigueModal(fatigue);
-            }
-        }).catch(() => {
-            // Ignorer les erreurs de vérification de fatigue
-        });
-    }
-    
-    // Arrêter le timer de série
+function startTimers() {
     if (timerInterval) {
         clearInterval(timerInterval);
         setTimerInterval(null);
     }
     
-    // Augmenter légèrement la fatigue pour la prochaine série
-    setSelectedFatigue(Math.min(5, selectedFatigue + 0.3));
-
-    // Mettre à jour le temps de repos de la série PRÉCÉDENTE
-    updatePreviousSetRestTime().catch(() => {
-        // Ignorer les erreurs de mise à jour du temps de repos
-    });
-    
-    // Afficher l'interface de repos
-    if (window.showRestInterface) {
-        window.showRestInterface({...setData, duration: setDuration});
-    }
-    
-    // Mettre à jour la distribution musculaire
-    if (window.updateMuscleDistribution) {
-        window.updateMuscleDistribution();
-    }
-}
-
-// ===== MISE À JOUR DU TEMPS DE REPOS DE LA SÉRIE PRÉCÉDENTE =====
-async function updatePreviousSetRestTime() {
-    if (currentSetNumber > 1) {
-        const previousSetId = localStorage.getItem('lastCompletedSetId');
-        const restTime = lastSetEndTime ? Math.floor((new Date() - lastSetEndTime) / 1000) : 0;
-        
-        if (previousSetId && restTime > 0) {
-            await updateSetRestTime(previousSetId, restTime);
+    const interval = setInterval(() => {
+        if (document.hidden || !document.getElementById('setTimer')) {
+            clearInterval(interval);
+            setTimerInterval(null);
+            return;
         }
-    }
-}
-
-// ===== PASSER UNE SÉRIE =====
-async function skipSet() {
-    const setData = {
-        workout_id: currentWorkout.id,
-        exercise_id: currentExercise.id,
-        set_number: currentSetNumber,
-        target_reps: 0,
-        actual_reps: 0,
-        weight: 0,
-        rest_time: 0,
-        fatigue_level: 0,
-        perceived_exertion: 0,
-        skipped: true
+        
+        if (setStartTime) {
+            const elapsed = Math.floor((new Date() - setStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const setTimer = document.getElementById('setTimer');
+            if (setTimer) {
+                setTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+    }, 1000);
+    
+    setTimerInterval(interval);
+    
+    const handleVisibilityChange = () => {
+        if (document.hidden && timerInterval) {
+            clearInterval(timerInterval);
+            setTimerInterval(null);
+        }
     };
     
-    const result = await createSet(setData);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    if (result) {
-        showToast('Série passée', 'info');
-        incrementSetNumber();
-        showSetInput();
-    }
-}
-
-// ===== TOGGLE AUTO POIDS =====
-function toggleAutoWeight(enabled) {
-    setIsAutoWeightEnabled(enabled);
-    
-    const mlSuggestion = window.currentMLSuggestion;
-    const weightInput = document.getElementById('setWeight');
-    
-    if (!enabled) {
-        showToast('Ajustement automatique désactivé', 'info');
-        
-        // Revenir au poids de base/dernier poids
-        if (weightInput && currentExercise) {
-            getSuggestedWeight(currentUser.id, currentExercise.id).then(lastWeight => {
-                const baseWeight = currentExercise.base_weight || 
-                    calculateSuggestedWeight(currentExercise);
-                weightInput.value = lastWeight || baseWeight || 0;
-                updateBarbellVisualization();
-            });
+    return () => {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            setTimerInterval(null);
         }
-    } else {
-        showToast('Ajustement automatique activé', 'info');
-        if (mlSuggestion && weightInput) {
-            weightInput.value = mlSuggestion;
-            updateBarbellVisualization();
-        }
-    }
-    
-    // Mettre à jour le visuel
-    updateWeightSuggestionVisual();
-}
-
-window.toggleAutoWeight = toggleAutoWeight;
-
-// ===== HISTORIQUE LOCAL =====
-function addSetToHistory(setData) {
-    // Enrichir les données avec les informations de l'exercice
-    const enrichedData = {
-        ...setData,
-        bodyPart: currentExercise.body_part,
-        exerciseName: currentExercise.name_fr
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-    
-    // Utiliser la fonction importée depuis app-history.js
-    addToSessionHistory('set', enrichedData);
 }
 
-function updateSessionHistory(setData) {
-    const sessionHistory = JSON.parse(localStorage.getItem('currentWorkoutHistory') || '[]');
-    
-    // Trouver ou créer l'entrée pour cet exercice
-    let exerciseEntry = sessionHistory.find(h => h.exerciseId === currentExercise.id);
-    
-    if (!exerciseEntry) {
-        exerciseEntry = {
-            exerciseId: currentExercise.id,
-            exerciseName: currentExercise.name_fr,
-            sets: [],
-            timestamp: new Date().toISOString()
-        };
-        sessionHistory.push(exerciseEntry);
-    }
-    
-    // Ajouter la série
-    exerciseEntry.sets.push(setData);
-    exerciseEntry.totalSets = exerciseEntry.sets.length;
-    
-    localStorage.setItem('currentWorkoutHistory', JSON.stringify(sessionHistory));
-}
-
-// ===== EXPORT GLOBAL =====
+// ===== EXPORTS GLOBAUX =====
+window.adjustWeight = adjustWeight;
+window.createWeightInterface = createWeightInterface;
 window.showSetInput = showSetInput;
 window.selectFatigue = selectFatigue;
 window.selectEffort = selectEffort;
-window.validateWeightInput = validateWeightInput;
 window.completeSet = completeSet;
 window.skipSet = skipSet;
 window.showGuidedExerciseCompletion = showGuidedExerciseCompletion;
 window.updateBarbellVisualization = updateBarbellVisualization;
+window.adjustReps = adjustReps;
+window.toggleAutoWeight = toggleAutoWeight;
+
+// COMPATIBILITY : Redirection pour l'ancien système
+window.adjustWeightToNext = adjustWeight;
+window.validateWeightInput = () => {}; // Devenu inutile avec le nouveau système

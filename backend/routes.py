@@ -9,6 +9,7 @@ from backend.schemas import UserCreate, WorkoutCreate, SetCreate, ProgramGenerat
 from backend.schemas import UserCommitmentCreate, UserCommitmentResponse, AdaptiveTargetsResponse, TrajectoryAnalysis
 from backend.models import UserCommitment, AdaptiveTargets
 from backend.ml_engine import RecoveryTracker, VolumeOptimizer, SessionBuilder, ProgressionAnalyzer, RealTimeAdapter
+from .equipment_service import EquipmentService
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -377,3 +378,63 @@ async def get_program_adjustments(
     except Exception as e:
         logger.error(f"Error getting adjustments: {str(e)}")
         raise HTTPException(status_code=500, detail="Analysis failed")
+
+from .equipment_service import EquipmentService
+
+@router.get("/api/users/{user_id}/available-weights/{exercise_type}")
+async def get_available_weights(
+    user_id: int, 
+    exercise_type: str,
+    db: Session = Depends(get_db)
+):
+    """Obtenir tous les poids réalisables pour un type d'exercice"""
+    try:
+        weights = EquipmentService.get_available_weights(user_id, exercise_type)
+        return {"weights": weights}
+    except Exception as e:
+        logger.error(f"Error calculating weights: {str(e)}")
+        raise HTTPException(status_code=500, detail="Calculation failed")
+
+@router.get("/api/users/{user_id}/equipment-setup/{exercise_type}/{weight}")
+async def get_equipment_setup(
+    user_id: int, 
+    exercise_type: str, 
+    weight: float,
+    db: Session = Depends(get_db)
+):
+    """Obtenir la visualisation exacte pour un poids donné"""
+    try:
+        setup = EquipmentService.get_equipment_visualization(user_id, exercise_type, weight)
+        return setup
+    except Exception as e:
+        logger.error(f"Error getting setup: {str(e)}")
+        raise HTTPException(status_code=500, detail="Setup calculation failed")
+    
+@router.get("/api/users/{user_id}/available-weights/{exercise_type}")
+async def get_available_weights(
+    user_id: int, 
+    exercise_type: str,
+    db: Session = Depends(get_db)
+):
+    """Obtenir tous les poids réalisables pour un type d'exercice"""
+    try:
+        weights = EquipmentService.get_available_weights(db, user_id, exercise_type)
+        return {"weights": weights}
+    except Exception as e:
+        logger.error(f"Error calculating weights for user {user_id}, exercise {exercise_type}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Calculation failed")
+
+@router.get("/api/users/{user_id}/equipment-setup/{exercise_type}/{weight}")
+async def get_equipment_setup(
+    user_id: int, 
+    exercise_type: str, 
+    weight: float,
+    db: Session = Depends(get_db)
+):
+    """Obtenir la visualisation exacte pour un poids donné"""
+    try:
+        setup = EquipmentService.get_equipment_visualization(db, user_id, exercise_type, weight)
+        return setup
+    except Exception as e:
+        logger.error(f"Error getting setup for user {user_id}, exercise {exercise_type}, weight {weight}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Setup calculation failed")
