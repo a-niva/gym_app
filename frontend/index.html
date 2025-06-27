@@ -5,476 +5,511 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fitness Coach</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#3b82f6">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="data:,">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <!-- Header -->
     <div class="header">
         <div class="header-content">
-            <div class="logo">Fitness Coach</div>
+            <div class="logo">💪 Fitness Coach</div>
             <div class="user-avatar" id="userInitial" style="display: none;"></div>
         </div>
     </div>
 
-    <!-- Progress Bar pour Onboarding -->
+    <!-- Barre de progression onboarding -->
     <div class="progress-container" id="progressContainer" style="display: none;">
         <div class="progress-bar">
             <div class="progress-fill" id="progressBar"></div>
         </div>
     </div>
 
-    <!-- Main Container -->
+    <!-- Container principal -->
     <div class="container">
-        <!-- Onboarding -->
+        
+        <!-- ONBOARDING -->
         <div class="onboarding active" id="onboarding">
             <!-- Étape 1: Informations personnelles -->
             <div class="onboarding-step active" id="step1">
-                <h2>Bienvenue ! 👋</h2>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Commençons par faire connaissance</p>
+                <h2>Créons votre profil 🎯</h2>
+                <p class="subtitle">Quelques infos pour personnaliser votre expérience</p>
                 
                 <div class="form-group">
-                    <label for="userName">Votre nom</label>
-                    <input type="text" id="userName" placeholder="John Doe" class="form-input">
+                    <label for="userName">Prénom</label>
+                    <input type="text" id="userName" placeholder="Votre prénom" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="userBirthDate">Date de naissance</label>
-                    <input type="date" id="userBirthDate" class="form-input" max="">
+                    <label for="birthDate">Date de naissance</label>
+                    <input type="date" id="birthDate" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="height">Taille (cm)</label>
+                        <input type="number" id="height" placeholder="175" min="100" max="250" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="weight">Poids (kg)</label>
+                        <input type="number" id="weight" placeholder="70" min="30" max="200" required>
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="userHeight">Taille (cm)</label>
-                    <input type="number" id="userHeight" min="120" max="250" placeholder="175" class="form-input">
+                    <label>Niveau d'expérience</label>
+                    <div class="experience-levels">
+                        <label class="experience-option">
+                            <input type="radio" name="experience" value="beginner" checked>
+                            <span>🌱 Débutant</span>
+                        </label>
+                        <label class="experience-option">
+                            <input type="radio" name="experience" value="intermediate">
+                            <span>🏃‍♂️ Intermédiaire</span>
+                        </label>
+                        <label class="experience-option">
+                            <input type="radio" name="experience" value="advanced">
+                            <span>💪 Avancé</span>
+                        </label>
+                    </div>
                 </div>
+                
+                <button class="btn btn-primary" onclick="nextStep()">Continuer →</button>
+            </div>
 
+            <!-- Étape 2: Équipement -->
+            <div class="onboarding-step" id="step2">
+                <h2>Votre équipement 🏋️‍♂️</h2>
+                <p class="subtitle">Sélectionnez ce que vous avez à disposition</p>
+                
+                <div class="equipment-grid" id="equipmentGrid">
+                    <!-- Généré dynamiquement -->
+                </div>
+                
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">← Retour</button>
+                    <button class="btn btn-primary" onclick="nextStep()">Continuer →</button>
+                </div>
+            </div>
+
+            <!-- Étape 3: Configuration détaillée équipement -->
+            <div class="onboarding-step" id="step3">
+                <h2>Configuration de l'équipement ⚙️</h2>
+                <p class="subtitle">Précisez les détails de votre matériel</p>
+                
+                <div id="detailedConfig">
+                    <!-- Généré dynamiquement -->
+                </div>
+                
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">← Retour</button>
+                    <button class="btn btn-primary" onclick="nextStep()">Continuer →</button>
+                </div>
+            </div>
+
+            <!-- Étape 4: Création programme -->
+            <div class="onboarding-step" id="step4">
+                <h2>Votre programme 📋</h2>
+                <p class="subtitle">Définissons vos objectifs d'entraînement</p>
+                
                 <div class="form-group">
-                    <label for="userWeight">Poids (kg)</label>
-                    <input type="number" id="userWeight" min="30" max="300" step="0.5" placeholder="75" class="form-input">
+                    <label for="programName">Nom du programme</label>
+                    <input type="text" id="programName" placeholder="Mon programme" value="Mon programme">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sessionsPerWeek">Séances par semaine</label>
+                        <select id="sessionsPerWeek">
+                            <option value="2">2 séances</option>
+                            <option value="3" selected>3 séances</option>
+                            <option value="4">4 séances</option>
+                            <option value="5">5 séances</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sessionDuration">Durée par séance (min)</label>
+                        <select id="sessionDuration">
+                            <option value="30">30 min</option>
+                            <option value="45" selected>45 min</option>
+                            <option value="60">1h</option>
+                            <option value="75">1h15</option>
+                            <option value="90">1h30</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="experienceLevel">Niveau d'expérience</label>
-                    <select id="experienceLevel" class="form-input">
-                        <option value="">Sélectionnez votre niveau</option>
-                        <option value="débutant">Débutant (moins de 6 mois)</option>
-                        <option value="intermédiaire">Intermédiaire (6 mois - 2 ans)</option>
-                        <option value="avancé">Avancé (2-5 ans)</option>
-                        <option value="élite">Elite (5+ ans)</option>
+                    <label>Zones du corps à privilégier</label>
+                    <div class="focus-areas">
+                        <label class="focus-option">
+                            <input type="checkbox" value="dos" checked>
+                            <span>🔙 Dos</span>
+                        </label>
+                        <label class="focus-option">
+                            <input type="checkbox" value="pectoraux" checked>
+                            <span>💪 Pectoraux</span>
+                        </label>
+                        <label class="focus-option">
+                            <input type="checkbox" value="bras">
+                            <span>💪 Bras</span>
+                        </label>
+                        <label class="focus-option">
+                            <input type="checkbox" value="epaules">
+                            <span>🤷 Épaules</span>
+                        </label>
+                        <label class="focus-option">
+                            <input type="checkbox" value="jambes" checked>
+                            <span>🦵 Jambes</span>
+                        </label>
+                        <label class="focus-option">
+                            <input type="checkbox" value="abdominaux">
+                            <span>🎯 Abdominaux</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">← Retour</button>
+                    <button class="btn btn-primary" onclick="completeOnboarding()">Créer mon profil 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div class="view" id="dashboard">
+            <div class="welcome-message" id="welcomeMessage">
+                <!-- Généré dynamiquement -->
+            </div>
+            
+            <!-- Actions principales -->
+            <div class="main-actions">
+                <div class="action-card" onclick="startFreeWorkout()">
+                    <div class="action-icon">🏃‍♂️</div>
+                    <h3>Séance libre</h3>
+                    <p>Choisissez vos exercices librement</p>
+                </div>
+                
+                <div class="action-card" onclick="startProgramWorkout()">
+                    <div class="action-icon">📋</div>
+                    <h3>Séance programme</h3>
+                    <p>Suivez votre programme personnalisé</p>
+                </div>
+            </div>
+            
+            <!-- Progression musculaire -->
+            <div class="section">
+                <h3>🎯 État musculaire</h3>
+                <div class="muscle-readiness" id="muscleReadiness">
+                    <!-- Généré dynamiquement -->
+                </div>
+            </div>
+            
+            <!-- Historique récent -->
+            <div class="section">
+                <h3>📈 Séances récentes</h3>
+                <div class="recent-workouts" id="recentWorkouts">
+                    <!-- Généré dynamiquement -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SÉANCE DÉTAILLÉE -->
+        <div class="view" id="workout">
+            <!-- En-tête de séance -->
+            <div class="workout-header">
+                <div class="workout-info">
+                    <h2 id="workoutTitle">Séance en cours</h2>
+                    <div class="workout-meta">
+                        <div class="workout-timer" id="workoutTimer">00:00</div>
+                        <div class="workout-progress">
+                            <span id="exerciseProgress">Exercice 1/3</span>
+                            <span id="setProgress">Série 1/3</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="workout-actions-header">
+                    <button class="btn btn-warning btn-sm" onclick="pauseWorkout()">⏸️ Pause</button>
+                    <button class="btn btn-danger btn-sm" onclick="abandonWorkout()">❌ Abandonner</button>
+                </div>
+            </div>
+            
+            <!-- Fatigue globale de la séance -->
+            <div class="fatigue-tracker" id="fatigueTracker" style="display: none;">
+                <h3>Comment vous sentez-vous pour débuter ?</h3>
+                <div class="fatigue-scale">
+                    <button class="fatigue-btn" data-level="1" onclick="setSessionFatigue(1)">
+                        😎<br><span>Très frais</span>
+                    </button>
+                    <button class="fatigue-btn" data-level="2" onclick="setSessionFatigue(2)">
+                        🙂<br><span>Frais</span>
+                    </button>
+                    <button class="fatigue-btn" data-level="3" onclick="setSessionFatigue(3)">
+                        😐<br><span>Normal</span>
+                    </button>
+                    <button class="fatigue-btn" data-level="4" onclick="setSessionFatigue(4)">
+                        😓<br><span>Fatigué</span>
+                    </button>
+                    <button class="fatigue-btn" data-level="5" onclick="setSessionFatigue(5)">
+                        🥵<br><span>Très fatigué</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sélection exercice (mode libre) -->
+            <div class="exercise-selection" id="exerciseSelection" style="display: none;">
+                <h3>Choisir un exercice</h3>
+                <div class="exercise-filters">
+                    <select id="muscleFilter">
+                        <option value="">Tous les muscles</option>
+                        <option value="dos">Dos</option>
+                        <option value="pectoraux">Pectoraux</option>
+                        <option value="bras">Bras</option>
+                        <option value="epaules">Épaules</option>
+                        <option value="jambes">Jambes</option>
+                        <option value="abdominaux">Abdominaux</option>
                     </select>
                 </div>
-                
-                <button class="btn" onclick="nextStep()">
-                    Continuer
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Étape 2: Objectifs -->
-            <div class="onboarding-step" id="step2">
-                <h2>Vos objectifs 🎯</h2>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Que souhaitez-vous accomplir ?</p>
-                
-                <div class="chip-group">
-                    <div class="chip" data-goal="force" onclick="toggleGoal(this)">💪 Force</div>
-                    <div class="chip" data-goal="hypertrophie" onclick="toggleGoal(this)">🦾 Masse musculaire</div>
-                    <div class="chip" data-goal="cardio" onclick="toggleGoal(this)">🏃 Cardio</div>
-                    <div class="chip" data-goal="perte_de_poids" onclick="toggleGoal(this)">⚖️ Perte de poids</div>
-                    <div class="chip" data-goal="endurance" onclick="toggleGoal(this)">🔋 Endurance</div>
-                    <div class="chip" data-goal="flexibility" onclick="toggleGoal(this)">🤸 Souplesse</div>
-                </div>
-                
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button class="btn btn-secondary" onclick="prevStep()">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                        Retour
-                    </button>
-                    <button class="btn" onclick="nextStep()">
-                        Continuer
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
+                <div class="exercise-list" id="exerciseList">
+                    <!-- Généré dynamiquement -->
                 </div>
             </div>
-<!-- Étape 3: Équipement de base -->
-<div class="onboarding-step" id="step3">
-    <h2>Votre équipement 🏋️</h2>
-    <p style="color: var(--gray); margin-bottom: 2rem;">Sélectionnez ce que vous avez à disposition</p>
-    
-    <div class="equipment-grid-square">
-        <div class="equipment-card" data-equipment="dumbbells" onclick="toggleEquipment(this)">
-            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
-            </svg>
-            <div>Haltères</div>
-        </div>
-        
-        <div class="equipment-card" data-equipment="barbell" onclick="toggleEquipment(this)">
-            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18M8 6h8M7 18h10"/>
-            </svg>
-            <div>Barres & Disques</div>
-        </div>
-        
-        <div class="equipment-card" data-equipment="elastiques" onclick="toggleEquipment(this)">
-            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            <div>Élastiques</div>
-        </div>
-        
-        <div class="equipment-card" data-equipment="bench" onclick="toggleEquipment(this)">
-            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v6H3zM3 12h18v9H3z"/>
-            </svg>
-            <div>Banc</div>
-        </div>
-        
-        <div class="equipment-card" data-equipment="barre_traction" onclick="toggleEquipment(this)">
-            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18M5 3v9m14-9v9"/>
-            </svg>
-            <div>Barre de traction</div>
-        </div>
-        
-        <div class="equipment-card" data-equipment="kettlebell" onclick="toggleEquipment(this)">
-            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="15" r="7" stroke-width="2"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8V4m-2 4h4"/>
-            </svg>
-            <div>Kettlebells</div>
-        </div>
-    </div>
-    
-    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-        <button class="btn btn-secondary" onclick="prevStep()">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-            Retour
-        </button>
-        <button class="btn" onclick="nextStep()">
-            Continuer
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-        </button>
-    </div>
-</div>
-
-<!-- Étape 4: Configuration détaillée -->
-<div class="onboarding-step" id="step4">
-    <h2>Configuration détaillée 🔧</h2>
-    <p style="color: var(--gray); margin-bottom: 2rem;">Précisez votre équipement</p>
-    
-    <div id="detailedEquipmentConfig">
-        <!-- Contenu généré dynamiquement -->
-    </div>
-    
-    <div id="equipmentProgress" style="display: none;">0 / 0 configurés</div>
-    
-    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-        <button class="btn btn-secondary" onclick="prevStep()">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-            Retour
-        </button>
-        <button class="btn" onclick="nextStep()">
-            Valider
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-        </button>
-    </div>
-</div>
-
-            <!-- Étape 5: Récapitulatif -->
-            <div class="onboarding-step" id="step5">
-                <h2>Récapitulatif 📋</h2>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Vérifiez vos informations</p>
-                
-                <div class="profile-summary" id="profileSummary">
-                    <!-- Contenu généré dynamiquement -->
-                </div>
-                
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button class="btn btn-secondary" onclick="prevStep()">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                        Retour
-                    </button>
-                    <button class="btn btn-primary" onclick="saveUser()">
-                        Commencer l'aventure !
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dashboard -->
-        <div class="view" id="dashboard">
-            <h1 id="welcomeMessage">Bonjour !</h1>
             
-            <div class="dashboard-grid">
+            <!-- Exercice en cours -->
+            <div class="current-exercise" id="currentExercise" style="display: none;">
+                <div class="exercise-header">
+                    <div class="exercise-info">
+                        <h3 id="exerciseName">Nom de l'exercice</h3>
+                        <p id="exerciseInstructions">Instructions de l'exercice</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="changeExercise()">
+                        🔄 Changer d'exercice
+                    </button>
+                </div>
+                
+                <!-- Recommandations ML -->
+                <div class="ml-recommendations" id="mlRecommendations" style="display: none;">
+                    <div class="recommendation-card">
+                        <h4>🤖 Recommandations IA</h4>
+                        <div class="recommendation-content">
+                            <div class="recommendation-item">
+                                <span class="rec-label">Poids suggéré:</span>
+                                <span class="rec-value" id="recWeight">-</span>
+                                <span class="rec-change" id="recWeightChange"></span>
+                            </div>
+                            <div class="recommendation-item">
+                                <span class="rec-label">Répétitions:</span>
+                                <span class="rec-value" id="recReps">-</span>
+                                <span class="rec-change" id="recRepsChange"></span>
+                            </div>
+                            <div class="recommendation-reason" id="recReason">-</div>
+                            <div class="recommendation-confidence">
+                                Confiance: <span id="recConfidence">-</span>%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Série en cours -->
+                <div class="current-set" id="currentSet">
+                    <div class="set-header">
+                        <h4>Série <span id="currentSetNumber">1</span></h4>
+                        <div class="set-controls">
+                            <button class="btn btn-secondary btn-sm" onclick="previousSet()" id="prevSetBtn" style="display: none;">
+                                ← Série précédente
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="nextSet()" id="nextSetBtn">
+                                Série suivante →
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Inputs de la série -->
+                    <div class="set-inputs">
+                        <div class="input-group">
+                            <label for="setWeight">Poids (kg)</label>
+                            <div class="weight-input">
+                                <button class="btn btn-sm btn-secondary" onclick="adjustWeight(-2.5)">-2.5</button>
+                                <input type="number" id="setWeight" step="0.5" min="0" placeholder="0">
+                                <button class="btn btn-sm btn-secondary" onclick="adjustWeight(2.5)">+2.5</button>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="setReps">Répétitions</label>
+                            <div class="reps-input">
+                                <button class="btn btn-sm btn-secondary" onclick="adjustReps(-1)">-1</button>
+                                <input type="number" id="setReps" min="1" placeholder="10">
+                                <button class="btn btn-sm btn-secondary" onclick="adjustReps(1)">+1</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Feedback après la série -->
+                    <div class="set-feedback" id="setFeedback" style="display: none;">
+                        <h4>Comment s'est passée cette série ?</h4>
+                        
+                        <div class="feedback-section">
+                            <label>Niveau de fatigue ressenti :</label>
+                            <div class="feedback-scale">
+                                <button class="feedback-btn" data-fatigue="1" onclick="setFatigue(1)">
+                                    1<br><span>Très facile</span>
+                                </button>
+                                <button class="feedback-btn" data-fatigue="2" onclick="setFatigue(2)">
+                                    2<br><span>Facile</span>
+                                </button>
+                                <button class="feedback-btn" data-fatigue="3" onclick="setFatigue(3)">
+                                    3<br><span>Modéré</span>
+                                </button>
+                                <button class="feedback-btn" data-fatigue="4" onclick="setFatigue(4)">
+                                    4<br><span>Difficile</span>
+                                </button>
+                                <button class="feedback-btn" data-fatigue="5" onclick="setFatigue(5)">
+                                    5<br><span>Très difficile</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="feedback-section">
+                            <label>Effort fourni (réserve restante) :</label>
+                            <div class="feedback-scale">
+                                <button class="feedback-btn" data-effort="1" onclick="setEffort(1)">
+                                    1<br><span>Énorme réserve</span>
+                                </button>
+                                <button class="feedback-btn" data-effort="2" onclick="setEffort(2)">
+                                    2<br><span>Bonne réserve</span>
+                                </button>
+                                <button class="feedback-btn" data-effort="3" onclick="setEffort(3)">
+                                    3<br><span>Quelques reps</span>
+                                </button>
+                                <button class="feedback-btn" data-effort="4" onclick="setEffort(4)">
+                                    4<br><span>1-2 reps max</span>
+                                </button>
+                                <button class="feedback-btn" data-effort="5" onclick="setEffort(5)">
+                                    5<br><span>Échec total</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-success" onclick="validateSet()">✓ Valider la série</button>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="executeSet()" id="executeSetBtn">
+                        🏋️ Effectuer la série
+                    </button>
+                </div>
+                
+                <!-- Historique des séries de l'exercice -->
+                <div class="sets-history">
+                    <h4>Séries effectuées</h4>
+                    <div class="sets-list" id="setsHistory">
+                        <!-- Séries complétées -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Période de repos -->
+            <div class="rest-period" id="restPeriod" style="display: none;">
+                <div class="rest-content">
+                    <h3>Temps de repos</h3>
+                    <div class="rest-timer" id="restTimer">01:30</div>
+                    <div class="rest-progress">
+                        <div class="rest-progress-bar">
+                            <div class="rest-progress-fill" id="restProgressFill"></div>
+                        </div>
+                    </div>
+                    <div class="rest-info">
+                        <p>Prochaine série : <span id="nextSetInfo">Série 2 - Même exercice</span></p>
+                    </div>
+                    <div class="rest-actions">
+                        <button class="btn btn-secondary" onclick="skipRest()">⏭️ Passer le repos</button>
+                        <button class="btn btn-warning" onclick="addRestTime(30)">⏱️ +30s</button>
+                        <button class="btn btn-primary" onclick="endRest()">✅ Terminer le repos</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATISTIQUES -->
+        <div class="view" id="stats">
+            <h2>📊 Vos statistiques</h2>
+            
+            <div class="stats-summary">
                 <div class="stat-card">
-                    <div class="stat-value" id="totalWorkouts">0</div>
+                    <div class="stat-number" id="totalWorkouts">0</div>
                     <div class="stat-label">Séances totales</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="weekStreak">0</div>
-                    <div class="stat-label">Semaines d'affilée</div>
+                    <div class="stat-number" id="totalVolume">0kg</div>
+                    <div class="stat-label">Volume total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lastWorkout">-</div>
+                    <div class="stat-label">Dernière séance</div>
                 </div>
             </div>
             
-            <div class="action-grid">
-                <div class="action-card" onclick="window.startWorkout('free')">
-                    <h3>🏃 Séance libre</h3>
-                    <p>Entraînement sans programme</p>
+            <div class="charts-container">
+                <div class="chart-section">
+                    <h3>Volume d'entraînement</h3>
+                    <canvas id="volumeChart" width="400" height="200"></canvas>
                 </div>
-                <div class="action-card" onclick="showProgramGenerator()">
-                    <h3>📋 Programme</h3>
-                    <p>Générer un programme</p>
-                </div>
-            </div>
-            
-            <div class="section-title">Historique récent</div>
-            <div id="workoutHistory" class="workout-history">
-                <!-- Historique chargé ici -->
-            </div>
-        </div>
-
-        <!-- Entraînement -->
-        <div class="view" id="training">
-            <h1>Entraînement en cours</h1>
-            <div class="training-controls">
-                <button class="btn-icon" onclick="toggleSilentMode()" title="Mode silencieux">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
-                    </svg>
-                </button>
-            </div>
-            <div id="workoutInterface">
-                <!-- Interface générée dynamiquement -->
-            </div>
-        </div>
-        <!-- Générateur de programmes -->
-        <div class="view" id="program-generator">
-            <div class="program-header">
-                <button class="btn-icon" onclick="showView('dashboard')" style="margin-bottom: 1rem;">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Retour
-                </button>
-            </div>
-            <div id="mainContent"></div>
-        </div>
-
-
-
-<!-- Statistiques détaillées -->
-<div class="view" id="stats">
-    <div class="stats-container">
-        <div class="stats-header">
-            <h1>Statistiques détaillées</h1>
-            <button class="btn-secondary" onclick="showView('dashboard')">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Retour
-            </button>
-        </div>
-        
-        <!-- IMPORTANT: chartsContainer DOIT être ICI, DANS stats-container -->
-        <div id="chartsContainer" class="charts-container">
-            <!-- 1. Progression par groupe musculaire -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Progression par groupe musculaire</h3>
-                    <div class="chart-controls">
-                        <select id="muscleProgressionPeriod" class="chart-select" onchange="updateMuscleProgression()">
-                            <option value="week">Semaine</option>
-                            <option value="month" selected>Mois</option>
-                            <option value="year">Année</option>
-                        </select>
+                
+                <div class="chart-section">
+                    <h3>Records personnels</h3>
+                    <div id="recordsList">
+                        <!-- Généré dynamiquement -->
                     </div>
                 </div>
-                <div class="chart-wrapper">
-                    <canvas id="muscleProgressionChart"></canvas>
-                </div>
-            </div>
-
-            <!-- 2. État de récupération musculaire -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>État de récupération musculaire</h3>
-                    <button class="btn-icon" onclick="refreshMuscleRecovery()">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="muscleRecoveryChart"></canvas>
-                </div>
-            </div>
-
-            <!-- 3. Volume progressif (tonnage) -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Volume d'entraînement progressif</h3>
-                    <div class="chart-controls">
-                        <select id="volumePeriod" class="chart-select" onchange="updateVolumeChart()">
-                            <option value="week">Semaine</option>
-                            <option value="month" selected>Mois</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="muscleVolumeChart"></canvas>
-                </div>
-            </div>
-
-            <!-- 4. Sunburst utilisation équipement -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Répartition par partie du corps</h3>
-                    <div class="chart-controls">
-                        <select id="bodyPartPeriod" class="chart-select" onchange="updateBodyPartDistribution()">
-                            <option value="week">Semaine</option>
-                            <option value="month" selected>Mois</option>
-                            <option value="year">Année</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="chart-wrapper" id="bodyPartSunburst">
-                    <!-- D3.js sunburst sera injecté ici -->
-                </div>
-            </div>
-
-            <!-- 5. Prédiction de performance -->
-            <div class="chart-card chart-card-wide">
-                <div class="chart-header">
-                    <h3>Prédiction de performance par muscle</h3>
-                    <button class="btn-icon" onclick="updatePerformancePrediction()">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="performancePredictionChart"></canvas>
-                </div>
             </div>
         </div>
-    </div>
-</div>
 
-        <!-- Profil -->
+        <!-- PROFIL -->
         <div class="view" id="profile">
-            <h1>Mon Profil</h1>
-            <div class="profile-info">
-                <!-- Informations générées dynamiquement -->
+            <h2>👤 Mon profil</h2>
+            
+            <div class="profile-info" id="profileInfo">
+                <!-- Généré dynamiquement -->
             </div>
             
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <button class="btn btn-danger" onclick="clearWorkoutHistory()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                    Supprimer l'historique
-                </button>
-                
-                <button class="btn btn-danger" onclick="deleteProfile()" style="background: #dc2626; border-color: #dc2626;">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                    Supprimer mon profil
-                </button>
-                
-                <button class="btn btn-secondary" onclick="logout()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
-                    Déconnexion
-                </button>
+            <div class="profile-actions">
+                <button class="btn btn-primary" onclick="editEquipment()">Modifier l'équipement</button>
+                <button class="btn btn-warning" onclick="clearHistory()">Vider l'historique</button>
+                <button class="btn btn-danger" onclick="deleteProfile()">Supprimer le profil</button>
             </div>
         </div>
     </div>
 
-    <!-- Welcome Screen -->
-    <div class="view" id="welcome">
-        <div class="welcome-container">
-            <h1>💪 Fitness Coach</h1>
-            <p style="color: var(--gray); margin-bottom: 3rem;">Choisissez une option pour continuer</p>
-            
-            <button class="btn btn-primary" onclick="startNewProfile()">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Créer un nouveau profil
-            </button>
-            
-            <div class="profiles-section" style="margin-top: 3rem;">
-                <h3 style="margin-bottom: 1.5rem;">Profils existants</h3>
-                <div id="profilesList" class="profiles-list">
-                    <!-- Chargé dynamiquement -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Navigation -->
+    <!-- Navigation -->
     <div class="bottom-nav" id="bottomNav" style="display: none;">
         <button class="nav-item active" onclick="showView('dashboard')">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-            </svg>
+            <span>🏠</span>
             <span>Accueil</span>
         </button>
         <button class="nav-item" onclick="showView('stats')">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
+            <span>📊</span>
             <span>Stats</span>
         </button>
-        <button class="nav-item" onclick="showView('exercises')">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            <span>Exercices</span>
-        </button>
-        <button class="nav-item" onclick="handleTrainingNavigation()">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
-            <span>S'entraîner</span>
-        </button>
         <button class="nav-item" onclick="showView('profile')">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
+            <span>👤</span>
             <span>Profil</span>
         </button>
     </div>
 
-    <script type="module">
-        import './app-init.js';
-        import './app-stats.js';
-    </script>
-    <script type="module" src="app-guided-workout.js"></script>
+    <!-- Modals -->
+    <div class="modal" id="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Contenu dynamique -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js" type="module"></script>
 </body>
 </html>

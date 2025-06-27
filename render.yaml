@@ -1,17 +1,16 @@
 services:
   - type: web
-    name: gym-app
+    name: fitness-coach
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn backend.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    plan: free
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: fitness-db
-          property: connectionString
-
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    
 databases:
-  - name: fitness-db
-    databaseName: fitness_db
-    user: fitness_user
+  - name: fitness-coach-db
+    databaseName: fitness_coach
+    user: fitness_coach_user
     plan: free

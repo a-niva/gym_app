@@ -1,273 +1,166 @@
-# ===== backend/schemas.py =====
-from pydantic import BaseModel, field_validator
+# ===== backend/schemas.py - VERSION REFACTORISÉE =====
+from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
-# STRUCTURES ÉQUIPEMENT REFONDUES
-class BarreConfig(BaseModel):
-    available: bool = False
-    count: int = 0
-    weight: float = 20.0  # Poids par défaut en kg
 
-class DisquesConfig(BaseModel):
-    available: bool = False
-    weights: Dict[str, int] = {}  # {"5.0": 4, "10.0": 2} - poids en kg -> nombre
+# ===== SCHEMAS UTILISATEUR =====
 
-class DumbbellsConfig(BaseModel):
-    available: bool = False
-    weights: List[float] = []  # Liste des poids disponibles
-
-class BancConfig(BaseModel):
-    available: bool = False
-    inclinable_haut: bool = False
-    inclinable_bas: bool = False
-
-class ElastiquesBand(BaseModel):
-    color: str
-    resistance: float  # Résistance exacte en kg
-    count: int = 1
-
-class ElastiquesConfig(BaseModel):
-    available: bool = False
-    bands: List[ElastiquesBand] = []
-
-class KettlebellConfig(BaseModel):
-    available: bool = False
-    weights: List[float] = []  # Liste des poids de kettlebells
-
-class BarreTractionConfig(BaseModel):
-    available: bool = False
-
-class LestConfig(BaseModel):
-    available: bool = False
-    weights: List[float] = []  # Liste des poids disponibles
-
-class AutresEquipmentConfig(BaseModel):
-    kettlebell: KettlebellConfig = KettlebellConfig()
-    barre_traction: BarreTractionConfig = BarreTractionConfig()
-    lest_corps: LestConfig = LestConfig()
-    lest_chevilles: LestConfig = LestConfig()
-    lest_poignets: LestConfig = LestConfig()
-
-class EquipmentConfig(BaseModel):
-    barres: Dict[str, BarreConfig] = {
-        "olympique": BarreConfig(weight=20.0),
-        "ez": BarreConfig(weight=10.0),
-        "courte": BarreConfig(weight=2.5)
-    }
-    disques: DisquesConfig = DisquesConfig()
-    dumbbells: DumbbellsConfig = DumbbellsConfig()
-    banc: BancConfig = BancConfig()
-    elastiques: ElastiquesConfig = ElastiquesConfig()
-    autres: AutresEquipmentConfig = AutresEquipmentConfig()
-
-# SCHEMAS EXERCICES
-class ExerciseSpecs(BaseModel):
-    barbell_count: Optional[int] = None  # Nombre de barres nécessaires
-    dumbbell_count: Optional[int] = None  # Nombre d'haltères nécessaires
-    requires_rack: Optional[bool] = False
-    requires_incline: Optional[bool] = False
-    requires_decline: Optional[bool] = False
-    min_weight: Optional[float] = None
-    max_weight: Optional[float] = None
-
-
-# SCHEMAS STATS
-class UserStats(BaseModel):
-    total_workouts: int
-    week_streak: int
-    last_workout: Optional[str]
-    total_weight_lifted: float
-    favorite_exercises: List[Dict[str, Any]]
-    progress_data: Dict[str, List[Dict[str, Any]]]
-
-
-# SCHEMAS UTILISATEUR
 class UserCreate(BaseModel):
     name: str
     birth_date: datetime
-    height: float
-    weight: float
-    experience_level: str
-    goals: List[str]
-    equipment_config: EquipmentConfig
+    height: float  # cm
+    weight: float  # kg
+    experience_level: str  # beginner, intermediate, advanced
+    equipment_config: Dict[str, Any]
+
 
 class UserResponse(BaseModel):
     id: int
     name: str
     birth_date: datetime
+    height: float
+    weight: float
     experience_level: str
-    goals: List[str]
-    equipment_config: EquipmentConfig
+    equipment_config: Dict[str, Any]
     created_at: datetime
     
     class Config:
         from_attributes = True
 
+
+# ===== SCHEMAS EXERCICES =====
+
 class ExerciseResponse(BaseModel):
     id: int
-    name_fr: str
-    name_eng: str
-    equipment: List[str]
-    equipment_specs: Optional[ExerciseSpecs] = None
-    level: str
-    body_part: str
-    sets_reps: List[dict]
+    name: str
+    muscle_groups: List[str]
+    equipment_required: List[str]
+    difficulty: str
+    default_sets: int
+    default_reps_min: int
+    default_reps_max: int
+    rest_time_seconds: int
+    instructions: Optional[str] = None
     
     class Config:
         from_attributes = True
 
-# SCHEMAS WORKOUTS
-class WorkoutCreate(BaseModel):
+
+# ===== SCHEMAS PROGRAMMES =====
+
+class ProgramCreate(BaseModel):
+    name: str
+    sessions_per_week: int
+    session_duration_minutes: int
+    focus_areas: List[str]  # ["upper_body", "legs", "core"]
+
+
+class ProgramResponse(BaseModel):
+    id: int
     user_id: int
-    type: str = "free_time"
-    initial_exercise_id: Optional[int] = None  # Premier exercice prévu
+    name: str
+    sessions_per_week: int
+    session_duration_minutes: int
+    focus_areas: List[str]
+    exercises: List[Dict[str, Any]]
+    created_at: datetime
+    is_active: bool
+    
+    class Config:
+        from_attributes = True
+
+
+# ===== SCHEMAS SÉANCES =====
+
+class WorkoutCreate(BaseModel):
+    type: str  # "free" ou "program"
+    program_id: Optional[int] = None
+
+
+class WorkoutResponse(BaseModel):
+    id: int
+    user_id: int
+    type: str
+    program_id: Optional[int]
+    status: str
+    started_at: datetime
+    completed_at: Optional[datetime]
+    total_duration_minutes: Optional[int]
+    
+    class Config:
+        from_attributes = True
+
 
 class SetCreate(BaseModel):
-    workout_id: int
     exercise_id: int
     set_number: int
-    target_reps: int
-    actual_reps: int
-    weight: float
-    rest_time: int
-    fatigue_level: int
-    perceived_exertion: int
-    skipped: bool = False
-    # Nouveaux champs optionnels
-    is_bodyweight: Optional[bool] = False
-    is_time_based: Optional[bool] = False
-    body_weight: Optional[float] = None
+    reps: int
+    weight: Optional[float] = None
+    duration_seconds: Optional[int] = None
+    rest_time_seconds: Optional[int] = None
+    
+    # Nouveaux champs pour l'interface détaillée et le ML
+    target_reps: Optional[int] = None
+    target_weight: Optional[float] = None
+    fatigue_level: Optional[int] = None  # 1-5
+    effort_level: Optional[int] = None   # 1-5
+    
+    # Recommandations ML
+    ml_weight_suggestion: Optional[float] = None
+    ml_reps_suggestion: Optional[int] = None
+    ml_confidence: Optional[float] = None
+    user_followed_ml_weight: Optional[bool] = None
+    user_followed_ml_reps: Optional[bool] = None
+    
+    # Position dans la séance
+    exercise_order_in_session: Optional[int] = None
+    set_order_in_session: Optional[int] = None
 
-class SetRestTimeUpdate(BaseModel):
-    rest_time: int
 
 class SetResponse(BaseModel):
     id: int
     workout_id: int
     exercise_id: int
     set_number: int
-    target_reps: int
-    actual_reps: int
-    weight: float
-    rest_time: int
-    fatigue_level: int
-    perceived_exertion: int
+    reps: int
+    weight: Optional[float]
+    duration_seconds: Optional[int]
+    rest_time_seconds: Optional[int]
+    target_reps: Optional[int]
+    target_weight: Optional[float]
+    fatigue_level: Optional[int]
+    effort_level: Optional[int]
+    ml_weight_suggestion: Optional[float]
+    ml_reps_suggestion: Optional[int]
+    ml_confidence: Optional[float]
+    user_followed_ml_weight: Optional[bool]
+    user_followed_ml_reps: Optional[bool]
+    exercise_order_in_session: Optional[int]
+    set_order_in_session: Optional[int]
     completed_at: datetime
-    skipped: bool
     
     class Config:
         from_attributes = True
 
-class WorkoutResponse(BaseModel):
-    id: int
-    user_id: int
-    type: str
-    status: str
-    paused_at: Optional[datetime]
-    total_pause_duration: int
-    created_at: datetime
-    completed_at: Optional[datetime]
-    sets: List[SetResponse] = []
-    
-    class Config:
-        from_attributes = True
 
-class ProgramGenerationRequest(BaseModel):
-    weeks: int = 4
-    frequency: Optional[int] = 3  # Le frontend envoie aussi frequency
-
-# SCHEMAS PROGRAMMES
-class ProgramExerciseBase(BaseModel):
+# Nouveau schéma pour les recommandations ML
+class RecommendationRequest(BaseModel):
     exercise_id: int
-    sets: int
-    target_reps: int
-    rest_time: int
-    order_index: int
-    predicted_weight: Optional[float] = None
+    set_number: int = 1
+    current_fatigue: int = 3  # 1-5
+    previous_effort: int = 3  # 1-5
+    last_rest_duration: Optional[int] = None
+    exercise_order: int = 1
+    set_order_global: int = 1
 
-class ProgramDayBase(BaseModel):
-    week_number: int
-    day_number: int
-    muscle_group: str
-    exercises: List[ProgramExerciseBase]
 
-class ProgramCreate(BaseModel):
-    name: str
-    duration_weeks: int
-    frequency: int
-    program_days: List[ProgramDayBase]
-
-class ProgramExerciseResponse(BaseModel):
-    id: int
-    exercise_id: int
-    exercise: ExerciseResponse
-    sets: int
-    target_reps: int
-    rest_time: int
-    order_index: int
-    predicted_weight: Optional[float]
-    
-    class Config:
-        from_attributes = True
-
-class ProgramDayResponse(BaseModel):
-    id: int
-    week_number: int
-    day_number: int
-    muscle_group: str
-    exercises: List[ProgramExerciseResponse]
-    
-    class Config:
-        from_attributes = True
-
-class ProgramResponse(BaseModel):
-    id: int
-    user_id: int
-    name: str
-    duration_weeks: int
-    frequency: int
-    created_at: datetime
-    is_active: bool
-    program_days: List[ProgramDayResponse]
-    
-    class Config:
-        from_attributes = True
-
-# SCHEMAS ENGAGEMENT ADAPTATIF
-class UserCommitmentCreate(BaseModel):
-    sessions_per_week: int
-    focus_muscles: Dict[str, str]
-    time_per_session: int
-
-class UserCommitmentResponse(BaseModel):
-    user_id: int
-    sessions_per_week: int
-    focus_muscles: Dict[str, str]
-    time_per_session: int
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
-
-class AdaptiveTargetsResponse(BaseModel):
-    id: int
-    muscle_group: str
-    target_volume: Optional[float] = 0.0  # Accepter None avec défaut 0.0
-    current_volume: float
-    recovery_debt: float
-    last_trained: Optional[datetime]
-    adaptation_rate: float
-    
-    class Config:
-        from_attributes = True
-
-class TrajectoryAnalysis(BaseModel):
-    on_track: bool
-    sessions_this_week: int
-    sessions_target: int
-    volume_adherence: float
-    consistency_score: float
-    muscle_balance: Dict[str, float]
-    insights: List[str]
+class RecommendationResponse(BaseModel):
+    weight_recommendation: Optional[float]
+    reps_recommendation: int
+    confidence: float
+    reasoning: str
+    weight_change: str  # "increase", "decrease", "same"
+    reps_change: str
+    baseline_weight: Optional[float]
+    baseline_reps: int
